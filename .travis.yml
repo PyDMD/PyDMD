@@ -1,0 +1,70 @@
+sudo: true
+dist: trusty
+  
+language: python
+
+service: docker
+
+matrix:
+    include:
+        - os: linux
+          python: 2.7
+          env: TOXENV=py27
+        - os: osx
+          language: generic
+          env: TOXENV=py27
+          
+before_script:
+    - "export DISPLAY=:99.0"
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        sh -e /etc/init.d/xvfb start;
+        sleep 3;
+      fi
+
+before_install:
+    # We do this conditionally because it saves us some downloading if the
+    # version is the same.
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+      else
+        brew update;
+        brew install python;
+        python --version;
+        wget https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh -O miniconda.sh;
+      fi
+    - chmod +x miniconda.sh
+    - bash miniconda.sh -b -p $HOME/miniconda
+    - export PATH="$HOME/miniconda/bin:$HOME/miniconda/lib:$PATH"
+    - hash -r
+    - conda config --set always_yes yes --set changeps1 no
+    - conda update -q conda
+    # Useful for debugging any issues with conda
+    - conda info -a
+    - conda config --add channels conda-forge
+
+install:
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        conda create --yes -n test python=$TRAVIS_PYTHON_VERSION;
+      else
+        conda create --yes -n test python="2.7";
+      fi
+    - source activate test
+    - conda install --yes numpy scipy matplotlib vtk pip nose sip=4.18
+    - pip install setuptools
+    - pip install enum34
+    - pip install coveralls
+    - pip install coverage
+    - python setup.py install
+
+script:
+    - coverage run test.py
+    # Docker in travis works only with linux. 
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        docker run -u root docker.io/pygemdocker/pygem:latest /bin/sh -c "cd /home/PyGeM/build/PyGeM; coverage run test.py";
+      fi
+after_success:
+    - coveralls
+
+branches:
+    only:
+        - master

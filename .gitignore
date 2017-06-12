@@ -1,0 +1,5 @@
+# mac file systems
+.DS_Store
+
+# compiled python codes
+*.pyc
