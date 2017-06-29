@@ -1,21 +1,25 @@
 from unittest import TestCase
-from dmd.dmd import dmd
+from dmd.dmd import DMD
 
 import numpy as np
 
 sample_data = np.load('tests/test_datasets/input_sample.npy')
+# print sample_data.shape
 
 
 class TestDmd(TestCase):
 	def test_dmd_shape(self):
-		Phi, B, V = dmd(sample_data)
-		assert Phi.shape[1] == sample_data.shape[1] - 1
+		dmd = DMD()
+		dmd.fit(X=sample_data)
+		assert dmd.modes.shape[1] == sample_data.shape[1] - 1
 
-	def test_dmd_truncation(self):
-		Phi, B, V = dmd(sample_data, k=2)
-		assert Phi.shape[1] == 2
+	def test_dmd_truncation_shape(self):
+		dmd = DMD(k=3)
+		dmd.fit(X=sample_data)
+		assert dmd.modes.shape[1] == 3
 
 	def test_dmd_decomposition(self):
-		Phi, B, V = dmd(sample_data)
-		dmd_data = Phi.dot(B).dot(V)
+		dmd = DMD()
+		dmd.fit(X=sample_data)
+		dmd_data = dmd.reconstructed_data
 		assert np.allclose(dmd_data, sample_data)
