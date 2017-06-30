@@ -12,10 +12,10 @@ class DMD(object):
 	"""
 	def __init__(self, k=None):
 		self.k = k
-		self._basis = None  # spatial basis vectors
-		self._mode_coeffs = None  # DMD mode coefficients
-		self._eigs = None # DMD eigenvalues
-		self._Atilde = None  # The full DMD matrix
+		self._basis = None # spatial basis vectors
+		self._mode_coeffs = None
+		self._eigs = None 
+		self._Atilde = None
 		self._modes = None # Phi
 		self._amplitudes = None # B
 		self._vander = None # Vander
@@ -40,6 +40,8 @@ class DMD(object):
 	def fit(self, X, Y=None):
 		"""
 		"""
+		n_samples = X.shape[1]
+		# split the data
 		if Y is None:
 			Y = X[:, 1:]
 			X = X[:, :-1]
@@ -73,6 +75,6 @@ class DMD(object):
 		b = np.linalg.lstsq(self._modes, X[:, 0])[0]
 		self._amplitudes = np.diag(b)
 
-		self._vander = np.fliplr(np.vander(self._eigs, N=X.shape[1]))
+		self._vander = np.fliplr(np.vander(self._eigs, N=n_samples))
 
 		return self
