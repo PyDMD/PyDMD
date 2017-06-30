@@ -58,10 +58,7 @@ install:
 
 script:
     - coverage run test.py
-    # Docker in travis works only with linux. 
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-        docker run -u root docker.io/pygemdocker/pygem:latest /bin/sh -c "cd /home/PyGeM/build/PyGeM; coverage run test.py";
-      fi
+
 after_success:
     - coveralls
 
