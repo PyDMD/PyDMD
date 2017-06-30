@@ -21,7 +21,22 @@ class TestDmd(TestCase):
 		dmd.fit(X=sample_data)
 		assert dmd.modes.shape[1] == 3
 
-	def test_dmd_decomposition(self):
+	def test_dmd_amplitudes_1(self):
+		dmd = DMD()
+		dmd.fit(X=sample_data)
+		assert dmd.amplitudes.shape == (14, 14)
+
+	def test_dmd_amplitudes_2(self):
+		dmd = DMD(k=3)
+		dmd.fit(X=sample_data)
+		assert dmd.amplitudes.shape == (dmd.k, dmd.k)
+
+	def test_dmd_vander(self):
+		dmd = DMD()
+		dmd.fit(X=sample_data)
+		assert dmd.vander.shape == (14, 15)
+
+	def test_dmd_reconstructed_data(self):
 		dmd = DMD()
 		dmd.fit(X=sample_data)
 		dmd_data = dmd.reconstructed_data
