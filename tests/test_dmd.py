@@ -36,8 +36,23 @@ class TestDmd(TestCase):
 		dmd.fit(X=sample_data)
 		assert dmd.vander.shape == (14, 15)
 
+	def test_dmd_eigs_1(self):
+		dmd = DMD()
+		dmd.fit(X=sample_data)
+		assert len(dmd.eigs) == 14
+
+	def test_dmd_eigs_2(self):
+		dmd = DMD(k=5)
+		dmd.fit(X=sample_data)
+		assert len(dmd.eigs) == 5
+
 	def test_dmd_reconstructed_data(self):
 		dmd = DMD()
 		dmd.fit(X=sample_data)
 		dmd_data = dmd.reconstructed_data
 		assert np.allclose(dmd_data, sample_data)
+
+	def test_dmd_plot_eigs(self):
+		dmd = DMD()
+		dmd.fit(X=sample_data)
+		dmd.plot_eigs(show_axes=True, show_unit_circle=True)
