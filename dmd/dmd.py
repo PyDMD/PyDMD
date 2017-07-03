@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class DMD(object):
@@ -12,17 +13,21 @@ class DMD(object):
 	"""
 	def __init__(self, k=None):
 		self.k = k
-		self._basis = None # spatial basis vectors
+		self._basis = None	# spatial basis vectors
 		self._mode_coeffs = None
-		self._eigs = None 
+		self._eigs = None
 		self._Atilde = None
-		self._modes = None # Phi
-		self._amplitudes = None # B
-		self._vander = None # Vander
+		self._modes = None	# Phi
+		self._amplitudes = None	 # B
+		self._vander = None	 # Vander
 
 	@property
 	def modes(self):
 		return self._modes
+
+	@property
+	def eigs(self):
+		return self._eigs
 
 	@property
 	def amplitudes(self):
@@ -35,7 +40,6 @@ class DMD(object):
 	@property
 	def reconstructed_data(self):
 		return self._modes.dot(self._amplitudes).dot(self._vander)
-
 
 	def fit(self, X, Y=None):
 		"""
@@ -78,3 +82,65 @@ class DMD(object):
 		self._vander = np.fliplr(np.vander(self._eigs, N=n_samples))
 
 		return self
+
+	def plot_eigs(self, show_axes=False, show_unit_circle=False):
+		"""
+		"""
+		fig = plt.gcf()
+		ax = plt.gca()
+
+		points, = ax.plot(
+			self._eigs.real, self._eigs.imag, 'bo', label='Eigenvalues'
+		)
+
+		# set limits for axis
+		limit = np.max(np.ceil(np.absolute(self._eigs)))
+		ax.set_xlim((-limit, limit))
+		ax.set_ylim((-limit, limit))
+
+		plt.ylabel('Imaginary part')
+		plt.xlabel('Real part')
+
+		if show_unit_circle:
+			unit_circle = plt.Circle((0., 0.),
+									 1.,
+									 color='green',
+									 fill=False,
+									 label='Unit circle',
+									 linestyle='--')
+			ax.add_artist(unit_circle)
+
+		# Dashed grid
+		gridlines = ax.get_xgridlines() + ax.get_ygridlines()
+		for line in gridlines:
+			line.set_linestyle('-.')
+		ax.grid(True)
+
+		ax.set_aspect('equal')
+
+		# x and y axes
+		if show_axes:
+			ax.annotate(
+				'',
+				xy=(np.max([limit * 0.8, 1.]), 0.),
+				xytext=(np.min([-limit * 0.8, -1.]), 0.),
+				arrowprops=dict(arrowstyle="->")
+			)
+			ax.annotate(
+				'',
+				xy=(0., np.max([limit * 0.8, 1.])),
+				xytext=(0., np.min([-limit * 0.8, -1.])),
+				arrowprops=dict(arrowstyle="->")
+			)
+
+		# legend
+		if show_unit_circle:
+			ax.add_artist(
+				plt.legend([points, unit_circle],
+						   ['Eigenvalues', 'Unit circle'],
+						   loc=1)
+			)
+		else:
+			ax.add_artist(plt.legend([points], ['Eigenvalues'], loc=1))
+
+		plt.show()
