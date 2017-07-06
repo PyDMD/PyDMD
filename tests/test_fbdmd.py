@@ -59,6 +59,16 @@ class TestFbDmd(TestCase):
 		dmd.fit(X=sample_data)
 		assert len(dmd.eigs) == 1
 
+	def test_eigs_modulus_1(self):
+		dmd = FbDMD(svd_rank=0)
+		dmd.fit(X=sample_data)
+		np.testing.assert_almost_equal(np.linalg.norm(dmd.eigs[0]), 1., decimal=6)
+
+	def test_eigs_modulus_2(self):
+		dmd = FbDMD(svd_rank=0, exact=True)
+		dmd.fit(X=sample_data)
+		np.testing.assert_almost_equal(np.linalg.norm(dmd.eigs[1]), 1., decimal=6)
+
 	def test_reconstructed_data(self):
 		dmd = FbDMD(exact=True)
 		dmd.fit(X=sample_data)
