@@ -11,10 +11,11 @@ class DMDBase(object):
 	:param numpy.ndarray X: the input matrix with dimension `m`x`n`
 	:param int k: rank truncation in SVD
 	"""
-	def __init__(self, svd_rank=0, tlsq_rank=0):
 
-		self.svd_rank  = svd_rank
+	def __init__(self, svd_rank=0, tlsq_rank=0, exact=False):
+		self.svd_rank = svd_rank
 		self.tlsq_rank = tlsq_rank
+		self.exact = exact
 
 		self._basis = None	# spatial basis vectors
 		self._mode_coeffs = None
@@ -23,7 +24,6 @@ class DMDBase(object):
 		self._modes = None	# Phi
 		self._amplitudes = None	 # B
 		self._vander = None	 # Vander
-
 
 	@property
 	def modes(self):
@@ -45,10 +45,23 @@ class DMDBase(object):
 	def reconstructed_data(self):
 		return self._modes.dot(self._amplitudes).dot(self._vander)
 
+	def fit(self, *args):
+		"""
+		Abstract method to fit the snapshots matrices.
 
-	def plot_eigs(self, show_axes=False, show_unit_circle=False):
+		Not implemented, it has to be implemented in subclasses.
+		"""
+		raise NotImplementedError('Subclass must implement abstract method ' \
+		 + self.__class__.__name__ + '.parse')
+
+	def plot_eigs(self, show_axes=True, show_unit_circle=True):
 		"""
 		"""
+		if self._eigs is None:
+			raise ValueError(
+				'The eigenvalues have not been computed. You have to perform the fit method.'
+			)
+
 		fig = plt.gcf()
 		ax = plt.gca()
 

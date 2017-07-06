@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from dmd.dmdbase import DMDBase
+from dmdbase import DMDBase
 
-class DMDExact(DMDBase):
+
+class DMD(DMDBase):
 	"""
 	Dynamic Mode Decomposition
 
@@ -12,6 +13,7 @@ class DMDExact(DMDBase):
 	:param numpy.ndarray X: the input matrix with dimension `m`x`n`
 	:param int k: rank truncation in SVD
 	"""
+
 	def fit(self, X, Y=None):
 		"""
 		"""
@@ -38,7 +40,14 @@ class DMDExact(DMDBase):
 		# DMD Modes
 		#-----------------------------------------------------------------------
 		self._Atilde = np.transpose(U).dot(Y).dot(V).dot(Sinverse)
-		self._basis = Y.dot(V).dot(Sinverse)
+
+		if self.exact:
+			# exact DMD
+			self._basis = Y.dot(V).dot(Sinverse)
+		else:
+			# projected DMD
+			self._basis = U
+
 		self._eigs, self._mode_coeffs = np.linalg.eig(self._Atilde)
 
 		self._modes = self._basis.dot(self._mode_coeffs)
