@@ -32,7 +32,7 @@ class TestDmd(TestCase):
 		assert dmd.amplitudes.shape == (dmd.svd_rank, dmd.svd_rank)
 
 	def test_vander(self):
-		dmd = DMD()
+		dmd = DMD(exact=True)
 		dmd.fit(X=sample_data)
 		assert dmd.vander.shape == (14, 15)
 
