@@ -3,11 +3,30 @@ from dmd import DMD
 
 import numpy as np
 
+
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
 # f1 = lambda x,t: sech(x+3)*(1.*np.exp(1j*2.3*t))
 # f2 = lambda x,t: (sech(x)*np.tanh(x))*(2.*np.exp(1j*2.8*t))
 sample_data = np.load('tests/test_datasets/input_sample.npy')
+def create_noisy_data():
+	mu = 0.
+	sigma = 0.	# noise standard deviation
+	m = 100	 # number of snapshot
+	noise = np.random.normal(mu, sigma, m)	# gaussian noise
+	A = np.array([[1., 1.], [-1., 2.]])
+	A /= np.sqrt(3)
+	n = 2
+	X = np.zeros((n, m))
+	X[:, 0] = np.array([0.5, 1.])
+	# evolve the system and perturb the data with noise
+	for k in range(1, m):
+		X[:, k] = A.dot(X[:, k - 1])
+		X[:, k - 1] += noise[k - 1]
+	return X
+
+
+noisy_data = create_noisy_data()
 
 
 class TestDmd(TestCase):
@@ -59,5 +78,10 @@ class TestDmd(TestCase):
 
 	def test_plot_eigs_2(self):
 		dmd = DMD()
+		dmd.fit(X=sample_data)
+		dmd.plot_eigs(show_axes=False, show_unit_circle=False)
+
+	def test_tdmd_plot(self):
+		dmd = DMD(tlsq_rank=3)
 		dmd.fit(X=sample_data)
 		dmd.plot_eigs(show_axes=False, show_unit_circle=False)

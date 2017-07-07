@@ -51,15 +51,65 @@ class DMDBase(object):
 
 		Not implemented, it has to be implemented in subclasses.
 		"""
-		raise NotImplementedError('Subclass must implement abstract method ' \
-		 + self.__class__.__name__ + '.parse')
+		raise NotImplementedError(
+			'Subclass must implement abstract method {}.fit'.format(
+		 		self.__class__.__name__
+			)
+		)
+	@staticmethod
+	def _compute_tlsq(X, Y, tlsq_rank):
+		"""
+		Compute Total Least Square
+
+		:param X numpy.ndarray: the first matrix;
+		:param X numpy.ndarray: the second matrix;
+		:param tlsq_rank int: the rank for the truncation;
+
+		References:
+		https://arxiv.org/pdf/1703.11004.pdf
+		https://arxiv.org/pdf/1502.03854.pdf
+		"""
+		# Do not perform tlsq
+		if tlsq_rank is 0:
+			return X, Y
+
+		V = np.linalg.svd(np.append(X, Y, axis=0), full_matrices=False)[-1]
+		print(min(tlsq_rank, V.shape[0]))
+		rank = min(tlsq_rank, V.shape[0])
+		VV = V[:rank, :].conj().T.dot(V[:rank, :])
+
+		return X.dot(VV), Y.dot(VV)
+		
+	@staticmethod
+	def _compute_svd(X, svd_rank):
+		"""
+		Singular Value Decomposition truncated
+
+		:param X numpy.ndarray: the matrix to decompose;
+		:param svd_rank int: the rank for the truncation;
+		"""
+		U, s, V = np.linalg.svd(X, full_matrices=False)
+		V = V.conj().T
+
+		if svd_rank is 0:
+			return U, s, V
+
+		rank = min(svd_rank, U.shape[1])
+
+		U = U[:, :rank]
+		V = V[:, :rank]
+		s = s[:rank]
+
+		return U, s, V
+
 
 	def plot_eigs(self, show_axes=True, show_unit_circle=True):
 		"""
 		"""
 		if self._eigs is None:
 			raise ValueError(
-				'The eigenvalues have not been computed. You have to perform the fit method.'
+				'The eigenvalues have not been computed.' 
+				'You have to perform the fit method.'
 			)
 
 		fig = plt.gcf()
