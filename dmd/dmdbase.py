@@ -74,7 +74,6 @@ class DMDBase(object):
 			return X, Y
 
 		V = np.linalg.svd(np.append(X, Y, axis=0), full_matrices=False)[-1]
-		print(min(tlsq_rank, V.shape[0]))
 		rank = min(tlsq_rank, V.shape[0])
 		VV = V[:rank, :].conj().T.dot(V[:rank, :])
 
