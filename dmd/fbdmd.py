@@ -20,42 +20,18 @@ class FbDMD(DMDBase):
 			Y = X[:, 1:]
 			X = X[:, :-1]
 
-		#---------------------------------------------------------------------------
 		# Singular Value Decomposition - Backward
-		#---------------------------------------------------------------------------
-		U, s, V = np.linalg.svd(Y, full_matrices=False)
-		V = np.conjugate(V.T)
+		U, s, V = self._compute_svd(Y, self.svd_rank)
 
-		if self.svd_rank:
-			U = U[:, 0:self.svd_rank]
-			V = V[:, 0:self.svd_rank]
-			s = s[0:self.svd_rank]
-
-		Sinverse = np.diag(1. / s)
-
-		#---------------------------------------------------------------------------
 		# DMD Modes - Backward
-		#---------------------------------------------------------------------------
-		# backward
+		Sinverse = np.diag(1. / s)
 		bAtilde = np.transpose(U).dot(X).dot(V).dot(Sinverse)
 
-		#---------------------------------------------------------------------------
 		# Singular Value Decomposition - Forward
-		#---------------------------------------------------------------------------
-		U, s, V = np.linalg.svd(X, full_matrices=False)
-		V = np.conjugate(V.T)
+		U, s, V = self._compute_svd(X, self.svd_rank)
 
-		if self.svd_rank:
-			U = U[:, 0:self.svd_rank]
-			V = V[:, 0:self.svd_rank]
-			s = s[0:self.svd_rank]
-
-		Sinverse = np.diag(1. / s)
-
-		#---------------------------------------------------------------------------
 		# DMD Modes - Forward
-		#---------------------------------------------------------------------------
-		# forward
+		Sinverse = np.diag(1. / s)
 		fAtilde = np.transpose(U).dot(Y).dot(V).dot(Sinverse)
 
 		# A tilde
@@ -71,9 +47,9 @@ class FbDMD(DMDBase):
 		self._eigs, self._mode_coeffs = np.linalg.eig(self._Atilde)
 		self._modes = self._basis.dot(self._mode_coeffs)
 
-		#---------------------------------------------------------------------------
+		#-----------------------------------------------------------------------
 		# DMD Amplitudes and Dynamics
-		#---------------------------------------------------------------------------
+		#-----------------------------------------------------------------------
 		b = np.linalg.lstsq(self._modes, X[:, 0])[0]
 		self._amplitudes = np.diag(b)
 

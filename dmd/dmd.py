@@ -23,22 +23,14 @@ class DMD(DMDBase):
 			Y = X[:, 1:]
 			X = X[:, :-1]
 
-		#-----------------------------------------------------------------------
-		# Singular Value Decomposition
-		#-----------------------------------------------------------------------
-		U, s, V = np.linalg.svd(X, full_matrices=False)
-		V = np.conjugate(V.T)
+		X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
 
-		if self.svd_rank:
-			U = U[:, 0:self.svd_rank]
-			V = V[:, 0:self.svd_rank]
-			s = s[0:self.svd_rank]
-
-		Sinverse = np.diag(1. / s)
+		U, s, V = self._compute_svd(X, self.svd_rank)
 
 		#-----------------------------------------------------------------------
 		# DMD Modes
 		#-----------------------------------------------------------------------
+		Sinverse = np.diag(1. / s)
 		self._Atilde = np.transpose(U).dot(Y).dot(V).dot(Sinverse)
 
 		if self.exact:
