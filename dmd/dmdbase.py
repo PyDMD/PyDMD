@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -169,3 +170,63 @@ class DMDBase(object):
 			ax.add_artist(plt.legend([points], ['Eigenvalues'], loc=1))
 
 		plt.show()
+
+	def plot_modes(self, x, y, index_mode=None, filename=None):
+		"""
+		Plot the DMD Modes.
+
+		:param x numpy.ndarray: domain abscissa
+		:param y numpy.ndarray: domain ordinate
+		:param index_mode int or sequence of int: the index of the modes to
+			plot. By default, all the modes are plotted.
+		:param filename str: filename
+		"""
+		if self._modes is None:
+			raise ValueError(
+				'The modes have not been computed.' 
+				'You have to perform the fit method.'
+			)
+
+		X, Y = np.meshgrid(x, y)
+		shape = X.shape
+
+		if index_mode is None:
+			index_mode = range(self._modes.shape[1])
+		elif isinstance(index_mode, int):
+			index_mode = [index_mode]
+
+		if filename:
+			basename, ext = os.path.splitext(filename)
+
+		for id in index_mode:
+			fig = plt.figure()
+			fig.suptitle('DMD Mode {}'.format(id))
+			
+			real_ax = fig.add_subplot(1, 2, 1)
+			imag_ax = fig.add_subplot(1, 2, 2)
+
+			mode = self._modes.T[id].reshape(shape, order='F')
+		
+			real_ax.pcolor(
+				X, Y, mode.real, cmap='RdBu', 
+				vmin=mode.real.min(),
+				vmax=mode.real.max()
+			)
+			imag_ax.pcolor(
+				X, Y, mode.imag, cmap='RdBu', 
+				vmin=mode.imag.min(),
+				vmax=mode.imag.max()
+			)
+
+			real_ax.set_aspect('auto')
+			imag_ax.set_aspect('auto')
+
+			real_ax.set_title('Real')
+			imag_ax.set_title('Imag')
+
+			if filename:
+				plt.savefig('{0}.{1}{2}'.format(basename, id, ext))
+				plt.close(fig)
+
+		if not filename:
+			plt.show()
