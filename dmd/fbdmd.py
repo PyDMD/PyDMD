@@ -1,5 +1,5 @@
 """
-Derived module from dmd.py for forward/backward dmd.
+Derived module from dmdbase.py for forward/backward dmd.
 """
 import numpy as np
 from scipy.linalg import sqrtm
@@ -8,6 +8,13 @@ from dmdbase import DMDBase
 
 class FbDMD(DMDBase):
 	"""
+	Forward/backward DMD class.
+	
+	:param numpy.ndarray X: the input matrix with dimension `m`x`n`
+	:param int svd_rank: rank truncation in SVD. Default is 0, that means no truncation.
+	:param int tlsq_rank: rank truncation computing Total Least Square. Default is 0, that means no truncation.
+	:param bool exact: flag to compute either exact DMD or projected DMD. Default is False.
+
 	Reference: Dawson et al. https://arxiv.org/abs/1507.02264
 	"""
 
