@@ -8,11 +8,11 @@ def readme():
 		return f.read()
 
 setup(name='dmd',
-	  version='0.0.1',
+	  version='0.0.2',
 	  description='Dynamic Mode Decomposition.',
 	  long_description=readme(),
 	  classifiers=[
-	  	'Development Status :: 1 - Planning',
+	  	'Development Status :: 3 - Alpha',
 	  	'License :: OSI Approved :: MIT License',
 	  	'Programming Language :: Python :: 2.7',
 	  	'Intended Audience :: Science/Research',
@@ -28,7 +28,6 @@ setup(name='dmd',
 	  		'numpy',
 	  		'scipy',
 	  		'matplotlib',
-	  		'enum34',
 	  		'Sphinx>=1.4',
 	  		'sphinx_rtd_theme'
 	  ],

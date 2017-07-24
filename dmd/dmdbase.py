@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 
 class DMDBase(object):
 	"""
-	Dynamic Mode Decomposition
-
-	This method decomposes
+	Dynamic Mode Decomposition base class.
 
 	:param numpy.ndarray X: the input matrix with dimension `m`x`n`
-	:param int k: rank truncation in SVD
+	:param int svd_rank: rank truncation in SVD. Default is 0, that means no truncation.
+	:param int tlsq_rank: rank truncation computing Total Least Square. Default is 0, that means no truncation.
+	:param bool exact: flag to compute either exact DMD or projected DMD. Default is False.
 	"""
 
 	def __init__(self, svd_rank=0, tlsq_rank=0, exact=False):
@@ -53,10 +53,10 @@ class DMDBase(object):
 		Not implemented, it has to be implemented in subclasses.
 		"""
 		raise NotImplementedError(
-			'Subclass must implement abstract method {}.fit'.format(
-		 		self.__class__.__name__
-			)
+			'Subclass must implement abstract method {}.fit'.
+			format(self.__class__.__name__)
 		)
+
 	@staticmethod
 	def _compute_tlsq(X, Y, tlsq_rank):
 		"""
@@ -79,11 +79,11 @@ class DMDBase(object):
 		VV = V[:rank, :].conj().T.dot(V[:rank, :])
 
 		return X.dot(VV), Y.dot(VV)
-		
+
 	@staticmethod
 	def _compute_svd(X, svd_rank):
 		"""
-		Singular Value Decomposition truncated
+		Truncated Singular Value Decomposition
 
 		:param X numpy.ndarray: the matrix to decompose;
 		:param svd_rank int: the rank for the truncation;
@@ -102,13 +102,12 @@ class DMDBase(object):
 
 		return U, s, V
 
-
 	def plot_eigs(self, show_axes=True, show_unit_circle=True):
 		"""
 		"""
 		if self._eigs is None:
 			raise ValueError(
-				'The eigenvalues have not been computed.' 
+				'The eigenvalues have not been computed.'
 				'You have to perform the fit method.'
 			)
 
@@ -183,7 +182,7 @@ class DMDBase(object):
 		"""
 		if self._modes is None:
 			raise ValueError(
-				'The modes have not been computed.' 
+				'The modes have not been computed.'
 				'You have to perform the fit method.'
 			)
 
@@ -201,28 +200,32 @@ class DMDBase(object):
 		for id in index_mode:
 			fig = plt.figure()
 			fig.suptitle('DMD Mode {}'.format(id))
-			
+
 			real_ax = fig.add_subplot(1, 2, 1)
 			imag_ax = fig.add_subplot(1, 2, 2)
 
 			mode = self._modes.T[id].reshape(shape, order='F')
-		
-			real_ax.pcolor(
-				X, Y, mode.real, cmap='RdBu', 
-				vmin=mode.real.min(),
-				vmax=mode.real.max()
+
+			real = real_ax.pcolor(
+			 X, Y, mode.real, # cmap='jet', 
+			 vmin=mode.real.min(),
+			 vmax=mode.real.max()
 			)
-			imag_ax.pcolor(
-				X, Y, mode.imag, cmap='RdBu', 
-				vmin=mode.imag.min(),
-				vmax=mode.imag.max()
+			imag = imag_ax.pcolor(
+				X, Y, mode.imag, vmin=mode.imag.min(), vmax=mode.imag.max()
 			)
+
+			fig.colorbar(real, ax=real_ax)
+			fig.colorbar(imag, ax=imag_ax)
 
 			real_ax.set_aspect('auto')
 			imag_ax.set_aspect('auto')
 
 			real_ax.set_title('Real')
 			imag_ax.set_title('Imag')
+
+			# padding between elements
+			plt.tight_layout(pad=2.)
 
 			if filename:
 				plt.savefig('{0}.{1}{2}'.format(basename, id, ext))
