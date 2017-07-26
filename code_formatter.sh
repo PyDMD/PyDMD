@@ -51,9 +51,8 @@ for file in $python_files; do
 	yapf --style='{
 					based_on_style: pep8, 
 				   	indent_width: 4,
-					dedent_closing_brackets = true,
-					coalesce_brackets = true,
-					column_limit = 80
+					dedent_closing_brackets: true,
+					column_limit: 80
 			  	  }' -i $file
 	unexpand -t 4 $file > tmp.py
 	mv tmp.py $file

@@ -8,9 +8,12 @@ class DMDBase(object):
 	Dynamic Mode Decomposition base class.
 
 	:param numpy.ndarray X: the input matrix with dimension `m`x`n`
-	:param int svd_rank: rank truncation in SVD. Default is 0, that means no truncation.
-	:param int tlsq_rank: rank truncation computing Total Least Square. Default is 0, that means no truncation.
-	:param bool exact: flag to compute either exact DMD or projected DMD. Default is False.
+	:param int svd_rank: rank truncation in SVD. Default is 0, that means no
+		truncation.
+	:param int tlsq_rank: rank truncation computing Total Least Square. Default
+		is 0, that means no truncation.
+	:param bool exact: flag to compute either exact DMD or projected DMD.
+		Default is False.
 	"""
 
 	def __init__(self, svd_rank=0, tlsq_rank=0, exact=False):
@@ -25,6 +28,9 @@ class DMDBase(object):
 		self._modes = None	# Phi
 		self._amplitudes = None	 # B
 		self._vander = None	 # Vander
+		self._X = None
+		self._Y = None
+		self._snapshots_shape = None
 
 	@property
 	def modes(self):
@@ -56,6 +62,42 @@ class DMDBase(object):
 			'Subclass must implement abstract method {}.fit'.
 			format(self.__class__.__name__)
 		)
+
+	def _fit_read_input(self, X, Y=None):
+		"""
+		Private method that takes as input the snapshots and stores them into a
+		2D matrix, by column. If the input data is already formatted as 2D
+		array, the method saves it, otherwise it also saves the original
+		snapshots shape and reshapes the snapshots.
+
+		:param iterable or numpy.ndarray X: the input snapshots.
+		:param itarable or numpy.ndarray Y: if specified, it provides the
+			snapshots at the next time step. Its dimension must be equal to X.
+			Default is None.
+		"""
+
+		# If the data is already 2D ndarray
+		if isinstance(X, np.ndarray) and X.ndim == 2:
+			if Y is None:
+				self._X = X[:, :-1]
+				self._Y = X[:, 1:]
+			else:
+				self._X = X
+				self._Y = Y
+			return
+
+		self._snapshots_shape = X[0].shape
+		reshapedX = np.array([snapshot.reshape(
+			-1,
+		) for snapshot in X]).T
+		if Y is none:
+			self._Y = reshapedX[:, 1:]
+			self._X = reshapedX[:, :-1]
+		else:
+			self._X = reshapedX
+			self._Y = np.transpose(
+				[snapshot.reshape(-1,) for snapshot in Y]
+			)
 
 	@staticmethod
 	def _compute_tlsq(X, Y, tlsq_rank):
@@ -127,12 +169,14 @@ class DMDBase(object):
 		plt.xlabel('Real part')
 
 		if show_unit_circle:
-			unit_circle = plt.Circle((0., 0.),
-									 1.,
-									 color='green',
-									 fill=False,
-									 label='Unit circle',
-									 linestyle='--')
+			unit_circle = plt.Circle(
+				(0., 0.),
+				1.,
+				color='green',
+				fill=False,
+				label='Unit circle',
+				linestyle='--'
+			)
 			ax.add_artist(unit_circle)
 
 		# Dashed grid
@@ -161,16 +205,19 @@ class DMDBase(object):
 		# legend
 		if show_unit_circle:
 			ax.add_artist(
-				plt.legend([points, unit_circle],
-						   ['Eigenvalues', 'Unit circle'],
-						   loc=1)
+				plt.legend(
+					[points, unit_circle], ['Eigenvalues', 'Unit circle'],
+					loc=1
+				)
 			)
 		else:
 			ax.add_artist(plt.legend([points], ['Eigenvalues'], loc=1))
 
 		plt.show()
 
-	def plot_modes(self, x, y, index_mode=None, filename=None):
+	def plot_modes_2D(
+		self, index_mode=None, filename=None, x=None, y=None, order='C'
+	):
 		"""
 		Plot the DMD Modes.
 
@@ -186,8 +233,22 @@ class DMDBase(object):
 				'You have to perform the fit method.'
 			)
 
-		X, Y = np.meshgrid(x, y)
-		shape = X.shape
+		# Domain dimensions as argument
+		if self._snapshots_shape is None and not all([x, y]):
+			raise ValueError(
+				'The input snapshots have not information about shape.'
+			)
+
+		if len(self._snapshots_shape) != 2 and not all([x, y]):
+			raise ValueError('The dimension of the input snapshots is not 2D.')
+
+		# If domain dimensions have not been passed as argument,
+		# use the snapshots dimensions
+		if None in [x, y]:
+			x = np.arange(self._snapshots_shape[0])
+			y = np.arange(self._snapshots_shape[1])
+
+		xgrid, ygrid = np.meshgrid(x, y)
 
 		if index_mode is None:
 			index_mode = range(self._modes.shape[1])
@@ -197,22 +258,30 @@ class DMDBase(object):
 		if filename:
 			basename, ext = os.path.splitext(filename)
 
-		for id in index_mode:
+		for idx in index_mode:
 			fig = plt.figure()
-			fig.suptitle('DMD Mode {}'.format(id))
+			fig.suptitle('DMD Mode {}'.format(idx))
 
 			real_ax = fig.add_subplot(1, 2, 1)
 			imag_ax = fig.add_subplot(1, 2, 2)
 
-			mode = self._modes.T[id].reshape(shape, order='F')
+			mode = self._modes.T[idx].reshape(
+				self._snapshots_shape, order=order
+			)
 
 			real = real_ax.pcolor(
-			 X, Y, mode.real, # cmap='jet', 
-			 vmin=mode.real.min(),
-			 vmax=mode.real.max()
+				xgrid,
+				ygrid,
+				mode.real,	# cmap='jet', 
+				vmin=mode.real.min(),
+				vmax=mode.real.max()
 			)
 			imag = imag_ax.pcolor(
-				X, Y, mode.imag, vmin=mode.imag.min(), vmax=mode.imag.max()
+				xgrid,
+				ygrid,
+				mode.imag,
+				vmin=mode.imag.min(),
+				vmax=mode.imag.max()
 			)
 
 			fig.colorbar(real, ax=real_ax)
@@ -228,7 +297,69 @@ class DMDBase(object):
 			plt.tight_layout(pad=2.)
 
 			if filename:
-				plt.savefig('{0}.{1}{2}'.format(basename, id, ext))
+				plt.savefig('{0}.{1}{2}'.format(basename, idx, ext))
+				plt.close(fig)
+
+		if not filename:
+			plt.show()
+
+	def plot_snapshots_2D(
+		self, index_snap=None, filename=None, x=None, y=None, order='C'
+	):
+		"""
+		Plot the snapshots.
+
+		:param x numpy.ndarray: domain abscissa
+		:param y numpy.ndarray: domain ordinate
+		:param snapshots numpy.ndarray: the matrix that contains the snapshots
+			to plot, stored by column
+		:param filename str: filename
+		"""
+		if None in [self._X, self._Y]:
+			raise ValueError('Input snapshots not found.')
+
+		if self._snapshots_shape is None and not all([x, y]):
+			raise ValueError(
+				'No information about the original shape of the snapshots.'
+			)
+
+		if len(self._snapshots_shape) != 2 and not all([x, y]):
+			raise ValueError('The dimension of the input snapshots is not 2D.')
+
+		# If domain dimensions have not been passed as argument,
+		# use the snapshots dimensions
+		if None in [x, y]:
+			x = np.arange(self._snapshots_shape[0])
+			y = np.arange(self._snapshots_shape[1])
+
+		xgrid, ygrid = np.meshgrid(x, y)
+
+		snapshots = np.append(self._X, self._Y[:, -1].reshape(-1, 1), axis=1)
+
+		if index_snap is None:
+			index_snap = range(self._modes.shape[1])
+		elif isinstance(index_snap, int):
+			index_snap = [index_snap]
+
+		if filename:
+			basename, ext = os.path.splitext(filename)
+
+		for idx in index_mode:
+			fig = plt.figure()
+			fig.suptitle('Snapshot {}'.format(idx))
+
+			snapshot = snapshots.T[idx].reshape(
+				self._snapshots_shape, order=order
+			)
+
+			contour = plt.pcolor(
+				xgrid, ygrid, snapshot, vmin=snapshot.min(), vmax=snapshot.max()
+			)
+
+			fig.colorbar(contour)
+
+			if filename:
+				plt.savefig('{0}.{1}{2}'.format(basename, idx, ext))
 				plt.close(fig)
 
 		if not filename:

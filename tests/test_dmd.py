@@ -85,7 +85,8 @@ class TestDmd(TestCase):
 	def test_plot_modes(self):
 		dmd = DMD()
 		dmd.fit(X=sample_data)
-		dmd.plot_modes(np.linspace(0, 1, 40), np.linspace(0, 1, 10))
+		with self.assertRaises(ValueError):
+			dmd.plot_modes_2D()
 
 	def test_tdmd_plot(self):
 		dmd = DMD(tlsq_rank=3)
