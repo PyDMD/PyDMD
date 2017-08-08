@@ -82,11 +82,39 @@ class TestDmd(TestCase):
 		dmd.fit(X=sample_data)
 		dmd.plot_eigs(show_axes=False, show_unit_circle=False)
 
-	def test_plot_modes(self):
+	def test_plot_modes_1(self):
 		dmd = DMD()
 		dmd.fit(X=sample_data)
 		with self.assertRaises(ValueError):
 			dmd.plot_modes_2D()
+
+	def test_plot_modes_2(self):
+		dmd = DMD()
+		dmd.fit(X=sample_data)
+		dmd.plot_modes_2D((1,2,5), x=np.arange(20), y=np.arange(20))
+
+	def test_plot_modes_2(self):
+		dmd = DMD()
+		snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
+		dmd.fit(X=snapshots)
+		dmd.plot_modes_2D()
+
+	def test_plot_snapshots_1(self):
+		dmd = DMD()
+		dmd.fit(X=sample_data)
+		with self.assertRaises(ValueError):
+			dmd.plot_snapshots_2D()
+
+	def test_plot_snapshots_2(self):
+		dmd = DMD()
+		dmd.fit(X=sample_data)
+		dmd.plot_snapshots_2D((1,2,5), x=np.arange(20), y=np.arange(20))
+
+	def test_plot_snapshots_2(self):
+		dmd = DMD()
+		snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
+		dmd.fit(X=snapshots)
+		dmd.plot_snapshots_2D()
 
 	def test_tdmd_plot(self):
 		dmd = DMD(tlsq_rank=3)

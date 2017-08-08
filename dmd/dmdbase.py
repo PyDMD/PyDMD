@@ -87,10 +87,11 @@ class DMDBase(object):
 			return
 
 		self._snapshots_shape = X[0].shape
-		reshapedX = np.array([snapshot.reshape(
-			-1,
-		) for snapshot in X]).T
-		if Y is none:
+		reshapedX = np.transpose(
+			[snapshot.reshape(-1,) for snapshot in X]
+		)
+		
+		if Y is None:
 			self._Y = reshapedX[:, 1:]
 			self._X = reshapedX[:, :-1]
 		else:
@@ -233,18 +234,20 @@ class DMDBase(object):
 				'You have to perform the fit method.'
 			)
 
-		# Domain dimensions as argument
-		if self._snapshots_shape is None and not all([x, y]):
-			raise ValueError(
-				'The input snapshots have not information about shape.'
-			)
+		if x is None and y is None:
+			if self._snapshots_shape is None:
+				raise ValueError(
+					'No information about the original shape of the snapshots.'
+				)
 
-		if len(self._snapshots_shape) != 2 and not all([x, y]):
-			raise ValueError('The dimension of the input snapshots is not 2D.')
+			if len(self._snapshots_shape) != 2:
+				raise ValueError(
+					'The dimension of the input snapshots is not 2D.'
+				)
 
 		# If domain dimensions have not been passed as argument,
 		# use the snapshots dimensions
-		if None in [x, y]:
+		if x is None and y is None:
 			x = np.arange(self._snapshots_shape[0])
 			y = np.arange(self._snapshots_shape[1])
 
@@ -266,13 +269,13 @@ class DMDBase(object):
 			imag_ax = fig.add_subplot(1, 2, 2)
 
 			mode = self._modes.T[idx].reshape(
-				self._snapshots_shape, order=order
+				xgrid.shape, order=order
 			)
 
 			real = real_ax.pcolor(
 				xgrid,
 				ygrid,
-				mode.real,	# cmap='jet', 
+				mode.real, cmap='jet', 
 				vmin=mode.real.min(),
 				vmax=mode.real.max()
 			)
@@ -315,20 +318,23 @@ class DMDBase(object):
 			to plot, stored by column
 		:param filename str: filename
 		"""
-		if None in [self._X, self._Y]:
+		if self._X is None and self._Y is None:
 			raise ValueError('Input snapshots not found.')
 
-		if self._snapshots_shape is None and not all([x, y]):
-			raise ValueError(
-				'No information about the original shape of the snapshots.'
-			)
+		if x is None and y is None:
+			if self._snapshots_shape is None:
+				raise ValueError(
+					'No information about the original shape of the snapshots.'
+				)
 
-		if len(self._snapshots_shape) != 2 and not all([x, y]):
-			raise ValueError('The dimension of the input snapshots is not 2D.')
+			if len(self._snapshots_shape) != 2:
+				raise ValueError(
+					'The dimension of the input snapshots is not 2D.'
+				)
 
 		# If domain dimensions have not been passed as argument,
 		# use the snapshots dimensions
-		if None in [x, y]:
+		if x is None and y is None:
 			x = np.arange(self._snapshots_shape[0])
 			y = np.arange(self._snapshots_shape[1])
 
@@ -344,11 +350,11 @@ class DMDBase(object):
 		if filename:
 			basename, ext = os.path.splitext(filename)
 
-		for idx in index_mode:
+		for idx in index_snap:
 			fig = plt.figure()
 			fig.suptitle('Snapshot {}'.format(idx))
 
-			snapshot = snapshots.T[idx].reshape(
+			snapshot = snapshots.T[idx].real.reshape(
 				self._snapshots_shape, order=order
 			)
 

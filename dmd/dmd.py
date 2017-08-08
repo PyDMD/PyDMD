@@ -11,21 +11,21 @@ class DMD(DMDBase):
 	Dynamic Mode Decomposition
 
 	:param numpy.ndarray X: the input matrix with dimension `m`x`n`
-	:param int svd_rank: rank truncation in SVD. Default is 0, that means no truncation.
-	:param int tlsq_rank: rank truncation computing Total Least Square. Default is 0, that means no truncation.
-	:param bool exact: flag to compute either exact DMD or projected DMD. Default is False.
+	:param int svd_rank: rank truncation in SVD. Default is 0, that means no
+		truncation.
+	:param int tlsq_rank: rank truncation computing Total Least Square. Default
+		is 0, that means no truncation.
+	:param bool exact: flag to compute either exact DMD or projected DMD.
+		Default is False.
 	"""
 
 	def fit(self, X, Y=None):
 		"""
 		"""
-		n_samples = X.shape[1]
-		# split the data
-		if Y is None:
-			Y = X[:, 1:]
-			X = X[:, :-1]
+		self._fit_read_input(X, Y)
+		n_samples = self._X.shape[1] +1
 
-		X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
+		X, Y = self._compute_tlsq(self._X, self._Y, self.tlsq_rank)
 
 		U, s, V = self._compute_svd(X, self.svd_rank)
 

@@ -48,4 +48,9 @@ class TestDmdBase(TestCase):
 	def test_plot_modes_2D(self):
 		dmd = DMDBase()
 		with self.assertRaises(ValueError):
-			dmd.plot_modes_2D(range(4), range(3))
+			dmd.plot_modes_2D()
+
+	def test_plot_snaps_2D(self):
+		dmd = DMDBase()
+		with self.assertRaises(ValueError):
+			dmd.plot_snapshots_2D()
