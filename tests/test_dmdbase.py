@@ -45,7 +45,12 @@ class TestDmdBase(TestCase):
 		with self.assertRaises(ValueError):
 			dmd.plot_eigs(show_axes=True, show_unit_circle=True)
 
-	def test_plot_modes(self):
+	def test_plot_modes_2D(self):
 		dmd = DMDBase()
 		with self.assertRaises(ValueError):
-			dmd.plot_modes(range(4), range(3))
+			dmd.plot_modes_2D()
+
+	def test_plot_snaps_2D(self):
+		dmd = DMDBase()
+		with self.assertRaises(ValueError):
+			dmd.plot_snapshots_2D()
