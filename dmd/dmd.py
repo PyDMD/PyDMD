@@ -2,8 +2,8 @@
 Derived module from dmdbase.py for classic dmd.
 """
 import numpy as np
-import matplotlib.pyplot as plt
-from dmdbase import DMDBase
+
+from .dmdbase import DMDBase
 
 
 class DMD(DMDBase):
@@ -21,6 +21,12 @@ class DMD(DMDBase):
 
 	def fit(self, X, Y=None):
 		"""
+		Compute the Dynamic Modes Decomposition to the input data.
+
+		:param iterable or numpy.ndarray X: the input snapshots.
+		:param itarable or numpy.ndarray Y: if specified, it provides the
+			snapshots at the next time step. Its dimension must be equal to X.
+			Default is None.
 		"""
 		self._fit_read_input(X, Y)
 		n_samples = self._X.shape[1] +1
