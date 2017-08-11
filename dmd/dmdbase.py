@@ -1,3 +1,6 @@
+"""
+Base module for the DMD: `fit` method must be implemented in inherited classes
+"""
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -34,25 +37,47 @@ class DMDBase(object):
 
 	@property
 	def modes(self):
+		"""
+		numpy.ndarray: the matrix that contains the DMD modes, stored by column.
+		"""
 		return self._modes
 
 	@property
+	def atilde(self):
+		"""
+		numpy.ndarray: the reduced Koopman operator A
+		"""
+		return self._Atilde
+
+	@property
 	def eigs(self):
+		"""
+		numpy.ndarray: the eigenvalues from the eigendecomposition of Atilde
+		"""
 		return self._eigs
 
 	@property
 	def amplitudes(self):
+		"""
+		numpy.ndarray: DMD amplitudes
+		"""
 		return self._amplitudes
 
 	@property
 	def vander(self):
+		"""
+		numpy.ndarray: the Vandermonde matrix that cointains the system dynamic.
+		"""
 		return self._vander
 
 	@property
 	def reconstructed_data(self):
+		"""
+		numpy.ndarray: DMD reconstructed data.
+		"""
 		return self._modes.dot(self._amplitudes).dot(self._vander)
 
-	def fit(self, *args):
+	def fit(self, X, Y=None):
 		"""
 		Abstract method to fit the snapshots matrices.
 
@@ -90,7 +115,7 @@ class DMDBase(object):
 		reshapedX = np.transpose(
 			[snapshot.reshape(-1,) for snapshot in X]
 		)
-		
+
 		if Y is None:
 			self._Y = reshapedX[:, 1:]
 			self._X = reshapedX[:, :-1]
@@ -147,6 +172,12 @@ class DMDBase(object):
 
 	def plot_eigs(self, show_axes=True, show_unit_circle=True):
 		"""
+		Plot the eigenvalues.
+
+		:param show_axes bool: if True, the axes will be showed in the plot.
+			Default is True.
+		:param show_axes bool: if True, the circle with unitary radius and
+			center in the origin will be showed. Default is True.
 		"""
 		if self._eigs is None:
 			raise ValueError(
@@ -275,7 +306,7 @@ class DMDBase(object):
 			real = real_ax.pcolor(
 				xgrid,
 				ygrid,
-				mode.real, cmap='jet', 
+				mode.real, cmap='jet',
 				vmin=mode.real.min(),
 				vmax=mode.real.max()
 			)

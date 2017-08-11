@@ -38,7 +38,7 @@ class TestDmdBase(TestCase):
 	def test_fit(self):
 		dmd = DMDBase(exact=False)
 		with self.assertRaises(NotImplementedError):
-			dmd.fit()
+			dmd.fit(sample_data)
 
 	def test_plot_eigs(self):
 		dmd = DMDBase()
