@@ -10,9 +10,10 @@ class DMDBase(object):
 	"""
 	Dynamic Mode Decomposition base class.
 
-	:param numpy.ndarray X: the input matrix with dimension `m`x`n`
-	:param int svd_rank: rank truncation in SVD. Default is 0, that means no
-		truncation.
+	:param int svd_rank: rank truncation in SVD. If 0, the method computes the
+		optimal rank and uses it for truncation; if positive number, the method
+		uses the argument for the truncation; if -1, the method does not
+		compute truncation.
 	:param int tlsq_rank: rank truncation computing Total Least Square. Default
 		is 0, that means no truncation.
 	:param bool exact: flag to compute either exact DMD or projected DMD.
@@ -154,15 +155,29 @@ class DMDBase(object):
 		Truncated Singular Value Decomposition
 
 		:param X numpy.ndarray: the matrix to decompose;
-		:param svd_rank int: the rank for the truncation;
+		:param svd_rank int: the rank for the truncation; If 0, the method
+			computes the optimal rank and uses it for truncation; if positive
+			number, the method uses the argument for the truncation; if -1, the
+			method does not compute truncation.
+
+		References:
+		- Gavish, Matan, and David L. Donoho, The optimal hard threshold for
+		singular values is, IEEE Transactions on Information Theory 60.8
+		(2014): 5040-5053.
+
 		"""
 		U, s, V = np.linalg.svd(X, full_matrices=False)
 		V = V.conj().T
 
 		if svd_rank is 0:
-			return U, s, V
-
-		rank = min(svd_rank, U.shape[1])
+			omega = lambda x: 0.56*x**3 - 0.95*x**2 + 1.82*x + 1.43
+			beta = np.divide(*sorted(X.shape))
+			tau = np.median(s) * omega(beta)
+			rank = np.sum(s > tau)
+		elif svd_rank > 0:
+			rank = min(svd_rank, U.shape[1])
+		else:
+			rank = X.shape[1]
 
 		U = U[:, :rank]
 		V = V[:, :rank]

@@ -32,7 +32,7 @@ noisy_data = create_noisy_data()
 
 class TestDmd(TestCase):
 	def test_shape(self):
-		dmd = DMD()
+		dmd = DMD(svd_rank=-1)
 		dmd.fit(X=sample_data)
 		assert dmd.modes.shape[1] == sample_data.shape[1] - 1
 
@@ -42,7 +42,7 @@ class TestDmd(TestCase):
 		assert dmd.modes.shape[1] == 3
 
 	def test_amplitudes_1(self):
-		dmd = DMD()
+		dmd = DMD(svd_rank=-1)
 		dmd.fit(X=sample_data)
 		assert dmd.amplitudes.shape == (14, 14)
 
@@ -52,12 +52,12 @@ class TestDmd(TestCase):
 		assert dmd.amplitudes.shape == (dmd.svd_rank, dmd.svd_rank)
 
 	def test_vander(self):
-		dmd = DMD(exact=True)
+		dmd = DMD(svd_rank=-1)
 		dmd.fit(X=sample_data)
 		assert dmd.vander.shape == (14, 15)
 
 	def test_eigs_1(self):
-		dmd = DMD()
+		dmd = DMD(svd_rank=-1)
 		dmd.fit(X=sample_data)
 		assert len(dmd.eigs) == 14
 
