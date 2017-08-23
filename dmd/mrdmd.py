@@ -1,0 +1,199 @@
+"""
+Derived module from dmdbase.py for multi-resolution dmd.
+"""
+import numpy as np
+import scipy.linalg
+
+from .dmdbase import DMDBase
+
+
+class MrDMD(DMDBase):
+	"""
+	Multi-resolution Dynamic Mode Decomposition
+
+	:param numpy.ndarray X: the input matrix with dimension `m`x`n`
+	:param int svd_rank: rank truncation in SVD. Default is 0, that means no
+		truncation.
+	:param int tlsq_rank: rank truncation computing Total Least Square. Default
+		is 0, that means no truncation.
+	:param bool exact: flag to compute either exact DMD or projected DMD.
+		Default is False.
+	"""
+
+	def __init__(
+		self, svd_rank=0, tlsq_rank=0, exact=False, max_cycles=1, max_level=6
+	):
+		super(MrDMD, self).__init__(svd_rank, tlsq_rank, exact)
+		self.max_cycles = max_cycles
+		self.max_level	= max_level
+
+		self._start_t = []
+		self._binsize = []
+
+	def _index_list(self, level, bin):
+		"""
+		"""
+		if level > self.max_level:
+			raise ValueError("Invalid level: greater than `max_level`")
+
+		if bin >= 2**level:
+			raise ValueError("Invalid bin")
+
+		return 2**level+bin-1
+			
+
+	@property
+	def reconstructed_data(self):
+		"""
+		numpy.ndarray: DMD reconstructed_data
+		"""
+		data = np.sum(
+			np.array([
+				self.partial_reconstructed_data(i) for i in range(self.max_level)
+			]),
+			axis=0
+		)
+		return data
+
+	@property
+	def modes(self):
+		"""
+		numpy.ndarray: the matrix that contains all the modes, stored by
+		column, starting from the slowest level to the fastest one. 
+		"""
+		return np.hstack(tuple(self._modes))
+
+	@property
+	def dynamics(self):
+		"""
+		numpy.ndarray: the matrix that contains the time evolution, starting
+		from the slowest level to the fastest one. .
+		"""
+		return np.vstack(tuple([
+			self.partial_dynamics(i) for i in range(self.max_level + 1)
+		]))
+
+	def partial_modes(self, level, bin=None):
+		"""
+		Return the modes at the specific `level` and at the specific `bin`; if
+		`bin` is not specified, the method returns all the modes of the given
+		`level`.
+		:param int level: the index of the level from where the modes are
+			extracted.
+		:param int bin: the index of the bin from where the modes are
+			extracted; if None, the modes are extracted from all the bins of
+			the given level. Default is None.
+		"""
+		if bin:
+			return self._modes[self._index_list(level, bin)]
+		
+		indeces = [self._index_list(level, i) for i in range(2**level)]
+		return np.hstack(tuple([self._modes[idx] for idx in indeces]))
+
+	def partial_dynamics(self, level, bin=None):
+		"""
+		Return the time evolution of the specific `level` and of the specific
+		`bin`; if `bin` is not specified, the method returns the time evolution
+		of the given `level`.
+		:param int level: the index of the level from where the time evolution
+			is extracted.
+		:param int bin: the index of the bin from where the time evolution is
+			extracted; if None, the time evolution is extracted from all the
+			bins of the given level. Default is None.
+		"""
+		if bin:
+			return self._dynamics[self._index_list(level, bin)]
+		
+		indeces = [self._index_list(level, i) for i in range(2**level)]
+		level_dynamics = [self._dynamics[idx] for idx in indeces]
+		return scipy.linalg.block_diag(*level_dynamics)
+
+	def partial_reconstructed_data(self, level, bin=None):
+		"""
+		"""
+		modes = self.partial_modes(level, bin)
+		dynamics = self.partial_dynamics(level, bin)
+
+		return modes.dot(dynamics)
+
+	def fit(self, X, Y=None):
+		"""
+		Compute the Dynamic Modes Decomposition to the input data.
+
+		:param iterable or numpy.ndarray X: the input snapshots.
+		:param itarable or numpy.ndarray Y: if specified, it provides the
+			snapshots at the next time step. Its dimension must be equal to X.
+			Default is None.
+		"""
+		self._fit_read_input(X, Y)
+		
+		# To avoid recursion function, use FIFO list to simulate the tree
+		# structure
+		data_queue = []
+		Xraw = np.append(self._X, self._Y[:, -1].reshape(-1, 1), axis=1)
+		data_queue.append(Xraw)
+
+		current_level = 1
+
+		self._modes    = []
+		self._dynamics = []
+
+		while data_queue:
+			Xraw = data_queue.pop(0)
+
+			n_samples = Xraw.shape[1]
+			nyq  = 8 * self.max_cycles
+			step = int(np.floor(n_samples / nyq))
+			rho  = float(self.max_cycles) / n_samples
+
+			Xsub = Xraw[:, ::step]
+			Xc = Xsub[:, :-1]
+			Yc = Xsub[:, 1:]
+
+			#X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
+
+			U, s, V = self._compute_svd(Xc, self.svd_rank)
+
+			#-------------------------------------------------------------------
+			# DMD Modes
+			#-------------------------------------------------------------------
+			Sinverse = np.diag(1. / s)
+			self._Atilde = np.transpose(U.conj()).dot(Yc).dot(V).dot(Sinverse)
+
+			if self.exact:
+				# exact DMD
+				self._basis = Yc.dot(V).dot(Sinverse)
+			else:
+				# projected DMD
+				self._basis = U
+
+			self._eigs, self._mode_coeffs = np.linalg.eig(self._Atilde)
+
+			slow_modes = (np.abs(np.log(self._eigs) / (2.*np.pi*step))) <= rho
+
+			modes = self._basis.dot(self._mode_coeffs)[:, slow_modes]
+			self._eigs = self._eigs[slow_modes]
+
+			#-------------------------------------------------------------------
+			# DMD Amplitudes and Dynamics
+			#-------------------------------------------------------------------
+			Vand = np.vander(np.power(self._eigs, 1./step), n_samples, True)
+			b = np.linalg.lstsq(modes, Xc[:, 0])[0]
+
+			Psi = (Vand.T * b).T
+
+			self._modes.append(modes)
+			self._dynamics.append(Psi)
+
+			Xdmd = modes.dot(Psi)
+
+			Xraw -= Xdmd.real
+
+			if current_level < 2**self.max_level:
+				current_level += 1
+				half = int(np.ceil(Xraw.shape[1] / 2))
+				data_queue.append(Xraw[:, :half])
+				data_queue.append(Xraw[:, half:])
+
+
+		return self
