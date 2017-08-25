@@ -1,5 +1,9 @@
 """
 Derived module from dmdbase.py for multi-resolution dmd.
+
+Reference:
+- Kutz, J. Nathan, Xing Fu, and Steven L. Brunton. Multiresolution Dynamic Mode
+Decomposition. SIAM Journal on Applied Dynamical Systems 15.2 (2016): 713-735.
 """
 import numpy as np
 import scipy.linalg
@@ -11,13 +15,15 @@ class MrDMD(DMDBase):
 	"""
 	Multi-resolution Dynamic Mode Decomposition
 
-	:param numpy.ndarray X: the input matrix with dimension `m`x`n`
 	:param int svd_rank: rank truncation in SVD. Default is 0, that means no
 		truncation.
 	:param int tlsq_rank: rank truncation computing Total Least Square. Default
 		is 0, that means no truncation.
 	:param bool exact: flag to compute either exact DMD or projected DMD.
 		Default is False.
+	:param int max_cycles: the maximum number of mode oscillations in any given
+		time scale. Default is 1.
+	:param int max_level: the maximum number of levels. Defualt is 6.
 	"""
 
 	def __init__(
@@ -25,22 +31,27 @@ class MrDMD(DMDBase):
 	):
 		super(MrDMD, self).__init__(svd_rank, tlsq_rank, exact)
 		self.max_cycles = max_cycles
-		self.max_level	= max_level
+		self.max_level = max_level
 
-		self._start_t = []
-		self._binsize = []
+		self._dynamics = None
 
-	def _index_list(self, level, bin):
+	def _index_list(self, level, node):
 		"""
+		Private method that return the right index element from a given level
+			and node.
+		:param int level: the level in the binary tree.
+		:param int node: the node id.
+		:rtype: int
+		:return: the index of the list that contains the binary tree.
 		"""
 		if level > self.max_level:
 			raise ValueError("Invalid level: greater than `max_level`")
 
-		if bin >= 2**level:
-			raise ValueError("Invalid bin")
+		if node >= 2**level:
+			raise ValueError("Invalid node")
 
-		return 2**level+bin-1
-			
+		return 2**level+node-1
+
 
 	@property
 	def reconstructed_data(self):
@@ -59,7 +70,7 @@ class MrDMD(DMDBase):
 	def modes(self):
 		"""
 		numpy.ndarray: the matrix that contains all the modes, stored by
-		column, starting from the slowest level to the fastest one. 
+		column, starting from the slowest level to the fastest one.
 		"""
 		return np.hstack(tuple(self._modes))
 
@@ -67,52 +78,61 @@ class MrDMD(DMDBase):
 	def dynamics(self):
 		"""
 		numpy.ndarray: the matrix that contains the time evolution, starting
-		from the slowest level to the fastest one. .
+		from the slowest level to the fastest one.
 		"""
 		return np.vstack(tuple([
 			self.partial_dynamics(i) for i in range(self.max_level + 1)
 		]))
 
-	def partial_modes(self, level, bin=None):
+	def partial_modes(self, level, node=None):
 		"""
-		Return the modes at the specific `level` and at the specific `bin`; if
-		`bin` is not specified, the method returns all the modes of the given
-		`level`.
+		Return the modes at the specific `level` and at the specific `node`; if
+		`node` is not specified, the method returns all the modes of the given
+		`level` (all the nodes).
 		:param int level: the index of the level from where the modes are
 			extracted.
-		:param int bin: the index of the bin from where the modes are
-			extracted; if None, the modes are extracted from all the bins of
+		:param int node: the index of the node from where the modes are
+			extracted; if None, the modes are extracted from all the nodes of
 			the given level. Default is None.
 		"""
-		if bin:
-			return self._modes[self._index_list(level, bin)]
-		
+		if node:
+			return self._modes[self._index_list(level, node)]
+
 		indeces = [self._index_list(level, i) for i in range(2**level)]
 		return np.hstack(tuple([self._modes[idx] for idx in indeces]))
 
-	def partial_dynamics(self, level, bin=None):
+	def partial_dynamics(self, level, node=None):
 		"""
 		Return the time evolution of the specific `level` and of the specific
-		`bin`; if `bin` is not specified, the method returns the time evolution
-		of the given `level`.
+		`node`; if `node` is not specified, the method returns the time evolution
+		of the given `level` (all the nodes).
 		:param int level: the index of the level from where the time evolution
 			is extracted.
-		:param int bin: the index of the bin from where the time evolution is
+		:param int node: the index of the node from where the time evolution is
 			extracted; if None, the time evolution is extracted from all the
-			bins of the given level. Default is None.
+			nodes of the given level. Default is None.
 		"""
-		if bin:
-			return self._dynamics[self._index_list(level, bin)]
-		
+		if node:
+			return self._dynamics[self._index_list(level, node)]
+
 		indeces = [self._index_list(level, i) for i in range(2**level)]
 		level_dynamics = [self._dynamics[idx] for idx in indeces]
 		return scipy.linalg.block_diag(*level_dynamics)
 
-	def partial_reconstructed_data(self, level, bin=None):
+	def partial_reconstructed_data(self, level, node=None):
 		"""
+		Return the reconstructed data computed using the modes and the time
+		evolution at the specific `level` and at the specific `node`; if `node`
+		is not specified, the method returns the reconstructed data
+		of the given `level` (all the nodes).
+		:param int level: the index of the level.
+		:param int node: the index of the node from where the time evolution is
+			extracted; if None, the time evolution is extracted from all the
+			nodes of the given level. Default is None.
+
 		"""
-		modes = self.partial_modes(level, bin)
-		dynamics = self.partial_dynamics(level, bin)
+		modes = self.partial_modes(level, node)
+		dynamics = self.partial_dynamics(level, node)
 
 		return modes.dot(dynamics)
 
@@ -126,7 +146,7 @@ class MrDMD(DMDBase):
 			Default is None.
 		"""
 		self._fit_read_input(X, Y)
-		
+
 		# To avoid recursion function, use FIFO list to simulate the tree
 		# structure
 		data_queue = []
@@ -135,22 +155,27 @@ class MrDMD(DMDBase):
 
 		current_level = 1
 
-		self._modes    = []
+		self._modes = []
 		self._dynamics = []
 
 		while data_queue:
 			Xraw = data_queue.pop(0)
 
 			n_samples = Xraw.shape[1]
-			nyq  = 8 * self.max_cycles
-			step = int(np.floor(n_samples / nyq))
-			rho  = float(self.max_cycles) / n_samples
+			# subsamples frequency to detect slow modes
+			nyq = 8 * self.max_cycles
 
+			# not enough snapshots
+			if n_samples < nyq:
+				continue
+
+			step = int(np.floor(n_samples / nyq))
+			step = 1
 			Xsub = Xraw[:, ::step]
 			Xc = Xsub[:, :-1]
 			Yc = Xsub[:, 1:]
 
-			#X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
+			Xc, Yc = self._compute_tlsq(Xc, Yc, self.tlsq_rank)
 
 			U, s, V = self._compute_svd(Xc, self.svd_rank)
 
@@ -169,8 +194,8 @@ class MrDMD(DMDBase):
 
 			self._eigs, self._mode_coeffs = np.linalg.eig(self._Atilde)
 
+			rho = float(self.max_cycles) / n_samples
 			slow_modes = (np.abs(np.log(self._eigs) / (2.*np.pi*step))) <= rho
-
 			modes = self._basis.dot(self._mode_coeffs)[:, slow_modes]
 			self._eigs = self._eigs[slow_modes]
 
@@ -194,6 +219,5 @@ class MrDMD(DMDBase):
 				half = int(np.ceil(Xraw.shape[1] / 2))
 				data_queue.append(Xraw[:, :half])
 				data_queue.append(Xraw[:, half:])
-
 
 		return self
