@@ -7,6 +7,7 @@ Decomposition. SIAM Journal on Applied Dynamical Systems 15.2 (2016): 713-735.
 """
 import numpy as np
 import scipy.linalg
+import matplotlib.pyplot as plt
 
 from .dmdbase import DMDBase
 
@@ -81,7 +82,7 @@ class MrDMD(DMDBase):
 		from the slowest level to the fastest one.
 		"""
 		return np.vstack(tuple([
-			self.partial_dynamics(i) for i in range(self.max_level + 1)
+			self.partial_dynamics(i) for i in range(self.max_level)
 		]))
 
 	def partial_modes(self, level, node=None):
@@ -155,6 +156,9 @@ class MrDMD(DMDBase):
 
 		current_level = 1
 
+		# Reset the lists
+		self._eigs = []
+		self._Atilde = []
 		self._modes = []
 		self._dynamics = []
 
@@ -165,59 +169,139 @@ class MrDMD(DMDBase):
 			# subsamples frequency to detect slow modes
 			nyq = 8 * self.max_cycles
 
-			# not enough snapshots
-			if n_samples < nyq:
-				continue
+			try:
+				step = int(np.floor(n_samples / nyq))
+				Xsub = Xraw[:, ::step]
+				Xc = Xsub[:, :-1]
+				Yc = Xsub[:, 1:]
 
-			step = int(np.floor(n_samples / nyq))
-			step = 1
-			Xsub = Xraw[:, ::step]
-			Xc = Xsub[:, :-1]
-			Yc = Xsub[:, 1:]
+				Xc, Yc = self._compute_tlsq(Xc, Yc, self.tlsq_rank)
 
-			Xc, Yc = self._compute_tlsq(Xc, Yc, self.tlsq_rank)
+				U, s, V = self._compute_svd(Xc, self.svd_rank)
 
-			U, s, V = self._compute_svd(Xc, self.svd_rank)
+				#---------------------------------------------------------------
+				# DMD Modes
+				#---------------------------------------------------------------
+				Sinverse = np.diag(1. / s)
+				Atilde = U.T.conj().dot(Yc).dot(V).dot(Sinverse)
 
-			#-------------------------------------------------------------------
-			# DMD Modes
-			#-------------------------------------------------------------------
-			Sinverse = np.diag(1. / s)
-			self._Atilde = np.transpose(U.conj()).dot(Yc).dot(V).dot(Sinverse)
+				# Exact or projected DMD
+				basis = Yc.dot(V).dot(Sinverse) if self.exact else U
 
-			if self.exact:
-				# exact DMD
-				self._basis = Yc.dot(V).dot(Sinverse)
-			else:
-				# projected DMD
-				self._basis = U
+				eigs, mode_coeffs = np.linalg.eig(Atilde)
 
-			self._eigs, self._mode_coeffs = np.linalg.eig(self._Atilde)
+				rho = float(self.max_cycles) / n_samples
+				slow_modes = (np.abs(np.log(eigs) / (2.*np.pi*step))) <= rho
+				modes = basis.dot(mode_coeffs)[:, slow_modes]
+				eigs = eigs[slow_modes]
 
-			rho = float(self.max_cycles) / n_samples
-			slow_modes = (np.abs(np.log(self._eigs) / (2.*np.pi*step))) <= rho
-			modes = self._basis.dot(self._mode_coeffs)[:, slow_modes]
-			self._eigs = self._eigs[slow_modes]
+				#---------------------------------------------------------------
+				# DMD Amplitudes and Dynamics
+				#---------------------------------------------------------------
+				Vand = np.vander(np.power(eigs, 1./step), n_samples, True)
+				b = np.linalg.lstsq(modes, Xc[:, 0])[0]
 
-			#-------------------------------------------------------------------
-			# DMD Amplitudes and Dynamics
-			#-------------------------------------------------------------------
-			Vand = np.vander(np.power(self._eigs, 1./step), n_samples, True)
-			b = np.linalg.lstsq(modes, Xc[:, 0])[0]
-
-			Psi = (Vand.T * b).T
-
+				Psi = (Vand.T * b).T
+			except:
+				modes = np.zeros((Xraw.shape[0], 1))
+				Psi = np.zeros((1, Xraw.shape[1]))
+				Atilde = np.zeros(0)
+				eigs = np.zeros(0)
+				
 			self._modes.append(modes)
 			self._dynamics.append(Psi)
+			self._Atilde.append(Atilde)
+			self._eigs.append(eigs)
 
-			Xdmd = modes.dot(Psi)
+			Xraw -= modes.dot(Psi)
 
-			Xraw -= Xdmd.real
-
-			if current_level < 2**self.max_level:
+			if current_level < 2**(self.max_level-1):
 				current_level += 1
 				half = int(np.ceil(Xraw.shape[1] / 2))
 				data_queue.append(Xraw[:, :half])
 				data_queue.append(Xraw[:, half:])
 
 		return self
+
+	def plot_eigs(self, show_axes=True, show_unit_circle=True):
+		"""
+		Plot the eigenvalues.
+
+		:param show_axes bool: if True, the axes will be showed in the plot.
+			Default is True.
+		:param show_axes bool: if True, the circle with unitary radius and
+			center in the origin will be showed. Default is True.
+		"""
+		if self._eigs is None:
+			raise ValueError(
+				'The eigenvalues have not been computed.'
+				'You have to perform the fit method.'
+			)
+
+		fig = plt.gcf()
+		ax = plt.gca()
+
+		cmap = plt.get_cmap('viridis')
+		colors = [cmap(i) for i in np.linspace(0, 1, self.max_level)]
+
+		points = []
+		for level in range(self.max_level):
+			indeces = [self._index_list(level, i) for i in range(2**level)]
+			eigs = np.concatenate([self._eigs[idx] for idx in indeces])
+
+			points.append(ax.plot(
+				eigs.real, eigs.imag, '.', color=colors[level])[0]
+			)
+
+		# set limits for axis
+		limit = np.max([np.max(np.ceil(np.absolute(e))) for e in self._eigs])
+		ax.set_xlim((-limit, limit))
+		ax.set_ylim((-limit, limit))
+
+		plt.ylabel('Imaginary part')
+		plt.xlabel('Real part')
+
+		if show_unit_circle:
+			unit_circle = plt.Circle(
+				(0., 0.),
+				1.,
+				color='green',
+				fill=False,
+				linestyle='--'
+			)
+			ax.add_artist(unit_circle)
+
+		# Dashed grid
+		gridlines = ax.get_xgridlines() + ax.get_ygridlines()
+		for line in gridlines:
+			line.set_linestyle('-.')
+		ax.grid(True)
+
+		ax.set_aspect('equal')
+
+		# x and y axes
+		if show_axes:
+			ax.annotate(
+				'',
+				xy=(np.max([limit * 0.8, 1.]), 0.),
+				xytext=(np.min([-limit * 0.8, -1.]), 0.),
+				arrowprops=dict(arrowstyle="->")
+			)
+			ax.annotate(
+				'',
+				xy=(0., np.max([limit * 0.8, 1.])),
+				xytext=(0., np.min([-limit * 0.8, -1.])),
+				arrowprops=dict(arrowstyle="->")
+			)
+
+		# legend
+		labels = [
+			'Eigenvalues - level {}'.format(i) for i in range(self.max_level)
+		]
+
+		if show_unit_circle:
+			points += [unit_circle]
+			labels += ['Unit circle']
+
+		ax.add_artist(plt.legend(points, labels, loc='best'))
+		plt.show()
