@@ -34,20 +34,10 @@ class TestFbDmd(TestCase):
 		dmd.fit(X=sample_data)
 		assert dmd.modes.shape[1] == 1
 
-	def test_amplitudes_1(self):
+	def test_dynamics(self):
 		dmd = FbDMD(svd_rank=-1)
 		dmd.fit(X=sample_data)
-		assert dmd.amplitudes.shape == (2, 2)
-
-	def test_amplitudes_2(self):
-		dmd = FbDMD(svd_rank=2)
-		dmd.fit(X=sample_data)
-		assert dmd.amplitudes.shape == (dmd.svd_rank, dmd.svd_rank)
-
-	def test_vander(self):
-		dmd = FbDMD(svd_rank=-1)
-		dmd.fit(X=sample_data)
-		assert dmd.vander.shape == (2, 100)
+		assert dmd.dynamics.shape == (2, 100)
 
 	def test_eigs_1(self):
 		dmd = FbDMD(svd_rank=-1)
