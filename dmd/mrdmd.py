@@ -34,8 +34,6 @@ class MrDMD(DMDBase):
 		self.max_cycles = max_cycles
 		self.max_level = max_level
 
-		self._dynamics = None
-
 	def _index_list(self, level, node):
 		"""
 		Private method that return the right index element from a given level
@@ -85,6 +83,14 @@ class MrDMD(DMDBase):
 			self.partial_dynamics(i) for i in range(self.max_level)
 		]))
 
+	@property
+	def eigs(self):
+		"""
+		numpy.ndarray: the array from the eigendecomposition of Atilde,
+		starting from the slowest level to the fastest one.
+		"""
+		return np.concatenate(self._eigs)
+
 	def partial_modes(self, level, node=None):
 		"""
 		Return the modes at the specific `level` and at the specific `node`; if
@@ -119,6 +125,23 @@ class MrDMD(DMDBase):
 		indeces = [self._index_list(level, i) for i in range(2**level)]
 		level_dynamics = [self._dynamics[idx] for idx in indeces]
 		return scipy.linalg.block_diag(*level_dynamics)
+
+	def partial_eigs(self, level, node=None):
+		"""
+		Return the eigenvalues of the specific `level` and of the specific
+		`node`; if `node` is not specified, the method returns the eigenvalues
+		of the given `level` (all the nodes).
+		:param int level: the index of the level from where the eigenvalues is
+			extracted.
+		:param int node: the index of the node from where the eigenvalues is
+			extracted; if None, the time evolution is extracted from all the
+			nodes of the given level. Default is None.
+		"""
+		if node:
+			return self._eigs[self._index_list(level, node)]
+
+		indeces = [self._index_list(level, i) for i in range(2**level)]
+		return np.concatenate([self._eigs[idx] for idx in indeces])
 
 	def partial_reconstructed_data(self, level, node=None):
 		"""
@@ -254,7 +277,7 @@ class MrDMD(DMDBase):
 			)
 
 		# set limits for axis
-		limit = np.max([np.max(np.ceil(np.absolute(e))) for e in self._eigs])
+		limit = np.max(np.ceil(np.absolute(self.eigs)))
 		ax.set_xlim((-limit, limit))
 		ax.set_ylim((-limit, limit))
 

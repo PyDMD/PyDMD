@@ -91,6 +91,34 @@ class TestMrDmd(TestCase):
 		pdynamics = dmd.partial_dynamics(level, 3)
 		assert pdynamics.shape == (rank, sample_data.shape[1]/2**level)
 
+	def test_eigs2(self):
+		max_level = 5
+		level = 2
+		rank = -1
+		dmd = MrDMD(svd_rank=rank, max_level=max_level, max_cycles=2)
+		dmd.fit(X=sample_data)
+		assert dmd.eigs.ndim == 1
+
+	def test_partial_eigs1(self):
+		max_level = 5
+		level = 2
+		rank = 2
+		dmd = MrDMD(svd_rank=rank, max_level=max_level, max_cycles=2)
+		dmd.fit(X=sample_data)
+		peigs = dmd.partial_eigs(level)
+		print(peigs)
+		assert peigs.shape == (rank * 2**level,)
+
+	def test_partial_eigs2(self):
+		max_level = 5
+		level = 2
+		rank = 2
+		dmd = MrDMD(svd_rank=rank, max_level=max_level, max_cycles=2)
+		dmd.fit(X=sample_data)
+		peigs = dmd.partial_eigs(level, 3)
+		print(peigs)
+		assert peigs.shape == (rank, )
+
 	def test_partial_reconstructed1(self):
 		max_level = 5
 		level = 2
