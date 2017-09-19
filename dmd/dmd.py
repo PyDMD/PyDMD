@@ -39,25 +39,18 @@ class DMD(DMDBase):
 		# DMD Modes
 		#-----------------------------------------------------------------------
 		Sinverse = np.diag(1. / s)
-		self._Atilde = np.transpose(U).dot(Y).dot(V).dot(Sinverse)
+		self._Atilde = U.T.conj().dot(Y).dot(V).dot(Sinverse)
 
-		if self.exact:
-			# exact DMD
-			self._basis = Y.dot(V).dot(Sinverse)
-		else:
-			# projected DMD
-			self._basis = U
+		basis = Y.dot(V).dot(Sinverse) if self.exact else U
 
-		self._eigs, self._mode_coeffs = np.linalg.eig(self._Atilde)
-
-		self._modes = self._basis.dot(self._mode_coeffs)
+		self._eigs, mode_coeffs = np.linalg.eig(self._Atilde)
+		self._modes = basis.dot(mode_coeffs)
 
 		#-----------------------------------------------------------------------
 		# DMD Amplitudes and Dynamics
 		#-----------------------------------------------------------------------
 		b = np.linalg.lstsq(self._modes, X[:, 0])[0]
-		self._amplitudes = np.diag(b)
-
-		self._vander = np.fliplr(np.vander(self._eigs, N=n_samples))
+		vander = np.fliplr(np.vander(self._eigs, N=n_samples))
+		self._dynamics = (vander.T * b).T
 
 		return self

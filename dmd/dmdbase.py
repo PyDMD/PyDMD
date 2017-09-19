@@ -25,13 +25,10 @@ class DMDBase(object):
 		self.tlsq_rank = tlsq_rank
 		self.exact = exact
 
-		self._basis = None	# spatial basis vectors
-		self._mode_coeffs = None
 		self._eigs = None
 		self._Atilde = None
 		self._modes = None	# Phi
-		self._amplitudes = None	 # B
-		self._vander = None	 # Vander
+		self._dynamics = None # Psi
 		self._X = None
 		self._Y = None
 		self._snapshots_shape = None
@@ -58,25 +55,19 @@ class DMDBase(object):
 		return self._eigs
 
 	@property
-	def amplitudes(self):
+	def dynamics(self):
 		"""
-		numpy.ndarray: DMD amplitudes
+		numpy.ndarray: the matrix that contains all the time evolution, stored
+		by row.
 		"""
-		return self._amplitudes
-
-	@property
-	def vander(self):
-		"""
-		numpy.ndarray: the Vandermonde matrix that cointains the system dynamic.
-		"""
-		return self._vander
+		return self._dynamics
 
 	@property
 	def reconstructed_data(self):
 		"""
 		numpy.ndarray: DMD reconstructed data.
 		"""
-		return self._modes.dot(self._amplitudes).dot(self._vander)
+		return self.modes.dot(self.dynamics)
 
 	def fit(self, X, Y=None):
 		"""

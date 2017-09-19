@@ -41,21 +41,6 @@ class TestDmd(TestCase):
 		dmd.fit(X=sample_data)
 		assert dmd.modes.shape[1] == 3
 
-	def test_amplitudes_1(self):
-		dmd = DMD(svd_rank=-1)
-		dmd.fit(X=sample_data)
-		assert dmd.amplitudes.shape == (14, 14)
-
-	def test_amplitudes_2(self):
-		dmd = DMD(svd_rank=3)
-		dmd.fit(X=sample_data)
-		assert dmd.amplitudes.shape == (dmd.svd_rank, dmd.svd_rank)
-
-	def test_vander(self):
-		dmd = DMD(svd_rank=-1)
-		dmd.fit(X=sample_data)
-		assert dmd.vander.shape == (14, 15)
-
 	def test_eigs_1(self):
 		dmd = DMD(svd_rank=-1)
 		dmd.fit(X=sample_data)
@@ -65,6 +50,11 @@ class TestDmd(TestCase):
 		dmd = DMD(svd_rank=5)
 		dmd.fit(X=sample_data)
 		assert len(dmd.eigs) == 5
+
+	def test_dynamics(self):
+		dmd = DMD(svd_rank=5)
+		dmd.fit(X=sample_data)
+		assert dmd.dynamics.shape == (5, sample_data.shape[1])
 
 	def test_reconstructed_data(self):
 		dmd = DMD()

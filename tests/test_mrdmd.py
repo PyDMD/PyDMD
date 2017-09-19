@@ -38,13 +38,13 @@ class TestMrDmd(TestCase):
 		level = 5
 		dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
 		dmd.fit(X=sample_data)
-		assert dmd.modes.shape == (sample_data.shape[0], 2**(level+1)-1)
+		assert dmd.modes.shape == (sample_data.shape[0], 2**level-1)
 
 	def test_shape_dynamics(self):
 		level = 5
 		dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
 		dmd.fit(X=sample_data)
-		assert dmd.dynamics.shape == (2**(level+1)-1, sample_data.shape[1])
+		assert dmd.dynamics.shape == (2**level-1, sample_data.shape[1])
 
 	def test_reconstructed_data(self):
 		dmd = MrDMD(svd_rank=0, max_level=6, max_cycles=2, exact=True)
