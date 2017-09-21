@@ -32,7 +32,7 @@ class FbDMD(DMDBase):
 		"""
 		self._fit_read_input(X, Y)
 		n_samples = X.shape[1]
-		
+
 		X, Y = self._compute_tlsq(self._X, self._Y, self.tlsq_rank)
 
 		# Singular Value Decomposition - Backward

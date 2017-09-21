@@ -29,7 +29,7 @@ class DMD(DMDBase):
 			Default is None.
 		"""
 		self._fit_read_input(X, Y)
-		n_samples = self._X.shape[1] +1
+		n_samples = self._X.shape[1] + 1
 
 		X, Y = self._compute_tlsq(self._X, self._Y, self.tlsq_rank)
 

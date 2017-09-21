@@ -81,7 +81,7 @@ class TestDmd(TestCase):
 	def test_plot_modes_2(self):
 		dmd = DMD()
 		dmd.fit(X=sample_data)
-		dmd.plot_modes_2D((1,2,5), x=np.arange(20), y=np.arange(20))
+		dmd.plot_modes_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
 
 	def test_plot_modes_2(self):
 		dmd = DMD()
@@ -98,7 +98,7 @@ class TestDmd(TestCase):
 	def test_plot_snapshots_2(self):
 		dmd = DMD()
 		dmd.fit(X=sample_data)
-		dmd.plot_snapshots_2D((1,2,5), x=np.arange(20), y=np.arange(20))
+		dmd.plot_snapshots_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
 
 	def test_plot_snapshots_2(self):
 		dmd = DMD()
