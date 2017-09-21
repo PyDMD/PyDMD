@@ -28,7 +28,7 @@ class DMDBase(object):
 		self._eigs = None
 		self._Atilde = None
 		self._modes = None	# Phi
-		self._dynamics = None # Psi
+		self._dynamics = None  # Psi
 		self._X = None
 		self._Y = None
 		self._snapshots_shape = None
@@ -104,18 +104,14 @@ class DMDBase(object):
 			return
 
 		self._snapshots_shape = X[0].shape
-		reshapedX = np.transpose(
-			[snapshot.reshape(-1,) for snapshot in X]
-		)
+		reshapedX = np.transpose([snapshot.reshape(-1, ) for snapshot in X])
 
 		if Y is None:
 			self._Y = reshapedX[:, 1:]
 			self._X = reshapedX[:, :-1]
 		else:
 			self._X = reshapedX
-			self._Y = np.transpose(
-				[snapshot.reshape(-1,) for snapshot in Y]
-			)
+			self._Y = np.transpose([snapshot.reshape(-1, ) for snapshot in Y])
 
 	@staticmethod
 	def _compute_tlsq(X, Y, tlsq_rank):
@@ -161,7 +157,7 @@ class DMDBase(object):
 		V = V.conj().T
 
 		if svd_rank is 0:
-			omega = lambda x: 0.56*x**3 - 0.95*x**2 + 1.82*x + 1.43
+			omega = lambda x: 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
 			beta = np.divide(*sorted(X.shape))
 			tau = np.median(s) * omega(beta)
 			rank = np.sum(s > tau)
@@ -176,7 +172,9 @@ class DMDBase(object):
 
 		return U, s, V
 
-	def plot_eigs(self, show_axes=True, show_unit_circle=True):
+	def plot_eigs(
+		self, show_axes=True, show_unit_circle=True, figsize=(8, 8), title=''
+	):
 		"""
 		Plot the eigenvalues.
 
@@ -191,6 +189,8 @@ class DMDBase(object):
 				'You have to perform the fit method.'
 			)
 
+		plt.figure(figsize=figsize)
+		plt.title(title)
 		fig = plt.gcf()
 		ax = plt.gca()
 
@@ -259,11 +259,23 @@ class DMDBase(object):
 		"""
 		Plot the DMD Modes.
 
-		:param x numpy.ndarray: domain abscissa
-		:param y numpy.ndarray: domain ordinate
 		:param index_mode int or sequence of int: the index of the modes to
 			plot. By default, all the modes are plotted.
 		:param filename str: filename
+		:param x numpy.ndarray: domain abscissa
+		:param y numpy.ndarray: domain ordinate
+		:param order str: {'C', 'F', 'A'}, default 'C'.
+			Read the elements of snapshots using this index order, and place
+			the elements into the reshaped array using this index order. It
+			has to be the same used to store the snapshot. 'C' means to read/
+			write the elements using C-like index order, with the last axis
+			index changing fastest, back to the first axis index changing slowest.
+			'F' means to read / write the elements using Fortran-like index order,
+			with the first index changing fastest, and the last index changing
+			slowest. Note that the 'C' and 'F' options take no account of the
+			memory layout of the underlying array, and only refer to the order
+			of indexing. 'A' means to read / write the elements in Fortran-like
+			index order if a is Fortran contiguous in memory, C-like order otherwise.
 		"""
 		if self._modes is None:
 			raise ValueError(
@@ -305,14 +317,13 @@ class DMDBase(object):
 			real_ax = fig.add_subplot(1, 2, 1)
 			imag_ax = fig.add_subplot(1, 2, 2)
 
-			mode = self._modes.T[idx].reshape(
-				xgrid.shape, order=order
-			)
+			mode = self._modes.T[idx].reshape(xgrid.shape, order=order)
 
 			real = real_ax.pcolor(
 				xgrid,
 				ygrid,
-				mode.real, cmap='jet',
+				mode.real,
+				cmap='jet',
 				vmin=mode.real.min(),
 				vmax=mode.real.max()
 			)
@@ -349,11 +360,23 @@ class DMDBase(object):
 		"""
 		Plot the snapshots.
 
+		:param snapshots int or sequence of int: the index of the modes to
+			plot. By default, all the modes are plotted.
+		:param filename str: filename
 		:param x numpy.ndarray: domain abscissa
 		:param y numpy.ndarray: domain ordinate
-		:param snapshots numpy.ndarray: the matrix that contains the snapshots
-			to plot, stored by column
-		:param filename str: filename
+		:param order str: {'C', 'F', 'A'}, default 'C'.
+			Read the elements of snapshots using this index order, and place
+			the elements into the reshaped array using this index order. It
+			has to be the same used to store the snapshot. 'C' means to read/
+			write the elements using C-like index order, with the last axis
+			index changing fastest, back to the first axis index changing slowest.
+			'F' means to read / write the elements using Fortran-like index order,
+			with the first index changing fastest, and the last index changing
+			slowest. Note that the 'C' and 'F' options take no account of the
+			memory layout of the underlying array, and only refer to the order
+			of indexing. 'A' means to read / write the elements in Fortran-like
+			index order if a is Fortran contiguous in memory, C-like order otherwise.
 		"""
 		if self._X is None and self._Y is None:
 			raise ValueError('Input snapshots not found.')
@@ -396,7 +419,11 @@ class DMDBase(object):
 			)
 
 			contour = plt.pcolor(
-				xgrid, ygrid, snapshot, vmin=snapshot.min(), vmax=snapshot.max()
+				xgrid,
+				ygrid,
+				snapshot,
+				vmin=snapshot.min(),
+				vmax=snapshot.max()
 			)
 
 			fig.colorbar(contour)

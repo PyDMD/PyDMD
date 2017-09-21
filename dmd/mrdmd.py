@@ -49,8 +49,7 @@ class MrDMD(DMDBase):
 		if node >= 2**level:
 			raise ValueError("Invalid node")
 
-		return 2**level+node-1
-
+		return 2**level + node - 1
 
 	@property
 	def reconstructed_data(self):
@@ -58,9 +57,12 @@ class MrDMD(DMDBase):
 		numpy.ndarray: DMD reconstructed_data
 		"""
 		data = np.sum(
-			np.array([
-				self.partial_reconstructed_data(i) for i in range(self.max_level)
-			]),
+			np.array(
+				[
+					self.partial_reconstructed_data(i)
+					for i in range(self.max_level)
+				]
+			),
 			axis=0
 		)
 		return data
@@ -79,9 +81,11 @@ class MrDMD(DMDBase):
 		numpy.ndarray: the matrix that contains the time evolution, starting
 		from the slowest level to the fastest one.
 		"""
-		return np.vstack(tuple([
-			self.partial_dynamics(i) for i in range(self.max_level)
-		]))
+		return np.vstack(
+			tuple([
+				self.partial_dynamics(i) for i in range(self.max_level)
+			])
+		)
 
 	@property
 	def eigs(self):
@@ -137,6 +141,12 @@ class MrDMD(DMDBase):
 			extracted; if None, the time evolution is extracted from all the
 			nodes of the given level. Default is None.
 		"""
+		if level >= self.max_level:
+			raise ValueError(
+				'The level input parameter ({}) has to be less then the max_level ({}). '
+				'Remember that the starting index is 0'.
+				format(level, self.max_level)
+			)
 		if node:
 			return self._eigs[self._index_list(level, node)]
 
@@ -155,6 +165,12 @@ class MrDMD(DMDBase):
 			nodes of the given level. Default is None.
 
 		"""
+		if level >= self.max_level:
+			raise ValueError(
+				'The level input parameter ({}) has to be less then the max_level ({}). '
+				'Remember that the starting index is 0'.
+				format(level, self.max_level)
+			)
 		modes = self.partial_modes(level, node)
 		dynamics = self.partial_dynamics(level, node)
 
@@ -214,14 +230,14 @@ class MrDMD(DMDBase):
 				eigs, mode_coeffs = np.linalg.eig(Atilde)
 
 				rho = float(self.max_cycles) / n_samples
-				slow_modes = (np.abs(np.log(eigs) / (2.*np.pi*step))) <= rho
+				slow_modes = (np.abs(np.log(eigs) / (2. * np.pi * step))) <= rho
 				modes = basis.dot(mode_coeffs)[:, slow_modes]
 				eigs = eigs[slow_modes]
 
 				#---------------------------------------------------------------
 				# DMD Amplitudes and Dynamics
 				#---------------------------------------------------------------
-				Vand = np.vander(np.power(eigs, 1./step), n_samples, True)
+				Vand = np.vander(np.power(eigs, 1. / step), n_samples, True)
 				b = np.linalg.lstsq(modes, Xc[:, 0])[0]
 
 				Psi = (Vand.T * b).T
@@ -230,7 +246,7 @@ class MrDMD(DMDBase):
 				Psi = np.zeros((1, Xraw.shape[1]))
 				Atilde = np.zeros(0)
 				eigs = np.zeros(0)
-				
+
 			self._modes.append(modes)
 			self._dynamics.append(Psi)
 			self._Atilde.append(Atilde)
@@ -238,7 +254,7 @@ class MrDMD(DMDBase):
 
 			Xraw -= modes.dot(Psi)
 
-			if current_level < 2**(self.max_level-1):
+			if current_level < 2**(self.max_level - 1):
 				current_level += 1
 				half = int(np.ceil(Xraw.shape[1] / 2))
 				data_queue.append(Xraw[:, :half])
@@ -246,7 +262,15 @@ class MrDMD(DMDBase):
 
 		return self
 
-	def plot_eigs(self, show_axes=True, show_unit_circle=True):
+	def plot_eigs(
+		self,
+		show_axes=True,
+		show_unit_circle=True,
+		figsize=(8, 8),
+		title='',
+		level=None,
+		node=None
+	):
 		"""
 		Plot the eigenvalues.
 
@@ -261,23 +285,40 @@ class MrDMD(DMDBase):
 				'You have to perform the fit method.'
 			)
 
+		if level:
+			peigs = self.partial_eigs(level=level, node=node)
+		else:
+			peigs = self.eigs
+
+		plt.figure(figsize=figsize)
+		plt.title(title)
 		fig = plt.gcf()
 		ax = plt.gca()
 
-		cmap = plt.get_cmap('viridis')
-		colors = [cmap(i) for i in np.linspace(0, 1, self.max_level)]
+		if not level:
+			cmap = plt.get_cmap('viridis')
+			colors = [cmap(i) for i in np.linspace(0, 1, self.max_level)]
 
-		points = []
-		for level in range(self.max_level):
-			indeces = [self._index_list(level, i) for i in range(2**level)]
-			eigs = np.concatenate([self._eigs[idx] for idx in indeces])
+			points = []
+			for lvl in range(self.max_level):
+				indeces = [self._index_list(lvl, i) for i in range(2**lvl)]
+				eigs = np.concatenate([self._eigs[idx] for idx in indeces])
 
-			points.append(ax.plot(
-				eigs.real, eigs.imag, '.', color=colors[level])[0]
+				points.append(
+					ax.plot(
+						eigs.real, eigs.imag, '.', color=colors[lvl]
+					)[0]
+				)
+		else:
+			points = []
+			points.append(
+				ax.plot(
+					peigs.real, peigs.imag, 'bo', label='Eigenvalues'
+				)[0]
 			)
 
 		# set limits for axis
-		limit = np.max(np.ceil(np.absolute(self.eigs)))
+		limit = np.max(np.ceil(np.absolute(peigs)))
 		ax.set_xlim((-limit, limit))
 		ax.set_ylim((-limit, limit))
 
@@ -286,11 +327,7 @@ class MrDMD(DMDBase):
 
 		if show_unit_circle:
 			unit_circle = plt.Circle(
-				(0., 0.),
-				1.,
-				color='green',
-				fill=False,
-				linestyle='--'
+				(0., 0.), 1., color='green', fill=False, linestyle='--'
 			)
 			ax.add_artist(unit_circle)
 
@@ -318,9 +355,13 @@ class MrDMD(DMDBase):
 			)
 
 		# legend
-		labels = [
-			'Eigenvalues - level {}'.format(i) for i in range(self.max_level)
-		]
+		if level:
+			labels = ['Eigenvalues - level {}'.format(level)]
+		else:
+			labels = [
+				'Eigenvalues - level {}'.format(i)
+				for i in range(self.max_level)
+			]
 
 		if show_unit_circle:
 			points += [unit_circle]
