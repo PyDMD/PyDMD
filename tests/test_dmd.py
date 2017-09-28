@@ -62,6 +62,21 @@ class TestDmd(TestCase):
 		dmd_data = dmd.reconstructed_data
 		assert np.allclose(dmd_data, sample_data)
 
+	def test_original_timesteps(self):
+		dmd = DMD()
+		dmd.fit(X=sample_data)
+		assert np.array_equal(
+			dmd.original_timesteps, np.arange(sample_data.shape[1])
+		)
+
+	def test_dmd_time(self):
+		dmd = DMD()
+		dmd.fit(X=sample_data)
+		dmd.dmd_time['t0'] = 10
+		dmd.dmd_time['tend'] = 14
+		expected_data = sample_data[:, -5:]
+		assert np.allclose(dmd.reconstructed_data, expected_data)
+
 	def test_plot_eigs_1(self):
 		dmd = DMD()
 		dmd.fit(X=sample_data)
@@ -79,11 +94,11 @@ class TestDmd(TestCase):
 			dmd.plot_modes_2D()
 
 	def test_plot_modes_2(self):
-		dmd = DMD()
+		dmd = DMD(svd_rank=-1)
 		dmd.fit(X=sample_data)
 		dmd.plot_modes_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
 
-	def test_plot_modes_2(self):
+	def test_plot_modes_3(self):
 		dmd = DMD()
 		snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
 		dmd.fit(X=snapshots)
@@ -96,11 +111,11 @@ class TestDmd(TestCase):
 			dmd.plot_snapshots_2D()
 
 	def test_plot_snapshots_2(self):
-		dmd = DMD()
+		dmd = DMD(svd_rank=-1)
 		dmd.fit(X=sample_data)
 		dmd.plot_snapshots_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
 
-	def test_plot_snapshots_2(self):
+	def test_plot_snapshots_3(self):
 		dmd = DMD()
 		snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
 		dmd.fit(X=snapshots)

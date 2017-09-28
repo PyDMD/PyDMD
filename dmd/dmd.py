@@ -49,8 +49,10 @@ class DMD(DMDBase):
 		#-----------------------------------------------------------------------
 		# DMD Amplitudes and Dynamics
 		#-----------------------------------------------------------------------
-		b = np.linalg.lstsq(self._modes, X[:, 0])[0]
-		vander = np.fliplr(np.vander(self._eigs, N=n_samples))
-		self._dynamics = (vander.T * b).T
+		self._b = np.linalg.lstsq(self._modes, X[:, 0])[0]
+
+		# Default timesteps
+		self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
+		self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
 
 		return self
