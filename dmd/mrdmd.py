@@ -82,9 +82,7 @@ class MrDMD(DMDBase):
 		from the slowest level to the fastest one.
 		"""
 		return np.vstack(
-			tuple([
-				self.partial_dynamics(i) for i in range(self.max_level)
-			])
+			tuple([self.partial_dynamics(i) for i in range(self.max_level)])
 		)
 
 	@property
@@ -123,11 +121,24 @@ class MrDMD(DMDBase):
 			extracted; if None, the time evolution is extracted from all the
 			nodes of the given level. Default is None.
 		"""
-		if node:
-			return self._dynamics[self._index_list(level, node)]
 
-		indeces = [self._index_list(level, i) for i in range(2**level)]
-		level_dynamics = [self._dynamics[idx] for idx in indeces]
+		def dynamic(eigs, amplitudes, step, nsamples):
+			omega = np.log(np.power(eigs, 1. / step)) / self.original_time['dt']
+			partial_timestep = np.arange(nsamples) * self.dmd_time['dt']
+			vander = np.exp(np.multiply(*np.meshgrid(omega, partial_timestep)))
+			return (vander * amplitudes).T
+
+		if node:
+			indeces = [self._index_list(level, node)]
+		else:
+			indeces = [self._index_list(level, i) for i in range(2**level)]
+
+		level_dynamics = [
+			dynamic(
+				self._eigs[idx], self._b[idx], self._steps[idx],
+				self._nsamples[idx]
+			) for idx in indeces
+		]
 		return scipy.linalg.block_diag(*level_dynamics)
 
 	def partial_eigs(self, level, node=None):
@@ -144,8 +155,9 @@ class MrDMD(DMDBase):
 		if level >= self.max_level:
 			raise ValueError(
 				'The level input parameter ({}) has to be less then the max_level ({}). '
-				'Remember that the starting index is 0'.
-				format(level, self.max_level)
+				'Remember that the starting index is 0'.format(
+					level, self.max_level
+				)
 			)
 		if node:
 			return self._eigs[self._index_list(level, node)]
@@ -168,8 +180,9 @@ class MrDMD(DMDBase):
 		if level >= self.max_level:
 			raise ValueError(
 				'The level input parameter ({}) has to be less then the max_level ({}). '
-				'Remember that the starting index is 0'.
-				format(level, self.max_level)
+				'Remember that the starting index is 0'.format(
+					level, self.max_level
+				)
 			)
 		modes = self.partial_modes(level, node)
 		dynamics = self.partial_dynamics(level, node)
@@ -199,7 +212,9 @@ class MrDMD(DMDBase):
 		self._eigs = []
 		self._Atilde = []
 		self._modes = []
-		self._dynamics = []
+		self._b = []
+		self._nsamples = []
+		self._steps = []
 
 		while data_queue:
 			Xraw = data_queue.pop(0)
@@ -246,11 +261,15 @@ class MrDMD(DMDBase):
 				Psi = np.zeros((1, Xraw.shape[1]))
 				Atilde = np.zeros(0)
 				eigs = np.zeros(0)
+				b = np.zeros(0)
+				step = 0
 
 			self._modes.append(modes)
-			self._dynamics.append(Psi)
+			self._b.append(b)
 			self._Atilde.append(Atilde)
 			self._eigs.append(eigs)
+			self._nsamples.append(n_samples)
+			self._steps.append(step)
 
 			Xraw -= modes.dot(Psi)
 
@@ -259,6 +278,9 @@ class MrDMD(DMDBase):
 				half = int(np.ceil(Xraw.shape[1] / 2))
 				data_queue.append(Xraw[:, :half])
 				data_queue.append(Xraw[:, half:])
+
+		self.dmd_time = {'t0': 0, 'tend': self._X.shape[1] + 1, 'dt': 1}
+		self.original_time = {'t0': 0, 'tend': self._X.shape[1] + 1, 'dt': 1}
 
 		return self
 
@@ -305,16 +327,12 @@ class MrDMD(DMDBase):
 				eigs = np.concatenate([self._eigs[idx] for idx in indeces])
 
 				points.append(
-					ax.plot(
-						eigs.real, eigs.imag, '.', color=colors[lvl]
-					)[0]
+					ax.plot(eigs.real, eigs.imag, '.', color=colors[lvl])[0]
 				)
 		else:
 			points = []
 			points.append(
-				ax.plot(
-					peigs.real, peigs.imag, 'bo', label='Eigenvalues'
-				)[0]
+				ax.plot(peigs.real, peigs.imag, 'bo', label='Eigenvalues')[0]
 			)
 
 		# set limits for axis

@@ -18,20 +18,51 @@ class DMDBase(object):
 		is 0, that means no truncation.
 	:param bool exact: flag to compute either exact DMD or projected DMD.
 		Default is False.
+	:param original_time: dictionary that contains information about the time
+		window where the system is sampled: `t0` is the time of the first input
+		snapshot, `tend` is the time of the last input snapshot and `dt` is the
+		delta time between the snapshots.
+	:param dmd_time: dictionary that contains information about the time
+		window where the system is reconstructed: `t0` is the time of the first
+		approximated solition, `tend` is the time of the last approximated
+		solution and `dt` is the delta time between the approximated solutions.
 	"""
 
 	def __init__(self, svd_rank=0, tlsq_rank=0, exact=False):
 		self.svd_rank = svd_rank
 		self.tlsq_rank = tlsq_rank
 		self.exact = exact
+		self.original_time = None
+		self.dmd_time = None
 
 		self._eigs = None
 		self._Atilde = None
 		self._modes = None	# Phi
-		self._dynamics = None  # Psi
+		self._b = None	# amplitudes
 		self._X = None
 		self._Y = None
 		self._snapshots_shape = None
+
+	@property
+	def dmd_timesteps(self):
+		"""
+		numpy.ndarray: the time intervals of the reconstructed system.
+		"""
+		return np.arange(
+			self.dmd_time['t0'], self.dmd_time['tend'] + self.dmd_time['dt'],
+			self.dmd_time['dt']
+		)
+
+	@property
+	def original_timesteps(self):
+		"""
+		numpy.ndarray: the time intervals of the original snapshots.
+		"""
+		return np.arange(
+			self.original_time['t0'],
+			self.original_time['tend'] + self.original_time['dt'],
+			self.original_time['dt']
+		)
 
 	@property
 	def modes(self):
@@ -60,7 +91,9 @@ class DMDBase(object):
 		numpy.ndarray: the matrix that contains all the time evolution, stored
 		by row.
 		"""
-		return self._dynamics
+		omega = np.log(self.eigs) / self.original_time['dt']
+		vander = np.exp(np.multiply(*np.meshgrid(omega, self.dmd_timesteps)))
+		return (vander * self._b).T
 
 	@property
 	def reconstructed_data(self):
@@ -104,14 +137,18 @@ class DMDBase(object):
 			return
 
 		self._snapshots_shape = X[0].shape
-		reshapedX = np.transpose([snapshot.reshape(-1, ) for snapshot in X])
+		reshapedX = np.transpose([snapshot.reshape(
+			-1,
+		) for snapshot in X])
 
 		if Y is None:
 			self._Y = reshapedX[:, 1:]
 			self._X = reshapedX[:, :-1]
 		else:
 			self._X = reshapedX
-			self._Y = np.transpose([snapshot.reshape(-1, ) for snapshot in Y])
+			self._Y = np.transpose([snapshot.reshape(
+				-1,
+			) for snapshot in Y])
 
 	@staticmethod
 	def _compute_tlsq(X, Y, tlsq_rank):
@@ -414,9 +451,7 @@ class DMDBase(object):
 			fig = plt.figure()
 			fig.suptitle('Snapshot {}'.format(idx))
 
-			snapshot = snapshots.T[idx].real.reshape(
-				self._snapshots_shape, order=order
-			)
+			snapshot = snapshots.T[idx].real.reshape(xgrid.shape, order=order)
 
 			contour = plt.pcolor(
 				xgrid,
