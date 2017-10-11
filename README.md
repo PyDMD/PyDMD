@@ -1,4 +1,4 @@
-# DMD [![Build Status](https://travis-ci.org/mathLab/DMD.svg?branch=master)](https://travis-ci.org/mathLab/DMD) [![Coverage Status](https://coveralls.io/repos/github/mathLab/DMD/badge.svg)](https://coveralls.io/github/mathLab/DMD) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/75f02cdeed684c25a273eaffb0d89880)](https://www.codacy.com/app/mathLab/DMD?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/DMD&amp;utm_campaign=Badge_Grade)
+# DMD [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE) [![Build Status](https://travis-ci.org/mathLab/DMD.svg?branch=master)](https://travis-ci.org/mathLab/DMD) [![Coverage Status](https://coveralls.io/repos/github/mathLab/DMD/badge.svg)](https://coveralls.io/github/mathLab/DMD) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/75f02cdeed684c25a273eaffb0d89880)](https://www.codacy.com/app/mathLab/DMD?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/DMD&amp;utm_campaign=Badge_Grade)
 
 Dynamic Mode Decomposition
 
