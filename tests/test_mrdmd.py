@@ -52,8 +52,6 @@ class TestMrDmd(TestCase):
 		dmd = MrDMD(svd_rank=0, max_level=6, max_cycles=2, exact=True)
 		dmd.fit(X=sample_data)
 		dmd_data = dmd.reconstructed_data
-		print(dmd_data.shape)
-		print(sample_data.shape)
 		norm_err = (
 			np.linalg.norm(sample_data - dmd_data) /
 			np.linalg.norm(sample_data)
