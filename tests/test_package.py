@@ -8,11 +8,11 @@ from os import path
 class TestPackage(TestCase):
 	def test_modules_name(self):
 		# it checks that __all__ includes all the .py files in dmd folder
-		import dmd
-		package = dmd
+		import pydmd
+		package = pydmd
 
 		f_aux = []
-		for (__, __, filenames) in walk('dmd'):
+		for (__, __, filenames) in walk('pydmd'):
 			f_aux.extend(filenames)
 
 		f = []
@@ -24,13 +24,13 @@ class TestPackage(TestCase):
 		assert (sorted(package.__all__) == sorted(f))
 
 	def test_import_dm_1(self):
-		import dmd as dm
+		import pydmd as dm
 		dmd = dm.dmd.DMDBase()
 
 	def test_import_dm_2(self):
-		import dmd as dm
+		import pydmd as dm
 		dmd = dm.dmd.DMD()
 
 	def test_import_dm_3(self):
-		import dmd as dm
+		import pydmd as dm
 		dmd = dm.fbdmd.FbDMD()

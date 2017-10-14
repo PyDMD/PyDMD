@@ -3,7 +3,7 @@ Derived module from dmdbase.py for forward/backward dmd.
 """
 import numpy as np
 from scipy.linalg import sqrtm
-from dmdbase import DMDBase
+from .dmdbase import DMDBase
 
 
 class FbDMD(DMDBase):
