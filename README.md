@@ -1,6 +1,6 @@
-# DMD [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE) [![Build Status](https://travis-ci.org/mathLab/DMD.svg?branch=master)](https://travis-ci.org/mathLab/DMD) [![Coverage Status](https://coveralls.io/repos/github/mathLab/DMD/badge.svg)](https://coveralls.io/github/mathLab/DMD) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/75f02cdeed684c25a273eaffb0d89880)](https://www.codacy.com/app/mathLab/DMD?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/DMD&amp;utm_campaign=Badge_Grade)
+# PyDMD [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE) [![Build Status](https://travis-ci.org/mathLab/PyDMD.svg?branch=master)](https://travis-ci.org/mathLab/PyDMD) [![Coverage Status](https://coveralls.io/repos/github/mathLab/PyDMD/badge.svg)](https://coveralls.io/github/mathLab/PyDMD) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/75f02cdeed684c25a273eaffb0d89880)](https://www.codacy.com/app/mathLab/PyDMD?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Grade)
 
-Dynamic Mode Decomposition
+Python Dynamic Mode Decomposition
 
 ## Description
 
@@ -9,7 +9,7 @@ Dynamic Mode Decomposition
 The official distribution is on GitHub, and you can clone the repository using
 
 ```bash
-> git clone https://github.com/mathLab/DMD
+> git clone https://github.com/mathLab/PyDMD
 ```
 
 To install the package just type:
@@ -27,13 +27,13 @@ To uninstall the package you have to rerun the installation and record the insta
 
 
 ## Authors and contributors
-**PyGeM** is currently developed and mantained at [SISSA mathLab](http://mathlab.sissa.it/) by
+**PyDMD** is currently developed and mantained at [SISSA mathLab](http://mathlab.sissa.it/) by
 * [Marco Tezzele](mailto:marcotez@gmail.com)
 * [Nicola Demo](mailto:demo.nicola@gmail.com)
 
 under the supervision of [Prof. Gianluigi Rozza](mailto:gianluigi.rozza@sissa.it).
 
-Contact us by email for further information or questions about **DMD**, or suggest pull requests. Contributions improving either the code or the documentation are welcome!
+Contact us by email for further information or questions about **PyDMD**, or suggest pull requests. Contributions improving either the code or the documentation are welcome!
 
 
 ## How to contribute
