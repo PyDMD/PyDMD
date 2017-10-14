@@ -1,5 +1,6 @@
 from unittest import TestCase
 from pydmd.fbdmd import FbDMD
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -74,8 +75,10 @@ class TestFbDmd(TestCase):
 		dmd = FbDMD(svd_rank=-1)
 		dmd.fit(X=sample_data)
 		dmd.plot_eigs(show_axes=True, show_unit_circle=True)
+		plt.close()
 
 	def test_plot_eigs_2(self):
 		dmd = FbDMD(svd_rank=-1)
 		dmd.fit(X=sample_data)
 		dmd.plot_eigs(show_axes=False, show_unit_circle=False)
+		plt.close()
