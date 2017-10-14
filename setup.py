@@ -7,9 +7,9 @@ def readme():
 	with open('README.md') as f:
 		return f.read()
 
-setup(name='dmd',
+setup(name='pydmd',
 	  version='0.0.2',
-	  description='Dynamic Mode Decomposition.',
+	  description='Python Dynamic Mode Decomposition.',
 	  long_description=readme(),
 	  classifiers=[
 	  	'Development Status :: 3 - Alpha',
@@ -19,11 +19,11 @@ setup(name='dmd',
 	  	'Topic :: Scientific/Engineering :: Mathematics'
 	  ],
 	  keywords='dynamic_mode_decomposition ',
-	  url='https://github.com/mathLab/DMD',
+	  url='https://github.com/mathLab/PyDMD',
 	  author='Marco Tezzele, Nicola Demo',
 	  author_email='marcotez@gmail.com, demo.nicola@gmail.com',
 	  license='MIT',
-	  packages=['dmd'],
+	  packages=['pydmd'],
 	  install_requires=[
 	  		'numpy',
 	  		'scipy',

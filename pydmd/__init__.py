@@ -1,5 +1,5 @@
 """
-DMD init
+PyDMD init
 """
 __all__ = ['dmdbase', 'dmd', 'fbdmd', 'mrdmd']
 

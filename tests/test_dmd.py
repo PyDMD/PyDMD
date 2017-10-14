@@ -1,5 +1,5 @@
 from unittest import TestCase
-from dmd import DMD
+from pydmd.dmd import DMD
 
 import numpy as np
 
