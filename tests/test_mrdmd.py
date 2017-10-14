@@ -1,6 +1,6 @@
 from unittest import TestCase
 from pydmd.mrdmd import MrDMD
-
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -171,23 +171,28 @@ class TestMrDmd(TestCase):
 			dmd.plot_eigs(
 				show_axes=True, show_unit_circle=True, figsize=(8, 8), level=7
 			)
+			plt.close()
 
 	def test_wrong_plot_eig2(self):
 		dmd = MrDMD(svd_rank=1, max_level=7, max_cycles=1)
 		with self.assertRaises(ValueError):
 			dmd.plot_eigs()
+			plt.close()
 
 	def test_plot_eig1(self):
 		dmd = MrDMD(svd_rank=-1, max_level=7, max_cycles=1)
 		dmd.fit(X=sample_data)
 		dmd.plot_eigs(show_axes=True, show_unit_circle=True, figsize=(8, 8))
+		plt.close()
 
 	def test_plot_eig2(self):
 		dmd = MrDMD(svd_rank=-1, max_level=7, max_cycles=1)
 		dmd.fit(X=sample_data)
 		dmd.plot_eigs(show_axes=True, show_unit_circle=False, title='Title')
+		plt.close()
 
 	def test_plot_eig3(self):
 		dmd = MrDMD(svd_rank=-1, max_level=7, max_cycles=1)
 		dmd.fit(X=sample_data)
 		dmd.plot_eigs(show_axes=False, show_unit_circle=False, level=1, node=0)
+		plt.close()
