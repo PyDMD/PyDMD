@@ -25,6 +25,7 @@ setup(name='pydmd',
 	  license='MIT',
 	  packages=['pydmd'],
 	  install_requires=[
+	  		'future',
 	  		'numpy',
 	  		'scipy',
 	  		'matplotlib',

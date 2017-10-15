@@ -10,9 +10,15 @@ matrix:
         - os: linux
           python: 2.7
           env: TOXENV=py27
+        - os: linux
+          python: 3.6
+          env: TOXENV=py36
         - os: osx
           language: generic
           env: TOXENV=py27
+        - os: osx
+          language: generic
+          env: TOXENV=py36
           
 before_script:
     - "export DISPLAY=:99.0"
@@ -24,14 +30,22 @@ before_script:
 before_install:
     # We do this conditionally because it saves us some downloading if the
     # version is the same.
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-        wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
-      else
+    - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+        wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+      fi
+    - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
         brew update;
         brew install python;
-        python --version;
-        wget https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh -O miniconda.sh;
+        if [[ "$TOXENV" == "py27" ]]; then
+            wget https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh -O miniconda.sh;
+        else
+            wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
+        fi
       fi
+    - python --version
     - chmod +x miniconda.sh
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$HOME/miniconda/lib:$PATH"
@@ -46,10 +60,14 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
         conda create --yes -n test python=$TRAVIS_PYTHON_VERSION;
       else
-        conda create --yes -n test python="2.7";
+        if [[ "$TOXENV" == "py27" ]]; then
+            conda create --yes -n test python="2.7";
+        else
+            conda create --yes -n test python="3.6";
+        fi
       fi
     - source activate test
-    - conda install --yes numpy scipy matplotlib vtk pip nose sip=4.18
+    - conda install --yes numpy scipy matplotlib pip nose sip=4.18
     - pip install setuptools
     - pip install enum34
     - pip install coveralls

@@ -1,6 +1,8 @@
 """
 Derived module from dmdbase.py for classic dmd.
 """
+from __future__ import division
+from past.utils import old_div
 import numpy as np
 
 from .dmdbase import DMDBase
@@ -38,7 +40,7 @@ class DMD(DMDBase):
 		#-----------------------------------------------------------------------
 		# DMD Modes
 		#-----------------------------------------------------------------------
-		Sinverse = np.diag(1. / s)
+		Sinverse = np.diag(old_div(1., s))
 		self._Atilde = U.T.conj().dot(Y).dot(V).dot(Sinverse)
 
 		basis = Y.dot(V).dot(Sinverse) if self.exact else U
