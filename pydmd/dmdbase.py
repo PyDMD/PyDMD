@@ -1,6 +1,10 @@
 """
 Base module for the DMD: `fit` method must be implemented in inherited classes
 """
+from __future__ import division
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -91,7 +95,7 @@ class DMDBase(object):
 		numpy.ndarray: the matrix that contains all the time evolution, stored
 		by row.
 		"""
-		omega = np.log(self.eigs) / self.original_time['dt']
+		omega = old_div(np.log(self.eigs), self.original_time['dt'])
 		vander = np.exp(np.multiply(*np.meshgrid(omega, self.dmd_timesteps)))
 		return (vander * self._b).T
 
@@ -340,7 +344,7 @@ class DMDBase(object):
 		xgrid, ygrid = np.meshgrid(x, y)
 
 		if index_mode is None:
-			index_mode = range(self._modes.shape[1])
+			index_mode = list(range(self._modes.shape[1]))
 		elif isinstance(index_mode, int):
 			index_mode = [index_mode]
 
@@ -440,7 +444,7 @@ class DMDBase(object):
 		snapshots = np.append(self._X, self._Y[:, -1].reshape(-1, 1), axis=1)
 
 		if index_snap is None:
-			index_snap = range(self._modes.shape[1])
+			index_snap = list(range(self._modes.shape[1]))
 		elif isinstance(index_snap, int):
 			index_snap = [index_snap]
 

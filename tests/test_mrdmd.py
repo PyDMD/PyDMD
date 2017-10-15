@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 from unittest import TestCase
 from pydmd.mrdmd import MrDMD
 import matplotlib.pyplot as plt
@@ -9,7 +11,7 @@ def create_data():
 	t = np.linspace(0, 20, 1600)
 	Xm, Tm = np.meshgrid(x, t)
 
-	D = np.exp(-np.power(Xm / 2, 2)) * np.exp(0.8j * Tm)
+	D = np.exp(-np.power(old_div(Xm, 2), 2)) * np.exp(0.8j * Tm)
 	D += np.sin(0.9 * Xm) * np.exp(1j * Tm)
 	D += np.cos(1.1 * Xm) * np.exp(2j * Tm)
 	D += 0.6 * np.sin(1.2 * Xm) * np.exp(3j * Tm)
@@ -20,8 +22,8 @@ def create_data():
 	D += 0.1 * np.cos(5.9 * Xm) * np.exp(12j * Tm)
 	D += 0.1 * np.random.randn(*Xm.shape)
 	D += 0.03 * np.random.randn(*Xm.shape)
-	D += 5 * np.exp(-np.power((Xm + 5) / 5, 2)
-					) * np.exp(-np.power((Tm - 5) / 5, 2))
+	D += 5 * np.exp(-np.power(old_div((Xm + 5), 5), 2)
+					) * np.exp(-np.power(old_div((Tm - 5), 5), 2))
 	D[:800, 40:] += 2
 	D[200:600, 50:70] -= 3
 	D[800:, :40] -= 2
@@ -53,8 +55,8 @@ class TestMrDmd(TestCase):
 		dmd.fit(X=sample_data)
 		dmd_data = dmd.reconstructed_data
 		norm_err = (
-			np.linalg.norm(sample_data - dmd_data) /
-			np.linalg.norm(sample_data)
+			old_div(np.linalg.norm(sample_data - dmd_data),
+			np.linalg.norm(sample_data))
 		)
 		assert norm_err < 1
 
@@ -92,7 +94,7 @@ class TestMrDmd(TestCase):
 		dmd = MrDMD(svd_rank=rank, max_level=max_level, max_cycles=2)
 		dmd.fit(X=sample_data)
 		pdynamics = dmd.partial_dynamics(level, 3)
-		assert pdynamics.shape == (rank, sample_data.shape[1] / 2**level)
+		assert pdynamics.shape == (rank, old_div(sample_data.shape[1], 2**level))
 
 	def test_eigs2(self):
 		max_level = 5
@@ -137,7 +139,7 @@ class TestMrDmd(TestCase):
 		dmd.fit(X=sample_data)
 		pdata = dmd.partial_reconstructed_data(level, 3)
 		assert pdata.shape == (
-			sample_data.shape[0], sample_data.shape[1] / 2**level
+			sample_data.shape[0], old_div(sample_data.shape[1], 2**level)
 		)
 
 	def test_wrong_partial_reconstructed(self):

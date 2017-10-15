@@ -1,3 +1,4 @@
+from builtins import range
 from unittest import TestCase
 from pydmd.dmd import DMD
 import matplotlib.pyplot as plt

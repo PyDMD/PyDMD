@@ -1,6 +1,8 @@
 """
 Derived module from dmdbase.py for forward/backward dmd.
 """
+from __future__ import division
+from past.utils import old_div
 import numpy as np
 from scipy.linalg import sqrtm
 from .dmdbase import DMDBase
@@ -39,14 +41,14 @@ class FbDMD(DMDBase):
 		U, s, V = self._compute_svd(Y, self.svd_rank)
 
 		# DMD Modes - Backward
-		Sinverse = np.diag(1. / s)
+		Sinverse = np.diag(old_div(1., s))
 		bAtilde = U.T.conj().dot(X).dot(V).dot(Sinverse)
 
 		# Singular Value Decomposition - Forward
 		U, s, V = self._compute_svd(X, self.svd_rank)
 
 		# DMD Modes - Forward
-		Sinverse = np.diag(1. / s)
+		Sinverse = np.diag(old_div(1., s))
 		fAtilde = U.T.conj().dot(Y).dot(V).dot(Sinverse)
 
 		# A tilde

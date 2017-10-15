@@ -5,6 +5,9 @@ Reference:
 - Kutz, J. Nathan, Xing Fu, and Steven L. Brunton. Multiresolution Dynamic Mode
 Decomposition. SIAM Journal on Applied Dynamical Systems 15.2 (2016): 713-735.
 """
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import numpy as np
 import scipy.linalg
 import matplotlib.pyplot as plt
@@ -123,7 +126,7 @@ class MrDMD(DMDBase):
 		"""
 
 		def dynamic(eigs, amplitudes, step, nsamples):
-			omega = np.log(np.power(eigs, 1. / step)) / self.original_time['dt']
+			omega = old_div(np.log(np.power(eigs, old_div(1., step))), self.original_time['dt'])
 			partial_timestep = np.arange(nsamples) * self.dmd_time['dt']
 			vander = np.exp(np.multiply(*np.meshgrid(omega, partial_timestep)))
 			return (vander * amplitudes).T
@@ -224,7 +227,7 @@ class MrDMD(DMDBase):
 			nyq = 8 * self.max_cycles
 
 			try:
-				step = int(np.floor(n_samples / nyq))
+				step = int(np.floor(old_div(n_samples, nyq)))
 				Xsub = Xraw[:, ::step]
 				Xc = Xsub[:, :-1]
 				Yc = Xsub[:, 1:]
@@ -236,7 +239,7 @@ class MrDMD(DMDBase):
 				#---------------------------------------------------------------
 				# DMD Modes
 				#---------------------------------------------------------------
-				Sinverse = np.diag(1. / s)
+				Sinverse = np.diag(old_div(1., s))
 				Atilde = U.T.conj().dot(Yc).dot(V).dot(Sinverse)
 
 				# Exact or projected DMD
@@ -244,15 +247,15 @@ class MrDMD(DMDBase):
 
 				eigs, mode_coeffs = np.linalg.eig(Atilde)
 
-				rho = float(self.max_cycles) / n_samples
-				slow_modes = (np.abs(np.log(eigs) / (2. * np.pi * step))) <= rho
+				rho = old_div(float(self.max_cycles), n_samples)
+				slow_modes = (np.abs(old_div(np.log(eigs), (2. * np.pi * step)))) <= rho
 				modes = basis.dot(mode_coeffs)[:, slow_modes]
 				eigs = eigs[slow_modes]
 
 				#---------------------------------------------------------------
 				# DMD Amplitudes and Dynamics
 				#---------------------------------------------------------------
-				Vand = np.vander(np.power(eigs, 1. / step), n_samples, True)
+				Vand = np.vander(np.power(eigs, old_div(1., step)), n_samples, True)
 				b = np.linalg.lstsq(modes, Xc[:, 0])[0]
 
 				Psi = (Vand.T * b).T
@@ -275,7 +278,7 @@ class MrDMD(DMDBase):
 
 			if current_level < 2**(self.max_level - 1):
 				current_level += 1
-				half = int(np.ceil(Xraw.shape[1] / 2))
+				half = int(np.ceil(old_div(Xraw.shape[1], 2)))
 				data_queue.append(Xraw[:, :half])
 				data_queue.append(Xraw[:, half:])
 
