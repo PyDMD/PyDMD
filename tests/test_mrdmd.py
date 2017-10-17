@@ -173,13 +173,11 @@ class TestMrDmd(TestCase):
 			dmd.plot_eigs(
 				show_axes=True, show_unit_circle=True, figsize=(8, 8), level=7
 			)
-			plt.close()
 
 	def test_wrong_plot_eig2(self):
 		dmd = MrDMD(svd_rank=1, max_level=7, max_cycles=1)
 		with self.assertRaises(ValueError):
 			dmd.plot_eigs()
-			plt.close()
 
 	def test_plot_eig1(self):
 		dmd = MrDMD(svd_rank=-1, max_level=7, max_cycles=1)
