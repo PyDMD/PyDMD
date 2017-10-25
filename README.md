@@ -1,6 +1,25 @@
-# PyDMD [![License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE) [![Build Status](https://travis-ci.org/mathLab/PyDMD.svg?branch=master)](https://travis-ci.org/mathLab/PyDMD) [![Coverage Status](https://coveralls.io/repos/github/mathLab/PyDMD/badge.svg)](https://coveralls.io/github/mathLab/PyDMD) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/75f02cdeed684c25a273eaffb0d89880)](https://www.codacy.com/app/mathLab/PyDMD?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Grade)
+<p align="center">
+  <a href="http://mathlab.github.io/PyDMD/" target="_blank" >
+    <img alt="Python Dynamic Mode Decomposition" src="readme/logo_PyDMD.png" width="200" />
+  </a>
+</p>
+<p align="center">
+    <a href="LICENSE.rst" target="_blank">
+        <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square">
+    </a>
+    <a href="https://travis-ci.org/mathLab/PyDMD" target="_blank">
+        <img alt="Build Status" src="https://travis-ci.org/mathLab/PyDMD.svg">
+    </a>
+    <a href="https://coveralls.io/github/mathLab/PyDMD" target="_blank">
+        <img alt="Coverage Status" src="https://coveralls.io/repos/github/mathLab/PyDMD/badge.svg">
+    </a>
+    <a href="https://www.codacy.com/app/mathLab/PyDMD?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Grade" target="_blank">
+        <img alt="Codacy Badge" src="https://api.codacy.com/project/badge/Grade/75f02cdeed684c25a273eaffb0d89880">
+    </a>
+</p>
 
-Python Dynamic Mode Decomposition
+
+**PyDMD**: Python Dynamic Mode Decomposition
 
 ## Description
 
