@@ -126,7 +126,10 @@ class MrDMD(DMDBase):
 		"""
 
 		def dynamic(eigs, amplitudes, step, nsamples):
-			omega = old_div(np.log(np.power(eigs, old_div(1., step))), self.original_time['dt'])
+			omega = old_div(
+				np.log(np.power(eigs, old_div(1., step))),
+				self.original_time['dt']
+			)
 			partial_timestep = np.arange(nsamples) * self.dmd_time['dt']
 			vander = np.exp(np.multiply(*np.meshgrid(omega, partial_timestep)))
 			return (vander * amplitudes).T
@@ -248,14 +251,18 @@ class MrDMD(DMDBase):
 				eigs, mode_coeffs = np.linalg.eig(Atilde)
 
 				rho = old_div(float(self.max_cycles), n_samples)
-				slow_modes = (np.abs(old_div(np.log(eigs), (2. * np.pi * step)))) <= rho
+				slow_modes = (
+					np.abs(old_div(np.log(eigs), (2. * np.pi * step)))
+				) <= rho
 				modes = basis.dot(mode_coeffs)[:, slow_modes]
 				eigs = eigs[slow_modes]
 
 				#---------------------------------------------------------------
 				# DMD Amplitudes and Dynamics
 				#---------------------------------------------------------------
-				Vand = np.vander(np.power(eigs, old_div(1., step)), n_samples, True)
+				Vand = np.vander(
+					np.power(eigs, old_div(1., step)), n_samples, True
+				)
 				b = np.linalg.lstsq(modes, Xc[:, 0])[0]
 
 				Psi = (Vand.T * b).T

@@ -55,8 +55,10 @@ class TestMrDmd(TestCase):
 		dmd.fit(X=sample_data)
 		dmd_data = dmd.reconstructed_data
 		norm_err = (
-			old_div(np.linalg.norm(sample_data - dmd_data),
-			np.linalg.norm(sample_data))
+			old_div(
+				np.linalg.norm(sample_data - dmd_data),
+				np.linalg.norm(sample_data)
+			)
 		)
 		assert norm_err < 1
 
@@ -94,7 +96,9 @@ class TestMrDmd(TestCase):
 		dmd = MrDMD(svd_rank=rank, max_level=max_level, max_cycles=2)
 		dmd.fit(X=sample_data)
 		pdynamics = dmd.partial_dynamics(level, 3)
-		assert pdynamics.shape == (rank, old_div(sample_data.shape[1], 2**level))
+		assert pdynamics.shape == (
+			rank, old_div(sample_data.shape[1], 2**level)
+		)
 
 	def test_eigs2(self):
 		max_level = 5
