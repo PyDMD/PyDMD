@@ -3,7 +3,7 @@
 #######################################
 
 required_command="yapf unexpand"
-code_directories="dmd tests"
+code_directories="pydmd tests"
 
 #######################################
 

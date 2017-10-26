@@ -141,18 +141,14 @@ class DMDBase(object):
 			return
 
 		self._snapshots_shape = X[0].shape
-		reshapedX = np.transpose([snapshot.reshape(
-			-1,
-		) for snapshot in X])
+		reshapedX = np.transpose([snapshot.reshape(-1, ) for snapshot in X])
 
 		if Y is None:
 			self._Y = reshapedX[:, 1:]
 			self._X = reshapedX[:, :-1]
 		else:
 			self._X = reshapedX
-			self._Y = np.transpose([snapshot.reshape(
-				-1,
-			) for snapshot in Y])
+			self._Y = np.transpose([snapshot.reshape(-1, ) for snapshot in Y])
 
 	@staticmethod
 	def _compute_tlsq(X, Y, tlsq_rank):

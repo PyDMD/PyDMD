@@ -51,8 +51,12 @@ class TestDmd(TestCase):
 	def test_Atilde_values(self):
 		dmd = DMD(svd_rank=2)
 		dmd.fit(X=sample_data)
-		exact_atilde = np.array([[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j], 
-			[0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]])
+		exact_atilde = np.array(
+			[
+				[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
+				[0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]
+			]
+		)
 		np.testing.assert_allclose(exact_atilde, dmd.atilde)
 
 	def test_fit_given_Y(self):
@@ -75,8 +79,12 @@ class TestDmd(TestCase):
 	def test_eigs_3(self):
 		dmd = DMD(svd_rank=2)
 		dmd.fit(X=sample_data)
-		expected_eigs = np.array([-8.09016994e-01 +5.87785252e-01j,
-						  -4.73868662e-01 +8.80595532e-01j])
+		expected_eigs = np.array(
+			[
+				-8.09016994e-01 + 5.87785252e-01j,
+				-4.73868662e-01 + 8.80595532e-01j
+			]
+		)
 		np.testing.assert_almost_equal(dmd.eigs, expected_eigs, decimal=6)
 
 	def test_dynamics_1(self):
@@ -87,14 +95,20 @@ class TestDmd(TestCase):
 	def test_dynamics_2(self):
 		dmd = DMD(svd_rank=1)
 		dmd.fit(X=sample_data)
-		expected_dynamics = np.array([[-2.20639502 -9.10168802e-16j,  1.55679980 -1.49626864e+00j,
-										-0.08375915 +2.11149018e+00j, -1.37280962 -1.54663768e+00j,
-										 2.01748787 +1.60312745e-01j, -1.53222592 +1.25504678e+00j,
-										 0.23000498 -1.92462280e+00j,  1.14289644 +1.51396355e+00j,
-										-1.83310653 -2.93174173e-01j,  1.49222925 -1.03626336e+00j,
-										-0.35015209 +1.74312867e+00j, -0.93504202 -1.46738182e+00j,
-										 1.65485808 +4.01263449e-01j, -1.43976061 +8.39117825e-01j,
-										 0.44682540 -1.56844403e+00j]])
+		expected_dynamics = np.array(
+			[
+				[
+					-2.20639502 - 9.10168802e-16j, 1.55679980 - 1.49626864e+00j,
+					-0.08375915 + 2.11149018e+00j,
+					-1.37280962 - 1.54663768e+00j, 2.01748787 + 1.60312745e-01j,
+					-1.53222592 + 1.25504678e+00j, 0.23000498 - 1.92462280e+00j,
+					1.14289644 + 1.51396355e+00j, -1.83310653 - 2.93174173e-01j,
+					1.49222925 - 1.03626336e+00j, -0.35015209 + 1.74312867e+00j,
+					-0.93504202 - 1.46738182e+00j, 1.65485808 + 4.01263449e-01j,
+					-1.43976061 + 8.39117825e-01j, 0.44682540 - 1.56844403e+00j
+				]
+			]
+		)
 		np.testing.assert_allclose(dmd.dynamics, expected_dynamics)
 
 	def test_reconstructed_data(self):
@@ -108,7 +122,6 @@ class TestDmd(TestCase):
 		dmd.fit(X=sample_data)
 		expected_dict = {'dt': 1, 't0': 0, 'tend': 14}
 		np.testing.assert_equal(dmd.original_time, expected_dict)
-
 
 	def test_original_timesteps(self):
 		dmd = DMD()
@@ -144,9 +157,13 @@ class TestDmd(TestCase):
 		dmd.fit(X=sample_data)
 		dmd.dmd_time['t0'] = 20
 		dmd.dmd_time['tend'] = 20
-		expected_data = np.array([[ -7.29383297e+00 -4.90248179e-14j],
-								  [ -5.69109796e+00 -2.74068833e+00j],
-								  [  3.38410649e-83 +3.75677740e-83j]])
+		expected_data = np.array(
+			[
+				[-7.29383297e+00 - 4.90248179e-14j],
+				[-5.69109796e+00 - 2.74068833e+00j],
+				[3.38410649e-83 + 3.75677740e-83j]
+			]
+		)
 		np.testing.assert_almost_equal(dmd.dynamics, expected_data, decimal=6)
 
 	def test_plot_eigs_1(self):
