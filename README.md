@@ -26,8 +26,22 @@
 **PyDMD**: Python Dynamic Mode Decomposition
 
 ## Description
+**PyDMD** is a Python package that uses **Dynamic Mode Decomposition** for a
+data-driven model simplification based on spatiotemporal coherent structures.
 
 ## Dependencies and installation
+**PyDMD** requires requires `numpy`, `scipy`, `matplotlib`, `sphinx` (for the
+		documentation). The code is compatible with Python 2.7 and Python 3.6.
+It can be installed using `pip` or directly from the source code.
+
+### Installing via PIP
+Mac and Linux users can install pre-built binary packages using pip. To install
+**PyDMD** using pip, just type:
+```bash
+> pip install pydmd
+```
+
+### Installing from source
 
 The official distribution is on GitHub, and you can clone the repository using
 
@@ -48,6 +62,16 @@ To uninstall the package you have to rerun the installation and record the insta
 > cat installed_files.txt | xargs rm -rf
 ```
 
+## Testing
+
+We are using Travis CI for continuous intergration testing. You can check out
+the current status [here](https://travis-ci.org/mathLab/PyDMD).
+
+To run tests locally:
+
+```bash
+> python test.py
+```
 
 ## Authors and contributors
 **PyDMD** is currently developed and mantained at [SISSA mathLab](http://mathlab.sissa.it/) by
