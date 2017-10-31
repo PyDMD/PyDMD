@@ -60,7 +60,10 @@ class DMDBase(object):
 	@property
 	def original_timesteps(self):
 		"""
-		numpy.ndarray: the time intervals of the original snapshots.
+		Get the timesteps of the original snapshot.
+
+		:return: the time intervals of the original snapshots.
+		:rtype: numpy.ndarray
 		"""
 		return np.arange(
 			self.original_time['t0'],
@@ -71,21 +74,30 @@ class DMDBase(object):
 	@property
 	def modes(self):
 		"""
-		numpy.ndarray: the matrix that contains the DMD modes, stored by column.
+		Get the matrix containing the DMD modes, stored by column.
+
+		:return: self._modes: the matrix containing the DMD modes.
+		:rtype: numpy.ndarray
 		"""
 		return self._modes
 
 	@property
 	def atilde(self):
 		"""
-		numpy.ndarray: the reduced Koopman operator A
+		Get the reduced Koopman operator A, called A tilde.
+
+		:return: self._Atilde: the reduced Koopman operator A.
+		:rtype: numpy.ndarray
 		"""
 		return self._Atilde
 
 	@property
 	def eigs(self):
 		"""
-		numpy.ndarray: the eigenvalues from the eigendecomposition of Atilde
+		Get the eigenvalues of A tilde.
+
+		:return: self._eigs: the eigenvalues from the eigendecomposition of `atilde`.
+		:rtype: numpy.ndarray
 		"""
 		return self._eigs
 
