@@ -50,7 +50,10 @@ class DMDBase(object):
 	@property
 	def dmd_timesteps(self):
 		"""
-		numpy.ndarray: the time intervals of the reconstructed system.
+		Get the timesteps of the reconstructed states.
+
+		:return: the time intervals of the original snapshots.
+		:rtype: numpy.ndarray
 		"""
 		return np.arange(
 			self.dmd_time['t0'], self.dmd_time['tend'] + self.dmd_time['dt'],
@@ -96,7 +99,8 @@ class DMDBase(object):
 		"""
 		Get the eigenvalues of A tilde.
 
-		:return: self._eigs: the eigenvalues from the eigendecomposition of `atilde`.
+		:return: self._eigs: the eigenvalues from the eigendecomposition of
+			`atilde`.
 		:rtype: numpy.ndarray
 		"""
 		return self._eigs
@@ -303,7 +307,13 @@ class DMDBase(object):
 		plt.show()
 
 	def plot_modes_2D(
-		self, index_mode=None, filename=None, x=None, y=None, order='C'
+		self,
+		index_mode=None,
+		filename=None,
+		x=None,
+		y=None,
+		order='C',
+		figsize=(8, 8)
 	):
 		"""
 		Plot the DMD Modes.
@@ -360,7 +370,7 @@ class DMDBase(object):
 			basename, ext = os.path.splitext(filename)
 
 		for idx in index_mode:
-			fig = plt.figure()
+			fig = plt.figure(figsize=figsize)
 			fig.suptitle('DMD Mode {}'.format(idx))
 
 			real_ax = fig.add_subplot(1, 2, 1)
@@ -404,13 +414,19 @@ class DMDBase(object):
 			plt.show()
 
 	def plot_snapshots_2D(
-		self, index_snap=None, filename=None, x=None, y=None, order='C'
+		self,
+		index_snap=None,
+		filename=None,
+		x=None,
+		y=None,
+		order='C',
+		figsize=(8, 8)
 	):
 		"""
 		Plot the snapshots.
 
-		:param snapshots int or sequence of int: the index of the modes to
-			plot. By default, all the modes are plotted.
+		:param snapshots int or sequence of int: the index of the snapshots to
+			plot. By default, all the snapshots are plotted.
 		:param filename str: filename
 		:param x numpy.ndarray: domain abscissa
 		:param y numpy.ndarray: domain ordinate
@@ -452,7 +468,7 @@ class DMDBase(object):
 		snapshots = np.append(self._X, self._Y[:, -1].reshape(-1, 1), axis=1)
 
 		if index_snap is None:
-			index_snap = list(range(self._modes.shape[1]))
+			index_snap = list(range(snapshots.shape[1]))
 		elif isinstance(index_snap, int):
 			index_snap = [index_snap]
 
@@ -460,7 +476,7 @@ class DMDBase(object):
 			basename, ext = os.path.splitext(filename)
 
 		for idx in index_snap:
-			fig = plt.figure()
+			fig = plt.figure(figsize=figsize)
 			fig.suptitle('Snapshot {}'.format(idx))
 
 			snapshot = snapshots.T[idx].real.reshape(xgrid.shape, order=order)
