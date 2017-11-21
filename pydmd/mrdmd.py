@@ -195,7 +195,7 @@ class MrDMD(DMDBase):
 
 		return modes.dot(dynamics)
 
-	def fit(self, X, Y=None):
+	def fit(self, X):
 		"""
 		Compute the Dynamic Modes Decomposition to the input data.
 
@@ -204,13 +204,16 @@ class MrDMD(DMDBase):
 			snapshots at the next time step. Its dimension must be equal to X.
 			Default is None.
 		"""
-		self._fit_read_input(X, Y)
+		self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+
+		n_samples = self._snapshots.shape[1]
+		X = self._snapshots[:, :-1]
+		Y = self._snapshots[:, 1:]
 
 		# To avoid recursion function, use FIFO list to simulate the tree
 		# structure
 		data_queue = []
-		Xraw = np.append(self._X, self._Y[:, -1].reshape(-1, 1), axis=1)
-		data_queue.append(Xraw)
+		data_queue.append(self._snapshots.copy())
 
 		current_level = 1
 
@@ -239,22 +242,17 @@ class MrDMD(DMDBase):
 
 				U, s, V = self._compute_svd(Xc, self.svd_rank)
 
-				#---------------------------------------------------------------
-				# DMD Modes
-				#---------------------------------------------------------------
-				Sinverse = np.diag(old_div(1., s))
-				Atilde = U.T.conj().dot(Yc).dot(V).dot(Sinverse)
+				Atilde = self._build_lowrank_op(U, s, V, Yc)
 
-				# Exact or projected DMD
-				basis = Yc.dot(V).dot(Sinverse) if self.exact else U
-
-				eigs, mode_coeffs = np.linalg.eig(Atilde)
-
+				eigs, modes = self._eig_from_lowrank_op(
+					Atilde, Yc, U, s, V, self.exact
+				)
 				rho = old_div(float(self.max_cycles), n_samples)
 				slow_modes = (
 					np.abs(old_div(np.log(eigs), (2. * np.pi * step)))
 				) <= rho
-				modes = basis.dot(mode_coeffs)[:, slow_modes]
+
+				modes = modes[:, slow_modes]
 				eigs = eigs[slow_modes]
 
 				#---------------------------------------------------------------
@@ -263,7 +261,7 @@ class MrDMD(DMDBase):
 				Vand = np.vander(
 					np.power(eigs, old_div(1., step)), n_samples, True
 				)
-				b = np.linalg.lstsq(modes, Xc[:, 0])[0]
+				b = self._compute_amplitudes(modes, Xc)
 
 				Psi = (Vand.T * b).T
 			except:
@@ -289,8 +287,8 @@ class MrDMD(DMDBase):
 				data_queue.append(Xraw[:, :half])
 				data_queue.append(Xraw[:, half:])
 
-		self.dmd_time = {'t0': 0, 'tend': self._X.shape[1] + 1, 'dt': 1}
-		self.original_time = {'t0': 0, 'tend': self._X.shape[1] + 1, 'dt': 1}
+		self.dmd_time = {'t0': 0, 'tend': self._snapshots.shape[1], 'dt': 1}
+		self.original_time = self.dmd_time.copy()
 
 		return self
 

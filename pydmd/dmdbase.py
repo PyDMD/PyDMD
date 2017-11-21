@@ -43,8 +43,7 @@ class DMDBase(object):
 		self._Atilde = None
 		self._modes = None	# Phi
 		self._b = None	# amplitudes
-		self._X = None
-		self._Y = None
+		self._snapshots = None
 		self._snapshots_shape = None
 
 	@property
@@ -122,6 +121,13 @@ class DMDBase(object):
 		"""
 		return self.modes.dot(self.dynamics)
 
+	@property
+	def snapshots(self):
+		"""
+		numpy.ndarray: DMD reconstructed data.
+		"""
+		return self._snapshots
+
 	def fit(self, X, Y=None):
 		"""
 		Abstract method to fit the snapshots matrices.
@@ -133,7 +139,8 @@ class DMDBase(object):
 			format(self.__class__.__name__)
 		)
 
-	def _fit_read_input(self, X, Y=None):
+	@staticmethod
+	def _col_major_2darray(X):
 		"""
 		Private method that takes as input the snapshots and stores them into a
 		2D matrix, by column. If the input data is already formatted as 2D
@@ -148,23 +155,16 @@ class DMDBase(object):
 
 		# If the data is already 2D ndarray
 		if isinstance(X, np.ndarray) and X.ndim == 2:
-			if Y is None:
-				self._X = X[:, :-1]
-				self._Y = X[:, 1:]
-			else:
-				self._X = X
-				self._Y = Y
-			return
+			return X, None
 
-		self._snapshots_shape = X[0].shape
-		reshapedX = np.transpose([snapshot.reshape(-1, ) for snapshot in X])
+		input_shapes = [np.asarray(x).shape for x in X]
+		
+		if len(set(input_shapes)) is not 1:
+			raise ValueError('Snapshots have not the same dimension.')
 
-		if Y is None:
-			self._Y = reshapedX[:, 1:]
-			self._X = reshapedX[:, :-1]
-		else:
-			self._X = reshapedX
-			self._Y = np.transpose([snapshot.reshape(-1, ) for snapshot in Y])
+		snapshots_shape = input_shapes[0]
+		snapshots = np.transpose([np.asarray(x).flatten() for x in X])
+		return snapshots, snapshots_shape
 
 	@staticmethod
 	def _compute_tlsq(X, Y, tlsq_rank):
@@ -224,6 +224,35 @@ class DMDBase(object):
 		s = s[:rank]
 
 		return U, s, V
+
+	@staticmethod
+	def _build_lowrank_op(U, s, V, Y):
+
+		return (U.T.conj().dot(Y).dot(V) * np.reciprocal(s))
+
+	@staticmethod
+	def _eig_from_lowrank_op(Atilde, Y, U, s, V, exact):
+
+		lowrank_eigenvalues, lowrank_eigenvectors = np.linalg.eig(Atilde)
+		
+		# Compute the eigenvectors of the high-dimensional operator
+		if exact:
+			eigenvectors = (
+				(Y.dot(V) * np.reciprocal(s)).dot(lowrank_eigenvectors)
+			)
+		else:
+			eigenvectors = U.dot(lowrank_eigenvectors)
+
+		# The eigenvalues are the same
+		eigenvalues = lowrank_eigenvalues
+
+		return eigenvalues, eigenvectors
+
+
+	@staticmethod
+	def _compute_amplitudes(modes, snapshots):
+
+		return np.linalg.lstsq(modes, snapshots.T[0])[0]
 
 	def plot_eigs(
 		self, show_axes=True, show_unit_circle=True, figsize=(8, 8), title=''
@@ -443,7 +472,7 @@ class DMDBase(object):
 			of indexing. 'A' means to read / write the elements in Fortran-like
 			index order if a is Fortran contiguous in memory, C-like order otherwise.
 		"""
-		if self._X is None and self._Y is None:
+		if self._snapshots is None:
 			raise ValueError('Input snapshots not found.')
 
 		if x is None and y is None:
@@ -465,10 +494,8 @@ class DMDBase(object):
 
 		xgrid, ygrid = np.meshgrid(x, y)
 
-		snapshots = np.append(self._X, self._Y[:, -1].reshape(-1, 1), axis=1)
-
 		if index_snap is None:
-			index_snap = list(range(snapshots.shape[1]))
+			index_snap = list(range(self._snapshots.shape[1]))
 		elif isinstance(index_snap, int):
 			index_snap = [index_snap]
 
@@ -479,7 +506,9 @@ class DMDBase(object):
 			fig = plt.figure(figsize=figsize)
 			fig.suptitle('Snapshot {}'.format(idx))
 
-			snapshot = snapshots.T[idx].real.reshape(xgrid.shape, order=order)
+			snapshot = (
+				self._snapshots.T[idx].real.reshape(xgrid.shape, order=order)
+			)
 
 			contour = plt.pcolor(
 				xgrid,

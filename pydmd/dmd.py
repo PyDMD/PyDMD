@@ -1,8 +1,6 @@
 """
 Derived module from dmdbase.py for classic dmd.
 """
-from __future__ import division
-from past.utils import old_div
 import numpy as np
 
 from .dmdbase import DMDBase
@@ -21,7 +19,7 @@ class DMD(DMDBase):
 		Default is False.
 	"""
 
-	def fit(self, X, Y=None):
+	def fit(self, X):
 		"""
 		Compute the Dynamic Modes Decomposition to the input data.
 
@@ -30,28 +28,24 @@ class DMD(DMDBase):
 			snapshots at the next time step. Its dimension must be equal to X.
 			Default is None.
 		"""
-		self._fit_read_input(X, Y)
-		n_samples = self._X.shape[1] + 1
+		self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
 
-		X, Y = self._compute_tlsq(self._X, self._Y, self.tlsq_rank)
+		n_samples = self._snapshots.shape[1]
+		X = self._snapshots[:, :-1]
+		Y = self._snapshots[:, 1:]
+
+		X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
 
 		U, s, V = self._compute_svd(X, self.svd_rank)
 
-		#-----------------------------------------------------------------------
-		# DMD Modes
-		#-----------------------------------------------------------------------
-		Sinverse = np.diag(old_div(1., s))
-		self._Atilde = U.T.conj().dot(Y).dot(V).dot(Sinverse)
 
-		basis = Y.dot(V).dot(Sinverse) if self.exact else U
+		self._Atilde = self._build_lowrank_op(U, s, V, Y)
 
-		self._eigs, mode_coeffs = np.linalg.eig(self._Atilde)
-		self._modes = basis.dot(mode_coeffs)
+		self._eigs, self._modes = self._eig_from_lowrank_op(
+			self._Atilde, Y, U, s, V, self.exact
+		)
 
-		#-----------------------------------------------------------------------
-		# DMD Amplitudes and Dynamics
-		#-----------------------------------------------------------------------
-		self._b = np.linalg.lstsq(self._modes, X[:, 0])[0]
+		self._b = self._compute_amplitudes(self._modes, self._snapshots)
 
 		# Default timesteps
 		self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}

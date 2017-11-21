@@ -59,13 +59,6 @@ class TestDmd(TestCase):
 		)
 		np.testing.assert_allclose(exact_atilde, dmd.atilde)
 
-	def test_fit_given_Y(self):
-		dmd = DMD(svd_rank=2)
-		X = np.copy(sample_data[:, :-1])
-		Y = np.copy(sample_data[:, 1:])
-		dmd.fit(X=X, Y=Y)
-		np.testing.assert_allclose(Y, dmd._Y)
-
 	def test_eigs_1(self):
 		dmd = DMD(svd_rank=-1)
 		dmd.fit(X=sample_data)
