@@ -38,7 +38,6 @@ class DMD(DMDBase):
 
 		U, s, V = self._compute_svd(X, self.svd_rank)
 
-
 		self._Atilde = self._build_lowrank_op(U, s, V, Y)
 
 		self._eigs, self._modes = self._eig_from_lowrank_op(
