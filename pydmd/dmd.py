@@ -1,8 +1,6 @@
 """
 Derived module from dmdbase.py for classic dmd.
 """
-import numpy as np
-
 from .dmdbase import DMDBase
 
 
@@ -10,9 +8,10 @@ class DMD(DMDBase):
 	"""
 	Dynamic Mode Decomposition
 
-	:param numpy.ndarray X: the input matrix with dimension `m`x`n`
-	:param int svd_rank: rank truncation in SVD. Default is 0, that means no
-		truncation.
+	:param int svd_rank: rank truncation in SVD. If 0, the method computes the
+		optimal rank and uses it for truncation; if positive number, the method
+		uses the argument for the truncation; if -1, the method does not
+		compute truncation.
 	:param int tlsq_rank: rank truncation computing Total Least Square. Default
 		is 0, that means no truncation.
 	:param bool exact: flag to compute either exact DMD or projected DMD.
@@ -23,10 +22,8 @@ class DMD(DMDBase):
 		"""
 		Compute the Dynamic Modes Decomposition to the input data.
 
-		:param iterable or numpy.ndarray X: the input snapshots.
-		:param itarable or numpy.ndarray Y: if specified, it provides the
-			snapshots at the next time step. Its dimension must be equal to X.
-			Default is None.
+		:param X: the input snapshots.
+		:type X: numpy.ndarray or iterable
 		"""
 		self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
 

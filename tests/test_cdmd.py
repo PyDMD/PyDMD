@@ -35,7 +35,6 @@ noisy_data = create_noisy_data()
 class TestCDmd(TestCase):
 	def test_shape(self):
 		dmd = CDMD(svd_rank=-1)
-		#dmd.fit(X=sample_data)
 		dmd.fit(X=[d for d in sample_data.T])
 		assert dmd.modes.shape[1] == sample_data.shape[1] - 1
 
@@ -48,17 +47,6 @@ class TestCDmd(TestCase):
 		dmd = CDMD(svd_rank=3)
 		dmd.fit(X=sample_data)
 		assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
-
-	def test_Atilde_values(self):
-		dmd = CDMD(svd_rank=2)
-		dmd.fit(X=sample_data)
-		exact_atilde = np.array(
-			[
-				[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
-				[0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]
-			]
-		)
-		np.testing.assert_allclose(exact_atilde, dmd.atilde)
 
 	def test_eigs_1(self):
 		dmd = CDMD(svd_rank=-1)
@@ -74,10 +62,7 @@ class TestCDmd(TestCase):
 		dmd = CDMD(svd_rank=2)
 		dmd.fit(X=sample_data)
 		expected_eigs = np.array(
-			[
-				-8.09016994e-01 + 5.87785252e-01j,
-				-4.73868662e-01 + 8.80595532e-01j
-			]
+			[-0.47386866 + 0.88059553j, -0.80901699 + 0.58778525j]
 		)
 		np.testing.assert_almost_equal(dmd.eigs, expected_eigs, decimal=6)
 

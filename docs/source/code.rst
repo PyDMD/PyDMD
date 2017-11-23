@@ -10,3 +10,4 @@ Code Documentation
    dmd
    mrdmd
    fbdmd
+   cdmd

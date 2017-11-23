@@ -22,14 +22,20 @@ class DMDBase(object):
 		is 0, that means no truncation.
 	:param bool exact: flag to compute either exact DMD or projected DMD.
 		Default is False.
-	:param original_time: dictionary that contains information about the time
-		window where the system is sampled: `t0` is the time of the first input
-		snapshot, `tend` is the time of the last input snapshot and `dt` is the
-		delta time between the snapshots.
-	:param dmd_time: dictionary that contains information about the time
-		window where the system is reconstructed: `t0` is the time of the first
-		approximated solition, `tend` is the time of the last approximated
-		solution and `dt` is the delta time between the approximated solutions.
+	:param dict original_time: dictionary that contains information about the time
+		window where the system is sampled:
+
+		- `t0` is the time of the first input snapshot;
+		- `tend` is the time of the last input snapshot;
+		- `dt` is the delta time between the snapshots.
+
+	:param dict dmd_time: dictionary that contains information about the time
+		window where the system is reconstructed:
+
+		- `t0` is the time of the first approximated solution;
+		- `tend` is the time of the last approximated solution;
+		- `dt` is the delta time between the approximated solutions.
+
 	"""
 
 	def __init__(self, svd_rank=0, tlsq_rank=0, exact=False):
@@ -78,7 +84,7 @@ class DMDBase(object):
 		"""
 		Get the matrix containing the DMD modes, stored by column.
 
-		:return: self._modes: the matrix containing the DMD modes.
+		:return: the matrix containing the DMD modes.
 		:rtype: numpy.ndarray
 		"""
 		return self._modes
@@ -88,7 +94,7 @@ class DMDBase(object):
 		"""
 		Get the reduced Koopman operator A, called A tilde.
 
-		:return: self._Atilde: the reduced Koopman operator A.
+		:return: the reduced Koopman operator A.
 		:rtype: numpy.ndarray
 		"""
 		return self._Atilde
@@ -98,8 +104,7 @@ class DMDBase(object):
 		"""
 		Get the eigenvalues of A tilde.
 
-		:return: self._eigs: the eigenvalues from the eigendecomposition of
-			`atilde`.
+		:return: the eigenvalues from the eigendecomposition of `atilde`.
 		:rtype: numpy.ndarray
 		"""
 		return self._eigs
@@ -107,8 +112,11 @@ class DMDBase(object):
 	@property
 	def dynamics(self):
 		"""
-		numpy.ndarray: the matrix that contains all the time evolution, stored
-		by row.
+		Get the time evolution of each mode.
+
+		:return: the matrix that contains all the time evolution, stored by
+			row.
+		:rtype: numpy.ndarray
 		"""
 		omega = old_div(np.log(self.eigs), self.original_time['dt'])
 		vander = np.exp(np.multiply(*np.meshgrid(omega, self.dmd_timesteps)))
@@ -117,26 +125,33 @@ class DMDBase(object):
 	@property
 	def reconstructed_data(self):
 		"""
-		numpy.ndarray: DMD reconstructed data.
+		Get the reconstructed data.
+
+		:return: the matrix that contains the reconstructed snapshots.
+		:rtype: numpy.ndarray
 		"""
 		return self.modes.dot(self.dynamics)
 
 	@property
 	def snapshots(self):
 		"""
-		numpy.ndarray: DMD reconstructed data.
+		Get the original input data.
+
+		:return: the matrix that contains the original snapshots.
+		:rtype: numpy.ndarray
 		"""
 		return self._snapshots
 
-	def fit(self, X, Y=None):
+	def fit(self, X):
 		"""
 		Abstract method to fit the snapshots matrices.
 
 		Not implemented, it has to be implemented in subclasses.
 		"""
 		raise NotImplementedError(
-			'Subclass must implement abstract method {}.fit'.
-			format(self.__class__.__name__)
+			'Subclass must implement abstract method {}.fit'.format(
+				self.__class__.__name__
+			)
 		)
 
 	@staticmethod
@@ -147,10 +162,11 @@ class DMDBase(object):
 		array, the method saves it, otherwise it also saves the original
 		snapshots shape and reshapes the snapshots.
 
-		:param iterable or numpy.ndarray X: the input snapshots.
-		:param itarable or numpy.ndarray Y: if specified, it provides the
-			snapshots at the next time step. Its dimension must be equal to X.
-			Default is None.
+		:param X: the input snapshots.
+		:type X: int or numpy.ndarray
+		:return: the 2D matrix that contains the flatten snapshots, the shape
+			of original snapshots.
+		:rtype: numpy.ndarray, tuple
 		"""
 
 		# If the data is already 2D ndarray
@@ -158,7 +174,7 @@ class DMDBase(object):
 			return X, None
 
 		input_shapes = [np.asarray(x).shape for x in X]
-		
+
 		if len(set(input_shapes)) is not 1:
 			raise ValueError('Snapshots have not the same dimension.')
 
@@ -169,11 +185,16 @@ class DMDBase(object):
 	@staticmethod
 	def _compute_tlsq(X, Y, tlsq_rank):
 		"""
-		Compute Total Least Square
+		Compute Total Least Square.
 
-		:param X numpy.ndarray: the first matrix;
-		:param X numpy.ndarray: the second matrix;
-		:param tlsq_rank int: the rank for the truncation;
+		:param numpy.ndarray X: the first matrix;
+		:param numpy.ndarray Y: the second matrix;
+		:param int tlsq_rank: the rank for the truncation; If 0, the method
+			computes the optimal rank and uses it for truncation; if positive
+			number, the method uses the argument for the truncation; if -1, the
+			method does not compute truncation.
+		:return: the denoised matrix X, the denoised matrix Y
+		:rtype: numpy.ndarray, numpy.ndarray
 
 		References:
 		https://arxiv.org/pdf/1703.11004.pdf
@@ -192,16 +213,19 @@ class DMDBase(object):
 	@staticmethod
 	def _compute_svd(X, svd_rank):
 		"""
-		Truncated Singular Value Decomposition
+		Truncated Singular Value Decomposition.
 
-		:param X numpy.ndarray: the matrix to decompose;
-		:param svd_rank int: the rank for the truncation; If 0, the method
+		:param numpy.ndarray X: the matrix to decompose.
+		:param int svd_rank: the rank for the truncation; If 0, the method
 			computes the optimal rank and uses it for truncation; if positive
 			number, the method uses the argument for the truncation; if -1, the
 			method does not compute truncation.
+		:return: the truncated left-singular vectors matrix, the truncated
+			singular values array, the truncated right-singular vectors matrix.
+		:rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
 
 		References:
-		- Gavish, Matan, and David L. Donoho, The optimal hard threshold for
+		Gavish, Matan, and David L. Donoho, The optimal hard threshold for
 		singular values is, IEEE Transactions on Information Theory 60.8
 		(2014): 5040-5053.
 
@@ -227,14 +251,48 @@ class DMDBase(object):
 
 	@staticmethod
 	def _build_lowrank_op(U, s, V, Y):
+		"""
+		Private method that computes the lowrank operator from the singular
+		value decomposition of matrix X and the matrix Y.
 
-		return (U.T.conj().dot(Y).dot(V) * np.reciprocal(s))
+		.. math::
+
+			\\mathbf{\\tilde{A}} =
+				\\mathbf{U}^* \\mathbf{Y} \\mathbf{X}^\\dagger \\mathbf{U} =
+				\\mathbf{U}^* \\mathbf{Y} \\mathbf{V} \\mathbf{S}^{-1}
+
+		:param numpy.ndarray U: 2D matrix that contains the left-singular
+			vectors of X, stored by column.
+		:param numpy.ndarray s: 1D array that contains the singular values of X.
+		:param numpy.ndarray V: 2D matrix that contains the right-singular
+			vectors of X, stored by row.
+		:param numpy.ndarray Y: input matrix Y.
+		:return: the lowrank operator
+		:rtype: numpy.ndarray
+		"""
+		return U.T.conj().dot(Y).dot(V) * np.reciprocal(s)
 
 	@staticmethod
 	def _eig_from_lowrank_op(Atilde, Y, U, s, V, exact):
+		"""
+		Private method that computes eigenvalues and eigenvectors of the
+		high-dimensional operator from the low-dimensional operator and the
+		input matrix.
 
+		:param numpy.ndarray Atilde: the lowrank operator.
+		:param numpy.ndarray Y: input matrix Y.
+		:param numpy.ndarray U: 2D matrix that contains the left-singular
+			vectors of X, stored by column.
+		:param numpy.ndarray s: 1D array that contains the singular values of X.
+		:param numpy.ndarray V: 2D matrix that contains the right-singular
+			vectors of X, stored by row.
+		:param bool exact: if True, the exact modes are computed; otherwise,
+			the projected ones are computed.
+		:return: eigenvalues, eigenvectors
+		:rtype: numpy.ndarray, numpy.ndarray
+		"""
 		lowrank_eigenvalues, lowrank_eigenvectors = np.linalg.eig(Atilde)
-		
+
 		# Compute the eigenvectors of the high-dimensional operator
 		if exact:
 			eigenvectors = (
@@ -248,10 +306,19 @@ class DMDBase(object):
 
 		return eigenvalues, eigenvectors
 
-
 	@staticmethod
 	def _compute_amplitudes(modes, snapshots):
+		"""
+		Compute the amplitudes by minimizing the error between the modes and
+		the first snapshot.
 
+		:param numpy.ndarray modes: 2D matrix that contains the modes, stored
+			by column.
+		:param numpy.ndarray snapshots: 2D matrix that contains the original
+			snapshots, stored by column.
+		:return: the amplitudes array
+		:rtype: numpy.ndarray
+		"""
 		return np.linalg.lstsq(modes, snapshots.T[0])[0]
 
 	def plot_eigs(
@@ -260,10 +327,12 @@ class DMDBase(object):
 		"""
 		Plot the eigenvalues.
 
-		:param show_axes bool: if True, the axes will be showed in the plot.
+		:param bool show_axes: if True, the axes will be showed in the plot.
 			Default is True.
-		:param show_axes bool: if True, the circle with unitary radius and
-			center in the origin will be showed. Default is True.
+		:param bool show_unit_circle: if True, the circle with unitary radius
+			and center in the origin will be showed. Default is True.
+		:param tuple(int,int) figsize: tuple in inches of the figure.
+		:param str title: title of the plot.
 		"""
 		if self._eigs is None:
 			raise ValueError(
@@ -347,23 +416,25 @@ class DMDBase(object):
 		"""
 		Plot the DMD Modes.
 
-		:param index_mode int or sequence of int: the index of the modes to
-			plot. By default, all the modes are plotted.
-		:param filename str: filename
-		:param x numpy.ndarray: domain abscissa
-		:param y numpy.ndarray: domain ordinate
-		:param order str: {'C', 'F', 'A'}, default 'C'.
-			Read the elements of snapshots using this index order, and place
-			the elements into the reshaped array using this index order. It
-			has to be the same used to store the snapshot. 'C' means to read/
-			write the elements using C-like index order, with the last axis
-			index changing fastest, back to the first axis index changing slowest.
-			'F' means to read / write the elements using Fortran-like index order,
-			with the first index changing fastest, and the last index changing
-			slowest. Note that the 'C' and 'F' options take no account of the
-			memory layout of the underlying array, and only refer to the order
-			of indexing. 'A' means to read / write the elements in Fortran-like
-			index order if a is Fortran contiguous in memory, C-like order otherwise.
+		:param index_mode: the index of the modes to plot. By default, all
+			the modes are plotted.
+		:type index_mode: int or sequence(int)
+		:param str filename: if specified, the plot is saved at `filename`.
+		:param numpy.ndarray x: domain abscissa.
+		:param numpy.ndarray y: domain ordinate
+		:param order: read the elements of snapshots using this index order,
+			and place the elements into the reshaped array using this index
+			order.  It has to be the same used to store the snapshot. 'C' means
+			to read/ write the elements using C-like index order, with the last
+			axis index changing fastest, back to the first axis index changing
+			slowest.  'F' means to read / write the elements using Fortran-like
+			index order, with the first index changing fastest, and the last
+			index changing slowest.  Note that the 'C' and 'F' options take no
+			account of the memory layout of the underlying array, and only
+			refer to the order of indexing.  'A' means to read / write the
+			elements in Fortran-like index order if a is Fortran contiguous in
+			memory, C-like order otherwise.
+		:type order: {'C', 'F', 'A'}, default 'C'
 		"""
 		if self._modes is None:
 			raise ValueError(
@@ -454,23 +525,25 @@ class DMDBase(object):
 		"""
 		Plot the snapshots.
 
-		:param snapshots int or sequence of int: the index of the snapshots to
-			plot. By default, all the snapshots are plotted.
-		:param filename str: filename
-		:param x numpy.ndarray: domain abscissa
-		:param y numpy.ndarray: domain ordinate
-		:param order str: {'C', 'F', 'A'}, default 'C'.
-			Read the elements of snapshots using this index order, and place
-			the elements into the reshaped array using this index order. It
-			has to be the same used to store the snapshot. 'C' means to read/
-			write the elements using C-like index order, with the last axis
-			index changing fastest, back to the first axis index changing slowest.
-			'F' means to read / write the elements using Fortran-like index order,
-			with the first index changing fastest, and the last index changing
-			slowest. Note that the 'C' and 'F' options take no account of the
-			memory layout of the underlying array, and only refer to the order
-			of indexing. 'A' means to read / write the elements in Fortran-like
-			index order if a is Fortran contiguous in memory, C-like order otherwise.
+		:param index_snap: the index of the snapshots to plot. By default, all
+			the snapshots are plotted.
+		:type index_snap: int or sequence(int)
+		:param str filename: if specified, the plot is saved at `filename`.
+		:param numpy.ndarray x: domain abscissa.
+		:param numpy.ndarray y: domain ordinate
+		:param order: read the elements of snapshots using this index order,
+			and place the elements into the reshaped array using this index
+			order.  It has to be the same used to store the snapshot. 'C' means
+			to read/ write the elements using C-like index order, with the last
+			axis index changing fastest, back to the first axis index changing
+			slowest.  'F' means to read / write the elements using Fortran-like
+			index order, with the first index changing fastest, and the last
+			index changing slowest.  Note that the 'C' and 'F' options take no
+			account of the memory layout of the underlying array, and only
+			refer to the order of indexing.  'A' means to read / write the
+			elements in Fortran-like index order if a is Fortran contiguous in
+			memory, C-like order otherwise.
+		:type order: {'C', 'F', 'A'}, default 'C'
 		"""
 		if self._snapshots is None:
 			raise ValueError('Input snapshots not found.')
