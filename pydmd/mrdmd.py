@@ -19,8 +19,10 @@ class MrDMD(DMDBase):
 	"""
 	Multi-resolution Dynamic Mode Decomposition
 
-	:param int svd_rank: rank truncation in SVD. Default is 0, that means no
-		truncation.
+	:param int svd_rank: rank truncation in SVD. If 0, the method computes the
+		optimal rank and uses it for truncation; if positive number, the method
+		uses the argument for the truncation; if -1, the method does not
+		compute truncation.
 	:param int tlsq_rank: rank truncation computing Total Least Square. Default
 		is 0, that means no truncation.
 	:param bool exact: flag to compute either exact DMD or projected DMD.
@@ -36,11 +38,14 @@ class MrDMD(DMDBase):
 		super(MrDMD, self).__init__(svd_rank, tlsq_rank, exact)
 		self.max_cycles = max_cycles
 		self.max_level = max_level
+		self._nsamples = None
+		self._steps = None
 
 	def _index_list(self, level, node):
 		"""
 		Private method that return the right index element from a given level
-			and node.
+		and node.
+
 		:param int level: the level in the binary tree.
 		:param int node: the node id.
 		:rtype: int
@@ -57,7 +62,10 @@ class MrDMD(DMDBase):
 	@property
 	def reconstructed_data(self):
 		"""
-		numpy.ndarray: DMD reconstructed_data
+		Get the reconstructed data.
+
+		:return: the matrix that contains the reconstructed snapshots.
+		:rtype: numpy.ndarray
 		"""
 		data = np.sum(
 			np.array(
@@ -73,16 +81,21 @@ class MrDMD(DMDBase):
 	@property
 	def modes(self):
 		"""
-		numpy.ndarray: the matrix that contains all the modes, stored by
-		column, starting from the slowest level to the fastest one.
+		Get the matrix containing the DMD modes, stored by column.
+
+		:return: the matrix containing the DMD modes.
+		:rtype: numpy.ndarray
 		"""
 		return np.hstack(tuple(self._modes))
 
 	@property
 	def dynamics(self):
 		"""
-		numpy.ndarray: the matrix that contains the time evolution, starting
-		from the slowest level to the fastest one.
+		Get the time evolution of each mode.
+
+		:return: the matrix that contains all the time evolution, stored by
+			row.
+		:rtype: numpy.ndarray
 		"""
 		return np.vstack(
 			tuple([self.partial_dynamics(i) for i in range(self.max_level)])
@@ -91,8 +104,10 @@ class MrDMD(DMDBase):
 	@property
 	def eigs(self):
 		"""
-		numpy.ndarray: the array from the eigendecomposition of Atilde,
-		starting from the slowest level to the fastest one.
+		Get the eigenvalues of A tilde.
+
+		:return: the eigenvalues from the eigendecomposition of `atilde`.
+		:rtype: numpy.ndarray
 		"""
 		return np.concatenate(self._eigs)
 
@@ -101,6 +116,7 @@ class MrDMD(DMDBase):
 		Return the modes at the specific `level` and at the specific `node`; if
 		`node` is not specified, the method returns all the modes of the given
 		`level` (all the nodes).
+
 		:param int level: the index of the level from where the modes are
 			extracted.
 		:param int node: the index of the node from where the modes are
@@ -118,6 +134,7 @@ class MrDMD(DMDBase):
 		Return the time evolution of the specific `level` and of the specific
 		`node`; if `node` is not specified, the method returns the time evolution
 		of the given `level` (all the nodes).
+
 		:param int level: the index of the level from where the time evolution
 			is extracted.
 		:param int node: the index of the node from where the time evolution is
@@ -152,6 +169,7 @@ class MrDMD(DMDBase):
 		Return the eigenvalues of the specific `level` and of the specific
 		`node`; if `node` is not specified, the method returns the eigenvalues
 		of the given `level` (all the nodes).
+
 		:param int level: the index of the level from where the eigenvalues is
 			extracted.
 		:param int node: the index of the node from where the eigenvalues is
@@ -177,6 +195,7 @@ class MrDMD(DMDBase):
 		evolution at the specific `level` and at the specific `node`; if `node`
 		is not specified, the method returns the reconstructed data
 		of the given `level` (all the nodes).
+
 		:param int level: the index of the level.
 		:param int node: the index of the node from where the time evolution is
 			extracted; if None, the time evolution is extracted from all the
@@ -195,22 +214,18 @@ class MrDMD(DMDBase):
 
 		return modes.dot(dynamics)
 
-	def fit(self, X, Y=None):
+	def fit(self, X):
 		"""
 		Compute the Dynamic Modes Decomposition to the input data.
 
-		:param iterable or numpy.ndarray X: the input snapshots.
-		:param itarable or numpy.ndarray Y: if specified, it provides the
-			snapshots at the next time step. Its dimension must be equal to X.
-			Default is None.
+		:param X: the input snapshots.
+		:type X: numpy.ndarray or iterable
 		"""
-		self._fit_read_input(X, Y)
+		self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
 
 		# To avoid recursion function, use FIFO list to simulate the tree
 		# structure
-		data_queue = []
-		Xraw = np.append(self._X, self._Y[:, -1].reshape(-1, 1), axis=1)
-		data_queue.append(Xraw)
+		data_queue = [self._snapshots.copy()]
 
 		current_level = 1
 
@@ -239,22 +254,17 @@ class MrDMD(DMDBase):
 
 				U, s, V = self._compute_svd(Xc, self.svd_rank)
 
-				#---------------------------------------------------------------
-				# DMD Modes
-				#---------------------------------------------------------------
-				Sinverse = np.diag(old_div(1., s))
-				Atilde = U.T.conj().dot(Yc).dot(V).dot(Sinverse)
+				Atilde = self._build_lowrank_op(U, s, V, Yc)
 
-				# Exact or projected DMD
-				basis = Yc.dot(V).dot(Sinverse) if self.exact else U
-
-				eigs, mode_coeffs = np.linalg.eig(Atilde)
-
+				eigs, modes = self._eig_from_lowrank_op(
+					Atilde, Yc, U, s, V, self.exact
+				)
 				rho = old_div(float(self.max_cycles), n_samples)
 				slow_modes = (
 					np.abs(old_div(np.log(eigs), (2. * np.pi * step)))
 				) <= rho
-				modes = basis.dot(mode_coeffs)[:, slow_modes]
+
+				modes = modes[:, slow_modes]
 				eigs = eigs[slow_modes]
 
 				#---------------------------------------------------------------
@@ -263,7 +273,7 @@ class MrDMD(DMDBase):
 				Vand = np.vander(
 					np.power(eigs, old_div(1., step)), n_samples, True
 				)
-				b = np.linalg.lstsq(modes, Xc[:, 0])[0]
+				b = self._compute_amplitudes(modes, Xc)
 
 				Psi = (Vand.T * b).T
 			except:
@@ -289,8 +299,8 @@ class MrDMD(DMDBase):
 				data_queue.append(Xraw[:, :half])
 				data_queue.append(Xraw[:, half:])
 
-		self.dmd_time = {'t0': 0, 'tend': self._X.shape[1] + 1, 'dt': 1}
-		self.original_time = {'t0': 0, 'tend': self._X.shape[1] + 1, 'dt': 1}
+		self.dmd_time = {'t0': 0, 'tend': self._snapshots.shape[1], 'dt': 1}
+		self.original_time = self.dmd_time.copy()
 
 		return self
 
@@ -306,10 +316,14 @@ class MrDMD(DMDBase):
 		"""
 		Plot the eigenvalues.
 
-		:param show_axes bool: if True, the axes will be showed in the plot.
+		:param bool show_axes: if True, the axes will be showed in the plot.
 			Default is True.
-		:param show_axes bool: if True, the circle with unitary radius and
-			center in the origin will be showed. Default is True.
+		:param bool show_unit_circle: if True, the circle with unitary radius
+			and center in the origin will be showed. Default is True.
+		:param tuple(int,int) figsize: tuple in inches of the figure.
+		:param str title: title of the plot.
+		:param int level: plot only the eigenvalues of specific level.
+		:param int node: plot only the eigenvalues of specific node.
 		"""
 		if self._eigs is None:
 			raise ValueError(

@@ -1,10 +1,6 @@
 """
 Derived module from dmdbase.py for classic dmd.
 """
-from __future__ import division
-from past.utils import old_div
-import numpy as np
-
 from .dmdbase import DMDBase
 
 
@@ -12,46 +8,40 @@ class DMD(DMDBase):
 	"""
 	Dynamic Mode Decomposition
 
-	:param numpy.ndarray X: the input matrix with dimension `m`x`n`
-	:param int svd_rank: rank truncation in SVD. Default is 0, that means no
-		truncation.
+	:param int svd_rank: rank truncation in SVD. If 0, the method computes the
+		optimal rank and uses it for truncation; if positive number, the method
+		uses the argument for the truncation; if -1, the method does not
+		compute truncation.
 	:param int tlsq_rank: rank truncation computing Total Least Square. Default
 		is 0, that means no truncation.
 	:param bool exact: flag to compute either exact DMD or projected DMD.
 		Default is False.
 	"""
 
-	def fit(self, X, Y=None):
+	def fit(self, X):
 		"""
 		Compute the Dynamic Modes Decomposition to the input data.
 
-		:param iterable or numpy.ndarray X: the input snapshots.
-		:param itarable or numpy.ndarray Y: if specified, it provides the
-			snapshots at the next time step. Its dimension must be equal to X.
-			Default is None.
+		:param X: the input snapshots.
+		:type X: numpy.ndarray or iterable
 		"""
-		self._fit_read_input(X, Y)
-		n_samples = self._X.shape[1] + 1
+		self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
 
-		X, Y = self._compute_tlsq(self._X, self._Y, self.tlsq_rank)
+		n_samples = self._snapshots.shape[1]
+		X = self._snapshots[:, :-1]
+		Y = self._snapshots[:, 1:]
+
+		X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
 
 		U, s, V = self._compute_svd(X, self.svd_rank)
 
-		#-----------------------------------------------------------------------
-		# DMD Modes
-		#-----------------------------------------------------------------------
-		Sinverse = np.diag(old_div(1., s))
-		self._Atilde = U.T.conj().dot(Y).dot(V).dot(Sinverse)
+		self._Atilde = self._build_lowrank_op(U, s, V, Y)
 
-		basis = Y.dot(V).dot(Sinverse) if self.exact else U
+		self._eigs, self._modes = self._eig_from_lowrank_op(
+			self._Atilde, Y, U, s, V, self.exact
+		)
 
-		self._eigs, mode_coeffs = np.linalg.eig(self._Atilde)
-		self._modes = basis.dot(mode_coeffs)
-
-		#-----------------------------------------------------------------------
-		# DMD Amplitudes and Dynamics
-		#-----------------------------------------------------------------------
-		self._b = np.linalg.lstsq(self._modes, X[:, 0])[0]
+		self._b = self._compute_amplitudes(self._modes, self._snapshots)
 
 		# Default timesteps
 		self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
