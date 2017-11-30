@@ -29,33 +29,38 @@
 **PyDMD** is a Python package that uses **Dynamic Mode Decomposition** for a
 data-driven model simplification based on spatiotemporal coherent structures.
 
+See the [**Examples**](#examples) section below and the [**Tutorials**](tutorials/README.md) to have an idea of the potential of this package.
+
+
 ## Dependencies and installation
 **PyDMD** requires requires `numpy`, `scipy`, `matplotlib`, `sphinx` (for the
 		documentation). The code is compatible with Python 2.7 and Python 3.6.
 It can be installed using `pip` or directly from the source code.
 
 ### Installing via PIP
-Mac and Linux users can install pre-built binary packages using pip. To install
-**PyDMD** using pip, just type:
+Mac and Linux users can install pre-built binary packages using pip.
+To install the package just type: 
 ```bash
 > pip install pydmd
 ```
+To uninstall the package:
+```bash
+> pip uninstall pydmd
+```
 
 ### Installing from source
-
 The official distribution is on GitHub, and you can clone the repository using
-
 ```bash
 > git clone https://github.com/mathLab/PyDMD
 ```
 
 To install the package just type:
-
 ```bash
 > python setup.py install
 ```
 
-To uninstall the package you have to rerun the installation and record the installed files in order to remove them:
+To uninstall the package you have to rerun the installation and record the
+installed files in order to remove them:
 
 ```bash
 > python setup.py install --record installed_files.txt
@@ -72,6 +77,20 @@ To run tests locally:
 ```bash
 > python test.py
 ```
+
+## Examples
+You can find useful tutorials on how to use the package in the [tutorials](tutorials/README.md) folder.
+
+Here we show a simple application (taken from [tutorial 2](tutorials/tutorial-2-adv-dmd.ipynb)): we collect few snapshots from a toy system with some noise and reconstruct the entire system evolution.
+<p align="center">
+<img src="readme/dmd-example.png" alt>
+<em>The original snapshots used as input for the dynamic mode decomposition</em>
+</p>
+
+<p align="center">
+<img src="readme/dmd-example.gif" alt></br>
+<em>The system evolution reconstructed with dynamic mode decomposition</em>
+</p>
 
 ## Authors and contributors
 **PyDMD** is currently developed and mantained at [SISSA mathLab](http://mathlab.sissa.it/) by
