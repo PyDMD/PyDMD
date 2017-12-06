@@ -11,5 +11,11 @@ Here we show a more complex application of the standard dynamic mode decompositi
 #### [Tutorial 3](tutorial-3-mrdmd.ipynb)
 Here we show the application of the multi-resolution dynamic mode decomposition on a system that contains transient time events.
 
+#### [Tutorial 4](tutorial-4-cdmd.ipynb)
+Here we show the application of the compressed dynamic mode decomposition in order to decrease the computational cost required by decomposition.
+
+#### [Tutorial 5](tutorial-5-fbdmd.ipynb)
+Here we show the forward-backward dynamic mode decomposition on a dataset coming from a fluid dynamics problem.
+
 #### More to come...
 We plan to add more tutorials but the time is often against us. If you want to contribute with a notebook on a feature not covered yet we will be very happy and give you support on editing!
