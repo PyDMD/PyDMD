@@ -56,22 +56,22 @@ class CDMD(DMDBase):
 		:return: the compressed snapshots.
 		:rtype: numpy.ndarray
 		"""
+
 		C_shape = (self._snapshots.shape[1], self._snapshots.shape[0])
-		sample_matrix = np.zeros(C_shape)
-		sample_matrix[np.arange(self._snapshots.shape[1]),
+
+		if self.compression_matrix is 'uniform':
+			C = np.random.uniform(0, 1, size=(C_shape))
+		elif self.compression_matrix is 'sparse':
+			C = scipy.sparse.random(*C_shape, density=1.)
+		elif self.compression_matrix is 'normal':
+			C = np.random.normal(0, 1, size=(C_shape))
+		elif self.compression_matrix is 'sample':
+			C = np.zeros(C_shape)
+			C[np.arange(self._snapshots.shape[1]),
 					  np.random.choice(*self._snapshots.shape, replace=False)
 					  ] = 1.
-
-		available_methods = {
-			'uniform': np.random.uniform(0, 1, size=(C_shape)),
-			'sparse': scipy.sparse.random(*C_shape, density=1.),
-			'normal': np.random.normal(0, 1, size=(C_shape)),
-			'sample': sample_matrix,
-		}
-
-		C = available_methods.get(
-			self.compression_matrix, self.compression_matrix
-		)
+		else:
+			C = self.compression_matrix
 
 		# compress the matrix
 		Y = C.dot(self._snapshots)
