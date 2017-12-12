@@ -34,7 +34,13 @@ class MrDMD(DMDBase):
 	"""
 
 	def __init__(
-		self, svd_rank=0, tlsq_rank=0, exact=False, opt=False, max_cycles=1, max_level=6
+		self,
+		svd_rank=0,
+		tlsq_rank=0,
+		exact=False,
+		opt=False,
+		max_cycles=1,
+		max_level=6
 	):
 		super(MrDMD, self).__init__(svd_rank, tlsq_rank, exact, opt)
 		self.max_cycles = max_cycles

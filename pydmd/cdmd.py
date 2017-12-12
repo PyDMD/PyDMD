@@ -46,7 +46,9 @@ class CDMD(DMDBase):
 	:param bool opt: flag to compute optimized DMD. Default is False.
 	"""
 
-	def __init__(self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform', opt=False):
+	def __init__(
+		self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform', opt=False
+	):
 		self.svd_rank = svd_rank
 		self.tlsq_rank = tlsq_rank
 		self.compression_matrix = compression_matrix
@@ -72,8 +74,7 @@ class CDMD(DMDBase):
 		elif self.compression_matrix is 'sample':
 			C = np.zeros(C_shape)
 			C[np.arange(self._snapshots.shape[1]),
-					  np.random.choice(*self._snapshots.shape, replace=False)
-					  ] = 1.
+			  np.random.choice(*self._snapshots.shape, replace=False)] = 1.
 		else:
 			C = self.compression_matrix
 
@@ -108,7 +109,9 @@ class CDMD(DMDBase):
 			self._Atilde, self._snapshots[:, 1:], U, s, V, True
 		)
 
-		self._b = self._compute_amplitudes(self._modes, self._snapshots, self._eigs, self.opt)
+		self._b = self._compute_amplitudes(
+			self._modes, self._snapshots, self._eigs, self.opt
+		)
 
 		# Default timesteps
 		self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}

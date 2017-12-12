@@ -62,7 +62,9 @@ class FbDMD(DMDBase):
 			self._Atilde, Y, Ux, sx, Vx, self.exact
 		)
 
-		self._b = self._compute_amplitudes(self._modes, self._snapshots, self._eigs, self.opt)
+		self._b = self._compute_amplitudes(
+			self._modes, self._snapshots, self._eigs, self.opt
+		)
 
 		self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
 		self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}

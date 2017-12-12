@@ -327,11 +327,14 @@ class DMDBase(object):
 		:rtype: numpy.ndarray
 		"""
 		if opt:
-			L = np.concatenate([
-				modes.dot(np.diag(eigs**i)) 
-				for i in range(snapshots.shape[1])
-			], axis=0)
-			b = np.reshape(snapshots, (-1,), order='F')
+			L = np.concatenate(
+				[
+					modes.dot(np.diag(eigs**i))
+					for i in range(snapshots.shape[1])
+				],
+				axis=0
+			)
+			b = np.reshape(snapshots, (-1, ), order='F')
 
 			a = np.linalg.lstsq(L, b)[0]
 		else:
@@ -442,14 +445,14 @@ class DMDBase(object):
 		:param numpy.ndarray y: domain ordinate
 		:param order: read the elements of snapshots using this index order,
 			and place the elements into the reshaped array using this index
-			order.  It has to be the same used to store the snapshot. 'C' means
+			order.	It has to be the same used to store the snapshot. 'C' means
 			to read/ write the elements using C-like index order, with the last
 			axis index changing fastest, back to the first axis index changing
 			slowest.  'F' means to read / write the elements using Fortran-like
 			index order, with the first index changing fastest, and the last
-			index changing slowest.  Note that the 'C' and 'F' options take no
+			index changing slowest.	 Note that the 'C' and 'F' options take no
 			account of the memory layout of the underlying array, and only
-			refer to the order of indexing.  'A' means to read / write the
+			refer to the order of indexing.	 'A' means to read / write the
 			elements in Fortran-like index order if a is Fortran contiguous in
 			memory, C-like order otherwise.
 		:type order: {'C', 'F', 'A'}, default 'C'
@@ -551,14 +554,14 @@ class DMDBase(object):
 		:param numpy.ndarray y: domain ordinate
 		:param order: read the elements of snapshots using this index order,
 			and place the elements into the reshaped array using this index
-			order.  It has to be the same used to store the snapshot. 'C' means
+			order.	It has to be the same used to store the snapshot. 'C' means
 			to read/ write the elements using C-like index order, with the last
 			axis index changing fastest, back to the first axis index changing
 			slowest.  'F' means to read / write the elements using Fortran-like
 			index order, with the first index changing fastest, and the last
-			index changing slowest.  Note that the 'C' and 'F' options take no
+			index changing slowest.	 Note that the 'C' and 'F' options take no
 			account of the memory layout of the underlying array, and only
-			refer to the order of indexing.  'A' means to read / write the
+			refer to the order of indexing.	 'A' means to read / write the
 			elements in Fortran-like index order if a is Fortran contiguous in
 			memory, C-like order otherwise.
 		:type order: {'C', 'F', 'A'}, default 'C'
