@@ -16,6 +16,7 @@ class DMD(DMDBase):
 		is 0, that means no truncation.
 	:param bool exact: flag to compute either exact DMD or projected DMD.
 		Default is False.
+	:param bool opt: flag to compute optimized DMD. Default is False.
 	"""
 
 	def fit(self, X):
@@ -41,7 +42,7 @@ class DMD(DMDBase):
 			self._Atilde, Y, U, s, V, self.exact
 		)
 
-		self._b = self._compute_amplitudes(self._modes, self._snapshots)
+		self._b = self._compute_amplitudes(self._modes, self._snapshots, self._eigs, self.opt)
 
 		# Default timesteps
 		self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}

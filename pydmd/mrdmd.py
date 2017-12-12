@@ -27,15 +27,16 @@ class MrDMD(DMDBase):
 		is 0, that means no truncation.
 	:param bool exact: flag to compute either exact DMD or projected DMD.
 		Default is False.
+	:param bool opt: flag to compute optimized DMD. Default is False.
 	:param int max_cycles: the maximum number of mode oscillations in any given
 		time scale. Default is 1.
 	:param int max_level: the maximum number of levels. Defualt is 6.
 	"""
 
 	def __init__(
-		self, svd_rank=0, tlsq_rank=0, exact=False, max_cycles=1, max_level=6
+		self, svd_rank=0, tlsq_rank=0, exact=False, opt=False, max_cycles=1, max_level=6
 	):
-		super(MrDMD, self).__init__(svd_rank, tlsq_rank, exact)
+		super(MrDMD, self).__init__(svd_rank, tlsq_rank, exact, opt)
 		self.max_cycles = max_cycles
 		self.max_level = max_level
 		self._nsamples = None
@@ -273,7 +274,7 @@ class MrDMD(DMDBase):
 				Vand = np.vander(
 					np.power(eigs, old_div(1., step)), n_samples, True
 				)
-				b = self._compute_amplitudes(modes, Xc)
+				b = self._compute_amplitudes(modes, Xc, eigs, self.opt)
 
 				Psi = (Vand.T * b).T
 			except:

@@ -21,6 +21,7 @@ class FbDMD(DMDBase):
 		is 0, that means no truncation.
 	:param bool exact: flag to compute either exact DMD or projected DMD.
 		Default is False.
+	:param bool opt: flag to compute optimized DMD. Default is False.
 
 	Reference: Dawson et al. https://arxiv.org/abs/1507.02264
 	"""
@@ -61,7 +62,7 @@ class FbDMD(DMDBase):
 			self._Atilde, Y, Ux, sx, Vx, self.exact
 		)
 
-		self._b = self._compute_amplitudes(self._modes, self._snapshots)
+		self._b = self._compute_amplitudes(self._modes, self._snapshots, self._eigs, self.opt)
 
 		self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
 		self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}

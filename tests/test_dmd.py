@@ -104,6 +104,25 @@ class TestDmd(TestCase):
 		)
 		np.testing.assert_allclose(dmd.dynamics, expected_dynamics)
 
+	def test_dynamics_opt_1(self):
+		dmd = DMD(svd_rank=5, opt=True)
+		dmd.fit(X=sample_data)
+		assert dmd.dynamics.shape == (5, sample_data.shape[1])
+
+	def test_dynamics_opt_2(self):
+		dmd = DMD(svd_rank=1, opt=True)
+		dmd.fit(X=sample_data)
+		print(dmd.dynamics)
+		expected_dynamics = np.array([[
+	-4.56004133-6.48054238j,  7.61228319+1.4801793j,  -6.37489962+4.11788355j,
+   	1.70548899-7.22866146j,  3.69875496+6.25701574j, -6.85298745-1.90654427j,
+   6.12829151-3.30212967j, -2.08469012+6.48584004j, -2.92745126-5.99004747j,
+   6.12772217+2.24123565j, -5.84352626+2.57413711j,  2.37745273-5.77906544j,
+   2.24158249+5.68989493j, -5.44023459-2.49457492j,  5.53024740-1.92916437j
+   		]]
+		)
+		np.testing.assert_allclose(dmd.dynamics, expected_dynamics)
+
 	def test_reconstructed_data(self):
 		dmd = DMD()
 		dmd.fit(X=sample_data)

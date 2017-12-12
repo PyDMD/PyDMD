@@ -43,12 +43,14 @@ class CDMD(DMDBase):
 		is '`uniform`'.
 	:type compression_matrix: {'linear', 'sparse', 'uniform', 'sample'} or
 		numpy.ndarray
+	:param bool opt: flag to compute optimized DMD. Default is False.
 	"""
 
-	def __init__(self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform'):
+	def __init__(self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform', opt=False):
 		self.svd_rank = svd_rank
 		self.tlsq_rank = tlsq_rank
 		self.compression_matrix = compression_matrix
+		self.opt = opt
 
 	def _compress_snapshots(self):
 		"""
@@ -106,7 +108,7 @@ class CDMD(DMDBase):
 			self._Atilde, self._snapshots[:, 1:], U, s, V, True
 		)
 
-		self._b = self._compute_amplitudes(self._modes, self._snapshots)
+		self._b = self._compute_amplitudes(self._modes, self._snapshots, self._eigs, self.opt)
 
 		# Default timesteps
 		self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
