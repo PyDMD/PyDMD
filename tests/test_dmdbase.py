@@ -35,6 +35,14 @@ class TestDmdBase(TestCase):
 		dmd = DMDBase(exact=True)
 		assert dmd.exact == True
 
+	def test_opt_default(self):
+		dmd = DMDBase()
+		assert dmd.opt == False
+
+	def test_opt(self):
+		dmd = DMDBase(opt=True)
+		assert dmd.opt == True
+
 	def test_fit(self):
 		dmd = DMDBase(exact=False)
 		with self.assertRaises(NotImplementedError):

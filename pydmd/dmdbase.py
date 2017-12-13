@@ -38,10 +38,11 @@ class DMDBase(object):
 
 	"""
 
-	def __init__(self, svd_rank=0, tlsq_rank=0, exact=False):
+	def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False):
 		self.svd_rank = svd_rank
 		self.tlsq_rank = tlsq_rank
 		self.exact = exact
+		self.opt = opt
 		self.original_time = None
 		self.dmd_time = None
 
@@ -307,19 +308,39 @@ class DMDBase(object):
 		return eigenvalues, eigenvectors
 
 	@staticmethod
-	def _compute_amplitudes(modes, snapshots):
+	def _compute_amplitudes(modes, snapshots, eigs, opt):
 		"""
-		Compute the amplitudes by minimizing the error between the modes and
-		the first snapshot.
+		Compute the amplitude coefficients. If `opt` is False the amplitudes
+		are computed by minimizing the error between the modes and the first
+		snapshot; if `opt` is True the amplitudes are computed by minimizing
+		the error between the modes and all the snapshots, at the expense of
+		bigger computational cost.
 
 		:param numpy.ndarray modes: 2D matrix that contains the modes, stored
 			by column.
 		:param numpy.ndarray snapshots: 2D matrix that contains the original
 			snapshots, stored by column.
+		:param numpy.ndarray eigs: array that contains the eigenvalues of the
+			linear operator.
+		:param bool opt: flag for optimized dmd.
 		:return: the amplitudes array
 		:rtype: numpy.ndarray
 		"""
-		return np.linalg.lstsq(modes, snapshots.T[0])[0]
+		if opt:
+			L = np.concatenate(
+				[
+					modes.dot(np.diag(eigs**i))
+					for i in range(snapshots.shape[1])
+				],
+				axis=0
+			)
+			b = np.reshape(snapshots, (-1, ), order='F')
+
+			a = np.linalg.lstsq(L, b)[0]
+		else:
+			a = np.linalg.lstsq(modes, snapshots.T[0])[0]
+
+		return a
 
 	def plot_eigs(
 		self, show_axes=True, show_unit_circle=True, figsize=(8, 8), title=''
@@ -424,14 +445,14 @@ class DMDBase(object):
 		:param numpy.ndarray y: domain ordinate
 		:param order: read the elements of snapshots using this index order,
 			and place the elements into the reshaped array using this index
-			order.  It has to be the same used to store the snapshot. 'C' means
+			order.	It has to be the same used to store the snapshot. 'C' means
 			to read/ write the elements using C-like index order, with the last
 			axis index changing fastest, back to the first axis index changing
 			slowest.  'F' means to read / write the elements using Fortran-like
 			index order, with the first index changing fastest, and the last
-			index changing slowest.  Note that the 'C' and 'F' options take no
+			index changing slowest.	 Note that the 'C' and 'F' options take no
 			account of the memory layout of the underlying array, and only
-			refer to the order of indexing.  'A' means to read / write the
+			refer to the order of indexing.	 'A' means to read / write the
 			elements in Fortran-like index order if a is Fortran contiguous in
 			memory, C-like order otherwise.
 		:type order: {'C', 'F', 'A'}, default 'C'
@@ -533,14 +554,14 @@ class DMDBase(object):
 		:param numpy.ndarray y: domain ordinate
 		:param order: read the elements of snapshots using this index order,
 			and place the elements into the reshaped array using this index
-			order.  It has to be the same used to store the snapshot. 'C' means
+			order.	It has to be the same used to store the snapshot. 'C' means
 			to read/ write the elements using C-like index order, with the last
 			axis index changing fastest, back to the first axis index changing
 			slowest.  'F' means to read / write the elements using Fortran-like
 			index order, with the first index changing fastest, and the last
-			index changing slowest.  Note that the 'C' and 'F' options take no
+			index changing slowest.	 Note that the 'C' and 'F' options take no
 			account of the memory layout of the underlying array, and only
-			refer to the order of indexing.  'A' means to read / write the
+			refer to the order of indexing.	 'A' means to read / write the
 			elements in Fortran-like index order if a is Fortran contiguous in
 			memory, C-like order otherwise.
 		:type order: {'C', 'F', 'A'}, default 'C'
