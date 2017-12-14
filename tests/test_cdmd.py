@@ -195,3 +195,37 @@ class TestCDmd(TestCase):
 		dmd.fit(X=sample_data)
 		dmd.plot_eigs(show_axes=False, show_unit_circle=False)
 		plt.close()
+
+	def test_cdmd_matrix_uniform(self):
+		dmd = CDMD(compression_matrix='uniform')
+		dmd.fit(X=sample_data)
+		error_norm = np.linalg.norm(dmd.reconstructed_data - sample_data, 1)
+		assert error_norm < 1e-10
+
+	def test_cdmd_matrix_sample(self):
+		dmd = CDMD(compression_matrix='sample')
+		dmd.fit(X=sample_data)
+		error_norm = np.linalg.norm(dmd.reconstructed_data - sample_data, 1)
+		assert error_norm < 1e-10
+
+	def test_cdmd_matrix_normal(self):
+		dmd = CDMD(compression_matrix='normal')
+		dmd.fit(X=sample_data)
+		error_norm = np.linalg.norm(dmd.reconstructed_data - sample_data, 1)
+		assert error_norm < 1e-10
+
+	def test_cdmd_matrix_sparse(self):
+		dmd = CDMD(compression_matrix='sparse')
+		dmd.fit(X=sample_data)
+		error_norm = np.linalg.norm(dmd.reconstructed_data - sample_data, 1)
+		assert error_norm < 1e-10
+
+	def test_cdmd_matrix_custom(self):
+		matrix = np.random.permutation(
+			(sample_data.shape[1] - 3) * sample_data.shape[0]
+		).reshape(sample_data.shape[1]-3, sample_data.shape[0]).astype(float)
+		matrix /= float(np.sum(matrix))
+		dmd = CDMD(compression_matrix=matrix)
+		dmd.fit(X=sample_data)
+		error_norm = np.linalg.norm(dmd.reconstructed_data - sample_data, 1)
+		assert error_norm < 1e-10
