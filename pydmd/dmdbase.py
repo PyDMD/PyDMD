@@ -217,10 +217,13 @@ class DMDBase(object):
 		Truncated Singular Value Decomposition.
 
 		:param numpy.ndarray X: the matrix to decompose.
-		:param int svd_rank: the rank for the truncation; If 0, the method
-			computes the optimal rank and uses it for truncation; if positive
-			number, the method uses the argument for the truncation; if -1, the
-			method does not compute truncation.
+		:param svd_rank: the rank for the truncation; If 0, the method computes
+			the optimal rank and uses it for truncation; if positive interger,
+			the method uses the argument for the truncation; if float between 0
+			and 1, the rank is the number of the biggest singular values that
+			are needed to reach the 'energy' specified by `svd_rank`; if -1,
+			the method does not compute truncation.
+		:type svd_rank: int or float
 		:return: the truncated left-singular vectors matrix, the truncated
 			singular values array, the truncated right-singular vectors matrix.
 		:rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
@@ -239,7 +242,10 @@ class DMDBase(object):
 			beta = np.divide(*sorted(X.shape))
 			tau = np.median(s) * omega(beta)
 			rank = np.sum(s > tau)
-		elif svd_rank > 0:
+		elif svd_rank > 0 and svd_rank < 1:
+			cumulative_energy = np.cumsum(s / s.sum())
+			rank = np.searchsorted(cumulative_energy, svd_rank) + 1 
+		elif svd_rank >= 1 and isinstance(svd_rank, int):
 			rank = min(svd_rank, U.shape[1])
 		else:
 			rank = X.shape[1]
