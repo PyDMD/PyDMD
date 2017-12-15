@@ -31,10 +31,13 @@ class CDMD(DMDBase):
 	  each row contains an element equal to 1 and all the other
 	  elements are null.
 
-	:param int svd_rank: rank truncation in SVD. If 0, the method computes the
-		optimal rank and uses it for truncation; if positive number, the method
-		uses the argument for the truncation; if -1, the method does not
-		compute truncation.
+	:param svd_rank: the rank for the truncation; If 0, the method computes the
+		optimal rank and uses it for truncation; if positive interger, the
+		method uses the argument for the truncation; if float between 0 and 1,
+		the rank is the number of the biggest singular values that are needed
+		to reach the 'energy' specified by `svd_rank`; if -1, the method does
+		not compute truncation.
+	:type svd_rank: int or float
 	:param int tlsq_rank: rank truncation computing Total Least Square. Default
 		is 0, that means no truncation.
 	:param compression_matrix: the matrix that pre-multiplies the snapshots

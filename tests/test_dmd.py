@@ -43,6 +43,11 @@ class TestDmd(TestCase):
 		dmd.fit(X=sample_data)
 		assert dmd.modes.shape[1] == 3
 
+	def test_rank(self):
+		dmd = DMD(svd_rank=0.9)
+		dmd.fit(X=sample_data)
+		assert len(dmd.eigs) == 2
+
 	def test_Atilde_shape(self):
 		dmd = DMD(svd_rank=3)
 		dmd.fit(X=sample_data)
