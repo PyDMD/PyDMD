@@ -22,6 +22,7 @@ class DMDBase(object):
 		is 0, that means no truncation.
 	:param bool exact: flag to compute either exact DMD or projected DMD.
 		Default is False.
+	:param bool opt: flag to compute optimized DMD. Default is False.
 	:param dict original_time: dictionary that contains information about the time
 		window where the system is sampled:
 
@@ -244,7 +245,7 @@ class DMDBase(object):
 			rank = np.sum(s > tau)
 		elif svd_rank > 0 and svd_rank < 1:
 			cumulative_energy = np.cumsum(s / s.sum())
-			rank = np.searchsorted(cumulative_energy, svd_rank) + 1 
+			rank = np.searchsorted(cumulative_energy, svd_rank) + 1
 		elif svd_rank >= 1 and isinstance(svd_rank, int):
 			rank = min(svd_rank, U.shape[1])
 		else:
