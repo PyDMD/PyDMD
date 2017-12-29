@@ -25,17 +25,30 @@
 
 **PyDMD**: Python Dynamic Mode Decomposition
 
+## Table of contents
+* [Description](#description)
+* [Dependencies and installation](#dependencies-and-installation)
+	* [Installing via PIP](#installing-via-pip)
+	* [Installing from source](#installing-from-source)
+* [Documentation](#documentation)
+* [Testing](#testing)
+* [Examples](#examples)
+* [How to cite](#how-to-cite)
+	* [References](#references)
+	* [Recent works with PyDMD](#recent-works-with-pydmd)
+* [Authors and contributors](#authors-and-contributors)
+* [How to contribute](#how-to-contribute)
+	* [Submitting a patch](#submitting-a-patch) 
+* [License](#license)
+
 ## Description
-**PyDMD** is a Python package that uses **Dynamic Mode Decomposition** for a
-data-driven model simplification based on spatiotemporal coherent structures.
+**PyDMD** is a Python package that uses **Dynamic Mode Decomposition** for a data-driven model simplification based on spatiotemporal coherent structures.
 
 See the [**Examples**](#examples) section below and the [**Tutorials**](tutorials/README.md) to have an idea of the potential of this package.
 
 
 ## Dependencies and installation
-**PyDMD** requires requires `numpy`, `scipy`, `matplotlib`, `sphinx` (for the
-		documentation). The code is compatible with Python 2.7 and Python 3.6.
-It can be installed using `pip` or directly from the source code.
+**PyDMD** requires requires `numpy`, `scipy`, `matplotlib`, `sphinx` (for the 		documentation). The code is compatible with Python 2.7 and Python 3.6. It can be installed using `pip` or directly from the source code.
 
 ### Installing via PIP
 Mac and Linux users can install pre-built binary packages using pip.
@@ -59,18 +72,27 @@ To install the package just type:
 > python setup.py install
 ```
 
-To uninstall the package you have to rerun the installation and record the
-installed files in order to remove them:
+To uninstall the package you have to rerun the installation and record the installed files in order to remove them:
 
 ```bash
 > python setup.py install --record installed_files.txt
 > cat installed_files.txt | xargs rm -rf
 ```
 
+## Documentation
+**PyDMD** uses [Sphinx](http://www.sphinx-doc.org/en/stable/) for code documentation. You can view the documentation online [here](http://mathlab.github.io/PyDMD/). To build the html version of the docs locally simply:
+
+```bash
+> cd docs
+> make html
+```
+
+The generated html can be found in `docs/build/html`. Open up the `index.html` you find there to browse.
+
+
 ## Testing
 
-We are using Travis CI for continuous intergration testing. You can check out
-the current status [here](https://travis-ci.org/mathLab/PyDMD).
+We are using Travis CI for continuous intergration testing. You can check out the current status [here](https://travis-ci.org/mathLab/PyDMD).
 
 To run tests locally:
 
@@ -92,10 +114,36 @@ Here we show a simple application (taken from [tutorial 2](tutorials/tutorial-2-
 <em>The system evolution reconstructed with dynamic mode decomposition</em>
 </p>
 
+
+## How to cite
+If you use this package in your publications please cite the package as follows:
+
+```tex
+\bibitem{pydmd}
+{PyDMD: Python Dynamic Mode Decomposition. Available at}: \href{https://github.com/mathLab/PyDMD}{https://github.com/mathLab/PyDMD}.
+```
+
+### References
+To implement the various versions of the DMD algorithm we follow these works:
+
+* Kutz, Brunton, Brunton, Proctor. *Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems*. SIAM Other Titles in Applied Mathematics, 2016. [[DOI](https://doi.org/10.1137/1.9781611974508)].
+* Gavish, Donoho. *The optimal hard threshold for singular values is 4/sqrt(3)*. IEEE Transactions on Information Theory, 2014. [[DOI](https://doi.org/10.1109/TIT.2014.2323359)].
+* Matsumoto, Indinger. *On-the-fly algorithm for Dynamic Mode Decomposition using Incremental Singular Value Decomposition and Total Least Squares*. 2017. [[arXiv](https://arxiv.org/abs/1703.11004)].
+* Hemati, Rowley, Deem, Cattafesta. *De-biasing the dynamic mode decomposition for applied Koopman spectral analysis of noisy datasets*. Theoretical and Computational Fluid Dynamics, 2017. [[DOI](https://doi.org/10.1007/s00162-017-0432-2)].
+* Dawson, Hemati, Williams, Rowley. *Characterizing and correcting for the effect of sensor noise in the dynamic mode decomposition*. Experiments in Fluids, 2016. [[DOI](https://doi.org/10.1007/s00348-016-2127-7)].
+* Kutz, Fu, Brunton. *Multiresolution Dynamic Mode Decomposition*. SIAM Journal on Applied Dynamical Systems, 2016. [[DOI](https://doi.org/10.1137/15M1023543)].
+* Erichson, Brunton, Kutz. *Compressed dynamic mode decomposition for background modeling*. Journal of Real-Time Image Processing, 2016. [[DOI](https://doi.org/10.1007/s11554-016-0655-2)].
+* Le Clainche, Vega. *Higher Order Dynamic Mode Decomposition*. Journal on Applied Dynamical Systems, 2017. [[DOI](https://doi.org/10.1137/15M1054924)].
+
+### Recent works with PyDMD
+Here there is a list of the scientific works involving **PyDMD** you can consult and/or cite. If you want to add one, please open a PR.
+
+
+
 ## Authors and contributors
 **PyDMD** is currently developed and mantained at [SISSA mathLab](http://mathlab.sissa.it/) by
-* [Marco Tezzele](mailto:marcotez@gmail.com)
 * [Nicola Demo](mailto:demo.nicola@gmail.com)
+* [Marco Tezzele](mailto:marcotez@gmail.com)
 
 under the supervision of [Prof. Gianluigi Rozza](mailto:gianluigi.rozza@sissa.it).
 
@@ -103,8 +151,7 @@ Contact us by email for further information or questions about **PyDMD**, or sug
 
 
 ## How to contribute
-We'd love to accept your patches and contributions to this project. There are
-just a few small guidelines you need to follow.
+We'd love to accept your patches and contributions to this project. There are just a few small guidelines you need to follow.
 
 ### Submitting a patch
 
