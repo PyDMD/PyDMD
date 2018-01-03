@@ -39,11 +39,7 @@ done
 [[ $# != 0 ]] && python_files=$@
 
 
-# Here the important part:
-# - first, yapf format the files; it works very well just setting few option
-#		by command line, but at the moment it has bugs for tabs, so uses spaces.
-# - second, convert 4 spaces to tab character
-# - third, you can look a very pretty code 
+# Here the important part: yapf format the files.
 for file in $python_files; do
 	echo "Making beatiful $file..."
 	[[ ! -f $file ]] && echo "$file does not exist; $0 -h for more info" && exit
@@ -51,9 +47,6 @@ for file in $python_files; do
 	yapf --style='{
 					based_on_style: pep8, 
 				   	indent_width: 4,
-					dedent_closing_brackets: true,
 					column_limit: 80
 			  	  }' -i $file
-	unexpand -t 4 $file > tmp.py
-	mv tmp.py $file
 done
