@@ -38,5 +38,7 @@ Here we have the reconstruction of the dynamical system. You can observe the sen
 
 ![Reconstruction](../readme/dmd-example.gif)
 
+# Acknowledgements
+This work was partially supported by European Union Funding for Research and Innovation — Horizon 2020 Program — in the framework of European Research Council Executive Agency: H2020 ERC CoG 2015 AROMA-CFD project 681447 “Advanced Reduced Order Methods with Applications in Computational Fluid Dynamics” P.I. Gianluigi Rozza.
 
 # References
