@@ -6,7 +6,6 @@ tags:
 - Multiresolution DMD
 - Compressed DMD
 - Forward Backward DMD
-- Higher Order DMD
 authors:
 - name: Nicola Demo
  orcid: 0000-0003-3107-9738
