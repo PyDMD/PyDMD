@@ -9,13 +9,13 @@ tags:
 - Higher Order DMD
 authors:
 - name: Nicola Demo
- orcid: ???
+ orcid: 0000-0003-3107-9738
  affiliation: 1
 - name: Marco Tezzele
  orcid: 0000-0001-9747-6328
  affiliation: 1
 - name: Gianluigi Rozza
- orcid: ???
+ orcid: 0000-0002-0810-8812
  affiliation: 1
 affiliations:
 - name: Internation School of Advanced Studies, SISSA, Trieste, Italy
