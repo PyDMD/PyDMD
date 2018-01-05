@@ -8,21 +8,21 @@ def readme():
 		return f.read()
 
 setup(name='pydmd',
-	  version='0.0.2',
+	  version='0.1.0',
 	  description='Python Dynamic Mode Decomposition.',
 	  long_description=readme(),
 	  classifiers=[
-	  	'Development Status :: 3 - Alpha',
+	  	'Development Status :: 5 - Production/Stable',
 	  	'License :: OSI Approved :: MIT License',
 	  	'Programming Language :: Python :: 2.7',
 	  	'Programming Language :: Python :: 3.6',
 	  	'Intended Audience :: Science/Research',
 	  	'Topic :: Scientific/Engineering :: Mathematics'
 	  ],
-	  keywords='dynamic-mode-decomposition dmd mrdmd fbdmd',
+	  keywords='dynamic-mode-decomposition dmd mrdmd fbdmd cdmd',
 	  url='https://github.com/mathLab/PyDMD',
-	  author='Marco Tezzele, Nicola Demo',
-	  author_email='marcotez@gmail.com, demo.nicola@gmail.com',
+	  author='Nicola Demo, Marco Tezzele',
+	  author_email='demo.nicola@gmail.com, marcotez@gmail.com',
 	  license='MIT',
 	  packages=['pydmd'],
 	  install_requires=[
