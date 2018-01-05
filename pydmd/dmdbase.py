@@ -23,14 +23,14 @@ class DMDBase(object):
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
     :param bool opt: flag to compute optimized DMD. Default is False.
-    :param dict original_time: dictionary that contains information about the
+    :cvar dict original_time: dictionary that contains information about the
         time window where the system is sampled:
 
            - `t0` is the time of the first input snapshot;
            - `tend` is the time of the last input snapshot;
            - `dt` is the delta time between the snapshots.
 
-    :param dict dmd_time: dictionary that contains information about the time
+    :cvar dict dmd_time: dictionary that contains information about the time
         window where the system is reconstructed:
 
             - `t0` is the time of the first approximated solution;

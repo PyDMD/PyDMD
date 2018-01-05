@@ -10,31 +10,42 @@ Python Dynamic Mode Decomposition.
 
 
 Description
-^^^^^^^^^^^^
-
+--------------------
 PyDMD is a Python package that uses Dynamic Mode Decomposition for a data-driven model simplification based on spatiotemporal coherent structures.
 
 
 Installation
-^^^^^^^^^^^^
-Mac and Linux users can install pre-built binary packages using pip. To install PyDMD using pip, just type:
+--------------------
+PyDMD requires requires numpy, scipy, matplotlib, sphinx (for the documentation). The code is compatible with Python 2.7 and Python 3.6. It can be installed using pip or directly from the source code.
+
+Installing via PIP
+^^^^^^^^^^^^^^^^^^^^^^^^
+Mac and Linux users can install pre-built binary packages using pip.
+To install the package just type: 
 ::
 
-    pip install PyDMD
+    pip install pydmd
 
-To install the pydmd package from source, open the terminal/command line and clone the repository with the command
+To uninstall the package:
 ::
 
-	 git clone https://github.com/mathLab/PyDMD
+    pip uninstall pydmd
 
-After installing the dependencies you can navigate into the ``PyDMD`` folder (where the ``setup.py`` file is located) and run the command
+
+Installing from source
+^^^^^^^^^^^^^^^^^^^^^^^^
+The official distribution is on GitHub, and you can clone the repository using
 ::
 
-	 python setup.py install
+    git clone https://github.com/mathLab/PyDMD
 
-You should now be able to import the pydmd library in Python scripts and interpreters with the command ``import pydmd``.
+To install the package just type:
+::
+
+    python setup.py install
 
 To uninstall the package you have to rerun the installation and record the installed files in order to remove them:
+
 ::
 
     python setup.py install --record installed_files.txt
@@ -42,7 +53,7 @@ To uninstall the package you have to rerun the installation and record the insta
 
 
 Developer's Guide
-^^^^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 .. toctree::
    :maxdepth: 1
@@ -54,19 +65,33 @@ Developer's Guide
 
 
 Tutorials
-^^^^^^^^^^
+--------------------
 
 We made some tutorial examples. Please refer to the official GitHub repository for the last updates. Here the list of the exported tutorials:
 
-- `Tutorial 1 <tutorial1dmd.html>`_ shows the typical use case and the basic features of the DMD class.
-- `Tutorial 2 <tutorial2advdmd.html>`_ shows a more sophisticated application of the standard DMD algorithm.
-- `Tutorial 3 <tutorial3mrdmd.html>`_ shows the possibilities of the multiresolution DMD (mrDMD) with respect to the classical DMD.
+- `Tutorial 1 <tutorial1dmd.html>`_ - Here we show a basic application of the standard dynamic mode decomposition on a simple system in order to reconstruct and analyze it.
+- `Tutorial 2 <tutorial2advdmd.html>`_ - Here we show a more complex application of the standard dynamic mode decomposition on a 2D system evolving in time, focusing on the advanced settings the class provides.
+- `Tutorial 3 <tutorial3mrdmd.html>`_ - Here we show the application of the multi-resolution dynamic mode decomposition on a system that contains transient time events.
+- `Tutorial 4 <tutorial4cdmd.html>`_ - Here we show the application of the compressed dynamic mode decomposition in order to decrease the computational cost required by decomposition.
+- `Tutorial 5 <tutorial5fbdmd.html>`_ - Here we show the forward-backward dynamic mode decomposition on a dataset coming from a fluid dynamics problem.
 
 
+References
+--------------------
+To implement the various versions of the DMD algorithm we follow these works:
+
+- Kutz, Brunton, Brunton, Proctor. Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems. SIAM Other Titles in Applied Mathematics, 2016.
+- Gavish, Donoho. The optimal hard threshold for singular values is 4/sqrt(3). IEEE Transactions on Information Theory, 2014.
+- Matsumoto, Indinger. On-the-fly algorithm for Dynamic Mode Decomposition using Incremental Singular Value Decomposition and Total Least Squares. 2017.
+- Hemati, Rowley, Deem, Cattafesta. De-biasing the dynamic mode decomposition for applied Koopman spectral analysis of noisy datasets. Theoretical and Computational Fluid Dynamics, 2017.
+- Dawson, Hemati, Williams, Rowley. Characterizing and correcting for the effect of sensor noise in the dynamic mode decomposition. Experiments in Fluids, 2016.
+- Kutz, Fu, Brunton. Multiresolution Dynamic Mode Decomposition. SIAM Journal on Applied Dynamical Systems, 2016.
+- Erichson, Brunton, Kutz. Compressed dynamic mode decomposition for background modeling. Journal of Real-Time Image Processing, 2016.
+- Le Clainche, Vega. Higher Order Dynamic Mode Decomposition. Journal on Applied Dynamical Systems, 2017.
 
 
 Indices and tables
-^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
