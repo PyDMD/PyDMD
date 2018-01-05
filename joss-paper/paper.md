@@ -33,7 +33,7 @@ In the PyDMD package [@pydmd] we implemented in Python the majority of the varia
 
 The research in the field is growing both in computational fluid dynamic and in structural mechanics, due to the equation-free nature of the model.
 
-As an exmaple, we show below few snapshots collected from a toy system with some noise. The DMD it is able to reconstruct the entire system evolution, filtering the noise. It is also possible to predict the evolution of the system in the future with respect to the available data.
+As an exmaple, we show below few snapshots collected from a toy system with some noise. The DMD is able to reconstruct the entire system evolution, filtering the noise. It is also possible to predict the evolution of the system in the future with respect to the available data.
 
 ![Snapshots](../readme/dmd-example.png)
 
