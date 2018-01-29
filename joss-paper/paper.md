@@ -39,7 +39,7 @@ As an exmaple, we show below few snapshots collected from a toy system with some
 
 Here we have the reconstruction of the dynamical system. You can observe the sensible reduction of the noise.
 
-![Reconstruction](../readme/dmd-example.gif)
+![Reconstruction](../readme/dmd-reconstruction.png)
 
 # Acknowledgements
 This work was partially supported by European Union Funding for Research and Innovation — Horizon 2020 Program — in the framework of European Research Council Executive Agency: H2020 ERC CoG 2015 AROMA-CFD project 681447 “Advanced Reduced Order Methods with Applications in Computational Fluid Dynamics” P.I. Gianluigi Rozza.
