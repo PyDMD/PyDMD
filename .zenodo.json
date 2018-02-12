@@ -1,0 +1,31 @@
+{
+    "description": "Python Dynamic Mode Decomposition", 
+    "license": "other-open", 
+    "title": "PyDMD", 
+    "version": "v0.1", 
+    "upload_type": "software", 
+    "publication_date": "2018-02-12", 
+    "creators": [
+        {
+            "affiliation": "SISSA mathLab", 
+            "name": "Marco Tezzele"
+        }, 
+        {
+            "affiliation": "SISSA mathLab", 
+            "name": "Nicola Demo"
+        }, 
+    ], 
+    "access_right": "open", 
+    "related_identifiers": [
+        {
+            "scheme": "url", 
+            "identifier": "https://github.com/mathLab/PyDMD/tree/v0.1", 
+            "relation": "isSupplementTo"
+        }, 
+        {
+            "scheme": "doi", 
+            "identifier": "10.5281/zenodo.1171787", 
+            "relation": "isPartOf"
+        }
+    ]
+}
