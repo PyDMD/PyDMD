@@ -4,6 +4,9 @@
   </a>
 </p>
 <p align="center">
+    <a href="https://doi.org/10.21105/joss.00530" target="_blank">
+        <img alt="JOSS DOI" src="http://joss.theoj.org/papers/10.21105/joss.00530/status.svg">
+    </a>
     <a href="https://github.com/mathLab/PyDMD/blob/master/LICENSE" target="_blank">
         <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square">
     </a>
@@ -125,9 +128,20 @@ Here we show a simple application (taken from [tutorial 2](tutorials/tutorial-2-
 ## How to cite
 If you use this package in your publications please cite the package as follows:
 
+Demo et al., (2018). PyDMD: Python Dynamic Mode Decomposition. Journal of Open Source Software, 3(22), 530, https://doi.org/10.21105/joss.00530
+
+Or if you use LaTeX:
 ```tex
-\bibitem{pydmd}
-{PyDMD: Python Dynamic Mode Decomposition. Available at}: \href{https://github.com/mathLab/PyDMD}{https://github.com/mathLab/PyDMD}.
+@article{demo18pydmd,
+  Author = {Demo, Nicola and Tezzele, Marco and Rozza, Gianluigi},
+  Title = {{PyDMD: Python Dynamic Mode Decomposition}},
+  Journal = {The Journal of Open Source Software},
+  Volume = {3},
+  Number = {22},
+  Pages = {530},
+  Year = {2018},
+  Doi = {https://doi.org/10.21105/joss.00530}
+}
 ```
 
 ### References
