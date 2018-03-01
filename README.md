@@ -58,7 +58,7 @@ The research in the field is growing both in computational fluid dynamic and in 
 
 
 ## Dependencies and installation
-**PyDMD** requires requires `numpy`, `scipy`, `matplotlib`, `sphinx` (for the 		documentation). The code is compatible with Python 2.7 and Python 3.6. It can be installed using `pip` or directly from the source code.
+**PyDMD** requires requires `numpy`, `scipy`, `matplotlib`, `future`, and `sphinx` (for the 		documentation). The code is compatible with Python 2.7 and Python 3.6. It can be installed using `pip` or directly from the source code.
 
 ### Installing via PIP
 Mac and Linux users can install pre-built binary packages using pip.
