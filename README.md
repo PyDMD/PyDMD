@@ -215,4 +215,4 @@ We'd love to accept your patches and contributions to this project. There are ju
 
 ## License
 
-See the [LICENSE](LICENSE) file for license rights and limitations (MIT).
+See the [LICENSE](LICENSE.rst) file for license rights and limitations (MIT).

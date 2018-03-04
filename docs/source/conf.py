@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# pygem documentation build configuration file, created by
+# pydmd documentation build configuration file, created by
 # sphinx-quickstart on Mon Jun 22 16:09:40 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -70,7 +70,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'PyDMD'
-copyright = u'2017, PyDMD contributors'
+copyright = u'2017-2018, PyDMD contributors'
 author = u'PyDMD contributors'
 
 # autoclass
@@ -236,7 +236,7 @@ html_show_copyright = True
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pygemdoc'
+htmlhelp_basename = 'pydmddoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -258,7 +258,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'pygem.tex', u'pygem Documentation',
+  (master_doc, 'pydmd.tex', u'pydmd Documentation',
    u'PyDMD contributors', 'manual'),
 ]
 
@@ -288,7 +288,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pygem', u'pygem Documentation',
+    (master_doc, 'pydmd', u'pydmd Documentation',
      [author], 1)
 ]
 
@@ -302,8 +302,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'pygem', u'pygem Documentation',
-   author, 'pygem', 'One line description of project.',
+  (master_doc, 'pydmd', u'pydmd Documentation',
+   author, 'pydmd', 'One line description of project.',
    'Miscellaneous'),
 ]
 
