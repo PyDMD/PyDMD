@@ -58,7 +58,7 @@ The research in the field is growing both in computational fluid dynamic and in 
 
 
 ## Dependencies and installation
-**PyDMD** requires requires `numpy`, `scipy`, `matplotlib`, `future`, and `sphinx` (for the 		documentation). The code is compatible with Python 2.7 and Python 3.6. It can be installed using `pip` or directly from the source code.
+**PyDMD** requires requires `numpy`, `scipy`, `matplotlib`, `future`, `sphinx` (for the documentation) and `nose` (for local test). The code is compatible with Python 2.7 and Python 3.6. It can be installed using `pip` or directly from the source code.
 
 ### Installing via PIP
 Mac and Linux users can install pre-built binary packages using pip.
@@ -104,7 +104,7 @@ The generated html can be found in `docs/build/html`. Open up the `index.html` y
 
 We are using Travis CI for continuous intergration testing. You can check out the current status [here](https://travis-ci.org/mathLab/PyDMD).
 
-To run tests locally:
+To run tests locally (`nose` is required):
 
 ```bash
 > python test.py
@@ -159,7 +159,9 @@ To implement the various versions of the DMD algorithm we follow these works:
 ### Recent works with PyDMD
 Here there is a list of the scientific works involving **PyDMD** you can consult and/or cite. If you want to add one, please open a PR.
 
-
+* Tezzele, Demo, Gadalla, Mola, Rozza. *Model Order Reduction by means of Active Subspaces and Dynamic Mode Decomposition for Parametric Hull Shape Design Hydrodynamics*. 2018. [[arXiv]](https://arxiv.org/abs/1803.07377)].
+ 
+* Demo, Tezzele, Mola, Rozza. *An efficient shape parametrisation by free-form deformation enhanced by active subspace for hull hydrodynamic ship design problems in open source environment*. 2018. [[arXiv](https://arxiv.org/abs/1801.06369)].
 
 ## Authors and contributors
 **PyDMD** is currently developed and mantained at [SISSA mathLab](http://mathlab.sissa.it/) by
