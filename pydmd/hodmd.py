@@ -19,7 +19,7 @@ class HODMD(DMDBase):
         uses the argument for the truncation; if -1, the method does not
         compute truncation.
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
-        s 0, that means no truncation.
+        is 0, that means TLSQ is not applied.
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
     :param bool opt: flag to compute optimized DMD. Default is False.
