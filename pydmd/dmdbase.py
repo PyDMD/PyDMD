@@ -7,6 +7,7 @@ from builtins import range
 from builtins import object
 from past.utils import old_div
 import numpy as np
+import scipy as sp
 import matplotlib.pyplot as plt
 
 
@@ -117,7 +118,7 @@ class DMDBase(object):
             row.
         :rtype: numpy.ndarray
         """
-        omega = old_div(np.log(self.eigs), self.original_time['dt'])
+        omega = old_div(sp.log(self.eigs), self.original_time['dt'])
         vander = np.exp(np.multiply(*np.meshgrid(omega, self.dmd_timesteps)))
         return (vander * self._b).T
 
