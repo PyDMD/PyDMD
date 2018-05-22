@@ -12,3 +12,4 @@ Code Documentation
    fbdmd
    cdmd
    hodmd
+   dmdc
