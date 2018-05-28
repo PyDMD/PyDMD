@@ -30,3 +30,13 @@ class TestMrDmd(TestCase):
         dmdc.fit(snapshots, control)
         np.testing.assert_array_almost_equal(dmdc.reconstructed_data,
                                              snapshots[:, 1:])
+    def test_btilde_b_known(self):
+        dmdc = DMDc(svd_rank=-1)
+        dmdc.fit(snapshots, control, b)
+        np.testing.assert_array_almost_equal(dmdc.btilde, b)
+
+    def test_btilde_b_unknown(self):
+        dmdc = DMDc(svd_rank=-1)
+        dmdc.fit(snapshots, control)
+        expected_btilde = np.array([[-0.05836184, 0.31070992]]).T
+        np.testing.assert_array_almost_equal(dmdc.btilde, expected_btilde)
