@@ -17,5 +17,8 @@ Here we show the application of the compressed dynamic mode decomposition in ord
 #### [Tutorial 5](tutorial-5-fbdmd.ipynb)
 Here we show the forward-backward dynamic mode decomposition on a dataset coming from a fluid dynamics problem.
 
+#### [Tutorial 6](tutorial-6-hodmd.ipynb)
+Here we show the higher order dynamic mode decomposition applied on 1D snapshots.
+
 #### More to come...
 We plan to add more tutorials but the time is often against us. If you want to contribute with a notebook on a feature not covered yet we will be very happy and give you support on editing!

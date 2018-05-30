@@ -82,6 +82,7 @@ We made some tutorial examples. Please refer to the official GitHub repository f
 - `Tutorial 3 <tutorial3mrdmd.html>`_ - Here we show the application of the multi-resolution dynamic mode decomposition on a system that contains transient time events.
 - `Tutorial 4 <tutorial4cdmd.html>`_ - Here we show the application of the compressed dynamic mode decomposition in order to decrease the computational cost required by decomposition.
 - `Tutorial 5 <tutorial5fbdmd.html>`_ - Here we show the forward-backward dynamic mode decomposition on a dataset coming from a fluid dynamics problem.
+- `Tutorial 6 <tutorial6hodmd.html>`_ - Here we show the higher order dynamic mode decomposition applied on 1D snapshots.
 
 
 References

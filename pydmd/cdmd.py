@@ -39,7 +39,7 @@ class CDMD(DMDBase):
         not compute truncation.
     :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
-        is 0, that means no truncation.
+        is 0, that means TLSQ is not applied.
     :param compression_matrix: the matrix that pre-multiplies the snapshots
         matrix in order to compress it; if `compression_matrix` is a
         numpy.ndarray, its dimension must be (`nsnaps`, `ndim`). Default value

@@ -188,9 +188,9 @@ class DMDBase(object):
         :param numpy.ndarray X: the first matrix;
         :param numpy.ndarray Y: the second matrix;
         :param int tlsq_rank: the rank for the truncation; If 0, the method
-            computes the optimal rank and uses it for truncation; if positive
-            number, the method uses the argument for the truncation; if -1, the
-            method does not compute truncation.
+            does not compute any noise reduction; if positive number, the
+            method uses the argument for the SVD truncation used in the TLSQ
+            method.
         :return: the denoised matrix X, the denoised matrix Y
         :rtype: numpy.ndarray, numpy.ndarray
 

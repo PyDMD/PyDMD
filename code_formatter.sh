@@ -34,7 +34,7 @@ done
 # Find all python files in code directories
 python_files=""
 for dir in $code_directories; do
-	python_files="$python_files `ls $dir/*.py`"
+    python_files="$python_files $(find $dir -name '*.py')"
 done
 [[ $# != 0 ]] && python_files=$@
 
