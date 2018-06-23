@@ -1,0 +1,17 @@
+README.md
+setup.py
+pydmd/__init__.py
+pydmd/cdmd.py
+pydmd/dmd.py
+pydmd/dmd_jov.py
+pydmd/dmdbase.py
+pydmd/dmdc.py
+pydmd/fbdmd.py
+pydmd/hodmd.py
+pydmd/mrdmd.py
+pydmd.egg-info/PKG-INFO
+pydmd.egg-info/SOURCES.txt
+pydmd.egg-info/dependency_links.txt
+pydmd.egg-info/not-zip-safe
+pydmd.egg-info/requires.txt
+pydmd.egg-info/top_level.txt
