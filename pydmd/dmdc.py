@@ -6,6 +6,7 @@ Reference:
 with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.
 """
 from .dmdbase import DMDBase
+from past.utils import old_div
 import numpy as np
 
 
@@ -35,41 +36,65 @@ class DMDc(DMDBase):
 
         self._eigs = None
         self._Atilde = None
-        self._Btilde = None
+        self._B = None
         self._modes = None  # Phi
         self._b = None  # amplitudes
         self._snapshots = None
         self._snapshots_shape = None
         self._controlin = None
         self._controlin_shape = None
+        self._basis = None
 
     @property
-    def reconstructed_data(self):
+    def B(self):
         """
-        Get the reconstructed data.
+        Get the operator B.
 
+        :return: the operator B.
+        :rtype: numpy.ndarray
+        """
+        return self._B
+
+    @property
+    def basis(self):
+        """
+        Get the basis used to reduce the linear operator to the low dimensional
+        space.
+
+        :return: the matrix which columns are the basis vectors.
+        :rtype: numpy.ndarray
+        """
+        return self._basis
+
+    def reconstructed_data(self, control_input=None):
+        """
+        Return the reconstructed data, computed using the `control_input`
+        argument. If the `control_input` is not passed, the original input (in
+        the `fit` method) is used. The input dimension has to be consistent
+        with the dynamics.
+
+        :param numpy.ndarray control_input: the input control matrix.
         :return: the matrix that contains the reconstructed snapshots.
         :rtype: numpy.ndarray
         """
-        try:
-            return self.Ur.dot(self._Atilde).dot(
-                self.Ur.dot(self._snapshots[:, :-1])) + self.Ur.dot(
-                    self._Btilde).dot(self._controlin)
-        except AttributeError:
-            return self._Atilde.dot(self._snapshots[:, :-1]) + self._Btilde.dot(
-                self._controlin)
+        if control_input is None:
+            controlin, controlin_shape = self._controlin, self._controlin_shape
+        else:
+            controlin, controlin_shape = self._col_major_2darray(control_input)
 
-    @property
-    def btilde(self):
-        """
-        Get the reduced operator B.
+        omega = old_div(np.log(self.eigs), self.original_time['dt'])
+        eigs = np.exp(omega * self.dmd_time['dt'])
+        A = self.modes.dot(np.diag(eigs)).dot(np.linalg.pinv(self.modes))
 
-        :return: the reduced operator B.
-        :rtype: numpy.ndarray
-        """
-        return self._Btilde
+        data = self._snapshots.copy().astype(complex)
 
-    def _fit_B_known(self, X, Y, I, B):
+        for i, u in enumerate(controlin.T, start=1):
+            data[:, i] = A.dot(data[:, i-1]) + self._B.dot(u)
+
+        return data
+
+
+    def _fit_B_known(self, X, Y, B):
         """
         Private method that performs the dynamic mode decomposition algorithm
         with control when the matrix `B` is provided.
@@ -79,22 +104,22 @@ class DMDc(DMDBase):
         :param numpy.ndarray I: the input control matrix.
         :param numpy.ndarray B: the matrib B.
         """
-
         X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
 
         U, s, V = self._compute_svd(X, self.svd_rank)
 
-        self._Atilde = (Y - B.dot(self._controlin)).dot(V).dot(
-            np.diag(np.reciprocal(s))).dot(U.T.conj())
+        self._Atilde = U.T.conj().dot(Y - B.dot(self._controlin)).dot(V).dot(
+            np.diag(np.reciprocal(s)))
         self._eigs, self._modes = self._eig_from_lowrank_op(
             self._Atilde, (Y - B.dot(self._controlin)), U, s, V, True)
         self._b = self._compute_amplitudes(self._modes, self._snapshots,
                                            self._eigs, self.opt)
 
-        self._Btilde = B
+        self._B = B
+        self._basis = U
         return self
 
-    def _fit_B_unknown(self, X, Y, I):
+    def _fit_B_unknown(self, X, Y):
         """
         Private method that performs the dynamic mode decomposition algorithm
         with control when the matrix `B` is not provided.
@@ -112,13 +137,13 @@ class DMDc(DMDBase):
         Up2 = Up[self._snapshots.shape[0]:, :]
         # TODO: a second svd_rank?
         Ur, sr, Vr = self._compute_svd(Y, -1)
-
-        self.Ur = Ur
+        self._basis = Ur
 
         self._Atilde = Ur.T.conj().dot(Y).dot(Vp).dot(
             np.diag(np.reciprocal(sp))).dot(Up1.T.conj()).dot(Ur)
         self._Btilde = Ur.T.conj().dot(Y).dot(Vp).dot(
             np.diag(np.reciprocal(sp))).dot(Up2.T.conj())
+        self._B = Ur.dot(self._Btilde)
 
         self._eigs, modes = np.linalg.eig(self._Atilde)
         self._modes = Y.dot(Vp).dot(np.diag(np.reciprocal(sp))).dot(
@@ -147,8 +172,9 @@ class DMDc(DMDBase):
         Y = self._snapshots[:, 1:]
 
         if B is None:
-            self._fit_B_unknown(X, Y, I)
+            self._fit_B_unknown(X, Y)
         else:
-            self._fit_B_known(X, Y, I, B)
+            self._fit_B_known(X, Y, B)
 
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
+        self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
