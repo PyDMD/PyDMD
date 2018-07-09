@@ -20,5 +20,9 @@ Here we show the forward-backward dynamic mode decomposition on a dataset coming
 #### [Tutorial 6](tutorial-6-hodmd.ipynb)
 Here we show the higher order dynamic mode decomposition applied on 1D snapshots.
 
+#### [Tutorial 7](tutorial-7-dmdc.ipynb)
+Here we show the dynamic mode decomposition incorporanting the effect of
+control, on a toy dataset.
+
 #### More to come...
 We plan to add more tutorials but the time is often against us. If you want to contribute with a notebook on a feature not covered yet we will be very happy and give you support on editing!
