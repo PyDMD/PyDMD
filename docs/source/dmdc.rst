@@ -10,7 +10,8 @@ DMDc
 	:nosignatures:
 
 	DMDc.atilde
-	DMDc.btilde
+	DMDc.B
+    DMDc.basis
 	DMDc.dmd_timesteps
 	DMDc.dynamics
 	DMDc.eigs
