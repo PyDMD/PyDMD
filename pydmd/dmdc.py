@@ -82,15 +82,20 @@ class DMDc(DMDBase):
         else:
             controlin, controlin_shape = self._col_major_2darray(control_input)
 
+        if controlin.shape[1] != self.dynamics.shape[1]-1:
+            raise RuntimeError(
+                    'The number of control inputs and the number of snapshots to reconstruct has to be the same')
+
         omega = old_div(np.log(self.eigs), self.original_time['dt'])
         eigs = np.exp(omega * self.dmd_time['dt'])
         A = self.modes.dot(np.diag(eigs)).dot(np.linalg.pinv(self.modes))
 
-        data = self._snapshots.copy().astype(complex)
+        data = [self._snapshots[:, 0]]
 
-        for i, u in enumerate(controlin.T, start=1):
-            data[:, i] = A.dot(data[:, i-1]) + self._B.dot(u)
+        for i, u in enumerate(controlin.T):
+            data.append(A.dot(data[i]) + self._B.dot(u))
 
+        data = np.array(data).T
         return data
 
 
