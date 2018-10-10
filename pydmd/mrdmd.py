@@ -285,7 +285,11 @@ class MrDMD(DMDBase):
             self._nsamples.append(n_samples)
             self._steps.append(step)
 
-            Xraw -= modes.dot(Psi)
+
+            if Xraw.dtype == 'float64':
+                Xraw -= modes.dot(Psi).real
+            else:
+                Xraw -= modes.dot(Psi)
 
             if current_level < 2**(self.max_level - 1):
                 current_level += 1
