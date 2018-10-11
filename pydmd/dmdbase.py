@@ -7,6 +7,8 @@ from builtins import range
 from builtins import object
 from past.utils import old_div
 import numpy as np
+import matplotlib as mpl
+mpl.rcParams['figure.max_open_warning'] = 0
 import matplotlib.pyplot as plt
 
 
@@ -336,9 +338,9 @@ class DMDBase(object):
                 axis=0)
             b = np.reshape(snapshots, (-1, ), order='F')
 
-            a = np.linalg.lstsq(L, b)[0]
+            a = np.linalg.lstsq(L, b, rcond=None)[0]
         else:
-            a = np.linalg.lstsq(modes, snapshots.T[0])[0]
+            a = np.linalg.lstsq(modes, snapshots.T[0], rcond=None)[0]
 
         return a
 
