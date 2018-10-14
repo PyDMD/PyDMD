@@ -167,7 +167,6 @@ class DMDBase(object):
             of original snapshots.
         :rtype: numpy.ndarray, tuple
         """
-
         # If the data is already 2D ndarray
         if isinstance(X, np.ndarray) and X.ndim == 2:
             return X, None
@@ -230,7 +229,6 @@ class DMDBase(object):
         Gavish, Matan, and David L. Donoho, The optimal hard threshold for
         singular values is, IEEE Transactions on Information Theory 60.8
         (2014): 5040-5053.
-
         """
         U, s, V = np.linalg.svd(X, full_matrices=False)
         V = V.conj().T
@@ -356,7 +354,8 @@ class DMDBase(object):
             Default is True.
         :param bool show_unit_circle: if True, the circle with unitary radius
             and center in the origin will be showed. Default is True.
-        :param tuple(int,int) figsize: tuple in inches of the figure.
+        :param tuple(int,int) figsize: tuple in inches defining the figure
+            size. Default is (8, 8).
         :param str title: title of the plot.
         """
         if self._eigs is None:
@@ -449,7 +448,9 @@ class DMDBase(object):
             refer to the order of indexing.  'A' means to read / write the
             elements in Fortran-like index order if a is Fortran contiguous in
             memory, C-like order otherwise.
-        :type order: {'C', 'F', 'A'}, default 'C'
+        :type order: {'C', 'F', 'A'}, default 'C'.
+        :param tuple(int,int) figsize: tuple in inches defining the figure
+            size. Default is (8, 8).
         """
         if self._modes is None:
             raise ValueError('The modes have not been computed.'
@@ -550,7 +551,9 @@ class DMDBase(object):
             refer to the order of indexing.  'A' means to read / write the
             elements in Fortran-like index order if a is Fortran contiguous in
             memory, C-like order otherwise.
-        :type order: {'C', 'F', 'A'}, default 'C'
+        :type order: {'C', 'F', 'A'}, default 'C'.
+        :param tuple(int,int) figsize: tuple in inches defining the figure
+            size. Default is (8, 8).
         """
         if self._snapshots is None:
             raise ValueError('Input snapshots not found.')
