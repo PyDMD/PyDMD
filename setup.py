@@ -33,7 +33,7 @@ description = (
 )
 
 setup(name='pydmd',
-	  version='0.2.0',
+	  version='0.2.1',
 	  description='Python Dynamic Mode Decomposition.',
 	  long_description=description,
 	  classifiers=[
