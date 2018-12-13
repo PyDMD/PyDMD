@@ -298,8 +298,8 @@ class DMDBase(object):
 
         # Compute the eigenvectors of the high-dimensional operator
         if exact:
-            eigenvectors = ((
-                Y.dot(V) * np.reciprocal(s)).dot(lowrank_eigenvectors))
+            eigenvectors = (
+                (Y.dot(V) * np.reciprocal(s)).dot(lowrank_eigenvectors))
         else:
             eigenvectors = U.dot(lowrank_eigenvectors)
 
@@ -307,7 +307,6 @@ class DMDBase(object):
         eigenvalues = lowrank_eigenvalues
 
         return eigenvalues, eigenvectors
-
 
     def _compute_amplitudes(self, modes, snapshots, eigs, opt):
         """
@@ -337,16 +336,19 @@ class DMDBase(object):
         if opt:
             # compute the vandermonde matrix
             omega = old_div(np.log(eigs), self.original_time['dt'])
-            vander = np.exp(np.multiply(*np.meshgrid(omega, self.dmd_timesteps))).T
+            vander = np.exp(
+                np.multiply(*np.meshgrid(omega, self.dmd_timesteps))).T
 
             # perform svd on all the snapshots
             U, s, V = np.linalg.svd(self._snapshots, full_matrices=False)
             V = V.T
 
-            P = np.multiply(np.dot(modes.conj().T, modes), np.conj(np.dot(vander, vander.conj().T)))
-            tmp = (np.dot(np.dot(U, np.diag(s)), V.T)).conj().T        
+            P = np.multiply(
+                np.dot(modes.conj().T, modes),
+                np.conj(np.dot(vander, vander.conj().T)))
+            tmp = (np.dot(np.dot(U, np.diag(s)), V.T)).conj().T
             q = np.conj(np.diag(np.dot(np.dot(vander, tmp), modes)))
-            
+
             # b optimal
             a = np.linalg.solve(P, q)
         else:
