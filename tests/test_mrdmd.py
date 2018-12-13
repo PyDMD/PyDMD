@@ -22,8 +22,8 @@ def create_data():
     D += 0.1 * np.cos(5.9 * Xm) * np.exp(12j * Tm)
     D += 0.1 * np.random.randn(*Xm.shape)
     D += 0.03 * np.random.randn(*Xm.shape)
-    D += 5 * np.exp(-np.power(old_div((Xm + 5), 5), 2)) * np.exp(
-        -np.power(old_div((Tm - 5), 5), 2))
+    D += 5 * np.exp(-np.power(old_div((Xm + 5), 5), 2)) * np.exp(-np.power(
+        old_div((Tm - 5), 5), 2))
     D[:800, 40:] += 2
     D[200:600, 50:70] -= 3
     D[800:, :40] -= 2
@@ -93,8 +93,8 @@ class TestMrDmd(TestCase):
         dmd = MrDMD(svd_rank=rank, max_level=max_level, max_cycles=2)
         dmd.fit(X=sample_data)
         pdynamics = dmd.partial_dynamics(level, 3)
-        assert pdynamics.shape == (rank, old_div(sample_data.shape[1], 2
-                                                 **level))
+        assert pdynamics.shape == (rank, old_div(sample_data.shape[1], 2**level)
+                                   )
 
     def test_eigs2(self):
         max_level = 5
@@ -138,8 +138,8 @@ class TestMrDmd(TestCase):
         dmd = MrDMD(svd_rank=rank, max_level=max_level, max_cycles=2)
         dmd.fit(X=sample_data)
         pdata = dmd.partial_reconstructed_data(level, 3)
-        assert pdata.shape == (sample_data.shape[0],
-                               old_div(sample_data.shape[1], 2**level))
+        assert pdata.shape == (sample_data.shape[0], old_div(
+            sample_data.shape[1], 2**level))
 
     def test_wrong_partial_reconstructed(self):
         max_level = 5

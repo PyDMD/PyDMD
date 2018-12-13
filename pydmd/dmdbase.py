@@ -298,8 +298,8 @@ class DMDBase(object):
 
         # Compute the eigenvectors of the high-dimensional operator
         if exact:
-            eigenvectors = ((
-                Y.dot(V) * np.reciprocal(s)).dot(lowrank_eigenvectors))
+            eigenvectors = (
+                (Y.dot(V) * np.reciprocal(s)).dot(lowrank_eigenvectors))
         else:
             eigenvectors = U.dot(lowrank_eigenvectors)
 
@@ -308,8 +308,7 @@ class DMDBase(object):
 
         return eigenvalues, eigenvectors
 
-    @staticmethod
-    def _compute_amplitudes(modes, snapshots, eigs, opt):
+    def _compute_amplitudes(self, modes, snapshots, eigs, opt):
         """
         Compute the amplitude coefficients. If `opt` is False the amplitudes
         are computed by minimizing the error between the modes and the first
@@ -323,20 +322,35 @@ class DMDBase(object):
             snapshots, stored by column.
         :param numpy.ndarray eigs: array that contains the eigenvalues of the
             linear operator.
-        :param bool opt: flag for optimized dmd.
+        :param bool opt: flag for computing the optimal amplitudes of the DMD
+            modes, minimizing the error between the time evolution and all
+            the original snapshots. If false the amplitudes are computed
+            using only the initial condition, that is snapshots[0].
         :return: the amplitudes array
         :rtype: numpy.ndarray
+
+        References for optimal amplitudes:
+        Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
+        https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document
         """
         if opt:
-            L = np.concatenate(
-                [
-                    modes.dot(np.diag(eigs**i))
-                    for i in range(snapshots.shape[1])
-                ],
-                axis=0)
-            b = np.reshape(snapshots, (-1, ), order='F')
+            # compute the vandermonde matrix
+            omega = old_div(np.log(eigs), self.original_time['dt'])
+            vander = np.exp(
+                np.multiply(*np.meshgrid(omega, self.dmd_timesteps))).T
 
-            a = np.linalg.lstsq(L, b, rcond=None)[0]
+            # perform svd on all the snapshots
+            U, s, V = np.linalg.svd(self._snapshots, full_matrices=False)
+            V = V.T
+
+            P = np.multiply(
+                np.dot(modes.conj().T, modes),
+                np.conj(np.dot(vander, vander.conj().T)))
+            tmp = (np.dot(np.dot(U, np.diag(s)), V.T)).conj().T
+            q = np.conj(np.diag(np.dot(np.dot(vander, tmp), modes)))
+
+            # b optimal
+            a = np.linalg.solve(P, q)
         else:
             a = np.linalg.lstsq(modes, snapshots.T[0], rcond=None)[0]
 

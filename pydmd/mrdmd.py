@@ -30,7 +30,8 @@ class MrDMD(DMDBase):
         is 0, that means TLSQ is not applied.
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
-    :param bool opt: flag to compute optimized DMD. Default is False.
+    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
+        Default is False.
     :param int max_cycles: the maximum number of mode oscillations in any given
         time scale. Default is 1.
     :param int max_level: the maximum number of levels. Defualt is 6.

@@ -22,7 +22,8 @@ class HODMD(DMDBase):
         is 0, that means TLSQ is not applied.
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
-    :param bool opt: flag to compute optimized DMD. Default is False.
+    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
+        Default is False.
     :param int d: the new order for spatial dimension of the input snapshots.
         Default is 1.
     """
@@ -60,11 +61,12 @@ class HODMD(DMDBase):
             self._Atilde, Y, U, s, V, self.exact)
         self._modes = self._modes[:self._snapshots.shape[0], :]
 
-        self._b = self._compute_amplitudes(self._modes, self._snapshots,
-                                           self._eigs, self.opt)
-
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
         self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
+
+        self._b = self._compute_amplitudes(self._modes, self._snapshots,
+                                           self._eigs, self.opt)
+
 
         return self

@@ -25,7 +25,8 @@ class DMDc(DMDBase):
     :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means no truncation.
-    :param bool opt: flag to compute optimized DMD. Default is False.
+    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
+        Default is False.
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, opt=False):
@@ -176,10 +177,12 @@ class DMDc(DMDBase):
         X = self._snapshots[:, :-1]
         Y = self._snapshots[:, 1:]
 
+        self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
+        self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
+
         if B is None:
             self._fit_B_unknown(X, Y)
         else:
             self._fit_B_known(X, Y, B)
 
-        self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
-        self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
+        return self
