@@ -3,3 +3,4 @@
 
 # compiled python codes
 *.pyc
+pydmd\.egg-info/
