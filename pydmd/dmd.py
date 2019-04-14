@@ -48,7 +48,7 @@ class DMD(DMDBase):
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
         self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
-        
+
         self._b = self._compute_amplitudes(self._modes, self._snapshots,
                                            self._eigs, self.opt)
 
