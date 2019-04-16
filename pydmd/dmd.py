@@ -1,6 +1,14 @@
 """
 Derived module from dmdbase.py for classic dmd.
 """
+# --> Import standard python packages
+import numpy as np
+from scipy.linalg import eig, eigvals
+from scipy.linalg import pinv2
+
+pinv = lambda x: pinv2(x, rcond=10*np.finfo(float).eps)
+
+# --> Import PyDMD base class for DMD.
 from .dmdbase import DMDBase
 
 
@@ -42,6 +50,8 @@ class DMD(DMDBase):
 
         self._Atilde = self._build_lowrank_op(U, s, V, Y)
 
+        self._svd_modes = U
+
         self._eigs, self._modes = self._eig_from_lowrank_op(
             self._Atilde, Y, U, s, V, self.exact)
 
@@ -53,3 +63,31 @@ class DMD(DMDBase):
                                            self._eigs, self.opt)
 
         return self
+
+    def predict(self, X):
+        """Predict the output Y given the input X using the fitted DMD model.
+
+        Parameters
+        ----------
+        X : numpy array
+            Input data.
+
+        Returns
+        -------
+        Y : numpy array
+            Predicted output.
+
+        """
+
+        # --> Predict using the SVD modes as the basis.
+        if self.exact is False:
+            Y = np.linalg.multi_dot(
+                [self._svd_modes, self._Atilde, self._svd_modes.T.conj(), X]
+            )
+        elif self.exact is True:
+            adjoint_modes = pinv(self._modes)
+            Y = np.linalg.multi_dot(
+                [self._modes, np.diag(self._eigs), adjoint_modes, X]
+            )
+
+        return Y
