@@ -10,6 +10,7 @@ Dynamic Mode Decomposition
 # --> Import standard python packages
 import numpy as np
 from scipy.linalg import eig, eigvals
+from scipy.linalg import svdvals
 from scipy.linalg import pinv2
 
 
@@ -60,7 +61,8 @@ class optDMD(DMDBase):
         self.svd_rank = svd_rank
 
     def fit(self, X, Y=None):
-        """Fit the DMD model using the input X and output Y (if provided).
+        """
+        Fit the DMD model using the input X and output Y (if provided).
 
         Parameters
         ----------
@@ -115,6 +117,9 @@ class optDMD(DMDBase):
             # --> Eigenvalues of Atilde.
             self._eigs = eigvals(S)
 
+            # --> Singular values of Atilde.
+            self._svds = svdvals(S)
+
         elif self.factorization == "evd":
             # --> Compute the eigentriplets of the low-dimensional DMD matrix.
             vals, vecs_left, vecs_right = eig(S, left=True, right=True)
@@ -148,10 +153,14 @@ class optDMD(DMDBase):
             # --> Eigenvalues of Atilde.
             self._eigs = vals
 
+            # --> Singular values of Atilde.
+            self._svds = svdvals(S)
+
         return self
 
     def predict(self, X):
-        """Predict the output Y given the input X using the fitted DMD model.
+        """
+        Predict the output Y given the input X using the fitted DMD model.
 
         Parameters
         ----------
