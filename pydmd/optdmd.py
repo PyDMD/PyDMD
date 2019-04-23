@@ -1,11 +1,10 @@
-# --> Import PyDMD base class for DMD.
-from .dmdbase import DMDBase
-"""
-Dynamic Mode Decomposition
-"""
 # Author : Jean-Christophe Loiseau <jean-christophe.loiseau@ensam.eu>
 #
 # Licence : Whatever licence PyDMD is using.
+
+
+# --> Import PyDMD base class for DMD.
+from .dmdbase import DMDBase
 
 # --> Import standard python packages
 import numpy as np
@@ -23,15 +22,14 @@ class optDMD(DMDBase):
     Dynamic Mode Decomposition
 
     This class implements the closed-form solution to the DMD minimization
-    problem. It relies on the optimal solution and the demonstration given by
-    Héas & Herzet [1].
+    problem. It relies on the optimal solution given by Héas & Herzet [1].
 
     Parameters
     ----------
     factorization : string
         Compute either the eigenvalue decomposition of the unknown high-
         -dimensional DMD operator (factorization="evd") or its singular value
-        decomposition, i.e. factorization="svd". (the default is "svd").
+        decomposition, i.e. factorization="svd". (the default is "evd").
 
     svd_rank : int or float
         The rank for the truncation; If 0, the method computes the
@@ -48,11 +46,11 @@ class optDMD(DMDBase):
     References
     ----------
     [1] P. Héas & C. Herzet. Low-rank dynamic mode decomposition: optimal
-    solution in polynomial time. arXiv:1610.02962. 2016
+    solution in polynomial time. arXiv:1610.02962. 2016.
 
     """
 
-    def __init__(self, factorization="svd", svd_rank=0):
+    def __init__(self, factorization="evd", svd_rank=0):
 
         # --> Compute either the SVD or EVD factorization of the DMD problem.
         self.factorization = factorization
@@ -131,9 +129,7 @@ class optDMD(DMDBase):
             right_vecs[:, abs(vals) > 1e-8] /= vals[abs(vals) > 1e-8]
 
             # --> Build the matrix of left eigenvectors.
-            left_vecs = np.linalg.multi_dot(
-                [Q, vecs_left]
-            )
+            left_vecs = Q.dot(vecs_left)
             left_vecs[:, abs(vals) > 1e-8] /= vals[abs(vals) > 1e-8]
 
             # --> Rescale the left eigenvectors.
