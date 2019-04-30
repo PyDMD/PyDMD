@@ -1,7 +1,6 @@
-# Author : Jean-Christophe Loiseau <jean-christophe.loiseau@ensam.eu>
-#
-# Licence : Whatever licence PyDMD is using.
-
+"""
+Derived module from dmdbase.py for the optimal closed-form solution to dmd.
+"""
 
 # --> Import PyDMD base class for DMD.
 from .dmdbase import DMDBase
