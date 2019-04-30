@@ -39,7 +39,7 @@ class OptDMD(DMDBase):
 
     References
     ----------
-    [1] P. Héas & C. Herzet. Low-rank dynamic mode decomposition: optimal
+    [1] P. Heas & C. Herzet. Low-rank dynamic mode decomposition: optimal
     solution in polynomial time. arXiv:1610.02962. 2016.
 
     """
@@ -65,7 +65,7 @@ class OptDMD(DMDBase):
 
         Returns
         -------
-        self : optDMD object
+        self : OptDMD object
             The fitted DMD model.
 
         """
@@ -95,6 +95,15 @@ class OptDMD(DMDBase):
         # --> Compute the low-dimensional DMD operator.
         S = Q.T.dot(Uz)
 
+        # --> Low-dimensional DMD operator.
+        self._Atilde = S
+
+        # --> Eigenvalues of Atilde.
+        self._eigs = eigvals(S)
+
+        # --> Singular values of Atilde.
+        self._svds = svdvals(S)
+
         if self.factorization == "svd":
             # --> Input/Output spaces.
             self._input_space = Q
@@ -102,15 +111,6 @@ class OptDMD(DMDBase):
 
             # --> DMD-SVD modes.
             self._modes = Uz
-
-            # --> Low-dimensional DMD operator.
-            self._Atilde = S
-
-            # --> Eigenvalues of Atilde.
-            self._eigs = eigvals(S)
-
-            # --> Singular values of Atilde.
-            self._svds = svdvals(S)
 
         elif self.factorization == "evd":
             # --> Compute the eigentriplets of the low-dimensional DMD matrix.
@@ -137,15 +137,6 @@ class OptDMD(DMDBase):
             # --> DMD-EVD modes.
             self._modes = right_vecs
 
-            # --> Low-dimensional DMD operator.
-            self._Atilde = S
-
-            # --> Eigenvalues of Atilde.
-            self._eigs = vals
-
-            # --> Singular values of Atilde.
-            self._svds = svdvals(S)
-
         return self
 
     def predict(self, X):
@@ -160,7 +151,7 @@ class OptDMD(DMDBase):
         Returns
         -------
         Y : numpy array
-            Predicted output.
+            One time-step ahead predicted output.
 
         """
 
