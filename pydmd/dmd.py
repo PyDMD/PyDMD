@@ -1,15 +1,16 @@
 """
 Derived module from dmdbase.py for classic dmd.
 """
-# --> Import standard python packages
-import numpy as np
-from scipy.linalg import eig, eigvals
-from scipy.linalg import pinv2
-
-pinv = lambda x: pinv2(x, rcond=10*np.finfo(float).eps)
 
 # --> Import PyDMD base class for DMD.
 from .dmdbase import DMDBase
+
+# --> Import standard python packages
+import numpy as np
+from scipy.linalg import eig, pinv2
+
+
+def pinv(x): return pinv2(x, rcond=10*np.finfo(float).eps)
 
 
 class DMD(DMDBase):
@@ -84,6 +85,7 @@ class DMD(DMDBase):
             Y = np.linalg.multi_dot(
                 [self._svd_modes, self._Atilde, self._svd_modes.T.conj(), X]
             )
+        # --> Predict using the DMD modes as the basis.
         elif self.exact is True:
             adjoint_modes = pinv(self._modes)
             Y = np.linalg.multi_dot(
