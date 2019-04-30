@@ -15,13 +15,12 @@ from scipy.linalg import pinv2
 def pinv(x): return pinv2(x, rcond=10*np.finfo(float).eps)
 
 
-class optDMD(DMDBase):
-
+class OptDMD(DMDBase):
     """
     Dynamic Mode Decomposition
 
     This class implements the closed-form solution to the DMD minimization
-    problem. It relies on the optimal solution given by Héas & Herzet [1].
+    problem. It relies on the optimal solution given by Heas & Herzet [1].
 
     Parameters
     ----------
@@ -37,10 +36,6 @@ class optDMD(DMDBase):
         the rank is the number of the biggest singular values that are needed
         to reach the 'energy' specified by `svd_rank`; if -1, the method does
         not compute truncation.
-
-    Attributes
-    -----------
-    ???
 
     References
     ----------

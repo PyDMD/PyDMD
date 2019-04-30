@@ -10,4 +10,4 @@ from .mrdmd import MrDMD
 from .cdmd import CDMD
 from .hodmd import HODMD
 from .dmdc import DMDc
-from .optdmd import optDMD
+from .optdmd import OptDMD
