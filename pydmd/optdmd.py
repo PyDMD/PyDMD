@@ -7,10 +7,40 @@ from .dmdbase import DMDBase
 
 # --> Import standard python packages
 import numpy as np
-from scipy.linalg import eig, eigvals, svdvals, pinv2
+from scipy.linalg import eig, eigvals, svdvals
 
 
-def pinv(x): return pinv2(x, rcond=10*np.finfo(float).eps)
+def pinv_diag(x):
+
+    """
+    Utility function to compute the pseudo-inverse of a diagonal matrix.
+
+    Parameters
+    ----------
+
+    x : array-like, shape (n,)
+        Diagonal of the matrix to be pseudo-inversed.
+
+    Returns
+    -------
+
+    y : array-like, shape (n, n)
+        The computed pseudo-inverse.
+
+    """
+
+    # --> Set the tolerance to zero-out small values.
+    t = x.dtype.char.lower()
+    factor = {'f': 1E2, 'd': 1E4}
+    rcond = factor[t] * np.finfo(t).eps
+
+    # --> Initialize array.
+    y = np.zeros_like(x)
+
+    # --> Compute the pseudo-inverse.
+    y[x>rcond] = np.reciprocal(x[x>rcond])
+
+    return np.diag(y)
 
 
 class OptDMD(DMDBase):
@@ -79,7 +109,7 @@ class OptDMD(DMDBase):
 
         # --> Compute the matrix Z.
         Z = np.linalg.multi_dot(
-            [Y, Vx, np.diag(Sx), pinv(np.diag(Sx)), Vx.conj().T]
+            [Y, Vx, np.diag(Sx), pinv_diag(Sx), Vx.conj().T]
         )
 
         # --> Compute the singular value decomposition of Z.
@@ -87,7 +117,7 @@ class OptDMD(DMDBase):
 
         # --> Compute the Q matrix.
         Q = np.linalg.multi_dot(
-            [Uz.T, Y, Vx, pinv(np.diag(Sx)), Ux.T.conj()]
+            [Uz.T, Y, Vx, pinv_diag(Sx), Ux.T.conj()]
         ).T
 
         # --> Compute the low-dimensional DMD operator.
