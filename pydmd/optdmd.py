@@ -7,9 +7,7 @@ from .dmdbase import DMDBase
 
 # --> Import standard python packages
 import numpy as np
-from scipy.linalg import eig, eigvals
-from scipy.linalg import svdvals
-from scipy.linalg import pinv2
+from scipy.linalg import eig, eigvals, svdvals, pinv2
 
 
 def pinv(x): return pinv2(x, rcond=10*np.finfo(float).eps)
