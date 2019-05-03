@@ -1,6 +1,6 @@
 from builtins import range
 from unittest import TestCase
-from pydmd.dmd import OptDMD
+from pydmd.optdmd import OptDMD
 import matplotlib.pyplot as plt
 import numpy as np
 import os
