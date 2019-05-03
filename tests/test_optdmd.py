@@ -64,7 +64,7 @@ class TestOptDmd(TestCase):
         exact_atilde = np.array(
             [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
              [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]])
-        np.testing.assert_allclose(exact_atilde, optdmd.atilde)
+        np.testing.assert_allclose(np.linalg.eigvals(exact_atilde), np.linalg.eigvals(optdmd.atilde))
 
     def test_eigs_1(self):
         optdmd = OptDMD(svd_rank=-1)
