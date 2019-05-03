@@ -98,6 +98,10 @@ class OptDMD(DMDBase):
         # --> DMD basis for the output space.
         self._output_space = None
 
+        # --> Snapshots.
+        self._input_snapshots, self._input_snapshots_shape = None, None
+        self._output_snapshots, self._output_snapshots_shape = None, None
+
     def fit(self, X, Y=None):
         """
         Fit the DMD model using the input X and output Y (if provided).
@@ -118,9 +122,16 @@ class OptDMD(DMDBase):
 
         # --> Check whether Y is given or not.
         if Y is None:
+            # --> Save snapshots for time-series analysis.
+            self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+
             # --> Assume X includes a single realization of the dynamic process.
             Y = X[:, 1:]    # y = x[k+1]
             X = X[:, :-1]   # x = x[k]
+        else:
+            # --> Save snapshots for time-series analysis.
+            self._input_snapshots, self._input_snapshots_shape = self._col_major_2darray(X)
+            self._output_snapshots, self._output_snapshots_shape = self._col_major_2darray(Y)
 
         # --> Total Least-Squares Denoising of the snapshots matrices.
         X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
@@ -129,13 +140,17 @@ class OptDMD(DMDBase):
         Ux, Sx, Vx = self._compute_svd(X, -1)
 
         # --> Compute the matrix Z.
-        Z = np.linalg.multi_dot([Y, Vx, np.diag(Sx), pinv_diag(Sx), Vx.T])
+        Z = np.linalg.multi_dot(
+            [Y, Vx, np.diag(Sx), pinv_diag(Sx), Vx.T.conj()]
+            )
 
         # --> Compute the singular value decomposition of Z.
         Uz, _, _ = self._compute_svd(Z, self.svd_rank)
 
         # --> Compute the Q matrix.
-        Q = np.linalg.multi_dot([Uz.T, Y, Vx, pinv_diag(Sx), Ux.T]).T
+        Q = np.linalg.multi_dot(
+            [Uz.T.conj(), Y, Vx, pinv_diag(Sx), Ux.T.conj()]
+            ).T.conj()
 
         # --> Low-dimensional DMD operator.
         self._Atilde = self._build_lowrank_op(Uz, Q)
@@ -153,15 +168,12 @@ class OptDMD(DMDBase):
             # --> DMD basis for the output space.
             self._output_space = Uz
 
-            # --> DMD-SVD modes.
-            self._modes = Uz
-
         elif self.factorization == "evd":
             # --> Compute DMD eigenvalues and right/left eigenvectors
             _, self._input_space, self._output_space = self._eig_from_lowrank_op(self._Atilde, Uz, Q)
 
-            # --> DMD-EVD modes.
-            self._modes = self._output_space
+        # --> DMD modes.
+        self._modes = self._output_space
 
         return self
 
@@ -213,7 +225,7 @@ class OptDMD(DMDBase):
             Low-dimensional DMD operator.
 
         """
-        return Q.T.dot(P)
+        return Q.T.conj().dot(P)
 
     @staticmethod
     def _eig_from_lowrank_op(Atilde, P, Q):
@@ -248,17 +260,14 @@ class OptDMD(DMDBase):
 
         # --> Build the matrix of right eigenvectors.
         right_vecs = np.linalg.multi_dot([P, Atilde, vecs_right])
-        #right_vecs[:, abs(vals) > 1e-8] /= vals[abs(vals) > 1e-8]
         right_vecs = right_vecs.dot(pinv_diag(vals))
 
         # --> Build the matrix of left eigenvectors.
         left_vecs = Q.dot(vecs_left)
-        #left_vecs[:, abs(vals) > 1e-8] /= vals[abs(vals) > 1e-8]
         left_vecs = left_vecs.dot(pinv_diag(vals))
 
         # --> Rescale the left eigenvectors.
         m = np.diag(left_vecs.T.conj().dot(right_vecs))
-        #left_vecs[:, abs(vals) > 1e-8] /= m[abs(vals) > 1e-8].conj()
         left_vecs = left_vecs.dot(pinv_diag(m))
 
         return vals, left_vecs, right_vecs
