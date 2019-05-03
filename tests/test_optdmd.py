@@ -33,10 +33,15 @@ noisy_data = create_noisy_data()
 
 
 class TestOptDmd(TestCase):
-    def test_shape(self):
+    def test_shape_1(self):
         optdmd = OptDMD(svd_rank=-1)
         optdmd.fit(X=sample_data)
         assert optdmd.modes.shape[1] == sample_data.shape[1] - 1
+
+    def test_shape_2(self):
+        optdmd = OptDMD(svd_rank=-1)
+        optdmd.fit(X=sample_data[:, :-1], Y=sample_data[:, 1:])
+        assert optdmd.modes.shape[1] == sample_data.shape[1]-1
 
     def test_truncation_shape(self):
         optdmd = OptDMD(svd_rank=3)
