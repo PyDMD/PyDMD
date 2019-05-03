@@ -80,14 +80,20 @@ class OptDMD(DMDBase):
                  opt=False
                  ):
 
-        # --> Initialize the super-seeded class
-        super().__init__()
-
         # --> Compute either the SVD or EVD factorization of the DMD problem.
         self.factorization = factorization
 
         # --> Rank of the DMD model.
         self.svd_rank = svd_rank
+
+        # --> Total Least-Squares denoising.
+        self.tlsq_rank = tlsq_rank
+
+        # --> Construction of the reduced-order model.
+        self.exact = exact
+
+        # --> Optimize the amplitudes.
+        self.opt = opt
 
         # --> Singular values of the DMD operator.
         self._svds = None
