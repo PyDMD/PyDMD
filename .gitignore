@@ -3,3 +3,6 @@
 
 # compiled python codes
 *.pyc
+pydmd\.egg-info/
+
+tutorials/\.ipynb_checkpoints/
