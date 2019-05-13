@@ -239,7 +239,7 @@ class DMDBase(object):
             tau = np.median(s) * omega(beta)
             rank = np.sum(s > tau)
         elif svd_rank > 0 and svd_rank < 1:
-            cumulative_energy = np.cumsum(s / s.sum())
+            cumulative_energy = np.cumsum(s**2 / (s**2).sum())
             rank = np.searchsorted(cumulative_energy, svd_rank) + 1
         elif svd_rank >= 1 and isinstance(svd_rank, int):
             rank = min(svd_rank, U.shape[1])
