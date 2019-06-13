@@ -143,6 +143,28 @@ class DMDBase(object):
         """
         return self._snapshots
 
+    @property
+    def frequency(self):
+        """
+        Get the amplitude spectrum.
+
+        :return: the array that contains the frequencies of the eigenvalues.
+        :rtype: numpy.ndarray
+        """
+        return np.log(self.eigs).imag/(2*np.pi*self.original_time['dt'])
+
+    @property
+    def amplitudes(self):
+        """
+        Get the coefficients that minimize the error between the original
+        system and the reconstructed one. For futher information, see
+        `dmdbase._compute_amplitudes`.
+
+        :return: the array that contains the amplitudes coefficient.
+        :rtype: numpy.ndarray
+        """
+        return self._b
+
     def fit(self, X):
         """
         Abstract method to fit the snapshots matrices.
