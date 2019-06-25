@@ -1,0 +1,437 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>DMDc &mdash; PyDMD 0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript">
+          var DOCUMENTATION_OPTIONS = {
+              URL_ROOT:'./',
+              VERSION:'0.2',
+              LANGUAGE:'None',
+              COLLAPSE_INDEX:false,
+              FILE_SUFFIX:'.html',
+              HAS_SOURCE:  true,
+              SOURCELINK_SUFFIX: ''
+          };
+      </script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="next" title="OptDMD" href="optdmd.html" />
+    <link rel="prev" title="pydmd.hodmd.HODMD.snapshots" href="_summaries/pydmd.hodmd.HODMD.snapshots.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PyDMD
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">MrDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">FbDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">CDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hodmd.html">HODMD</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DMDc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyDMD</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="code.html">Code Documentation</a> &raquo;</li>
+        
+      <li>DMDc</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dmdc.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pydmd.dmdc">
+<span id="dmdc"></span><h1>DMDc<a class="headerlink" href="#module-pydmd.dmdc" title="Permalink to this headline">¶</a></h1>
+<p>Derived module from dmdbase.py for dmd with control.</p>
+<p>Reference:
+- Proctor, J.L., Brunton, S.L. and Kutz, J.N., 2016. Dynamic mode decomposition
+with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.atilde.html#pydmd.dmdc.DMDc.atilde" title="pydmd.dmdc.DMDc.atilde"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.atilde</span></code></a></td>
+<td>Get the reduced Koopman operator A, called A tilde.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.B.html#pydmd.dmdc.DMDc.B" title="pydmd.dmdc.DMDc.B"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.B</span></code></a></td>
+<td>Get the operator B.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.basis.html#pydmd.dmdc.DMDc.basis" title="pydmd.dmdc.DMDc.basis"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.basis</span></code></a></td>
+<td>Get the basis used to reduce the linear operator to the low dimensional space.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.dmd_timesteps.html#pydmd.dmdc.DMDc.dmd_timesteps" title="pydmd.dmdc.DMDc.dmd_timesteps"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.dmd_timesteps</span></code></a></td>
+<td>Get the timesteps of the reconstructed states.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.dynamics.html#pydmd.dmdc.DMDc.dynamics" title="pydmd.dmdc.DMDc.dynamics"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.dynamics</span></code></a></td>
+<td>Get the time evolution of each mode.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.eigs.html#pydmd.dmdc.DMDc.eigs" title="pydmd.dmdc.DMDc.eigs"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.eigs</span></code></a></td>
+<td>Get the eigenvalues of A tilde.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.fit.html#pydmd.dmdc.DMDc.fit" title="pydmd.dmdc.DMDc.fit"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.fit</span></code></a>(X,&nbsp;I[,&nbsp;B])</td>
+<td>Compute the Dynamic Modes Decomposition with control given the original snapshots and the control input data.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.modes.html#pydmd.dmdc.DMDc.modes" title="pydmd.dmdc.DMDc.modes"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.modes</span></code></a></td>
+<td>Get the matrix containing the DMD modes, stored by column.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.original_timesteps.html#pydmd.dmdc.DMDc.original_timesteps" title="pydmd.dmdc.DMDc.original_timesteps"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.original_timesteps</span></code></a></td>
+<td>Get the timesteps of the original snapshot.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.plot_eigs.html#pydmd.dmdc.DMDc.plot_eigs" title="pydmd.dmdc.DMDc.plot_eigs"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.plot_eigs</span></code></a>([show_axes,&nbsp;...])</td>
+<td>Plot the eigenvalues.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.plot_modes_2D.html#pydmd.dmdc.DMDc.plot_modes_2D" title="pydmd.dmdc.DMDc.plot_modes_2D"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.plot_modes_2D</span></code></a>([index_mode,&nbsp;filename,&nbsp;...])</td>
+<td>Plot the DMD Modes.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.plot_snapshots_2D.html#pydmd.dmdc.DMDc.plot_snapshots_2D" title="pydmd.dmdc.DMDc.plot_snapshots_2D"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.plot_snapshots_2D</span></code></a>([index_snap,&nbsp;...])</td>
+<td>Plot the snapshots.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.reconstructed_data.html#pydmd.dmdc.DMDc.reconstructed_data" title="pydmd.dmdc.DMDc.reconstructed_data"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.reconstructed_data</span></code></a>([control_input])</td>
+<td>Return the reconstructed data, computed using the <cite>control_input</cite> argument.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.snapshots.html#pydmd.dmdc.DMDc.snapshots" title="pydmd.dmdc.DMDc.snapshots"><code class="xref py py-obj docutils literal"><span class="pre">DMDc.snapshots</span></code></a></td>
+<td>Get the original input data.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc._fit_B_known.html#pydmd.dmdc.DMDc._fit_B_known" title="pydmd.dmdc.DMDc._fit_B_known"><code class="xref py py-obj docutils literal"><span class="pre">DMDc._fit_B_known</span></code></a>(X,&nbsp;Y,&nbsp;B)</td>
+<td>Private method that performs the dynamic mode decomposition algorithm with control when the matrix <cite>B</cite> is provided.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc._fit_B_unknown.html#pydmd.dmdc.DMDc._fit_B_unknown" title="pydmd.dmdc.DMDc._fit_B_unknown"><code class="xref py py-obj docutils literal"><span class="pre">DMDc._fit_B_unknown</span></code></a>(X,&nbsp;Y)</td>
+<td>Private method that performs the dynamic mode decomposition algorithm with control when the matrix <cite>B</cite> is not provided.</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descname">DMDc</code><span class="sig-paren">(</span><em>svd_rank=0</em>, <em>tlsq_rank=0</em>, <em>opt=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdc.html#DMDc"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
+<p>Dynamic Mode Decomposition with control.
+This version does not allow to manipulate the temporal window within the
+system is reconstructed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>svd_rank</strong> (<em>int or float</em>) &#8211; the rank for the truncation; If 0, the method computes the
+optimal rank and uses it for truncation; if positive interger, the
+method uses the argument for the truncation; if float between 0 and 1,
+the rank is the number of the biggest singular values that are needed
+to reach the &#8216;energy&#8217; specified by <cite>svd_rank</cite>; if -1, the method does
+not compute truncation.</li>
+<li><strong>tlsq_rank</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; rank truncation computing Total Least Square. Default
+is 0, that means no truncation.</li>
+<li><strong>opt</strong> (<a class="reference external" href="http://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; flag to compute optimal amplitudes. See <code class="xref py py-class docutils literal"><span class="pre">DMDBase</span></code>.
+Default is False.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt>
+<code class="descname">B</code></dt>
+<dd><p>Get the operator B.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the operator B.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)">numpy.ndarray</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">_fit_B_known</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>B</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdc.html#DMDc._fit_B_known"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Private method that performs the dynamic mode decomposition algorithm
+with control when the matrix <cite>B</cite> is provided.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>X</strong> (<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><em>numpy.ndarray</em></a>) &#8211; the first matrix of original snapshots.</li>
+<li><strong>Y</strong> (<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><em>numpy.ndarray</em></a>) &#8211; the second matrix of original snapshots.</li>
+<li><strong>I</strong> (<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><em>numpy.ndarray</em></a>) &#8211; the input control matrix.</li>
+<li><strong>B</strong> (<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><em>numpy.ndarray</em></a>) &#8211; the matrib B.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">_fit_B_unknown</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdc.html#DMDc._fit_B_unknown"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Private method that performs the dynamic mode decomposition algorithm
+with control when the matrix <cite>B</cite> is not provided.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>X</strong> (<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><em>numpy.ndarray</em></a>) &#8211; the first matrix of original snapshots.</li>
+<li><strong>Y</strong> (<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><em>numpy.ndarray</em></a>) &#8211; the second matrix of original snapshots.</li>
+<li><strong>I</strong> (<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><em>numpy.ndarray</em></a>) &#8211; the input control matrix.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">basis</code></dt>
+<dd><p>Get the basis used to reduce the linear operator to the low dimensional
+space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the matrix which columns are the basis vectors.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)">numpy.ndarray</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>I</em>, <em>B=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdc.html#DMDc.fit"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute the Dynamic Modes Decomposition with control given the original
+snapshots and the control input data. The matrix <cite>B</cite> that controls how
+the control input influences the system evolution can be provided by
+the user; otherwise, it is computed by the algorithm.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>X</strong> (<em>numpy.ndarray or iterable</em>) &#8211; the input snapshots.</li>
+<li><strong>I</strong> (<em>numpy.ndarray or iterable</em>) &#8211; the control input.</li>
+<li><strong>B</strong> (<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><em>numpy.ndarray</em></a>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="descname">reconstructed_data</code><span class="sig-paren">(</span><em>control_input=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdc.html#DMDc.reconstructed_data"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Return the reconstructed data, computed using the <cite>control_input</cite>
+argument. If the <cite>control_input</cite> is not passed, the original input (in
+the <cite>fit</cite> method) is used. The input dimension has to be consistent
+with the dynamics.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>control_input</strong> (<a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><em>numpy.ndarray</em></a>) &#8211; the input control matrix.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the matrix that contains the reconstructed snapshots.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)">numpy.ndarray</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="optdmd.html" class="btn btn-neutral float-right" title="OptDMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="_summaries/pydmd.hodmd.HODMD.snapshots.html" class="btn btn-neutral float-left" title="pydmd.hodmd.HODMD.snapshots" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017-2018, PyDMD contributors
+      <span class="lastupdated">
+        Last updated on Jun 25, 2019.
+      </span>
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
