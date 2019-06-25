@@ -1,43 +1,32 @@
 """
-Derived module from dmdbase.py for the optimal closed-form solution to dmd.
+Derived module from :meth:`pydmd.dmdbase` for the optimal closed-form solution to dmd.
+
+.. note::
+
+    P. Heas & C. Herzet. Low-rank dynamic mode decomposition: optimal
+    solution in polynomial time. arXiv:1610.02962. 2016.
+
 """
-
-# --> Import standard python packages
 import numpy as np
-from scipy.linalg import eig, eigvals, svdvals
 
-# --> Import PyDMD base class for DMD.
+from scipy.linalg import eig, eigvals, svdvals
 from .dmdbase import DMDBase
 
 
 def pinv_diag(x):
-
     """
     Utility function to compute the pseudo-inverse of a diagonal matrix.
 
-    Parameters
-    ----------
-
-    x : array-like, shape (n,)
-        Diagonal of the matrix to be pseudo-inversed.
-
-    Returns
-    -------
-
-    y : array-like, shape (n, n)
-        The computed pseudo-inverse.
-
+    :param array_like x: diagonal of the matrix to be pseudo-inversed.
+    :return: the computed pseudo-inverse 
+    :rtype: numpy.ndarray
     """
-
-    # --> Set the tolerance to zero-out small values.
     t = x.dtype.char.lower()
     factor = {'f': 1E2, 'd': 1E4}
     rcond = factor[t] * np.finfo(t).eps
 
-    # --> Initialize array.
     y = np.zeros(*x.shape)
 
-    # --> Compute the pseudo-inverse.
     y[x > rcond] = np.reciprocal(x[x > rcond])
 
     return np.diag(y)
@@ -48,28 +37,28 @@ class OptDMD(DMDBase):
     Dynamic Mode Decomposition
 
     This class implements the closed-form solution to the DMD minimization
-    problem. It relies on the optimal solution given by Heas & Herzet [1].
+    problem. It relies on the optimal solution given by [HeasHerzet16]_.
 
-    Parameters
-    ----------
-    factorization : string
-        Compute either the eigenvalue decomposition of the unknown high-
-        -dimensional DMD operator (factorization="evd") or its singular value
-        decomposition, i.e. factorization="svd". (the default is "evd").
+    .. [HeasHerzet16] P. Heas & C. Herzet. Low-rank dynamic mode decomposition:
+        optimal solution in polynomial time. arXiv:1610.02962. 2016.
 
-    svd_rank : int or float
-        The rank for the truncation; If 0, the method computes the
+    :param str factorization: compute either the eigenvalue decomposition of
+        the unknown high-dimensional DMD operator (factorization="evd") or
+        its singular value decomposition (factorization="svd"). Default is
+        "evd".
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
         optimal rank and uses it for truncation; if positive interger, the
         method uses the argument for the truncation; if float between 0 and 1,
         the rank is the number of the biggest singular values that are needed
         to reach the 'energy' specified by `svd_rank`; if -1, the method does
         not compute truncation.
-
-    References
-    ----------
-    [1] P. Heas & C. Herzet. Low-rank dynamic mode decomposition: optimal
-    solution in polynomial time. arXiv:1610.02962. 2016.
-
+    :type svd_rank: int or float
+    :param int tlsq_rank: rank truncation computing Total Least Square. Default
+        is 0, that means TLSQ is not applied.
+    :param bool exact: flag to compute either exact DMD or projected DMD.
+        Default is False.
+    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
+        Default is False.
     """
 
     def __init__(self,
@@ -80,91 +69,52 @@ class OptDMD(DMDBase):
                  opt=False
                  ):
 
-        # --> Compute either the SVD or EVD factorization of the DMD problem.
+        super(OptDMD, self).__init__(svd_rank, tlsq_rank, exact, opt)
         self.factorization = factorization
 
-        # --> Rank of the DMD model.
-        self.svd_rank = svd_rank
-
-        # --> Total Least-Squares denoising.
-        self.tlsq_rank = tlsq_rank
-
-        # --> Construction of the reduced-order model.
-        self.exact = exact
-
-        # --> Optimize the amplitudes.
-        self.opt = opt
-
-        # --> Singular values of the DMD operator.
         self._svds = None
-
-        # --> DMD basis for the input space.
         self._input_space = None
-
-        # --> DMD basis for the output space.
         self._output_space = None
-
-        # --> Snapshots.
         self._input_snapshots, self._input_snapshots_shape = None, None
         self._output_snapshots, self._output_snapshots_shape = None, None
 
     def fit(self, X, Y=None):
         """
-        Fit the DMD model using the input X and output Y (if provided).
+        Compute the Dynamic Modes Decomposition to the input data.
 
-        Parameters
-        ----------
-        X : array-like, shape (n_features, n_samples)
-            Description of parameter `X`.
-        Y : array-like, shape (n_features, n_samples)
-            Description of parameter `Y` (the default is None).
-
-        Returns
-        -------
-        self : OptDMD object
-            The fitted DMD model.
-
+        :param X: the input snapshots.
+        :type X: numpy.ndarray or iterable
+        :param Y: the input snapshots at sequential timestep, if passed. Default is None.
+        :type Y: numpy.ndarray or iterable
         """
 
-        # --> Check whether Y is given or not.
         if Y is None:
-            # --> Save snapshots for time-series analysis.
             self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
 
-            # --> Assume X includes a single realization of the dynamic process.
             Y = X[:, 1:]    # y = x[k+1]
             X = X[:, :-1]   # x = x[k]
         else:
-            # --> Save snapshots for time-series analysis.
             self._input_snapshots, self._input_snapshots_shape = self._col_major_2darray(X)
             self._output_snapshots, self._output_snapshots_shape = self._col_major_2darray(Y)
 
-        # --> Total Least-Squares Denoising of the snapshots matrices.
         X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
 
-        # --> Compute the singular value decomposition of X.
         Ux, Sx, Vx = self._compute_svd(X, -1)
 
-        # --> Compute the matrix Z.
         Z = np.linalg.multi_dot(
             [Y, Vx, np.diag(Sx), pinv_diag(Sx), Vx.T.conj()]
             )
 
-        # --> Compute the singular value decomposition of Z.
         Uz, _, _ = self._compute_svd(Z, self.svd_rank)
 
-        # --> Compute the Q matrix.
         Q = np.linalg.multi_dot(
             [Uz.T.conj(), Y, Vx, pinv_diag(Sx), Ux.T.conj()]
             ).T.conj()
 
-        # --> Low-dimensional DMD operator.
         self._Atilde = self._build_lowrank_op(Uz, Q)
 
-        # --> Eigenvalues of Atilde.
         self._eigs = eigvals(self._Atilde)
 
-        # --> Singular values of Atilde.
         self._svds = svdvals(self._Atilde)
 
         if self.factorization == "svd":
@@ -178,33 +128,20 @@ class OptDMD(DMDBase):
             # --> Compute DMD eigenvalues and right/left eigenvectors
             _, self._input_space, self._output_space = self._eig_from_lowrank_op(self._Atilde, Uz, Q)
 
-        # --> DMD modes.
         self._modes = self._output_space
-
-        return self
 
     def predict(self, X):
         """
         Predict the output Y given the input X using the fitted DMD model.
 
-        Parameters
-        ----------
-        X : numpy array
-            Input data.
-
-        Returns
-        -------
-        Y : numpy array
-            One time-step ahead predicted output.
-
+        :param numpy.ndarray X: the input vector.
+        :return: one time-step ahead predicted output.
+        :rtype: numpy.ndarray
         """
-
-        # --> Factorization : SVD.
         if self.factorization == "svd":
             Y = np.linalg.multi_dot(
                 [self._output_space, self._input_space.T.conj(), X]
             )
-        # --> Factorization : EVD.
         elif self.factorization == "evd":
             Y = np.linalg.multi_dot(
                 [self._output_space, np.diag(self._eigs),
@@ -218,18 +155,11 @@ class OptDMD(DMDBase):
         """
         Utility function to build the low-dimension DMD operator.
 
-        Parameters
-        ----------
-        P : array-like, shape (m, n)
-            SVD-DMD basis for the output space.
-        Q : array-like, shape (m, n)
-            SVD-DMD basis for the input space.
+        :param numpy.ndarray P: SVD-DMD basis for the output space.
+        :param numpy.ndarray Q: SVD-DMD basis for the input space.
 
-        Returns
-        -------
-        array-like, shape (n , n)
-            Low-dimensional DMD operator.
-
+        :return: low-dimensional DMD operator.
+        :rtype: numpy.ndarray
         """
         return Q.T.conj().dot(P)
 
@@ -239,29 +169,15 @@ class OptDMD(DMDBase):
         Utility function to compute the eigenvalues of the low-dimensional
         DMD operator and the high-dimensional left and right eigenvectors.
 
-        Parameters
-        ----------
-        Atilde : array-like, shape (n, n)
-            Low-dimensional DMD operator.
-        P : array-like, shape (m, n)
-            Right DMD-SVD vectors.
-        Q : array-like, shape (m, n)
-            Left DMD-SVD vectors.
+        :param numpy.ndarray Atilde: low-dimensional DMD operator.
+        :param numpy.ndarray P: right DMD-SVD vectors.
+        :param numpy.ndarray Q: left DMD-SVD vectors.
 
-        Returns
-        -------
-        vals : array-like, shape (n,)
-            Eigenvalues of the low-dimensional DMD operator.
-
-        left_vecs : array-like, shape (m, n)
-            Left eigenvectors of the DMD operator.
-
-        right_vecs : array-like, shape (m, n)
-            Right eigenvectors of the DMD operator.
-
+        :return: eigenvalues, left eigenvectors and right eigenvectors of DMD
+            operator.
+        :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
         """
 
-        # --> Compute the eigentriplets of the low-dimensional DMD matrix.
         vals, vecs_left, vecs_right = eig(Atilde, left=True, right=True)
 
         # --> Build the matrix of right eigenvectors.
@@ -279,40 +195,9 @@ class OptDMD(DMDBase):
         return vals, left_vecs, right_vecs
 
     def _compute_amplitudes(self, modes, snapshots, eigs, opt):
-        """Short summary.
-
-        Parameters
-        ----------
-        modes : type
-            Description of parameter `modes`.
-        snapshots : type
-            Description of parameter `snapshots`.
-        eigs : type
-            Description of parameter `eigs`.
-        opt : type
-            Description of parameter `opt`.
-
-        Returns
-        -------
-        type
-            Description of returned object.
-
-        """
         raise NotImplementedError("This function has not been implemented yet.")
 
 
     @property
     def dynamics(self):
-        """Short summary.
-
-        Parameters
-        ----------
-
-
-        Returns
-        -------
-        type
-            Description of returned object.
-
-        """
         raise NotImplementedError("This function has not been implemented yet.")
