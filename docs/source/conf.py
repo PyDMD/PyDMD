@@ -23,6 +23,7 @@ import sphinx_rtd_theme
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../..'))
+import pydmd
 
 # -- General configuration ------------------------------------------------
 
@@ -70,8 +71,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'PyDMD'
-copyright = u'2017-2018, PyDMD contributors'
-author = u'PyDMD contributors'
+copyright = pydmd.__copyright__
+author = pydmd.__author__
 
 # autoclass
 autoclass_content = 'both'
@@ -81,7 +82,7 @@ autoclass_content = 'both'
 # built documents.
 #
 # The short X.Y version.
-version = '0.2'
+version = pydmd.__version__
 # The full version, including alpha/beta/rc tags.
 release = version
 
