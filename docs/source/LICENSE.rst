@@ -1,1 +1,5 @@
-../../LICENSE.rst
+License
+==============
+
+.. include:: ../../LICENSE.rst
+
