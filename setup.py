@@ -1,6 +1,26 @@
-from setuptools import setup
+from setuptools import setup, Command
+import os
+import sys
+import pydmd
 
-description = (
+# Package meta-data.
+NAME = pydmd.__title__
+DESCRIPTION = 'Python Dynamic Mode Decomposition.'
+URL = 'https://github.com/mathLab/PyDMD'
+MAIL = pydmd.__mail__
+AUTHOR = pydmd.__author__
+VERSION = pydmd.__version__
+KEYWORDS='dynamic-mode-decomposition dmd mrdmd fbdmd cdmd'
+
+REQUIRED = [
+    'future', 'numpy', 'scipy',	'matplotlib',
+]
+
+EXTRAS = {
+    'docs': ['Sphinx==1.4', 'sphinx_rtd_theme'],
+}
+
+LDESCRIPTION = (
     "PyDMD is a Python package that uses Dynamic Mode Decomposition for "
     "a data-driven model simplification based on spatiotemporal coherent "
     "structures.\n"
@@ -32,33 +52,70 @@ description = (
     "of the model.\n"
 )
 
-setup(name='pydmd',
-	  version='0.2.0',
-	  description='Python Dynamic Mode Decomposition.',
-	  long_description=description,
-	  classifiers=[
+here = os.path.abspath(os.path.dirname(__file__))
+class UploadCommand(Command):
+    """Support setup.py upload."""
+
+    description = 'Build and publish the package.'
+    user_options = []
+
+    @staticmethod
+    def status(s):
+        """Prints things in bold."""
+        print('\033[1m{0}\033[0m'.format(s))
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        try:
+            self.status('Removing previous builds...')
+            rmtree(os.path.join(here, 'dist'))
+        except OSError:
+            pass
+
+        self.status('Building Source and Wheel (universal) distribution...')
+        os.system('{0} setup.py sdist bdist_wheel --universal'.format(sys.executable))
+
+        self.status('Uploading the package to PyPI via Twine...')
+        os.system('twine upload dist/*')
+
+        self.status('Pushing git tags...')
+        os.system('git tag v{0}'.format(VERSION))
+        os.system('git push --tags')
+
+        sys.exit()
+
+setup(
+    name=NAME,
+    version=VERSION,
+    description=DESCRIPTION,
+    long_description=LDESCRIPTION,
+    author=AUTHOR,
+    author_email=MAIL,
+	classifiers=[
 	  	'Development Status :: 5 - Production/Stable',
 	  	'License :: OSI Approved :: MIT License',
 	  	'Programming Language :: Python :: 2.7',
 	  	'Programming Language :: Python :: 3.6',
-	  	'Intended Audience :: Science/Research',
-	  	'Topic :: Scientific/Engineering :: Mathematics'
-	  ],
-	  keywords='dynamic-mode-decomposition dmd mrdmd fbdmd cdmd',
-	  url='https://github.com/mathLab/PyDMD',
-	  author='Nicola Demo, Marco Tezzele',
-	  author_email='demo.nicola@gmail.com, marcotez@gmail.com',
-	  license='MIT',
-	  packages=['pydmd'],
-	  install_requires=[
-	  		'future',
-	  		'numpy',
-	  		'scipy',
-	  		'matplotlib',
-	  		'Sphinx==1.4',
-	  		'sphinx_rtd_theme'
-	  ],
-	  test_suite='nose.collector',
-	  tests_require=['nose'],
-	  include_package_data=True,
-	  zip_safe=False)
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering :: Mathematics'
+	],
+	keywords=KEYWORDS,
+	url=URL,
+	license='MIT',
+	packages=[NAME],
+    install_requires=REQUIRED,
+    extras_require=EXTRAS,
+    test_suite='nose.collector',
+	tests_require=['nose'],
+	include_package_data=True,
+	zip_safe=False,
+
+    # $ setup.py publish support.
+    cmdclass={
+        'upload': UploadCommand,
+    },)
