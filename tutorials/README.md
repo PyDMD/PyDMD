@@ -1,6 +1,6 @@
 # Tutorials
 
-In this folder you can find a collection of useful tutorials in order to understand the principles and the potential of **PyDMD**.
+In this folder you can find a collection of useful Notebooks containing several tutorials, in order to understand the principles and the potential of **PyDMD**. An additional PDF tutorial ([DSWeb contest winner](https://dsweb.siam.org/The-Magazine/All-Issues/dsweb-2019-contest-tutorials-on-dynamical-systems-software)) is available [here](tutorial_dsweb.pdf).
 
 #### [Tutorial 1](tutorial-1-dmd.ipynb)
 Here we show a basic application of the standard dynamic mode decomposition on a simple system in order to reconstruct and analyze it.
