@@ -35,7 +35,8 @@
 	* [Installing from source](#installing-from-source)
 * [Documentation](#documentation)
 * [Testing](#testing)
-* [Examples](#examples)
+* [Examples and Tutorials](#examples)
+* [Awards](#awards)
 * [How to cite](#how-to-cite)
 	* [References](#references)
 	* [Recent works with PyDMD](#recent-works-with-pydmd)
@@ -110,7 +111,7 @@ To run tests locally (`nose` is required):
 > python test.py
 ```
 
-## Examples
+## Examples and Tutorials
 You can find useful tutorials on how to use the package in the [tutorials](tutorials/README.md) folder.
 
 Here we show a simple application (taken from [tutorial 2](tutorials/tutorial-2-adv-dmd.ipynb)): we collect few snapshots from a toy system with some noise and reconstruct the entire system evolution.
@@ -124,6 +125,9 @@ Here we show a simple application (taken from [tutorial 2](tutorials/tutorial-2-
 <em>The system evolution reconstructed with dynamic mode decomposition</em>
 </p>
 
+## Awards
+
+* First prize winner in **DSWeb 2019 Contest** _Tutorials on Dynamical Systems Software_ (Junior Faculty Category). You can read the winner tutorial (PDF format) in the [tutorials](tutorials/tutorial_dsweb.pdf) folder.
 
 ## How to cite
 If you use this package in your publications please cite the package as follows:
