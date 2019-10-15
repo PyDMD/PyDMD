@@ -129,6 +129,8 @@ class OptDMD(DMDBase):
             _, self._input_space, self._output_space = self._eig_from_lowrank_op(self._Atilde, Uz, Q)
 
         self._modes = self._output_space
+        
+        return self
 
     def predict(self, X):
         """
