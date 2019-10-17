@@ -363,12 +363,11 @@ class DMDBase(object):
 
             # perform svd on all the snapshots
             U, s, V = np.linalg.svd(self._snapshots, full_matrices=False)
-            V = V.T
 
             P = np.multiply(
                 np.dot(modes.conj().T, modes),
                 np.conj(np.dot(vander, vander.conj().T)))
-            tmp = (np.dot(np.dot(U, np.diag(s)), V.T)).conj().T
+            tmp = (np.dot(np.dot(U, np.diag(s)), V)).conj().T
             q = np.conj(np.diag(np.dot(np.dot(vander, tmp), modes)))
 
             # b optimal
