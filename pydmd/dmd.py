@@ -1,7 +1,6 @@
 """
 Derived module from dmdbase.py for classic dmd.
 """
-import warnings
 
 # --> Import standard python packages
 import numpy as np
@@ -41,14 +40,6 @@ class DMD(DMDBase):
         :type X: numpy.ndarray or iterable
         """
         self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
-
-        # check condition number of the data passed in
-        cond_number = np.linalg.cond(self._snapshots)
-        if cond_number > 10e4:
-            warnings.warn(f"Input data matrix X has condition number {cond_number}. "
-                          f"Consider preprocessing data, "
-                          f"passing in augmented data matrix, "
-                          f"or regularization methods.")
 
         n_samples = self._snapshots.shape[1]
         X = self._snapshots[:, :-1]
