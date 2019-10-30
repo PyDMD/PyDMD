@@ -148,7 +148,7 @@ Or if you use LaTeX:
 }
 ```
 
-### References
+### Referencess
 To implement the various versions of the DMD algorithm we follow these works:
 
 * Kutz, Brunton, Brunton, Proctor. *Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems*. SIAM Other Titles in Applied Mathematics, 2016. [[DOI](https://doi.org/10.1137/1.9781611974508)].
