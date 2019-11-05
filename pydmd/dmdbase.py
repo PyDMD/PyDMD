@@ -2,12 +2,16 @@
 Base module for the DMD: `fit` method must be implemented in inherited classes
 """
 from __future__ import division
-from os.path import splitext
-from builtins import range
+
+import warnings
 from builtins import object
-from past.utils import old_div
-import numpy as np
+from builtins import range
+from os.path import splitext
+
 import matplotlib as mpl
+import numpy as np
+from past.utils import old_div
+
 mpl.rcParams['figure.max_open_warning'] = 0
 import matplotlib.pyplot as plt
 
@@ -151,7 +155,7 @@ class DMDBase(object):
         :return: the array that contains the frequencies of the eigenvalues.
         :rtype: numpy.ndarray
         """
-        return np.log(self.eigs).imag/(2*np.pi*self.original_time['dt'])
+        return np.log(self.eigs).imag / (2 * np.pi * self.original_time['dt'])
 
     @property
     def amplitudes(self):
@@ -191,15 +195,24 @@ class DMDBase(object):
         """
         # If the data is already 2D ndarray
         if isinstance(X, np.ndarray) and X.ndim == 2:
-            return X, None
+            snapshots = X
+            snapshots_shape = None
+        else:
+            input_shapes = [np.asarray(x).shape for x in X]
 
-        input_shapes = [np.asarray(x).shape for x in X]
+            if len(set(input_shapes)) is not 1:
+                raise ValueError('Snapshots have not the same dimension.')
 
-        if len(set(input_shapes)) is not 1:
-            raise ValueError('Snapshots have not the same dimension.')
+            snapshots_shape = input_shapes[0]
+            snapshots = np.transpose([np.asarray(x).flatten() for x in X])
 
-        snapshots_shape = input_shapes[0]
-        snapshots = np.transpose([np.asarray(x).flatten() for x in X])
+        # check condition number of the data passed in
+        cond_number = np.linalg.cond(snapshots)
+        if cond_number > 10e4:
+            warnings.warn("Input data matrix X has condition number {}. "
+                          "Consider preprocessing data, passing in augmented data matrix, or regularization methods."
+                          .format(cond_number))
+
         return snapshots, snapshots_shape
 
     @staticmethod
@@ -256,12 +269,12 @@ class DMDBase(object):
         V = V.conj().T
 
         if svd_rank is 0:
-            omega = lambda x: 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
+            omega = lambda x: 0.56 * x ** 3 - 0.95 * x ** 2 + 1.82 * x + 1.43
             beta = np.divide(*sorted(X.shape))
             tau = np.median(s) * omega(beta)
             rank = np.sum(s > tau)
         elif svd_rank > 0 and svd_rank < 1:
-            cumulative_energy = np.cumsum(s**2 / (s**2).sum())
+            cumulative_energy = np.cumsum(s ** 2 / (s ** 2).sum())
             rank = np.searchsorted(cumulative_energy, svd_rank) + 1
         elif svd_rank >= 1 and isinstance(svd_rank, int):
             rank = min(svd_rank, U.shape[1])

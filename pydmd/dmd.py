@@ -2,15 +2,15 @@
 Derived module from dmdbase.py for classic dmd.
 """
 
-# --> Import PyDMD base class for DMD.
-from .dmdbase import DMDBase
-
 # --> Import standard python packages
 import numpy as np
 from scipy.linalg import pinv2
 
+# --> Import PyDMD base class for DMD.
+from .dmdbase import DMDBase
 
-def pinv(x): return pinv2(x, rcond=10*np.finfo(float).eps)
+
+def pinv(x): return pinv2(x, rcond=10 * np.finfo(float).eps)
 
 
 class DMD(DMDBase):
