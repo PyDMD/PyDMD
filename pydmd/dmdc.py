@@ -28,7 +28,6 @@ class DMDc(DMDBase):
     :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
     """
-
     def __init__(self, svd_rank=0, tlsq_rank=0, opt=False):
         self.svd_rank = svd_rank
         self.tlsq_rank = tlsq_rank
@@ -83,12 +82,13 @@ class DMDc(DMDBase):
         else:
             controlin, controlin_shape = self._col_major_2darray(control_input)
 
-        if controlin.shape[1] != self.dynamics.shape[1]-1:
+        if controlin.shape[1] != self.dynamics.shape[1] - 1:
             raise RuntimeError(
-                    'The number of control inputs and the number of snapshots to reconstruct has to be the same')
+                'The number of control inputs and the number of snapshots to reconstruct has to be the same'
+            )
 
-        omega = old_div(np.log(self.eigs), self.original_time['dt'])
-        eigs = np.exp(omega * self.dmd_time['dt'])
+        eigs = np.power(self.eigs,
+                        old_div(self.dmd_time['dt'], self.original_time['dt']))
         A = self.modes.dot(np.diag(eigs)).dot(np.linalg.pinv(self.modes))
 
         data = [self._snapshots[:, 0]]
@@ -98,7 +98,6 @@ class DMDc(DMDBase):
 
         data = np.array(data).T
         return data
-
 
     def _fit_B_known(self, X, Y, B):
         """
@@ -145,10 +144,10 @@ class DMDc(DMDBase):
         Ur, sr, Vr = self._compute_svd(Y, -1)
         self._basis = Ur
 
-        self._Atilde = Ur.T.conj().dot(Y).dot(Vp).dot(
-            np.diag(np.reciprocal(sp))).dot(Up1.T.conj()).dot(Ur)
-        self._Btilde = Ur.T.conj().dot(Y).dot(Vp).dot(
-            np.diag(np.reciprocal(sp))).dot(Up2.T.conj())
+        self._Atilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
+            np.reciprocal(sp))).dot(Up1.T.conj()).dot(Ur)
+        self._Btilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
+            np.reciprocal(sp))).dot(Up2.T.conj())
         self._B = Ur.dot(self._Btilde)
 
         self._eigs, modes = np.linalg.eig(self._Atilde)
