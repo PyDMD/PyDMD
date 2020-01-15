@@ -97,10 +97,12 @@ setup(
     author=AUTHOR,
     author_email=MAIL,
 	classifiers=[
-	  	'Development Status :: 5 - Production/Stable',
-	  	'License :: OSI Approved :: MIT License',
-	  	'Programming Language :: Python :: 2.7',
-	  	'Programming Language :: Python :: 3.6',
+        'Development Status :: 5 - Production/Stable',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Mathematics'
 	],
