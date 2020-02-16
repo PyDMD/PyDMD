@@ -124,8 +124,9 @@ class DMDBase(object):
         :rtype: numpy.ndarray
         """
         omega = old_div(np.log(self.eigs), self.original_time['dt'])
-        vander = np.exp(np.multiply(*np.meshgrid(omega, self.dmd_timesteps)))
-        return (vander * self._b).T
+        vander = np.exp(
+            np.outer(omega, self.dmd_timesteps - self.original_time['t0']))
+        return vander * self._b[:, None]
 
     @property
     def reconstructed_data(self):
