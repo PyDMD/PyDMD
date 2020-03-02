@@ -60,7 +60,7 @@ class MrDMD(DMDBase):
         :rtype: int
         :return: the index of the list that contains the binary tree.
         """
-        if level > self.max_level:
+        if level >= self.max_level:
             raise ValueError("Invalid level: greater than `max_level`")
 
         if node >= 2**level:
@@ -186,7 +186,7 @@ class MrDMD(DMDBase):
         """
         if level >= self.max_level:
             raise ValueError(
-                'The level input parameter ({}) has to be less then the'
+                'The level input parameter ({}) has to be less than the'
                 'max_level ({}). Remember that the starting index is 0'.format(
                     level, self.max_level))
         if node:
@@ -210,7 +210,7 @@ class MrDMD(DMDBase):
         """
         if level >= self.max_level:
             raise ValueError(
-                'The level input parameter ({}) has to be less then the'
+                'The level input parameter ({}) has to be less than the'
                 'max_level ({}). Remember that the starting index is 0'.format(
                     level, self.max_level))
         modes = self.partial_modes(level, node)
@@ -231,7 +231,14 @@ class MrDMD(DMDBase):
         # structure
         data_queue = [self._snapshots.copy()]
 
-        current_level = 1
+        current_bin = 0
+
+        # Redefine max level if it is too big.
+        lvl_threshold = int(np.log(self._snapshots.shape[1]/4.)/np.log(2.)) - 1
+        if self.max_level > lvl_threshold:
+            self.max_level = lvl_threshold
+            print('Too many levels... '
+                  'Redefining `max_level` to {}'.format(self.max_level))
 
         # Reset the lists
         self._eigs = []
@@ -248,42 +255,34 @@ class MrDMD(DMDBase):
             # subsamples frequency to detect slow modes
             nyq = 8 * self.max_cycles
 
-            try:
-                step = int(np.floor(old_div(n_samples, nyq)))
-                Xsub = Xraw[:, ::step]
-                Xc = Xsub[:, :-1]
-                Yc = Xsub[:, 1:]
+            step = max(1, int(np.floor(old_div(n_samples, nyq))))
+            Xsub = Xraw[:, ::step]
+            Xc = Xsub[:, :-1]
+            Yc = Xsub[:, 1:]
 
-                Xc, Yc = self._compute_tlsq(Xc, Yc, self.tlsq_rank)
+            Xc, Yc = self._compute_tlsq(Xc, Yc, self.tlsq_rank)
 
-                U, s, V = self._compute_svd(Xc, self.svd_rank)
+            U, s, V = self._compute_svd(Xc, self.svd_rank)
 
-                Atilde = self._build_lowrank_op(U, s, V, Yc)
+            Atilde = self._build_lowrank_op(U, s, V, Yc)
 
-                eigs, modes = self._eig_from_lowrank_op(Atilde, Yc, U, s, V,
-                                                        self.exact)
-                rho = old_div(float(self.max_cycles), n_samples)
-                slow_modes = (np.abs(
-                    old_div(np.log(eigs), (2. * np.pi * step)))) <= rho
+            eigs, modes = self._eig_from_lowrank_op(Atilde, Yc, U, s, V,
+                                                    self.exact)
+            rho = old_div(float(self.max_cycles), n_samples)
+            slow_modes = (np.abs(
+                old_div(np.log(eigs), (2. * np.pi * step)))) <= rho
 
-                modes = modes[:, slow_modes]
-                eigs = eigs[slow_modes]
+            modes = modes[:, slow_modes]
+            eigs = eigs[slow_modes]
 
-                #---------------------------------------------------------------
-                # DMD Amplitudes and Dynamics
-                #---------------------------------------------------------------
-                Vand = np.vander(
-                    np.power(eigs, old_div(1., step)), n_samples, True)
-                b = self._compute_amplitudes(modes, Xc, eigs, self.opt)
+            #---------------------------------------------------------------
+            # DMD Amplitudes and Dynamics
+            #---------------------------------------------------------------
+            Vand = np.vander(
+                np.power(eigs, old_div(1., step)), n_samples, True)
+            b = self._compute_amplitudes(modes, Xc, eigs, self.opt)
 
-                Psi = (Vand.T * b).T
-            except:
-                modes = np.zeros((Xraw.shape[0], 1))
-                Psi = np.zeros((1, Xraw.shape[1]))
-                Atilde = np.zeros(0)
-                eigs = np.zeros(0)
-                b = np.zeros(0)
-                step = 0
+            Psi = (Vand.T * b).T
 
             self._modes.append(modes)
             self._b.append(b)
@@ -298,11 +297,13 @@ class MrDMD(DMDBase):
             else:
                 Xraw -= modes.dot(Psi)
 
-            if current_level < 2**(self.max_level - 1):
-                current_level += 1
+            if current_bin < 2**(self.max_level - 1) - 1:
+                current_bin += 1
                 half = int(np.ceil(old_div(Xraw.shape[1], 2)))
                 data_queue.append(Xraw[:, :half])
                 data_queue.append(Xraw[:, half:])
+            else:
+                current_bin += 1
 
         self.dmd_time = {'t0': 0, 'tend': self._snapshots.shape[1], 'dt': 1}
         self.original_time = self.dmd_time.copy()
