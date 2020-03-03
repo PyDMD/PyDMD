@@ -76,12 +76,18 @@ class MrDMD(DMDBase):
         :return: the matrix that contains the reconstructed snapshots.
         :rtype: numpy.ndarray
         """
-        data = np.sum(
-            np.array([
-                self.partial_reconstructed_data(i)
-                for i in range(self.max_level)
-            ]),
-            axis=0)
+        try:
+            data = np.sum(
+                np.array([
+                    self.partial_reconstructed_data(i)
+                    for i in range(self.max_level)
+                ]),
+                axis=0)
+        except MemoryError:
+            data = np.array(self.partial_reconstructed_data(0))
+            for i in range(1, self.max_level):
+                data = np.sum([data,
+                np.array(self.partial_reconstructed_data(i))], axis=0)
         return data
 
     @property
