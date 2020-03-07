@@ -4,7 +4,7 @@ from unittest import TestCase
 from pydmd.mrdmd import MrDMD
 import matplotlib.pyplot as plt
 import numpy as np
-import unittest
+
 
 def create_data():
     x = np.linspace(-10, 10, 80)
@@ -42,8 +42,14 @@ class TestMrDmd(TestCase):
         level = 10
         dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
         dmd.fit(X=sample_data)
-        lvl_threshold = int(np.log(sample_data.shape[1]/4.)/np.log(2.)) - 1
+        lvl_threshold = int(np.log(sample_data.shape[1]/4.)/np.log(2.)) + 1
         assert lvl_threshold == dmd.max_level
+
+    def test_max_level_threshold2(self):
+        level = 10
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        dmd.fit(X=sample_data)
+        assert dmd._steps[-1] == 1
 
     def test_shape_modes(self):
         level = 5
@@ -202,6 +208,3 @@ class TestMrDmd(TestCase):
         dmd.plot_eigs(show_axes=False, show_unit_circle=False, level=1, node=0)
         plt.close()
 
-
-if __name__ == "__main__":
-    unittest.main()
