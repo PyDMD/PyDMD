@@ -234,7 +234,7 @@ class MrDMD(DMDBase):
         current_bin = 0
 
         # Redefine max level if it is too big.
-        lvl_threshold = int(np.log(self._snapshots.shape[1]/4.)/np.log(2.)) - 1
+        lvl_threshold = int(np.log(self._snapshots.shape[1]/4.)/np.log(2.)) + 1
         if self.max_level > lvl_threshold:
             self.max_level = lvl_threshold
             print('Too many levels... '
