@@ -51,6 +51,101 @@ class TestMrDmd(TestCase):
         dmd.fit(X=sample_data)
         assert dmd._steps[-1] == 1
 
+    def test_index_list(self):
+        level = 5
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        assert dmd._index_list(3, 0) == 7
+
+    def test_index_list2(self):
+        level = 5
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        with self.assertRaises(ValueError):
+            dmd._index_list(3, 10)
+
+    def test_index_list_reversed(self):
+        level = 3
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        assert dmd._index_list_reversed(6) == (2, 3)
+
+    def test_index_list_reversed2(self):
+        level = 3
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        with self.assertRaises(ValueError):
+            dmd._index_list_reversed(7)
+
+    def test_partial_time_interval(self):
+        level = 4
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        dmd.original_time = {'t0': 0, 'tend': 8, 'dt': 1}
+        ans = {'t0': 6.0, 'tend': 7.0, 'dt': 1.0}
+        assert dmd.partial_time_interval(3, 6) == ans
+
+    def test_partial_time_interval2(self):
+        level = 4
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        dmd.original_time = {'t0': 0, 'tend': 8, 'dt': 1}
+        with self.assertRaises(ValueError):
+            dmd.partial_time_interval(4, 0)
+
+    def test_partial_time_interval3(self):
+        level = 4
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        dmd.original_time = {'t0': 0, 'tend': 8, 'dt': 1}
+        with self.assertRaises(ValueError):
+            dmd.partial_time_interval(3, 8)
+
+    def test_time_window_bins(self):
+        level = 4
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        dmd.original_time = {'t0': 0, 'tend': 9, 'dt': 1}
+        comparison = dmd.time_window_bins(0, 9) == np.arange(2**level-1)
+        assert comparison.all()
+
+    def test_time_window_bins2(self):
+        level = 3
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        dmd.original_time = {'t0': 0, 'tend': 4, 'dt': 1}
+        comparison = dmd.time_window_bins(1, 2) == np.array([0, 1, 4])
+        assert comparison.all()
+
+    def test_time_window_bins3(self):
+        level = 3
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        dmd.original_time = {'t0': 0, 'tend': 4, 'dt': 1}
+        comparison = dmd.time_window_bins(0, 3) == np.arange(6)
+        assert comparison.all()
+
+    def test_time_window_bins4(self):
+        level = 3
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        dmd.original_time = {'t0': 0, 'tend': 4, 'dt': 1}
+        comparison = dmd.time_window_bins(1, 3) == np.array([0, 1, 2, 4, 5])
+        assert comparison.all()
+
+    def test_time_window_eigs(self):
+        level = 3
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        dmd.fit(X=sample_data)
+        assert len(dmd.time_window_eigs(0, dmd._snapshots.shape[1])) == 7
+
+    def test_time_window_frequency(self):
+        level = 3
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        dmd.fit(X=sample_data)
+        assert len(dmd.time_window_frequency(0, dmd._snapshots.shape[1])) == 7
+
+    def test_time_window_growth_rate(self):
+        level = 3
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        dmd.fit(X=sample_data)
+        assert len(dmd.time_window_growth_rate(0, dmd._snapshots.shape[1])) == 7
+
+    def test_time_window_amplitudes(self):
+        level = 3
+        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
+        dmd.fit(X=sample_data)
+        assert len(dmd.time_window_amplitudes(0, dmd._snapshots.shape[1])) == 7
+
     def test_shape_modes(self):
         level = 5
         dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
@@ -207,4 +302,3 @@ class TestMrDmd(TestCase):
         dmd.fit(X=sample_data)
         dmd.plot_eigs(show_axes=False, show_unit_circle=False, level=1, node=0)
         plt.close()
-

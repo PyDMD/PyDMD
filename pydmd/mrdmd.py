@@ -68,6 +68,124 @@ class MrDMD(DMDBase):
 
         return 2**level + node - 1
 
+    def _index_list_reversed(self, index):
+        """
+        Method that return the level and node given the index of the bin.
+
+        :param int index: the index of the bin in the binary tree.
+        :return: the level of the bin in the binary tree and the node id
+            in that level.
+        """
+        if index > 2**self.max_level - 2:
+            raise ValueError("Invalid index: maximum index is ({})".format(2**self.max_level - 2))
+        for lvl in range(self.max_level + 1):
+            if index < 2**lvl - 1:
+                break
+        level = lvl - 1
+        node = index - 2**level + 1
+        return level, node
+
+    def partial_time_interval(self, level, node):
+        """
+        Evaluate the start and end time and the period of a given bin.
+
+        :param int level: the level in the binary tree.
+        :param int node: the node id.
+        :return: the start and end time and the period of the bin
+        :rtype: dictionary
+        """
+        if level >= self.max_level:
+            raise ValueError(
+                'The level input parameter ({}) has to be less than the '
+                'max_level ({}). Remember that the starting index is 0'.format(
+                    level, self.max_level))
+
+        if node >= 2**level:
+            raise ValueError("Invalid node")
+
+        full_period = self.original_time['tend'] - self.original_time['t0']
+        period = full_period / 2**level
+        t0 = self.original_time['t0'] + period*node
+        tend = t0 + period
+        return {'t0': t0, 'tend':tend, 'dt':period}
+
+    def time_window_bins(self, t0, tend):
+        """
+        Find which bins are embedded (partially or totally) in a given
+        time window.
+
+        :param float t0: start time of the window.
+        :param float tend: end time of the window.
+        :return: indexes of the bins seen by the time window.
+        :rtype: numpy.ndarray
+        """
+        indexes = []
+        for level in range(self.max_level):
+            for i in range(2**level):
+                local_times = self.partial_time_interval(level, i)
+                if t0 >= local_times['t0'] and t0 < local_times['tend']:
+                    indexes.append(self._index_list(level, i))
+                if tend > local_times['t0'] and tend <= local_times['tend']:
+                    indexes.append(self._index_list(level, i))
+                if t0 <= local_times['t0'] and tend >= local_times['tend']:
+                    indexes.append(self._index_list(level, i))
+        # Remove duplicates if they exist
+        # indexes = list(dict.fromkeys(indexes)) # Python 3.7 or later (preserve order)
+        indexes = list(set(indexes)) # Any Python version, but does not preserve order
+        indexes = np.sort(indexes)
+        return indexes
+
+    def time_window_eigs(self, t0, tend):
+        """
+        Get the eigenvalues relative to the modes of the bins embedded (partially
+        or totally) in a given time window.
+
+        :param float t0: start time of the window.
+        :param float tend: end time of the window.
+        :return: the eigenvalues for that time window.
+        :rtype: numpy.ndarray
+        """
+        indexes = self.time_window_bins(t0, tend)
+        return np.concatenate([self._eigs[idx] for idx in indexes])
+
+    def time_window_frequency(self, t0, tend):
+        """
+        Get the frequencies relative to the modes of the bins embedded (partially
+        or totally) in a given time window.
+
+        :param float t0: start time of the window.
+        :param float tend: end time of the window.
+        :return: the frequencies for that time window.
+        :rtype: numpy.ndarray
+        """
+        eigs = self.time_window_eigs(t0, tend)
+        return np.log(eigs).imag/(2*np.pi*self.original_time['dt'])
+
+    def time_window_growth_rate(self, t0, tend):
+        """
+        Get the growth rate values relative to the modes of the bins embedded (partially
+        or totally) in a given time window.
+
+        :param float t0: start time of the window.
+        :param float tend: end time of the window.
+        :return: the Floquet values for that time window.
+        :rtype: numpy.ndarray
+        """
+        return self.time_window_eigs(t0, tend).real/self.original_time['dt']
+
+    def time_window_amplitudes(self, t0, tend):
+        """
+        Get the amplitudes relative to the modes of the bins embedded (partially
+        or totally) in a given time window.
+
+        :param float t0: start time of the window.
+        :param float tend: end time of the window.
+        :return: the amplitude of the modes for that time window.
+        :rtype: numpy.ndarray
+        """
+        indexes = self.time_window_bins(t0, tend)
+        return np.concatenate([self._b[idx] for idx in indexes])
+
     @property
     def reconstructed_data(self):
         """
@@ -210,7 +328,7 @@ class MrDMD(DMDBase):
         """
         if level >= self.max_level:
             raise ValueError(
-                'The level input parameter ({}) has to be less than the'
+                'The level input parameter ({}) has to be less than the '
                 'max_level ({}). Remember that the starting index is 0'.format(
                     level, self.max_level))
         modes = self.partial_modes(level, node)
