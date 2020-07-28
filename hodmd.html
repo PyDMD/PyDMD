@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>HODMD &mdash; PyDMD 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pydmd.hodmd.HODMD.atilde" href="_summaries/pydmd.hodmd.HODMD.atilde.html" />
+    <link rel="prev" title="pydmd.cdmd.CDMD.snapshots" href="_summaries/pydmd.cdmd.CDMD.snapshots.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> PyDMD
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">MrDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">FbDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">CDMD</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">HODMD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.atilde.html">pydmd.hodmd.HODMD.atilde</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.dmd_timesteps.html">pydmd.hodmd.HODMD.dmd_timesteps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.dynamics.html">pydmd.hodmd.HODMD.dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.eigs.html">pydmd.hodmd.HODMD.eigs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.fit.html">pydmd.hodmd.HODMD.fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.modes.html">pydmd.hodmd.HODMD.modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.original_timesteps.html">pydmd.hodmd.HODMD.original_timesteps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.plot_eigs.html">pydmd.hodmd.HODMD.plot_eigs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.plot_modes_2D.html">pydmd.hodmd.HODMD.plot_modes_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.plot_snapshots_2D.html">pydmd.hodmd.HODMD.plot_snapshots_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.reconstructed_data.html">pydmd.hodmd.HODMD.reconstructed_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.snapshots.html">pydmd.hodmd.HODMD.snapshots</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyDMD</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="code.html">Code Documentation</a> &raquo;</li>
+        
+      <li>HODMD</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/hodmd.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pydmd.hodmd">
+<span id="hodmd"></span><h1>HODMD<a class="headerlink" href="#module-pydmd.hodmd" title="Permalink to this headline">¶</a></h1>
+<p>Derived module from dmdbase.py for higher order dmd.</p>
+<p>Reference:
+- S. L Clainche, J. M. Vega, Higher Order Dynamic Mode Decomposition.
+Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.atilde.html#pydmd.hodmd.HODMD.atilde" title="pydmd.hodmd.HODMD.atilde"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.atilde</span></code></a></p></td>
+<td><p>Get the reduced Koopman operator A, called A tilde.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.dmd_timesteps.html#pydmd.hodmd.HODMD.dmd_timesteps" title="pydmd.hodmd.HODMD.dmd_timesteps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.dmd_timesteps</span></code></a></p></td>
+<td><p>Get the timesteps of the reconstructed states.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.dynamics.html#pydmd.hodmd.HODMD.dynamics" title="pydmd.hodmd.HODMD.dynamics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.dynamics</span></code></a></p></td>
+<td><p>Get the time evolution of each mode.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.eigs.html#pydmd.hodmd.HODMD.eigs" title="pydmd.hodmd.HODMD.eigs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.eigs</span></code></a></p></td>
+<td><p>Get the eigenvalues of A tilde.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.fit.html#pydmd.hodmd.HODMD.fit" title="pydmd.hodmd.HODMD.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.fit</span></code></a></p></td>
+<td><p>Compute the Dynamic Modes Decomposition to the input data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.modes.html#pydmd.hodmd.HODMD.modes" title="pydmd.hodmd.HODMD.modes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.modes</span></code></a></p></td>
+<td><p>Get the matrix containing the DMD modes, stored by column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.original_timesteps.html#pydmd.hodmd.HODMD.original_timesteps" title="pydmd.hodmd.HODMD.original_timesteps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.original_timesteps</span></code></a></p></td>
+<td><p>Get the timesteps of the original snapshot.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.plot_eigs.html#pydmd.hodmd.HODMD.plot_eigs" title="pydmd.hodmd.HODMD.plot_eigs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.plot_eigs</span></code></a></p></td>
+<td><p>Plot the eigenvalues.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.plot_modes_2D.html#pydmd.hodmd.HODMD.plot_modes_2D" title="pydmd.hodmd.HODMD.plot_modes_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.plot_modes_2D</span></code></a></p></td>
+<td><p>Plot the DMD Modes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.plot_snapshots_2D.html#pydmd.hodmd.HODMD.plot_snapshots_2D" title="pydmd.hodmd.HODMD.plot_snapshots_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.plot_snapshots_2D</span></code></a></p></td>
+<td><p>Plot the snapshots.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.reconstructed_data.html#pydmd.hodmd.HODMD.reconstructed_data" title="pydmd.hodmd.HODMD.reconstructed_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.reconstructed_data</span></code></a></p></td>
+<td><p>Get the reconstructed data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.snapshots.html#pydmd.hodmd.HODMD.snapshots" title="pydmd.hodmd.HODMD.snapshots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.snapshots</span></code></a></p></td>
+<td><p>Get the original input data.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-name descname">HODMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">d=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hodmd.html#HODMD"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
+<p>Higher Order Dynamic Mode Decomposition</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation in SVD. If 0, the method computes the
+optimal rank and uses it for truncation; if positive number, the method
+uses the argument for the truncation; if -1, the method does not
+compute truncation.</p></li>
+<li><p><strong>tlsq_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation computing Total Least Square. Default
+is 0, that means TLSQ is not applied.</p></li>
+<li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute either exact DMD or projected DMD.
+Default is False.</p></li>
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute optimal amplitudes. See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>.
+Default is False.</p></li>
+<li><p><strong>d</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the new order for spatial dimension of the input snapshots.
+Default is 1.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hodmd.html#HODMD.fit"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute the Dynamic Modes Decomposition to the input data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="_summaries/pydmd.hodmd.HODMD.atilde.html" class="btn btn-neutral float-right" title="pydmd.hodmd.HODMD.atilde" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="_summaries/pydmd.cdmd.CDMD.snapshots.html" class="btn btn-neutral float-left" title="pydmd.cdmd.CDMD.snapshots" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright Copyright 2017-2019, PyDMD contributors
+      <span class="lastupdated">
+        Last updated on Jul 28, 2020.
+      </span>
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

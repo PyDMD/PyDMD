@@ -1,0 +1,270 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pydmd.mrdmd.MrDMD.atilde &mdash; PyDMD 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pydmd.mrdmd.MrDMD.dmd_timesteps" href="pydmd.mrdmd.MrDMD.dmd_timesteps.html" />
+    <link rel="prev" title="pydmd.mrdmd.MrDMD._index_list" href="pydmd.mrdmd.MrDMD._index_list.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> PyDMD
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../code.html">Code Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dmdbase.html">DMDBase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dmd.html">DMD</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../mrdmd.html">MrDMD</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD._index_list.html">pydmd.mrdmd.MrDMD._index_list</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">pydmd.mrdmd.MrDMD.atilde</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.dmd_timesteps.html">pydmd.mrdmd.MrDMD.dmd_timesteps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.dynamics.html">pydmd.mrdmd.MrDMD.dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.eigs.html">pydmd.mrdmd.MrDMD.eigs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.fit.html">pydmd.mrdmd.MrDMD.fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.modes.html">pydmd.mrdmd.MrDMD.modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.original_timesteps.html">pydmd.mrdmd.MrDMD.original_timesteps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.partial_dynamics.html">pydmd.mrdmd.MrDMD.partial_dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.partial_eigs.html">pydmd.mrdmd.MrDMD.partial_eigs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.partial_modes.html">pydmd.mrdmd.MrDMD.partial_modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.partial_reconstructed_data.html">pydmd.mrdmd.MrDMD.partial_reconstructed_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.plot_eigs.html">pydmd.mrdmd.MrDMD.plot_eigs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.plot_modes_2D.html">pydmd.mrdmd.MrDMD.plot_modes_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.plot_snapshots_2D.html">pydmd.mrdmd.MrDMD.plot_snapshots_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.reconstructed_data.html">pydmd.mrdmd.MrDMD.reconstructed_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.mrdmd.MrDMD.snapshots.html">pydmd.mrdmd.MrDMD.snapshots</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../fbdmd.html">FbDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cdmd.html">CDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hodmd.html">HODMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dmdc.html">DMDc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../optdmd.html">OptDMD</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../LICENSE.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyDMD</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../code.html">Code Documentation</a> &raquo;</li>
+        
+          <li><a href="../mrdmd.html">MrDMD</a> &raquo;</li>
+        
+      <li>pydmd.mrdmd.MrDMD.atilde</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/_summaries/pydmd.mrdmd.MrDMD.atilde.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pydmd-mrdmd-mrdmd-atilde">
+<h1>pydmd.mrdmd.MrDMD.atilde<a class="headerlink" href="#pydmd-mrdmd-mrdmd-atilde" title="Permalink to this headline">¶</a></h1>
+<dl class="attribute">
+<dt id="pydmd.mrdmd.MrDMD.atilde">
+<code class="sig-prename descclassname">MrDMD.</code><code class="sig-name descname">atilde</code><a class="headerlink" href="#pydmd.mrdmd.MrDMD.atilde" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the reduced Koopman operator A, called A tilde.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the reduced Koopman operator A.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pydmd.mrdmd.MrDMD.dmd_timesteps.html" class="btn btn-neutral float-right" title="pydmd.mrdmd.MrDMD.dmd_timesteps" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pydmd.mrdmd.MrDMD._index_list.html" class="btn btn-neutral float-left" title="pydmd.mrdmd.MrDMD._index_list" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright Copyright 2017-2019, PyDMD contributors
+      <span class="lastupdated">
+        Last updated on Jul 28, 2020.
+      </span>
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,766 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>DMDBase &mdash; PyDMD 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pydmd.dmdbase.DMDBase._build_lowrank_op" href="_summaries/pydmd.dmdbase.DMDBase._build_lowrank_op.html" />
+    <link rel="prev" title="Code Documentation" href="code.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> PyDMD
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DMDBase</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._build_lowrank_op.html">pydmd.dmdbase.DMDBase._build_lowrank_op</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._col_major_2darray.html">pydmd.dmdbase.DMDBase._col_major_2darray</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._compute_amplitudes.html">pydmd.dmdbase.DMDBase._compute_amplitudes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._compute_svd.html">pydmd.dmdbase.DMDBase._compute_svd</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._compute_tlsq.html">pydmd.dmdbase.DMDBase._compute_tlsq</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._eig_from_lowrank_op.html">pydmd.dmdbase.DMDBase._eig_from_lowrank_op</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.atilde.html">pydmd.dmdbase.DMDBase.atilde</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.dmd_timesteps.html">pydmd.dmdbase.DMDBase.dmd_timesteps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.dynamics.html">pydmd.dmdbase.DMDBase.dynamics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.eigs.html">pydmd.dmdbase.DMDBase.eigs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.fit.html">pydmd.dmdbase.DMDBase.fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.modes.html">pydmd.dmdbase.DMDBase.modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.original_timesteps.html">pydmd.dmdbase.DMDBase.original_timesteps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_eigs.html">pydmd.dmdbase.DMDBase.plot_eigs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_modes_2D.html">pydmd.dmdbase.DMDBase.plot_modes_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_snapshots_2D.html">pydmd.dmdbase.DMDBase.plot_snapshots_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.reconstructed_data.html">pydmd.dmdbase.DMDBase.reconstructed_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.snapshots.html">pydmd.dmdbase.DMDBase.snapshots</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">MrDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">FbDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">CDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hodmd.html">HODMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyDMD</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="code.html">Code Documentation</a> &raquo;</li>
+        
+      <li>DMDBase</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dmdbase.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pydmd.dmdbase">
+<span id="dmdbase"></span><h1>DMDBase<a class="headerlink" href="#module-pydmd.dmdbase" title="Permalink to this headline">¶</a></h1>
+<p>Base module for the DMD: <cite>fit</cite> method must be implemented in inherited classes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._build_lowrank_op.html#pydmd.dmdbase.DMDBase._build_lowrank_op" title="pydmd.dmdbase.DMDBase._build_lowrank_op"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._build_lowrank_op</span></code></a></p></td>
+<td><p>Private method that computes the lowrank operator from the singular value decomposition of matrix X and the matrix Y.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._col_major_2darray.html#pydmd.dmdbase.DMDBase._col_major_2darray" title="pydmd.dmdbase.DMDBase._col_major_2darray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._col_major_2darray</span></code></a></p></td>
+<td><p>Private method that takes as input the snapshots and stores them into a 2D matrix, by column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._compute_amplitudes.html#pydmd.dmdbase.DMDBase._compute_amplitudes" title="pydmd.dmdbase.DMDBase._compute_amplitudes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._compute_amplitudes</span></code></a></p></td>
+<td><p>Compute the amplitude coefficients.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._compute_svd.html#pydmd.dmdbase.DMDBase._compute_svd" title="pydmd.dmdbase.DMDBase._compute_svd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._compute_svd</span></code></a></p></td>
+<td><p>Truncated Singular Value Decomposition.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._compute_tlsq.html#pydmd.dmdbase.DMDBase._compute_tlsq" title="pydmd.dmdbase.DMDBase._compute_tlsq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._compute_tlsq</span></code></a></p></td>
+<td><p>Compute Total Least Square.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._eig_from_lowrank_op.html#pydmd.dmdbase.DMDBase._eig_from_lowrank_op" title="pydmd.dmdbase.DMDBase._eig_from_lowrank_op"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._eig_from_lowrank_op</span></code></a></p></td>
+<td><p>Private method that computes eigenvalues and eigenvectors of the high-dimensional operator from the low-dimensional operator and the input matrix.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.atilde.html#pydmd.dmdbase.DMDBase.atilde" title="pydmd.dmdbase.DMDBase.atilde"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.atilde</span></code></a></p></td>
+<td><p>Get the reduced Koopman operator A, called A tilde.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.dmd_timesteps.html#pydmd.dmdbase.DMDBase.dmd_timesteps" title="pydmd.dmdbase.DMDBase.dmd_timesteps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.dmd_timesteps</span></code></a></p></td>
+<td><p>Get the timesteps of the reconstructed states.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.dynamics.html#pydmd.dmdbase.DMDBase.dynamics" title="pydmd.dmdbase.DMDBase.dynamics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.dynamics</span></code></a></p></td>
+<td><p>Get the time evolution of each mode.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.eigs.html#pydmd.dmdbase.DMDBase.eigs" title="pydmd.dmdbase.DMDBase.eigs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.eigs</span></code></a></p></td>
+<td><p>Get the eigenvalues of A tilde.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.fit.html#pydmd.dmdbase.DMDBase.fit" title="pydmd.dmdbase.DMDBase.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.fit</span></code></a></p></td>
+<td><p>Abstract method to fit the snapshots matrices.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.modes.html#pydmd.dmdbase.DMDBase.modes" title="pydmd.dmdbase.DMDBase.modes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.modes</span></code></a></p></td>
+<td><p>Get the matrix containing the DMD modes, stored by column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.original_timesteps.html#pydmd.dmdbase.DMDBase.original_timesteps" title="pydmd.dmdbase.DMDBase.original_timesteps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.original_timesteps</span></code></a></p></td>
+<td><p>Get the timesteps of the original snapshot.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_eigs.html#pydmd.dmdbase.DMDBase.plot_eigs" title="pydmd.dmdbase.DMDBase.plot_eigs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.plot_eigs</span></code></a></p></td>
+<td><p>Plot the eigenvalues.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_modes_2D.html#pydmd.dmdbase.DMDBase.plot_modes_2D" title="pydmd.dmdbase.DMDBase.plot_modes_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.plot_modes_2D</span></code></a></p></td>
+<td><p>Plot the DMD Modes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_snapshots_2D.html#pydmd.dmdbase.DMDBase.plot_snapshots_2D" title="pydmd.dmdbase.DMDBase.plot_snapshots_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.plot_snapshots_2D</span></code></a></p></td>
+<td><p>Plot the snapshots.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.reconstructed_data.html#pydmd.dmdbase.DMDBase.reconstructed_data" title="pydmd.dmdbase.DMDBase.reconstructed_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.reconstructed_data</span></code></a></p></td>
+<td><p>Get the reconstructed data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.snapshots.html#pydmd.dmdbase.DMDBase.snapshots" title="pydmd.dmdbase.DMDBase.snapshots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.snapshots</span></code></a></p></td>
+<td><p>Get the original input data.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-name descname">DMDBase</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Dynamic Mode Decomposition base class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation in SVD. If 0, the method computes the
+optimal rank and uses it for truncation; if positive number, the method
+uses the argument for the truncation; if -1, the method does not
+compute truncation.</p></li>
+<li><p><strong>tlsq_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation computing Total Least Square. Default
+is 0, that means no truncation.</p></li>
+<li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute either exact DMD or projected DMD.
+Default is False.</p></li>
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute optimized DMD. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>original_time</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – <p>dictionary that contains information about the
+time window where the system is sampled:</p>
+<blockquote>
+<div><ul>
+<li><p><cite>t0</cite> is the time of the first input snapshot;</p></li>
+<li><p><cite>tend</cite> is the time of the last input snapshot;</p></li>
+<li><p><cite>dt</cite> is the delta time between the snapshots.</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+<li><p><strong>dmd_time</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – <p>dictionary that contains information about the time
+window where the system is reconstructed:</p>
+<blockquote>
+<div><ul>
+<li><p><cite>t0</cite> is the time of the first approximated solution;</p></li>
+<li><p><cite>tend</cite> is the time of the last approximated solution;</p></li>
+<li><p><cite>dt</cite> is the delta time between the approximated solutions.</p></li>
+</ul>
+</div></blockquote>
+</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_build_lowrank_op</code><span class="sig-paren">(</span><em class="sig-param">U</em>, <em class="sig-param">s</em>, <em class="sig-param">V</em>, <em class="sig-param">Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._build_lowrank_op"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Private method that computes the lowrank operator from the singular
+value decomposition of matrix X and the matrix Y.</p>
+<div class="math">
+<p><span class="math">\mathbf{\tilde{A}} =
+\mathbf{U}^* \mathbf{Y} \mathbf{X}^\dagger \mathbf{U} =
+\mathbf{U}^* \mathbf{Y} \mathbf{V} \mathbf{S}^{-1}</span></p>
+</div><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – 2D matrix that contains the left-singular
+vectors of X, stored by column.</p></li>
+<li><p><strong>s</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – 1D array that contains the singular values of X.</p></li>
+<li><p><strong>V</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – 2D matrix that contains the right-singular
+vectors of X, stored by row.</p></li>
+<li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – input matrix Y.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the lowrank operator</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_col_major_2darray</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._col_major_2darray"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Private method that takes as input the snapshots and stores them into a
+2D matrix, by column. If the input data is already formatted as 2D
+array, the method saves it, otherwise it also saves the original
+snapshots shape and reshapes the snapshots.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – the input snapshots.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the 2D matrix that contains the flatten snapshots, the shape
+of original snapshots.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a>, tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">_compute_amplitudes</code><span class="sig-paren">(</span><em class="sig-param">modes</em>, <em class="sig-param">snapshots</em>, <em class="sig-param">eigs</em>, <em class="sig-param">opt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._compute_amplitudes"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute the amplitude coefficients. If <cite>opt</cite> is False the amplitudes
+are computed by minimizing the error between the modes and the first
+snapshot; if <cite>opt</cite> is True the amplitudes are computed by minimizing
+the error between the modes and all the snapshots, at the expense of
+bigger computational cost.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>modes</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – 2D matrix that contains the modes, stored
+by column.</p></li>
+<li><p><strong>snapshots</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – 2D matrix that contains the original
+snapshots, stored by column.</p></li>
+<li><p><strong>eigs</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – array that contains the eigenvalues of the
+linear operator.</p></li>
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag for computing the optimal amplitudes of the DMD
+modes, minimizing the error between the time evolution and all
+the original snapshots. If false the amplitudes are computed
+using only the initial condition, that is snapshots[0].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the amplitudes array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+<p>References for optimal amplitudes:
+Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
+<a class="reference external" href="https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document">https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document</a></p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_compute_svd</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">svd_rank</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._compute_svd"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Truncated Singular Value Decomposition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – the matrix to decompose.</p></li>
+<li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If 0, the method computes
+the optimal rank and uses it for truncation; if positive interger,
+the method uses the argument for the truncation; if float between 0
+and 1, the rank is the number of the biggest singular values that
+are needed to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1,
+the method does not compute truncation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the truncated left-singular vectors matrix, the truncated
+singular values array, the truncated right-singular vectors matrix.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+<p>References:
+Gavish, Matan, and David L. Donoho, The optimal hard threshold for
+singular values is, IEEE Transactions on Information Theory 60.8
+(2014): 5040-5053.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_compute_tlsq</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">Y</em>, <em class="sig-param">tlsq_rank</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._compute_tlsq"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute Total Least Square.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – the first matrix;</p></li>
+<li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – the second matrix;</p></li>
+<li><p><strong>tlsq_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the rank for the truncation; If 0, the method
+does not compute any noise reduction; if positive number, the
+method uses the argument for the SVD truncation used in the TLSQ
+method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the denoised matrix X, the denoised matrix Y</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+<p>References:
+<a class="reference external" href="https://arxiv.org/pdf/1703.11004.pdf">https://arxiv.org/pdf/1703.11004.pdf</a>
+<a class="reference external" href="https://arxiv.org/pdf/1502.03854.pdf">https://arxiv.org/pdf/1502.03854.pdf</a></p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_eig_from_lowrank_op</code><span class="sig-paren">(</span><em class="sig-param">Atilde</em>, <em class="sig-param">Y</em>, <em class="sig-param">U</em>, <em class="sig-param">s</em>, <em class="sig-param">V</em>, <em class="sig-param">exact</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._eig_from_lowrank_op"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Private method that computes eigenvalues and eigenvectors of the
+high-dimensional operator from the low-dimensional operator and the
+input matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Atilde</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – the lowrank operator.</p></li>
+<li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – input matrix Y.</p></li>
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – 2D matrix that contains the left-singular
+vectors of X, stored by column.</p></li>
+<li><p><strong>s</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – 1D array that contains the singular values of X.</p></li>
+<li><p><strong>V</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – 2D matrix that contains the right-singular
+vectors of X, stored by row.</p></li>
+<li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the exact modes are computed; otherwise,
+the projected ones are computed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>eigenvalues, eigenvectors</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">amplitudes</code></dt>
+<dd><p>Get the coefficients that minimize the error between the original
+system and the reconstructed one. For futher information, see
+<cite>dmdbase._compute_amplitudes</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the array that contains the amplitudes coefficient.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">atilde</code></dt>
+<dd><p>Get the reduced Koopman operator A, called A tilde.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the reduced Koopman operator A.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">dmd_timesteps</code></dt>
+<dd><p>Get the timesteps of the reconstructed states.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the time intervals of the original snapshots.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">dynamics</code></dt>
+<dd><p>Get the time evolution of each mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the matrix that contains all the time evolution, stored by
+row.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">eigs</code></dt>
+<dd><p>Get the eigenvalues of A tilde.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the eigenvalues from the eigendecomposition of <cite>atilde</cite>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.fit"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Abstract method to fit the snapshots matrices.</p>
+<p>Not implemented, it has to be implemented in subclasses.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">frequency</code></dt>
+<dd><p>Get the amplitude spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the array that contains the frequencies of the eigenvalues.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">modes</code></dt>
+<dd><p>Get the matrix containing the DMD modes, stored by column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the matrix containing the DMD modes.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">original_timesteps</code></dt>
+<dd><p>Get the timesteps of the original snapshot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the time intervals of the original snapshots.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">plot_eigs</code><span class="sig-paren">(</span><em class="sig-param">show_axes=True</em>, <em class="sig-param">show_unit_circle=True</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em>, <em class="sig-param">title=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.plot_eigs"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Plot the eigenvalues.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>show_axes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the axes will be showed in the plot.
+Default is True.</p></li>
+<li><p><strong>show_unit_circle</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the circle with unitary radius
+and center in the origin will be showed. Default is True.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – tuple in inches defining the figure
+size. Default is (8, 8).</p></li>
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – title of the plot.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">plot_modes_2D</code><span class="sig-paren">(</span><em class="sig-param">index_mode=None</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em>, <em class="sig-param">order='C'</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.plot_modes_2D"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Plot the DMD Modes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index_mode</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>sequence</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – the index of the modes to plot. By default, all
+the modes are plotted.</p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
+<li><p><strong>order</strong> (<em>{'C'</em><em>, </em><em>'F'</em><em>, </em><em>'A'}</em><em>, </em><em>default 'C'.</em>) – read the elements of snapshots using this index order,
+and place the elements into the reshaped array using this index
+order.  It has to be the same used to store the snapshot. ‘C’ means
+to read/ write the elements using C-like index order, with the last
+axis index changing fastest, back to the first axis index changing
+slowest.  ‘F’ means to read / write the elements using Fortran-like
+index order, with the first index changing fastest, and the last
+index changing slowest.  Note that the ‘C’ and ‘F’ options take no
+account of the memory layout of the underlying array, and only
+refer to the order of indexing.  ‘A’ means to read / write the
+elements in Fortran-like index order if a is Fortran contiguous in
+memory, C-like order otherwise.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – tuple in inches defining the figure
+size. Default is (8, 8).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">plot_snapshots_2D</code><span class="sig-paren">(</span><em class="sig-param">index_snap=None</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em>, <em class="sig-param">order='C'</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.plot_snapshots_2D"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Plot the snapshots.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index_snap</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>sequence</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – the index of the snapshots to plot. By default, all
+the snapshots are plotted.</p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
+<li><p><strong>order</strong> (<em>{'C'</em><em>, </em><em>'F'</em><em>, </em><em>'A'}</em><em>, </em><em>default 'C'.</em>) – read the elements of snapshots using this index order,
+and place the elements into the reshaped array using this index
+order.  It has to be the same used to store the snapshot. ‘C’ means
+to read/ write the elements using C-like index order, with the last
+axis index changing fastest, back to the first axis index changing
+slowest.  ‘F’ means to read / write the elements using Fortran-like
+index order, with the first index changing fastest, and the last
+index changing slowest.  Note that the ‘C’ and ‘F’ options take no
+account of the memory layout of the underlying array, and only
+refer to the order of indexing.  ‘A’ means to read / write the
+elements in Fortran-like index order if a is Fortran contiguous in
+memory, C-like order otherwise.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – tuple in inches defining the figure
+size. Default is (8, 8).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">reconstructed_data</code></dt>
+<dd><p>Get the reconstructed data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the matrix that contains the reconstructed snapshots.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">snapshots</code></dt>
+<dd><p>Get the original input data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the matrix that contains the original snapshots.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="_summaries/pydmd.dmdbase.DMDBase._build_lowrank_op.html" class="btn btn-neutral float-right" title="pydmd.dmdbase.DMDBase._build_lowrank_op" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="code.html" class="btn btn-neutral float-left" title="Code Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright Copyright 2017-2019, PyDMD contributors
+      <span class="lastupdated">
+        Last updated on Jul 28, 2020.
+      </span>
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

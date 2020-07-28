@@ -1,0 +1,282 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pydmd.optdmd.OptDMD.plot_snapshots_2D &mdash; PyDMD 0.3 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pydmd.optdmd.OptDMD.reconstructed_data" href="pydmd.optdmd.OptDMD.reconstructed_data.html" />
+    <link rel="prev" title="pydmd.optdmd.OptDMD.plot_modes_2D" href="pydmd.optdmd.OptDMD.plot_modes_2D.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> PyDMD
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../code.html">Code Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../dmdbase.html">DMDBase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dmd.html">DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mrdmd.html">MrDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fbdmd.html">FbDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cdmd.html">CDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../hodmd.html">HODMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dmdc.html">DMDc</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../optdmd.html">OptDMD</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="pydmd.optdmd.OptDMD.atilde.html">pydmd.optdmd.OptDMD.atilde</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.optdmd.OptDMD.dmd_timesteps.html">pydmd.optdmd.OptDMD.dmd_timesteps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.optdmd.OptDMD.eigs.html">pydmd.optdmd.OptDMD.eigs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.optdmd.OptDMD.fit.html">pydmd.optdmd.OptDMD.fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.optdmd.OptDMD.predict.html">pydmd.optdmd.OptDMD.predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.optdmd.OptDMD.modes.html">pydmd.optdmd.OptDMD.modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.optdmd.OptDMD.original_timesteps.html">pydmd.optdmd.OptDMD.original_timesteps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.optdmd.OptDMD.plot_eigs.html">pydmd.optdmd.OptDMD.plot_eigs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.optdmd.OptDMD.plot_modes_2D.html">pydmd.optdmd.OptDMD.plot_modes_2D</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">pydmd.optdmd.OptDMD.plot_snapshots_2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.optdmd.OptDMD.reconstructed_data.html">pydmd.optdmd.OptDMD.reconstructed_data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pydmd.optdmd.OptDMD.snapshots.html">pydmd.optdmd.OptDMD.snapshots</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../LICENSE.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyDMD</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../code.html">Code Documentation</a> &raquo;</li>
+        
+          <li><a href="../optdmd.html">OptDMD</a> &raquo;</li>
+        
+      <li>pydmd.optdmd.OptDMD.plot_snapshots_2D</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/_summaries/pydmd.optdmd.OptDMD.plot_snapshots_2D.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pydmd-optdmd-optdmd-plot-snapshots-2d">
+<h1>pydmd.optdmd.OptDMD.plot_snapshots_2D<a class="headerlink" href="#pydmd-optdmd-optdmd-plot-snapshots-2d" title="Permalink to this headline">¶</a></h1>
+<dl class="method">
+<dt id="pydmd.optdmd.OptDMD.plot_snapshots_2D">
+<code class="sig-prename descclassname">OptDMD.</code><code class="sig-name descname">plot_snapshots_2D</code><span class="sig-paren">(</span><em class="sig-param">index_snap=None</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em>, <em class="sig-param">order='C'</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em><span class="sig-paren">)</span><a class="headerlink" href="#pydmd.optdmd.OptDMD.plot_snapshots_2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the snapshots.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>index_snap</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>sequence</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – the index of the snapshots to plot. By default, all
+the snapshots are plotted.</p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
+<li><p><strong>order</strong> (<em>{'C'</em><em>, </em><em>'F'</em><em>, </em><em>'A'}</em><em>, </em><em>default 'C'.</em>) – read the elements of snapshots using this index order,
+and place the elements into the reshaped array using this index
+order.  It has to be the same used to store the snapshot. ‘C’ means
+to read/ write the elements using C-like index order, with the last
+axis index changing fastest, back to the first axis index changing
+slowest.  ‘F’ means to read / write the elements using Fortran-like
+index order, with the first index changing fastest, and the last
+index changing slowest.  Note that the ‘C’ and ‘F’ options take no
+account of the memory layout of the underlying array, and only
+refer to the order of indexing.  ‘A’ means to read / write the
+elements in Fortran-like index order if a is Fortran contiguous in
+memory, C-like order otherwise.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – tuple in inches defining the figure
+size. Default is (8, 8).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pydmd.optdmd.OptDMD.reconstructed_data.html" class="btn btn-neutral float-right" title="pydmd.optdmd.OptDMD.reconstructed_data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pydmd.optdmd.OptDMD.plot_modes_2D.html" class="btn btn-neutral float-left" title="pydmd.optdmd.OptDMD.plot_modes_2D" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright Copyright 2017-2019, PyDMD contributors
+      <span class="lastupdated">
+        Last updated on Jul 28, 2020.
+      </span>
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
