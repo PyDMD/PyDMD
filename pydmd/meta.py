@@ -9,7 +9,7 @@ __all__ = [
     '__maintainer__',
     '__status__']
 
-
+__project__ = 'PyDMD'
 __title__ = "pydmd"
 __author__ = "Nicola Demo, Marco Tezzele"
 __copyright__ = "Copyright 2017-2019, PyDMD contributors"
