@@ -4,7 +4,7 @@ import sys
 import pydmd
 
 meta = {}
-with open("ezyrb/meta.py") as fp:
+with open("pydmd/meta.py") as fp:
     exec(fp.read(), meta)
 
 # Package meta-data.
