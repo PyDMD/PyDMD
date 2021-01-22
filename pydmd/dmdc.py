@@ -27,11 +27,18 @@ class DMDc(DMDBase):
         is 0, that means no truncation.
     :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
+    :param svd_rank_omega: the rank for the truncation of the aumented matrix
+        omega composed by the left snapshots matrix and the control. Used only
+        for the `_fit_B_unknown` method of this class. It should be greater or
+        equal than `svd_rank`. For the possible values please refer to the
+        `svd_rank` parameter description above.
+    :type svd_rank_omega: int or float
     """
-    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False):
+    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1):
         self.svd_rank = svd_rank
         self.tlsq_rank = tlsq_rank
         self.opt = opt
+        self.svd_rank_omega = svd_rank_omega
         self.original_time = None
 
         self._eigs = None
@@ -107,7 +114,7 @@ class DMDc(DMDBase):
         :param numpy.ndarray X: the first matrix of original snapshots.
         :param numpy.ndarray Y: the second matrix of original snapshots.
         :param numpy.ndarray I: the input control matrix.
-        :param numpy.ndarray B: the matrib B.
+        :param numpy.ndarray B: the matrix B.
         """
         X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
 
@@ -131,17 +138,15 @@ class DMDc(DMDBase):
 
         :param numpy.ndarray X: the first matrix of original snapshots.
         :param numpy.ndarray Y: the second matrix of original snapshots.
-        :param numpy.ndarray I: the input control matrix.
         """
-
         omega = np.vstack([X, self._controlin])
 
-        Up, sp, Vp = self._compute_svd(omega, self.svd_rank)
-
+        Up, sp, Vp = self._compute_svd(omega, self.svd_rank_omega)
+        
         Up1 = Up[:self._snapshots.shape[0], :]
         Up2 = Up[self._snapshots.shape[0]:, :]
-        # TODO: a second svd_rank?
-        Ur, sr, Vr = self._compute_svd(Y, -1)
+
+        Ur, sr, Vr = self._compute_svd(Y, self.svd_rank)
         self._basis = Ur
 
         self._Atilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
@@ -167,7 +172,9 @@ class DMDc(DMDBase):
         :type X: numpy.ndarray or iterable
         :param I: the control input.
         :type I: numpy.ndarray or iterable
-        :param numpy.ndarray B: 
+        :param numpy.ndarray B: matrix that controls the control input
+            influences the system evolution.
+        :type B: numpy.ndarray or iterable
         """
         self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
         self._controlin, self._controlin_shape = self._col_major_2darray(I)
