@@ -3,11 +3,11 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>pydmd.dmdc &mdash; PyDMD 0.3 documentation</title>
+  <title>pydmd.dmdc &mdash; PyDMD 0.3.1 documentation</title>
   
 
   
@@ -17,7 +17,10 @@
 
   
   
+
   
+  
+
   
 
   
@@ -50,7 +53,7 @@
           
 
           
-            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> PyDMD
+            <a href="../../index.html" class="icon icon-home"> PyDMD
           
 
           
@@ -60,7 +63,7 @@
             
             
               <div class="version">
-                0.3
+                0.3.1
               </div>
             
           
@@ -130,6 +133,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -183,11 +188,18 @@
 <span class="sd">        is 0, that means no truncation.</span>
 <span class="sd">    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.</span>
 <span class="sd">        Default is False.</span>
+<span class="sd">    :param svd_rank_omega: the rank for the truncation of the aumented matrix</span>
+<span class="sd">        omega composed by the left snapshots matrix and the control. Used only</span>
+<span class="sd">        for the `_fit_B_unknown` method of this class. It should be greater or</span>
+<span class="sd">        equal than `svd_rank`. For the possible values please refer to the</span>
+<span class="sd">        `svd_rank` parameter description above.</span>
+<span class="sd">    :type svd_rank_omega: int or float</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">svd_rank_omega</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank</span> <span class="o">=</span> <span class="n">svd_rank</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tlsq_rank</span> <span class="o">=</span> <span class="n">tlsq_rank</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">opt</span> <span class="o">=</span> <span class="n">opt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank_omega</span> <span class="o">=</span> <span class="n">svd_rank_omega</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span> <span class="o">=</span> <span class="kc">None</span>
@@ -263,7 +275,7 @@
 <span class="sd">        :param numpy.ndarray X: the first matrix of original snapshots.</span>
 <span class="sd">        :param numpy.ndarray Y: the second matrix of original snapshots.</span>
 <span class="sd">        :param numpy.ndarray I: the input control matrix.</span>
-<span class="sd">        :param numpy.ndarray B: the matrib B.</span>
+<span class="sd">        :param numpy.ndarray B: the matrix B.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_tlsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tlsq_rank</span><span class="p">)</span>
 
@@ -287,17 +299,15 @@
 
 <span class="sd">        :param numpy.ndarray X: the first matrix of original snapshots.</span>
 <span class="sd">        :param numpy.ndarray Y: the second matrix of original snapshots.</span>
-<span class="sd">        :param numpy.ndarray I: the input control matrix.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span><span class="p">])</span>
 
-        <span class="n">Up</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="n">Vp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_svd</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank</span><span class="p">)</span>
-
+        <span class="n">Up</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="n">Vp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_svd</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank_omega</span><span class="p">)</span>
+        
         <span class="n">Up1</span> <span class="o">=</span> <span class="n">Up</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:]</span>
         <span class="n">Up2</span> <span class="o">=</span> <span class="n">Up</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:,</span> <span class="p">:]</span>
-        <span class="c1"># TODO: a second svd_rank?</span>
-        <span class="n">Ur</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="n">Vr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_svd</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Ur</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="n">Vr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_svd</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="n">Ur</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">Ur</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Vp</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span>
@@ -323,7 +333,9 @@
 <span class="sd">        :type X: numpy.ndarray or iterable</span>
 <span class="sd">        :param I: the control input.</span>
 <span class="sd">        :type I: numpy.ndarray or iterable</span>
-<span class="sd">        :param numpy.ndarray B: </span>
+<span class="sd">        :param numpy.ndarray B: matrix that controls the control input</span>
+<span class="sd">            influences the system evolution.</span>
+<span class="sd">        :type B: numpy.ndarray or iterable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_controlin_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
@@ -347,16 +359,14 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright Copyright 2017-2019, PyDMD contributors
+        &#169; Copyright Copyright 2017-2019, PyDMD contributors.
       <span class="lastupdated">
-        Last updated on Jul 28, 2020.
+        Last updated on Jan 22, 2021.
       </span>
 
     </p>
@@ -364,14 +374,13 @@
     
     
     
-    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     
-    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
     
     provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
