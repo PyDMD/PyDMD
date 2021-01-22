@@ -36,6 +36,18 @@ class TestDMDC(TestCase):
         real_eigs = np.array([0.1, 1.5])
         np.testing.assert_array_almost_equal(dmdc.eigs, real_eigs)
 
+    def test_eigs_b_unknown(self):
+        system = create_system_without_B()
+        dmdc = DMDc(svd_rank=3, opt=False, svd_rank_omega=4)
+        dmdc.fit(system['snapshots'], system['u'])
+        self.assertEqual(dmdc.eigs.shape[0], 3)
+
+    def test_modes_b_unknown(self):
+        system = create_system_without_B()
+        dmdc = DMDc(svd_rank=3, opt=False, svd_rank_omega=4)
+        dmdc.fit(system['snapshots'], system['u'])
+        self.assertEqual(dmdc.modes.shape[1], 3)
+
     def test_reconstruct_b_known(self):
         system = create_system_with_B()
         dmdc = DMDc(svd_rank=-1)
