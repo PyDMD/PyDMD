@@ -1,7 +1,6 @@
 from setuptools import setup, Command
 import os
 import sys
-import pydmd
 
 meta = {}
 with open("pydmd/meta.py") as fp:
