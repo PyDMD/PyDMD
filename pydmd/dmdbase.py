@@ -29,7 +29,7 @@ class DMDBase(object):
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
     :param bool opt: flag to compute optimized DMD. Default is False.
-    :param numpy.array rescale_mode: None means no rescaling, empty array means
+    :param numpy.array rescale_mode: None means no rescaling, 'auto' means
         automatic rescaling using SV, otherwise the user chooses the preferred
         scaling.
     :cvar dict original_time: dictionary that contains information about the
