@@ -317,7 +317,7 @@ class DMDBase(object):
         return U.T.conj().dot(Y).dot(V) * np.reciprocal(s)
 
     @staticmethod
-    def _eig_from_lowrank_op(Atilde, Y, U, s, V, exact):
+    def _eig_from_lowrank_op(Atilde, Y, U, s, V, exact, rescale_mode):
         """
         Private method that computes eigenvalues and eigenvectors of the
         high-dimensional operator from the low-dimensional operator and the
@@ -332,10 +332,29 @@ class DMDBase(object):
             vectors of X, stored by row.
         :param bool exact: if True, the exact modes are computed; otherwise,
             the projected ones are computed.
+        :param numpy.array rescale_mode: None means no rescaling, 'auto' means
+            automatic rescaling using SV, otherwise the user chooses the
+            preferred scaling.
         :return: eigenvalues, eigenvectors
         :rtype: numpy.ndarray, numpy.ndarray
         """
-        lowrank_eigenvalues, lowrank_eigenvectors = np.linalg.eig(Atilde)
+
+        if rescale_mode is None:
+            # scaling isn't required
+            Ahat = Atilde
+        else:
+            # rescale using the singular values (as done in the paper)
+            if rescale_mode == 'auto':
+                scaling_factors_array = s.copy()
+            # rescale using custom values
+            else:
+                scaling_factors_array = rescale_mode
+
+            factors_inv_sqrt = np.diag(np.power(scaling_factors_array, -0.5))
+            factors_sqrt = np.diag(np.power(scaling_factors_array, 0.5))
+            Ahat = factors_inv_sqrt.dot(atilde).dot(factors_sqrt)
+
+        lowrank_eigenvalues, lowrank_eigenvectors = np.linalg.eig(Ahat)
 
         # Compute the eigenvectors of the high-dimensional operator
         if exact:
