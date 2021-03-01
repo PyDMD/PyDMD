@@ -32,7 +32,7 @@ class DMDc(DMDBase):
         for the `_fit_B_unknown` method of this class. It should be greater or
         equal than `svd_rank`. For the possible values please refer to the
         `svd_rank` parameter description above.
-    :param numpy.array rescale_mode: None means no rescaling, empty array means
+    :param numpy.array rescale_mode: None means no rescaling, 'auto' means
         automatic rescaling using SV, otherwise the user chooses the preferred
         scaling.
     :type svd_rank_omega: int or float

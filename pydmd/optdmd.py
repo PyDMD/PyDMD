@@ -59,7 +59,7 @@ class OptDMD(DMDBase):
         Default is False.
     :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
-    :param numpy.array rescale_mode: None means no rescaling, empty array means
+    :param numpy.array rescale_mode: None means no rescaling, 'auto' means
         automatic rescaling using SV, otherwise the user chooses the preferred
         scaling.
     """
