@@ -32,14 +32,19 @@ class DMDc(DMDBase):
         for the `_fit_B_unknown` method of this class. It should be greater or
         equal than `svd_rank`. For the possible values please refer to the
         `svd_rank` parameter description above.
+    :param numpy.array rescale_mode: None means no rescaling, empty array means
+        automatic rescaling using SV, otherwise the user chooses the preferred
+        scaling.
     :type svd_rank_omega: int or float
     """
-    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1):
+    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1,
+        rescale_mode=None):
         self.svd_rank = svd_rank
         self.tlsq_rank = tlsq_rank
         self.opt = opt
         self.svd_rank_omega = svd_rank_omega
         self.original_time = None
+        self.rescale_mode = rescale_mode
 
         self._eigs = None
         self._Atilde = None
@@ -142,7 +147,7 @@ class DMDc(DMDBase):
         omega = np.vstack([X, self._controlin])
 
         Up, sp, Vp = self._compute_svd(omega, self.svd_rank_omega)
-        
+
         Up1 = Up[:self._snapshots.shape[0], :]
         Up2 = Up[self._snapshots.shape[0]:, :]
 

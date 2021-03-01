@@ -24,12 +24,17 @@ class HODMD(DMDBase):
         Default is False.
     :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
+    :param numpy.array rescale_mode: None means no rescaling, empty array means
+        automatic rescaling using SV, otherwise the user chooses the preferred
+        scaling.
     :param int d: the new order for spatial dimension of the input snapshots.
         Default is 1.
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False, d=1):
-        super(HODMD, self).__init__(svd_rank, tlsq_rank, exact, opt)
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False, d=1,
+        rescale_mode=None):
+        super(HODMD, self).__init__(svd_rank, tlsq_rank, exact, opt,
+            rescale_mode)
         self.d = d
 
     def fit(self, X):

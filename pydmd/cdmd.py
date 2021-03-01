@@ -48,14 +48,18 @@ class CDMD(DMDBase):
         numpy.ndarray
     :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
+    :param numpy.array rescale_mode: None means no rescaling, empty array means
+        automatic rescaling using SV, otherwise the user chooses the preferred
+        scaling.
     """
 
     def __init__(self,
                  svd_rank=0,
                  tlsq_rank=0,
                  compression_matrix='uniform',
-                 opt=False):
-        super(CDMD, self).__init__(svd_rank, tlsq_rank, True, opt)
+                 opt=False,
+                 rescale_mode=None):
+        super(CDMD, self).__init__(svd_rank, tlsq_rank, True, opt, rescale_mode)
         self.compression_matrix = compression_matrix
 
     def _compress_snapshots(self):
