@@ -16,7 +16,7 @@ mpl.rcParams['figure.max_open_warning'] = 0
 import matplotlib.pyplot as plt
 
 
-class DMDBase:
+class DMDBase(object):
     """
     Dynamic Mode Decomposition base class.
 
