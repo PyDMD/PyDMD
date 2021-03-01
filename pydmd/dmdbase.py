@@ -326,7 +326,7 @@ class DMDBase(object):
         return U.T.conj().dot(Y).dot(V) * np.reciprocal(s)
 
     @staticmethod
-    def _eig_from_lowrank_op(Atilde, Y, U, s, V, exact, rescale_mode):
+    def _eig_from_lowrank_op(Atilde, Y, U, s, V, exact, rescale_mode=None):
         """
         Private method that computes eigenvalues and eigenvectors of the
         high-dimensional operator from the low-dimensional operator and the
