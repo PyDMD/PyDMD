@@ -29,6 +29,9 @@ class DMDBase:
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
     :param bool opt: flag to compute optimized DMD. Default is False.
+    :param numpy.array rescale_mode: None means no rescaling, empty array means
+        automatic rescaling using SV, otherwise the user chooses the preferred
+        scaling.
     :cvar dict original_time: dictionary that contains information about the
         time window where the system is sampled:
 
@@ -45,7 +48,8 @@ class DMDBase:
 
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False):
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False, rescale_mode=None):
+        self.rescale_mode = rescale_mode
         self.svd_rank = svd_rank
         self.tlsq_rank = tlsq_rank
         self.exact = exact
