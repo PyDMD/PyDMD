@@ -32,6 +32,9 @@ class MrDMD(DMDBase):
         Default is False.
     :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
+    :param numpy.array rescale_mode: None means no rescaling, empty array means
+        automatic rescaling using SV, otherwise the user chooses the preferred
+        scaling.
     :param int max_cycles: the maximum number of mode oscillations in any given
         time scale. Default is 1.
     :param int max_level: the maximum number of levels. Defualt is 6.
@@ -43,8 +46,10 @@ class MrDMD(DMDBase):
                  exact=False,
                  opt=False,
                  max_cycles=1,
-                 max_level=6):
-        super(MrDMD, self).__init__(svd_rank, tlsq_rank, exact, opt)
+                 max_level=6,
+                 rescale_mode=None):
+        super(MrDMD, self).__init__(svd_rank, tlsq_rank, exact, opt,
+            rescale_mode)
         self.max_cycles = max_cycles
         self.max_level = max_level
         self._nsamples = None
