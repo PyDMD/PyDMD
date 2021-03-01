@@ -48,7 +48,8 @@ class DMDBase:
 
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False, rescale_mode=None):
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
+        rescale_mode=None):
         self.rescale_mode = rescale_mode
         self.svd_rank = svd_rank
         self.tlsq_rank = tlsq_rank
