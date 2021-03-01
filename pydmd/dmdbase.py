@@ -29,6 +29,9 @@ class DMDBase:
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
     :param bool opt: flag to compute optimized DMD. Default is False.
+    :param numpy.array rescale_mode: None means no rescaling, empty array means
+        automatic rescaling using SV, otherwise the user chooses the preferred
+        scaling.
     :cvar dict original_time: dictionary that contains information about the
         time window where the system is sampled:
 
@@ -44,7 +47,10 @@ class DMDBase:
             - `dt` is the delta time between the approximated solutions.
 
     """
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False):
+
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
+        rescale_mode=None):
+        self.rescale_mode = rescale_mode
         self.svd_rank = svd_rank
         self.tlsq_rank = tlsq_rank
         self.exact = exact
@@ -117,9 +123,9 @@ class DMDBase:
     def dynamics(self):
         """
         Get the time evolution of each mode.
-        
+
         .. math::
-        
+
             \\mathbf{x}(t) \\approx
             \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\exp \\left( \\omega_{k} t \\right) b_{k} =
             \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\left( \\lambda_{k} \\right)^{\\left( t / \\Delta t \\right)} b_{k}
@@ -127,7 +133,7 @@ class DMDBase:
         :return: the matrix that contains all the time evolution, stored by
             row.
         :rtype: numpy.ndarray
-        
+
         """
         temp = np.outer(self.eigs, np.ones(self.dmd_timesteps.shape[0]))
         tpow = old_div(self.dmd_timesteps - self.original_time['t0'],
