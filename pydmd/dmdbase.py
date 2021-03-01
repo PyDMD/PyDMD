@@ -117,10 +117,16 @@ class DMDBase(object):
     def dynamics(self):
         """
         Get the time evolution of each mode.
+        
+        .. math::
+            \\mathbf{x}(t) \\approx
+            \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\exp \\left( \\omega_{k} t \\right) b_{k} =
+            \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\left( \\lambda_{k} \\right)^{\\left( t / \\Delta t \\right)} b_{k}
 
         :return: the matrix that contains all the time evolution, stored by
             row.
         :rtype: numpy.ndarray
+        
         """
         temp = np.outer(self.eigs, np.ones(self.dmd_timesteps.shape[0]))
         tpow = old_div(self.dmd_timesteps - self.original_time['t0'],
