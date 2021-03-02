@@ -44,7 +44,6 @@ class DMDBase(object):
             - `dt` is the delta time between the approximated solutions.
 
     """
-
     def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False):
         self.svd_rank = svd_rank
         self.tlsq_rank = tlsq_rank
@@ -118,15 +117,23 @@ class DMDBase(object):
     def dynamics(self):
         """
         Get the time evolution of each mode.
+        
+        .. math::
+        
+            \\mathbf{x}(t) \\approx
+            \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\exp \\left( \\omega_{k} t \\right) b_{k} =
+            \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\left( \\lambda_{k} \\right)^{\\left( t / \\Delta t \\right)} b_{k}
 
         :return: the matrix that contains all the time evolution, stored by
             row.
         :rtype: numpy.ndarray
+        
         """
-        omega = old_div(np.log(self.eigs), self.original_time['dt'])
-        vander = np.exp(
-            np.outer(omega, self.dmd_timesteps - self.original_time['t0']))
-        return vander * self._b[:, None]
+        temp = np.outer(self.eigs, np.ones(self.dmd_timesteps.shape[0]))
+        tpow = old_div(self.dmd_timesteps - self.original_time['t0'],
+                       self.original_time['dt'])
+
+        return np.power(temp, tpow) * self._b[:, None]
 
     @property
     def reconstructed_data(self):
@@ -210,9 +217,10 @@ class DMDBase(object):
         # check condition number of the data passed in
         cond_number = np.linalg.cond(snapshots)
         if cond_number > 10e4:
-            warnings.warn("Input data matrix X has condition number {}. "
-                          "Consider preprocessing data, passing in augmented data matrix, or regularization methods."
-                          .format(cond_number))
+            warnings.warn(
+                "Input data matrix X has condition number {}. "
+                "Consider preprocessing data, passing in augmented data matrix, or regularization methods."
+                .format(cond_number))
 
         return snapshots, snapshots_shape
 
@@ -270,12 +278,12 @@ class DMDBase(object):
         V = V.conj().T
 
         if svd_rank == 0:
-            omega = lambda x: 0.56 * x ** 3 - 0.95 * x ** 2 + 1.82 * x + 1.43
+            omega = lambda x: 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
             beta = np.divide(*sorted(X.shape))
             tau = np.median(s) * omega(beta)
             rank = np.sum(s > tau)
         elif svd_rank > 0 and svd_rank < 1:
-            cumulative_energy = np.cumsum(s ** 2 / (s ** 2).sum())
+            cumulative_energy = np.cumsum(s**2 / (s**2).sum())
             rank = np.searchsorted(cumulative_energy, svd_rank) + 1
         elif svd_rank >= 1 and isinstance(svd_rank, int):
             rank = min(svd_rank, U.shape[1])
@@ -334,8 +342,8 @@ class DMDBase(object):
 
         # Compute the eigenvectors of the high-dimensional operator
         if exact:
-            eigenvectors = (
-                (Y.dot(V) * np.reciprocal(s)).dot(lowrank_eigenvectors))
+            eigenvectors = ((Y.dot(V) *
+                             np.reciprocal(s)).dot(lowrank_eigenvectors))
         else:
             eigenvectors = U.dot(lowrank_eigenvectors)
 
@@ -378,9 +386,9 @@ class DMDBase(object):
             # perform svd on all the snapshots
             U, s, V = np.linalg.svd(self._snapshots, full_matrices=False)
 
-            P = np.multiply(
-                np.dot(modes.conj().T, modes),
-                np.conj(np.dot(vander, vander.conj().T)))
+            P = np.multiply(np.dot(modes.conj().T, modes),
+                            np.conj(np.dot(vander,
+                                           vander.conj().T)))
             tmp = (np.dot(np.dot(U, np.diag(s)), V)).conj().T
             q = np.conj(np.diag(np.dot(np.dot(vander, tmp), modes)))
 
@@ -416,8 +424,10 @@ class DMDBase(object):
         plt.gcf()
         ax = plt.gca()
 
-        points, = ax.plot(
-            self._eigs.real, self._eigs.imag, 'bo', label='Eigenvalues')
+        points, = ax.plot(self._eigs.real,
+                          self._eigs.imag,
+                          'bo',
+                          label='Eigenvalues')
 
         # set limits for axis
         limit = np.max(np.ceil(np.absolute(self._eigs)))
@@ -428,13 +438,12 @@ class DMDBase(object):
         plt.xlabel('Real part')
 
         if show_unit_circle:
-            unit_circle = plt.Circle(
-                (0., 0.),
-                1.,
-                color='green',
-                fill=False,
-                label='Unit circle',
-                linestyle='--')
+            unit_circle = plt.Circle((0., 0.),
+                                     1.,
+                                     color='green',
+                                     fill=False,
+                                     label='Unit circle',
+                                     linestyle='--')
             ax.add_artist(unit_circle)
 
         # Dashed grid
@@ -447,23 +456,21 @@ class DMDBase(object):
 
         # x and y axes
         if show_axes:
-            ax.annotate(
-                '',
-                xy=(np.max([limit * 0.8, 1.]), 0.),
-                xytext=(np.min([-limit * 0.8, -1.]), 0.),
-                arrowprops=dict(arrowstyle="->"))
-            ax.annotate(
-                '',
-                xy=(0., np.max([limit * 0.8, 1.])),
-                xytext=(0., np.min([-limit * 0.8, -1.])),
-                arrowprops=dict(arrowstyle="->"))
+            ax.annotate('',
+                        xy=(np.max([limit * 0.8, 1.]), 0.),
+                        xytext=(np.min([-limit * 0.8, -1.]), 0.),
+                        arrowprops=dict(arrowstyle="->"))
+            ax.annotate('',
+                        xy=(0., np.max([limit * 0.8, 1.])),
+                        xytext=(0., np.min([-limit * 0.8, -1.])),
+                        arrowprops=dict(arrowstyle="->"))
 
         # legend
         if show_unit_circle:
             ax.add_artist(
-                plt.legend(
-                    [points, unit_circle], ['Eigenvalues', 'Unit circle'],
-                    loc=1))
+                plt.legend([points, unit_circle],
+                           ['Eigenvalues', 'Unit circle'],
+                           loc=1))
         else:
             ax.add_artist(plt.legend([points], ['Eigenvalues'], loc=1))
 
@@ -539,19 +546,17 @@ class DMDBase(object):
 
             mode = self._modes.T[idx].reshape(xgrid.shape, order=order)
 
-            real = real_ax.pcolor(
-                xgrid,
-                ygrid,
-                mode.real,
-                cmap='jet',
-                vmin=mode.real.min(),
-                vmax=mode.real.max())
-            imag = imag_ax.pcolor(
-                xgrid,
-                ygrid,
-                mode.imag,
-                vmin=mode.imag.min(),
-                vmax=mode.imag.max())
+            real = real_ax.pcolor(xgrid,
+                                  ygrid,
+                                  mode.real,
+                                  cmap='jet',
+                                  vmin=mode.real.min(),
+                                  vmax=mode.real.max())
+            imag = imag_ax.pcolor(xgrid,
+                                  ygrid,
+                                  mode.imag,
+                                  vmin=mode.imag.min(),
+                                  vmax=mode.imag.max())
 
             fig.colorbar(real, ax=real_ax)
             fig.colorbar(imag, ax=imag_ax)
@@ -636,15 +641,14 @@ class DMDBase(object):
             fig = plt.figure(figsize=figsize)
             fig.suptitle('Snapshot {}'.format(idx))
 
-            snapshot = (self._snapshots.T[idx].real.reshape(
-                xgrid.shape, order=order))
+            snapshot = (self._snapshots.T[idx].real.reshape(xgrid.shape,
+                                                            order=order))
 
-            contour = plt.pcolor(
-                xgrid,
-                ygrid,
-                snapshot,
-                vmin=snapshot.min(),
-                vmax=snapshot.max())
+            contour = plt.pcolor(xgrid,
+                                 ygrid,
+                                 snapshot,
+                                 vmin=snapshot.min(),
+                                 vmax=snapshot.max())
 
             fig.colorbar(contour)
 
