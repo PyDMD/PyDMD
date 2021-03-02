@@ -358,7 +358,16 @@ class DMDBase(object):
             factors_sqrt = np.diag(np.power(scaling_factors_array, 0.5))
             Ahat = factors_inv_sqrt.dot(atilde).dot(factors_sqrt)
 
-        lowrank_eigenvalues, lowrank_eigenvectors = np.linalg.eig(Ahat)
+        lowrank_hat_eigenvalues, lowrank_hat_eigenvectors = np.linalg.eig(Ahat)
+
+        # eigenvalues are invariant wrt scaling
+        lowrank_eigenvalues = lowrank_hat_eigenvalues
+
+        if rescale_mode is None:
+            lowrank_eigenvectors = lowrank_hat_eigenvectors
+        else:
+            # compute eigenvalues after scaling
+            lowrank_eigenvectors = factors_sqrt.dot(lowrank_hat_eigenvectors)
 
         # Compute the eigenvectors of the high-dimensional operator
         if exact:
