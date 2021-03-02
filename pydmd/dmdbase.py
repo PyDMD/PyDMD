@@ -29,9 +29,11 @@ class DMDBase(object):
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
     :param bool opt: flag to compute optimized DMD. Default is False.
-    :param numpy.array rescale_mode: None means no rescaling, 'auto' means
-        automatic rescaling using SV, otherwise the user chooses the preferred
-        scaling.
+    :param rescale_mode: Scale Atilde as shown in
+            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
+            eigendecomposition. None means no rescaling, 'auto' means automatic
+            rescaling using singular values, otherwise the scaling factors.
+    :type rescale_mode: {'auto'} or None or numpy.ndarray
     :cvar dict original_time: dictionary that contains information about the
         time window where the system is sampled:
 
