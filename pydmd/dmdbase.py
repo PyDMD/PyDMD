@@ -119,6 +119,7 @@ class DMDBase(object):
         Get the time evolution of each mode.
         
         .. math::
+        
             \\mathbf{x}(t) \\approx
             \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\exp \\left( \\omega_{k} t \\right) b_{k} =
             \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\left( \\lambda_{k} \\right)^{\\left( t / \\Delta t \\right)} b_{k}
