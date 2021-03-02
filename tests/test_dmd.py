@@ -252,3 +252,17 @@ class TestDmd(TestCase):
         dmd.fit(X=sample_data)
         dmd.plot_eigs(show_axes=False, show_unit_circle=False)
         plt.close()
+
+    def test_rescale_mode_auto(self):
+        dmd_no_rescale = DMD(svd_rank=5, opt=True, rescale_mode=None)
+        dmd_no_rescale.fit(X=sample_data)
+
+        dmd_auto_rescale = DMD(svd_rank=5, opt=True, rescale_mode='auto')
+        dmd_auto_rescale.fit(X=sample_data)
+
+        dmd_auto_rescale_normalized_modes = np.apply_along_axis(
+            lambda vector: vector / np.linalg.norm(vector), 0,
+            dmd_auto_rescale._modes)
+
+        np.testing.assert_almost_equal(dmd_no_rescale._modes,
+            dmd_auto_rescale_normalized_modes, decimal=6)
