@@ -332,9 +332,11 @@ class DMDBase(object):
             vectors of X, stored by row.
         :param bool exact: if True, the exact modes are computed; otherwise,
             the projected ones are computed.
-        :param numpy.array rescale_mode: None means no rescaling, 'auto' means
-            automatic rescaling using SV, otherwise the user chooses the
-            preferred scaling.
+        :param rescale_mode: Scale Atilde as shown in
+            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
+            eigendecomposition. None means no rescaling, 'auto' means automatic
+            rescaling using singular values, otherwise the scaling factors.
+        :type rescale_mode: {'auto'} or None or numpy.ndarray
         :return: eigenvalues, eigenvectors
         :rtype: numpy.ndarray, numpy.ndarray
         """

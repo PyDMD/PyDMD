@@ -24,9 +24,11 @@ class FbDMD(DMDBase):
         Default is False.
     :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
-    :param numpy.array rescale_mode: None means no rescaling, 'auto' means
-        automatic rescaling using SV, otherwise the user chooses the preferred
-        scaling.
+    :param rescale_mode: Scale Atilde as shown in
+            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
+            eigendecomposition. None means no rescaling, 'auto' means automatic
+            rescaling using singular values, otherwise the scaling factors.
+    :type rescale_mode: {'auto'} or None or numpy.ndarray
 
     Reference: Dawson et al. https://arxiv.org/abs/1507.02264
     """
