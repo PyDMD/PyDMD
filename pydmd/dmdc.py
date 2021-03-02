@@ -32,9 +32,11 @@ class DMDc(DMDBase):
         for the `_fit_B_unknown` method of this class. It should be greater or
         equal than `svd_rank`. For the possible values please refer to the
         `svd_rank` parameter description above.
-    :param numpy.array rescale_mode: None means no rescaling, 'auto' means
-        automatic rescaling using SV, otherwise the user chooses the preferred
-        scaling.
+    :param rescale_mode: Scale Atilde as shown in
+            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
+            eigendecomposition. None means no rescaling, 'auto' means automatic
+            rescaling using singular values, otherwise the scaling factors.
+    :type rescale_mode: {'auto'} or None or numpy.ndarray
     :type svd_rank_omega: int or float
     """
     def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1,
