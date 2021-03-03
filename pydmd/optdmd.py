@@ -18,7 +18,7 @@ def pinv_diag(x):
     Utility function to compute the pseudo-inverse of a diagonal matrix.
 
     :param array_like x: diagonal of the matrix to be pseudo-inversed.
-    :return: the computed pseudo-inverse 
+    :return: the computed pseudo-inverse
     :rtype: numpy.ndarray
     """
     t = x.dtype.char.lower()
@@ -59,6 +59,11 @@ class OptDMD(DMDBase):
         Default is False.
     :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
+    :param rescale_mode: Scale Atilde as shown in
+            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
+            eigendecomposition. None means no rescaling, 'auto' means automatic
+            rescaling using singular values, otherwise the scaling factors.
+    :type rescale_mode: {'auto'} or None or numpy.ndarray
     """
 
     def __init__(self,
@@ -66,10 +71,11 @@ class OptDMD(DMDBase):
                  svd_rank=-1,
                  tlsq_rank=0,
                  exact=False,
-                 opt=False
-                 ):
+                 opt=False,
+                 rescale_mode=None):
 
-        super(OptDMD, self).__init__(svd_rank, tlsq_rank, exact, opt)
+        super(OptDMD, self).__init__(svd_rank, tlsq_rank, exact, opt,
+            rescale_mode)
         self.factorization = factorization
 
         self._svds = None
@@ -129,7 +135,7 @@ class OptDMD(DMDBase):
             _, self._input_space, self._output_space = self._eig_from_lowrank_op(self._Atilde, Uz, Q)
 
         self._modes = self._output_space
-        
+
         return self
 
     def predict(self, X):

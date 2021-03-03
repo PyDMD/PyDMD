@@ -29,6 +29,11 @@ class DMDBase(object):
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
     :param bool opt: flag to compute optimized DMD. Default is False.
+    :param rescale_mode: Scale Atilde as shown in
+            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
+            eigendecomposition. None means no rescaling, 'auto' means automatic
+            rescaling using singular values, otherwise the scaling factors.
+    :type rescale_mode: {'auto'} or None or numpy.ndarray
     :cvar dict original_time: dictionary that contains information about the
         time window where the system is sampled:
 
@@ -44,7 +49,10 @@ class DMDBase(object):
             - `dt` is the delta time between the approximated solutions.
 
     """
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False):
+
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
+        rescale_mode=None):
+        self.rescale_mode = rescale_mode
         self.svd_rank = svd_rank
         self.tlsq_rank = tlsq_rank
         self.exact = exact
@@ -117,9 +125,9 @@ class DMDBase(object):
     def dynamics(self):
         """
         Get the time evolution of each mode.
-        
+
         .. math::
-        
+
             \\mathbf{x}(t) \\approx
             \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\exp \\left( \\omega_{k} t \\right) b_{k} =
             \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\left( \\lambda_{k} \\right)^{\\left( t / \\Delta t \\right)} b_{k}
@@ -127,7 +135,7 @@ class DMDBase(object):
         :return: the matrix that contains all the time evolution, stored by
             row.
         :rtype: numpy.ndarray
-        
+
         """
         temp = np.outer(self.eigs, np.ones(self.dmd_timesteps.shape[0]))
         tpow = old_div(self.dmd_timesteps - self.original_time['t0'],
@@ -320,7 +328,7 @@ class DMDBase(object):
         return U.T.conj().dot(Y).dot(V) * np.reciprocal(s)
 
     @staticmethod
-    def _eig_from_lowrank_op(Atilde, Y, U, s, V, exact):
+    def _eig_from_lowrank_op(Atilde, Y, U, s, V, exact, rescale_mode=None):
         """
         Private method that computes eigenvalues and eigenvectors of the
         high-dimensional operator from the low-dimensional operator and the
@@ -335,10 +343,40 @@ class DMDBase(object):
             vectors of X, stored by row.
         :param bool exact: if True, the exact modes are computed; otherwise,
             the projected ones are computed.
+        :param rescale_mode: Scale Atilde as shown in
+            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
+            eigendecomposition. None means no rescaling, 'auto' means automatic
+            rescaling using singular values, otherwise the scaling factors.
+        :type rescale_mode: {'auto'} or None or numpy.ndarray
         :return: eigenvalues, eigenvectors
         :rtype: numpy.ndarray, numpy.ndarray
         """
-        lowrank_eigenvalues, lowrank_eigenvectors = np.linalg.eig(Atilde)
+
+        if rescale_mode is None:
+            # scaling isn't required
+            Ahat = Atilde
+        else:
+            # rescale using the singular values (as done in the paper)
+            if rescale_mode == 'auto':
+                scaling_factors_array = s.copy()
+            # rescale using custom values
+            else:
+                scaling_factors_array = rescale_mode
+
+            factors_inv_sqrt = np.diag(np.power(scaling_factors_array, -0.5))
+            factors_sqrt = np.diag(np.power(scaling_factors_array, 0.5))
+            Ahat = factors_inv_sqrt.dot(atilde).dot(factors_sqrt)
+
+        lowrank_hat_eigenvalues, lowrank_hat_eigenvectors = np.linalg.eig(Ahat)
+
+        # eigenvalues are invariant wrt scaling
+        lowrank_eigenvalues = lowrank_hat_eigenvalues
+
+        if rescale_mode is None:
+            lowrank_eigenvectors = lowrank_hat_eigenvectors
+        else:
+            # compute eigenvalues after scaling
+            lowrank_eigenvectors = factors_sqrt.dot(lowrank_hat_eigenvectors)
 
         # Compute the eigenvectors of the high-dimensional operator
         if exact:
