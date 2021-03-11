@@ -65,7 +65,8 @@ class HODMD(DMDBase):
         self._Atilde = self._build_lowrank_op(U, s, V, Y)
 
         self._eigs, self._modes = self._eig_from_lowrank_op(
-            self._Atilde, Y, U, s, V, self.exact)
+            self._Atilde, Y, U, s, V, self.exact,
+            rescale_mode=self.rescale_mode)
         self._modes = self._modes[:self._snapshots.shape[0], :]
 
         # Default timesteps

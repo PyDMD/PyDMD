@@ -115,7 +115,8 @@ class CDMD(DMDBase):
 
         # No projected modes for cdmd
         self._eigs, self._modes = self._eig_from_lowrank_op(
-            self._Atilde, self._snapshots[:, 1:], U, s, V, True)
+            self._Atilde, self._snapshots[:, 1:], U, s, V, True,
+            rescale_mode=self.rescale_mode)
 
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}

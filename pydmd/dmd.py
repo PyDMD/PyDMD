@@ -59,7 +59,8 @@ class DMD(DMDBase):
         self._svd_modes = U
 
         self._eigs, self._modes = self._eig_from_lowrank_op(
-            self._Atilde, Y, U, s, V, self.exact)
+            self._Atilde, Y, U, s, V, self.exact,
+            rescale_mode=self.rescale_mode)
 
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
