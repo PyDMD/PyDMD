@@ -253,16 +253,62 @@ class TestDmd(TestCase):
         dmd.plot_eigs(show_axes=False, show_unit_circle=False)
         plt.close()
 
-    def test_rescale_mode_auto(self):
-        dmd_no_rescale = DMD(svd_rank=5, opt=True, rescale_mode=None)
+       # we check that modes are the same vector multiplied by a coefficient
+    # when we rescale
+    def test_rescale_mode_auto_same_modes(self):
+        dmd_no_rescale = DMD(svd_rank=2, opt=True, rescale_mode=None)
         dmd_no_rescale.fit(X=sample_data)
 
-        dmd_auto_rescale = DMD(svd_rank=5, opt=True, rescale_mode='auto')
+        dmd_auto_rescale = DMD(svd_rank=2, opt=True, rescale_mode='auto')
         dmd_auto_rescale.fit(X=sample_data)
 
-        dmd_auto_rescale_normalized_modes = np.apply_along_axis(
-            lambda vector: vector / np.linalg.norm(vector), 0,
-            dmd_auto_rescale._modes)
+        def normalize(vector):
+            return vector / np.linalg.norm(vector)
 
-        np.testing.assert_almost_equal(dmd_no_rescale._modes,
-            dmd_auto_rescale_normalized_modes, decimal=6)
+        dmd_rescale_normalized_modes = np.apply_along_axis(normalize, 0,
+            dmd_auto_rescale._modes)
+        dmd_no_rescale_normalized_modes = np.apply_along_axis(normalize, 0,
+            dmd_no_rescale._modes)
+
+        np.testing.assert_almost_equal(dmd_no_rescale_normalized_modes,
+            dmd_rescale_normalized_modes, decimal=3)
+
+    # we check that modes are the same vector multiplied by a coefficient
+    # when we rescale
+    def test_rescale_mode_custom_same_modes(self):
+        dmd_no_rescale = DMD(svd_rank=2, opt=True, rescale_mode=None)
+        dmd_no_rescale.fit(X=sample_data)
+
+        dmd_rescale = DMD(svd_rank=2, opt=True, rescale_mode=
+            np.linspace(5,10, 2))
+        dmd_rescale.fit(X=sample_data)
+
+        def normalize(vector):
+            return vector / np.linalg.norm(vector)
+
+        dmd_rescale_normalized_modes = np.apply_along_axis(normalize, 0,
+            dmd_rescale._modes)
+        dmd_no_rescale_normalized_modes = np.apply_along_axis(normalize, 0,
+            dmd_no_rescale._modes)
+
+        np.testing.assert_almost_equal(dmd_no_rescale_normalized_modes,
+            dmd_rescale_normalized_modes, decimal=3)
+
+    def test_rescale_mode_same_evolution(self):
+        dmd_no_rescale = DMD(svd_rank=5, opt=True, rescale_mode=None)
+        dmd_no_rescale.fit(X=sample_data)
+        dmd_no_rescale.dmd_time['tend'] *= 2
+
+        dmd_rescale = DMD(svd_rank=5, opt=True, rescale_mode=
+            np.linspace(5,10, 5))
+        dmd_rescale.fit(X=sample_data)
+        dmd_rescale.dmd_time['tend'] *= 2
+
+        np.testing.assert_almost_equal(dmd_rescale.reconstructed_data,
+            dmd_no_rescale.reconstructed_data, decimal=6)
+
+    def test_rescale_mode_coefficients_count_check(self):
+        dmd_rescale = DMD(svd_rank=5, opt=True, rescale_mode=
+            np.linspace(5,10, 6))
+        with self.assertRaises(ValueError):
+            dmd_rescale.fit(X=sample_data)
