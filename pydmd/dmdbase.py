@@ -356,16 +356,21 @@ class DMDBase(object):
             # scaling isn't required
             Ahat = Atilde
         else:
-            # rescale using the singular values (as done in the paper)
+            # rescale using singular values (like in Section 2.4 of
+            # https://arxiv.org/pdf/1409.5496.pdf)
             if rescale_mode == 'auto':
                 scaling_factors_array = s.copy()
             # rescale using custom values
             else:
+                if len(rescale_mode) != len(s):
+                    raise ValueError('''Scaling by an invalid number of
+                        coefficients''')
+
                 scaling_factors_array = rescale_mode
 
             factors_inv_sqrt = np.diag(np.power(scaling_factors_array, -0.5))
             factors_sqrt = np.diag(np.power(scaling_factors_array, 0.5))
-            Ahat = factors_inv_sqrt.dot(atilde).dot(factors_sqrt)
+            Ahat = factors_inv_sqrt.dot(Atilde).dot(factors_sqrt)
 
         lowrank_hat_eigenvalues, lowrank_hat_eigenvectors = np.linalg.eig(Ahat)
 

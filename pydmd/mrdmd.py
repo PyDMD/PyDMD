@@ -392,7 +392,7 @@ class MrDMD(DMDBase):
             Atilde = self._build_lowrank_op(U, s, V, Yc)
 
             eigs, modes = self._eig_from_lowrank_op(Atilde, Yc, U, s, V,
-                                                    self.exact)
+                self.exact, rescale_mode=self.rescale_mode)
             rho = old_div(float(self.max_cycles), n_samples)
             slow_modes = (np.abs(
                 old_div(np.log(eigs), (2. * np.pi * step)))) <= rho

@@ -65,7 +65,8 @@ class FbDMD(DMDBase):
         self._Atilde = sqrtm(fAtilde.dot(np.linalg.inv(bAtilde)))
 
         self._eigs, self._modes = self._eig_from_lowrank_op(
-            self._Atilde, Y, Ux, sx, Vx, self.exact)
+            self._Atilde, Y, Ux, sx, Vx, self.exact,
+            rescale_mode=self.rescale_mode)
 
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
         self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
