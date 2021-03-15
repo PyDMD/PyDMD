@@ -51,7 +51,7 @@ class TestDmd(TestCase):
     def test_Atilde_shape(self):
         dmd = DMD(svd_rank=3)
         dmd.fit(X=sample_data)
-        assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+        assert dmd.atilde.shape == (3, 3)
 
     def test_Atilde_values(self):
         dmd = DMD(svd_rank=2)
@@ -266,9 +266,9 @@ class TestDmd(TestCase):
             return vector / np.linalg.norm(vector)
 
         dmd_rescale_normalized_modes = np.apply_along_axis(normalize, 0,
-            dmd_auto_rescale._modes)
+            dmd_auto_rescale.modes)
         dmd_no_rescale_normalized_modes = np.apply_along_axis(normalize, 0,
-            dmd_no_rescale._modes)
+            dmd_no_rescale.modes)
 
         np.testing.assert_almost_equal(dmd_no_rescale_normalized_modes,
             dmd_rescale_normalized_modes, decimal=3)
@@ -287,9 +287,9 @@ class TestDmd(TestCase):
             return vector / np.linalg.norm(vector)
 
         dmd_rescale_normalized_modes = np.apply_along_axis(normalize, 0,
-            dmd_rescale._modes)
+            dmd_rescale.modes)
         dmd_no_rescale_normalized_modes = np.apply_along_axis(normalize, 0,
-            dmd_no_rescale._modes)
+            dmd_no_rescale.modes)
 
         np.testing.assert_almost_equal(dmd_no_rescale_normalized_modes,
             dmd_rescale_normalized_modes, decimal=3)

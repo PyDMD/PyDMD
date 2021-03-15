@@ -33,11 +33,13 @@ class HODMD(DMDBase):
         Default is 1.
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False, d=1,
-        rescale_mode=None):
-        super(HODMD, self).__init__(svd_rank, tlsq_rank, exact, opt,
-            rescale_mode)
+    def __init__(self, d=1, **kwargs):
+        super(HODMD, self).__init__(**kwargs)
         self.d = d
+
+    @DMDBase.modes.getter
+    def modes(self):
+        return self.modes[:self._snapshots.shape[0], :]
 
     def fit(self, X):
         """
@@ -59,22 +61,13 @@ class HODMD(DMDBase):
         Y = snaps[:, 1:]
 
         X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
-
-        U, s, V = self._compute_svd(X, self.svd_rank)
-
-        self._Atilde = self._build_lowrank_op(U, s, V, Y)
-
-        self._eigs, self._modes = self._eig_from_lowrank_op(
-            self._Atilde, Y, U, s, V, self.exact,
-            rescale_mode=self.rescale_mode)
-        self._modes = self._modes[:self._snapshots.shape[0], :]
+        U, s, V = self.atilde.compute_operator(X,Y)
 
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
         self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
 
-        self._b = self._compute_amplitudes(self._modes, self._snapshots,
-                                           self._eigs, self.opt)
-
+        self._b = self._compute_amplitudes(self.modes, self._snapshots,
+            self.eigs, self.opt)
 
         return self

@@ -8,7 +8,43 @@ with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.
 from .dmdbase import DMDBase
 from past.utils import old_div
 import numpy as np
+from .dmdoperator import DMDOperator
 
+class DMDControlOperator(DMDOperator):
+    def __init__(self, svd_rank_omega=-1, **kwargs):
+        super(DMDControlOperator, self).__init__(**kwargs)
+        self._svd_rank_omega = svd_rank_omega
+
+class DMDBKnownOperator(DMDControlOperator):
+    def compute_operator(self, X, Y, B, controlin):
+        Y = Y - B.dot(controlin)
+        return super(DMDBKnownOperator, self).compute_operator(X,Y)
+
+class DMDBUnknownOperator(DMDControlOperator):
+    def compute_operator(self, X, Y, controlin, snapshots_rows):
+        omega = np.vstack([X, controlin])
+
+        Up, sp, Vp = self._compute_svd(omega, self._svd_rank_omega)
+
+        Up1 = Up[:snapshots_rows, :]
+        Up2 = Up[snapshots_rows:, :]
+
+        Ur, sr, Vr = self._compute_svd(Y, self._svd_rank)
+
+        self._Atilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
+            np.reciprocal(sp))).dot(Up1.T.conj()).dot(Ur)
+        self._compute_eigenquantities()
+        self._compute_modes_and_Lambda(Y, sp, Vp, Up1, Ur)
+
+        Btilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
+            np.reciprocal(sp))).dot(Up2.T.conj())
+
+        return Ur, Ur.dot(Btilde)
+
+    def _compute_modes_and_Lambda(self, Y, sp, Vp, Up1, Ur):
+        self._modes = Y.dot(Vp).dot(np.diag(np.reciprocal(sp))).dot(
+            Up1.T.conj()).dot(Ur).dot(self.eigenvectors)
+        self._Lambda = self.eigenvalues
 
 class DMDc(DMDBase):
     """
@@ -39,25 +75,20 @@ class DMDc(DMDBase):
     :type rescale_mode: {'auto'} or None or numpy.ndarray
     :type svd_rank_omega: int or float
     """
-    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1,
-        rescale_mode=None):
-        self.svd_rank = svd_rank
-        self.tlsq_rank = tlsq_rank
-        self.opt = opt
-        self.svd_rank_omega = svd_rank_omega
-        self.original_time = None
-        self.rescale_mode = rescale_mode
+    def __init__(self, tlsq_rank=0, opt=False, **kwargs):
+        super(DMDc, self).__init__(tlsq_rank=tlsq_rank, opt=opt, rescale_mode=None, **kwargs)
 
-        self._eigs = None
-        self._Atilde = None
         self._B = None
-        self._modes = None  # Phi
-        self._b = None  # amplitudes
-        self._snapshots = None
         self._snapshots_shape = None
         self._controlin = None
         self._controlin_shape = None
         self._basis = None
+
+    def _initialize_dmdoperator(self, **kwargs):
+        # we're going to initialize Atilde when we know if B is known
+        self._Atilde = None
+        # remember the arguments for when we'll need them
+        self._dmd_operator_kwargs = kwargs
 
     @property
     def B(self):
@@ -113,61 +144,6 @@ class DMDc(DMDBase):
         data = np.array(data).T
         return data
 
-    def _fit_B_known(self, X, Y, B):
-        """
-        Private method that performs the dynamic mode decomposition algorithm
-        with control when the matrix `B` is provided.
-
-        :param numpy.ndarray X: the first matrix of original snapshots.
-        :param numpy.ndarray Y: the second matrix of original snapshots.
-        :param numpy.ndarray I: the input control matrix.
-        :param numpy.ndarray B: the matrix B.
-        """
-        X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
-
-        U, s, V = self._compute_svd(X, self.svd_rank)
-
-        self._Atilde = U.T.conj().dot(Y - B.dot(self._controlin)).dot(V).dot(
-            np.diag(np.reciprocal(s)))
-        self._eigs, self._modes = self._eig_from_lowrank_op(
-            self._Atilde, (Y - B.dot(self._controlin)), U, s, V, True)
-        self._b = self._compute_amplitudes(self._modes, self._snapshots,
-                                           self._eigs, self.opt)
-
-        self._B = B
-        self._basis = U
-        return self
-
-    def _fit_B_unknown(self, X, Y):
-        """
-        Private method that performs the dynamic mode decomposition algorithm
-        with control when the matrix `B` is not provided.
-
-        :param numpy.ndarray X: the first matrix of original snapshots.
-        :param numpy.ndarray Y: the second matrix of original snapshots.
-        """
-        omega = np.vstack([X, self._controlin])
-
-        Up, sp, Vp = self._compute_svd(omega, self.svd_rank_omega)
-
-        Up1 = Up[:self._snapshots.shape[0], :]
-        Up2 = Up[self._snapshots.shape[0]:, :]
-
-        Ur, sr, Vr = self._compute_svd(Y, self.svd_rank)
-        self._basis = Ur
-
-        self._Atilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
-            np.reciprocal(sp))).dot(Up1.T.conj()).dot(Ur)
-        self._Btilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
-            np.reciprocal(sp))).dot(Up2.T.conj())
-        self._B = Ur.dot(self._Btilde)
-
-        self._eigs, modes = np.linalg.eig(self._Atilde)
-        self._modes = Y.dot(Vp).dot(np.diag(np.reciprocal(sp))).dot(
-            Up1.T.conj()).dot(Ur).dot(modes)
-
-        self._b = self._compute_amplitudes(self._modes, X, self._eigs, self.opt)
-
     def fit(self, X, I, B=None):
         """
         Compute the Dynamic Modes Decomposition with control given the original
@@ -194,8 +170,15 @@ class DMDc(DMDBase):
         self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
 
         if B is None:
-            self._fit_B_unknown(X, Y)
+            self._Atilde = DMDBUnknownOperator(**self._dmd_operator_kwargs)
+            self._basis, self._B = self._Atilde.compute_operator(X, Y, self._controlin, self._snapshots.shape[0])
         else:
-            self._fit_B_known(X, Y, B)
+            self._Atilde = DMDBKnownOperator(**self._dmd_operator_kwargs)
+            U, _, _ = self._Atilde.compute_operator(X, Y, B, self._controlin)
+
+            self._basis = U
+            self._B = B
+
+        self._b = self._compute_amplitudes()
 
         return self

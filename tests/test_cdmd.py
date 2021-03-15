@@ -46,7 +46,7 @@ class TestCDmd(TestCase):
     def test_Atilde_shape(self):
         dmd = CDMD(svd_rank=3)
         dmd.fit(X=sample_data)
-        assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+        assert dmd.atilde.shape == (3, 3)
 
     def test_eigs_1(self):
         dmd = CDMD(svd_rank=-1)

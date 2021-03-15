@@ -8,6 +8,7 @@ from scipy.linalg import pinv2
 
 # --> Import PyDMD base class for DMD.
 from .dmdbase import DMDBase
+from .dmdoperator import DMDOperator
 
 
 def pinv(x): return pinv2(x, rcond=10 * np.finfo(float).eps)
@@ -51,23 +52,14 @@ class DMD(DMDBase):
         Y = self._snapshots[:, 1:]
 
         X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
-
-        U, s, V = self._compute_svd(X, self.svd_rank)
-
-        self._Atilde = self._build_lowrank_op(U, s, V, Y)
-
+        U, s, V = self._Atilde.compute_operator(X,Y)
         self._svd_modes = U
-
-        self._eigs, self._modes = self._eig_from_lowrank_op(
-            self._Atilde, Y, U, s, V, self.exact,
-            rescale_mode=self.rescale_mode)
 
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
         self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
 
-        self._b = self._compute_amplitudes(self._modes, self._snapshots,
-                                           self._eigs, self.opt)
+        self._b = self._compute_amplitudes()
 
         return self
 
@@ -89,13 +81,14 @@ class DMD(DMDBase):
         # --> Predict using the SVD modes as the basis.
         if self.exact is False:
             Y = np.linalg.multi_dot(
-                [self._svd_modes, self._Atilde, self._svd_modes.T.conj(), X]
+                [self._svd_modes, self.atilde.as_numpy_array,
+                self._svd_modes.T.conj(), X]
             )
         # --> Predict using the DMD modes as the basis.
         elif self.exact is True:
-            adjoint_modes = pinv(self._modes)
+            adjoint_modes = pinv(self.modes)
             Y = np.linalg.multi_dot(
-                [self._modes, np.diag(self._eigs), adjoint_modes, X]
+                [self.modes, np.diag(self.eigs), adjoint_modes, X]
             )
 
         return Y

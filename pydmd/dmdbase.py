@@ -15,6 +15,8 @@ from past.utils import old_div
 mpl.rcParams['figure.max_open_warning'] = 0
 import matplotlib.pyplot as plt
 
+from .dmdoperator import DMDOperator
+
 
 class DMDBase(object):
     """
@@ -50,22 +52,20 @@ class DMDBase(object):
 
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-        rescale_mode=None):
-        self.rescale_mode = rescale_mode
-        self.svd_rank = svd_rank
+    def __init__(self, tlsq_rank=0, opt=False, **operator_kwargs):
+        self._initialize_dmdoperator(**operator_kwargs)
+
         self.tlsq_rank = tlsq_rank
-        self.exact = exact
-        self.opt = opt
         self.original_time = None
         self.dmd_time = None
+        self.opt = opt
 
-        self._eigs = None
-        self._Atilde = None
-        self._modes = None  # Phi
         self._b = None  # amplitudes
         self._snapshots = None
         self._snapshots_shape = None
+
+    def _initialize_dmdoperator(self, **kwargs):
+        self._Atilde = DMDOperator(**kwargs)
 
     @property
     def dmd_timesteps(self):
@@ -99,7 +99,7 @@ class DMDBase(object):
         :return: the matrix containing the DMD modes.
         :rtype: numpy.ndarray
         """
-        return self._modes
+        return self._Atilde.modes
 
     @property
     def atilde(self):
@@ -109,7 +109,7 @@ class DMDBase(object):
         :return: the reduced Koopman operator A.
         :rtype: numpy.ndarray
         """
-        return self._Atilde
+        return self._Atilde.as_numpy_array
 
     @property
     def eigs(self):
@@ -119,7 +119,7 @@ class DMDBase(object):
         :return: the eigenvalues from the eigendecomposition of `atilde`.
         :rtype: numpy.ndarray
         """
-        return self._eigs
+        return self._Atilde.eigenvalues
 
     @property
     def dynamics(self):
@@ -395,7 +395,7 @@ class DMDBase(object):
 
         return eigenvalues, eigenvectors
 
-    def _compute_amplitudes(self, modes, snapshots, eigs, opt):
+    def _compute_amplitudes(self):
         """
         Compute the amplitude coefficients. If `opt` is False the amplitudes
         are computed by minimizing the error between the modes and the first
@@ -420,25 +420,25 @@ class DMDBase(object):
         Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
         https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document
         """
-        if opt:
+        if self.opt:
             # compute the vandermonde matrix
-            omega = old_div(np.log(eigs), self.original_time['dt'])
+            omega = old_div(np.log(self.eigs), self.original_time['dt'])
             vander = np.exp(
                 np.multiply(*np.meshgrid(omega, self.dmd_timesteps))).T
 
             # perform svd on all the snapshots
             U, s, V = np.linalg.svd(self._snapshots, full_matrices=False)
 
-            P = np.multiply(np.dot(modes.conj().T, modes),
+            P = np.multiply(np.dot(self.modes.conj().T, self.modes),
                             np.conj(np.dot(vander,
                                            vander.conj().T)))
             tmp = (np.dot(np.dot(U, np.diag(s)), V)).conj().T
-            q = np.conj(np.diag(np.dot(np.dot(vander, tmp), modes)))
+            q = np.conj(np.diag(np.dot(np.dot(vander, tmp), self.modes)))
 
             # b optimal
             a = np.linalg.solve(P, q)
         else:
-            a = np.linalg.lstsq(modes, snapshots.T[0], rcond=None)[0]
+            a = np.linalg.lstsq(self.modes, self._snapshots.T[0], rcond=None)[0]
 
         return a
 
@@ -458,7 +458,7 @@ class DMDBase(object):
             size. Default is (8, 8).
         :param str title: title of the plot.
         """
-        if self._eigs is None:
+        if self.eigs is None:
             raise ValueError('The eigenvalues have not been computed.'
                              'You have to perform the fit method.')
 
@@ -467,13 +467,13 @@ class DMDBase(object):
         plt.gcf()
         ax = plt.gca()
 
-        points, = ax.plot(self._eigs.real,
-                          self._eigs.imag,
+        points, = ax.plot(self.eigs.real,
+                          self.eigs.imag,
                           'bo',
                           label='Eigenvalues')
 
         # set limits for axis
-        limit = np.max(np.ceil(np.absolute(self._eigs)))
+        limit = np.max(np.ceil(np.absolute(self.eigs)))
         ax.set_xlim((-limit, limit))
         ax.set_ylim((-limit, limit))
 
@@ -551,7 +551,7 @@ class DMDBase(object):
         :param tuple(int,int) figsize: tuple in inches defining the figure
             size. Default is (8, 8).
         """
-        if self._modes is None:
+        if self.modes is None:
             raise ValueError('The modes have not been computed.'
                              'You have to perform the fit method.')
 
@@ -573,7 +573,7 @@ class DMDBase(object):
         xgrid, ygrid = np.meshgrid(x, y)
 
         if index_mode is None:
-            index_mode = list(range(self._modes.shape[1]))
+            index_mode = list(range(self.modes.shape[1]))
         elif isinstance(index_mode, int):
             index_mode = [index_mode]
 
@@ -587,7 +587,7 @@ class DMDBase(object):
             real_ax = fig.add_subplot(1, 2, 1)
             imag_ax = fig.add_subplot(1, 2, 2)
 
-            mode = self._modes.T[idx].reshape(xgrid.shape, order=order)
+            mode = self.modes.T[idx].reshape(xgrid.shape, order=order)
 
             real = real_ax.pcolor(xgrid,
                                   ygrid,

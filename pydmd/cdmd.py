@@ -6,8 +6,28 @@ https://doi.org/10.1007/s11554-016-0655-2
 from __future__ import division
 import numpy as np
 import scipy.sparse
+from scipy.linalg import sqrtm
 
 from .dmdbase import DMDBase
+from .dmdoperator import DMDOperator
+
+class CDMDOperator(DMDOperator):
+    def compute_operator(self, compressedX, compressedY, nonCompressedY):
+        U, s, V = self._compute_svd(compressedX)
+
+        atilde = self._least_square_operator(U, s, V, compressedY)
+
+        if self._forward_backward:
+            # b stands for "backward"
+            bU, bs, bV = self._compute_svd(compressedY, svd_rank=self._svd_rank)
+            atilde_back = self._least_square_operator(bU, bs, bV, compressedX)
+            atilde = sqrtm(atilde.dot(np.linalg.inv(atilde_back)))
+
+        self._Atilde = atilde
+        self._compute_eigenquantities()
+        self._compute_modes_and_Lambda(nonCompressedY, U, s, V)
+
+        return U, s, V
 
 
 class CDMD(DMDBase):
@@ -55,14 +75,12 @@ class CDMD(DMDBase):
     :type rescale_mode: {'auto'} or None or numpy.ndarray
     """
 
-    def __init__(self,
-                 svd_rank=0,
-                 tlsq_rank=0,
-                 compression_matrix='uniform',
-                 opt=False,
-                 rescale_mode=None):
-        super(CDMD, self).__init__(svd_rank, tlsq_rank, True, opt, rescale_mode)
+    def __init__(self, compression_matrix='uniform', **kwargs):
+        super(CDMD, self).__init__(**kwargs)
         self.compression_matrix = compression_matrix
+
+    def _initialize_dmdoperator(self, **kwargs):
+        self._Atilde = CDMDOperator(**kwargs)
 
     def _compress_snapshots(self):
         """
@@ -108,21 +126,12 @@ class CDMD(DMDBase):
         Y = compressed_snapshots[:, 1:]
 
         X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
-
-        U, s, V = self._compute_svd(X, self.svd_rank)
-
-        self._Atilde = self._build_lowrank_op(U, s, V, Y)
-
-        # No projected modes for cdmd
-        self._eigs, self._modes = self._eig_from_lowrank_op(
-            self._Atilde, self._snapshots[:, 1:], U, s, V, True,
-            rescale_mode=self.rescale_mode)
+        U, s, V = self._Atilde.compute_operator(X,Y, self._snapshots[:, 1:])
 
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
         self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
 
-        self._b = self._compute_amplitudes(self._modes, self._snapshots,
-                                           self._eigs, self.opt)
+        self._b = self._compute_amplitudes()
 
         return self

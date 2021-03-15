@@ -4,10 +4,10 @@ Derived module from dmdbase.py for forward/backward dmd.
 import numpy as np
 
 from scipy.linalg import sqrtm
-from .dmdbase import DMDBase
+from .dmd import DMD
 
 
-class FbDMD(DMDBase):
+class FbDMD(DMD):
     """
     Forward/backward DMD class.
 
@@ -33,45 +33,7 @@ class FbDMD(DMDBase):
     Reference: Dawson et al. https://arxiv.org/abs/1507.02264
     """
 
-    def fit(self, X):
-        """
-        Compute the Dynamics Modes Decomposition to the input data.
-
-        :param X: the input snapshots.
-        :type X: numpy.ndarray or iterable
-        """
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
-
-        n_samples = self._snapshots.shape[1]
-        X = self._snapshots[:, :-1]
-        Y = self._snapshots[:, 1:]
-
-        X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
-
-        Uy, sy, Vy = self._compute_svd(Y, self.svd_rank)
-        Ux, sx, Vx = self._compute_svd(X, self.svd_rank)
-
-        if len(sy) != len(sx):
-            raise ValueError(
-                'The optimal truncation produced different number of singular'
-                'values for the X and Y matrix, please specify different'
-                'svd_rank')
-
-        # Backward operator
-        bAtilde = self._build_lowrank_op(Uy, sy, Vy, X)
-        # Forward operator
-        fAtilde = self._build_lowrank_op(Ux, sx, Vx, Y)
-
-        self._Atilde = sqrtm(fAtilde.dot(np.linalg.inv(bAtilde)))
-
-        self._eigs, self._modes = self._eig_from_lowrank_op(
-            self._Atilde, Y, Ux, sx, Vx, self.exact,
-            rescale_mode=self.rescale_mode)
-
-        self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
-        self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
-
-        self._b = self._compute_amplitudes(self._modes, self._snapshots,
-                                           self._eigs, self.opt)
-
-        return self
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
+        rescale_mode=None):
+        super().__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank, exact=exact,
+            opt=opt, rescale_mode=rescale_mode, forward_backward=True)
