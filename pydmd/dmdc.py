@@ -5,9 +5,10 @@ Reference:
 - Proctor, J.L., Brunton, S.L. and Kutz, J.N., 2016. Dynamic mode decomposition
 with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.
 """
-from .dmdbase import DMDBase
 from past.utils import old_div
 import numpy as np
+
+from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 
 class DMDControlOperator(DMDOperator):

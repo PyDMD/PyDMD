@@ -12,6 +12,7 @@ import numpy as np
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
+from .utils import compute_tlsq
 
 def pinv_diag(x):
     """
@@ -155,7 +156,7 @@ class OptDMD(DMDBase):
             self._input_snapshots, self._input_snapshots_shape = self._col_major_2darray(X)
             self._output_snapshots, self._output_snapshots_shape = self._col_major_2darray(Y)
 
-        X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
+        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
         Uz, Q = self._Atilde.compute_operator(X,Y)
 
         if self.factorization == "svd":

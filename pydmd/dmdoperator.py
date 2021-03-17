@@ -38,18 +38,26 @@ class DMDOperator(object):
 
     @property
     def eigenvalues(self):
+        if not hasattr(self, '_eigenvalues'):
+            raise ValueError('You need to call fit before')
         return self._eigenvalues
 
     @property
     def eigenvectors(self):
+        if not hasattr(self, '_eigenvectors'):
+            raise ValueError('You need to call fit before')
         return self._eigenvectors
 
     @property
     def modes(self):
+        if not hasattr(self, '_modes'):
+            raise ValueError('You need to call fit before')
         return self._modes
 
     @property
     def Lambda(self):
+        if not hasattr(self, '_Lambda'):
+            raise ValueError('You need to call fit before')
         return self._Lambda
 
     @property
@@ -134,6 +142,7 @@ class DMDOperator(object):
             # scaling isn't required
             Ahat = self._Atilde
         else:
+            print('upakjiwecbdsicsdiucdbsidbcsdicubisudbc')
             if len(self._rescale_mode) != self.as_numpy_array.shape[0]:
                 raise ValueError('''Scaling by an invalid number of
                         coefficients''')

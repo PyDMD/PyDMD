@@ -8,7 +8,9 @@ from scipy.linalg import pinv2
 
 # --> Import PyDMD base class for DMD.
 from .dmdbase import DMDBase
+
 from .dmdoperator import DMDOperator
+from .utils import compute_tlsq
 
 
 def pinv(x): return pinv2(x, rcond=10 * np.finfo(float).eps)
@@ -51,7 +53,7 @@ class DMD(DMDBase):
         X = self._snapshots[:, :-1]
         Y = self._snapshots[:, 1:]
 
-        X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
+        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
         U, s, V = self._Atilde.compute_operator(X,Y)
         self._svd_modes = U
 

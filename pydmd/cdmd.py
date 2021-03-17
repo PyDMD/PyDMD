@@ -11,7 +11,12 @@ from scipy.linalg import sqrtm
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 
+from .utils import compute_tlsq
+
 class CDMDOperator(DMDOperator):
+    def __init__(self, **kwargs):
+        super().__init__(exact=True, **kwargs)
+
     def compute_operator(self, compressedX, compressedY, nonCompressedY):
         U, s, V = self._compute_svd(compressedX)
 
@@ -125,7 +130,7 @@ class CDMD(DMDBase):
         X = compressed_snapshots[:, :-1]
         Y = compressed_snapshots[:, 1:]
 
-        X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
+        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
         U, s, V = self._Atilde.compute_operator(X,Y, self._snapshots[:, 1:])
 
         # Default timesteps

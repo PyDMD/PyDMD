@@ -8,6 +8,7 @@ Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.
 import numpy as np
 
 from .dmdbase import DMDBase
+from .utils import compute_tlsq
 
 
 class HODMD(DMDBase):
@@ -39,7 +40,7 @@ class HODMD(DMDBase):
 
     @DMDBase.modes.getter
     def modes(self):
-        return self.modes[:self._snapshots.shape[0], :]
+        return super(HODMD, self).modes[:self._snapshots.shape[0], :]
 
     def fit(self, X):
         """
@@ -60,14 +61,13 @@ class HODMD(DMDBase):
         X = snaps[:, :-1]
         Y = snaps[:, 1:]
 
-        X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
-        U, s, V = self.atilde.compute_operator(X,Y)
+        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
+        U, s, V = self._Atilde.compute_operator(X,Y)
 
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
         self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
 
-        self._b = self._compute_amplitudes(self.modes, self._snapshots,
-            self.eigs, self.opt)
+        self._b = self._compute_amplitudes()
 
         return self
