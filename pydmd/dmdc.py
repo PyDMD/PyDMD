@@ -23,7 +23,7 @@ class DMDBKnownOperator(DMDControlOperator):
     def compute_operator(self, X, Y, B, controlin):
         X, Y = compute_tlsq(X, Y, self._tlsq_rank)
         Y = Y - B.dot(controlin)
-        return super(DMDBKnownOperator, self).compute_operator(X,Y)
+        return super(DMDBKnownOperator, self).compute_operator(X, Y)
 
 class DMDBUnknownOperator(DMDControlOperator):
     def compute_operator(self, X, Y, controlin, snapshots_rows):
