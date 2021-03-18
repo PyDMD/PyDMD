@@ -4,16 +4,12 @@ Derived module from dmdbase.py for classic dmd.
 
 # --> Import standard python packages
 import numpy as np
-from scipy.linalg import pinv2
 
 # --> Import PyDMD base class for DMD.
 from .dmdbase import DMDBase
 
 from .dmdoperator import DMDOperator
 from .utils import compute_tlsq
-
-
-def pinv(x): return pinv2(x, rcond=10 * np.finfo(float).eps)
 
 
 class DMD(DMDBase):
@@ -54,8 +50,7 @@ class DMD(DMDBase):
         Y = self._snapshots[:, 1:]
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        U, s, V = self._Atilde.compute_operator(X,Y)
-        self._svd_modes = U
+        self._Atilde.compute_operator(X,Y)
 
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
@@ -79,18 +74,4 @@ class DMD(DMDBase):
             Predicted output.
 
         """
-
-        # --> Predict using the SVD modes as the basis.
-        if self.exact is False:
-            Y = np.linalg.multi_dot(
-                [self._svd_modes, self.atilde.as_numpy_array,
-                self._svd_modes.T.conj(), X]
-            )
-        # --> Predict using the DMD modes as the basis.
-        elif self.exact is True:
-            adjoint_modes = pinv(self.modes)
-            Y = np.linalg.multi_dot(
-                [self.modes, np.diag(self.eigs), adjoint_modes, X]
-            )
-
-        return Y
+        return self._Atilde(X)
