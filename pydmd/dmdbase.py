@@ -56,14 +56,38 @@ class DMDBase(object):
         self._Atilde = DMDOperator(svd_rank=svd_rank, exact=exact,
             rescale_mode=rescale_mode, forward_backward=forward_backward)
 
-        self.tlsq_rank = tlsq_rank
+        self._tlsq_rank = tlsq_rank
         self.original_time = None
         self.dmd_time = None
-        self.opt = opt
+        self._opt = opt
 
         self._b = None  # amplitudes
         self._snapshots = None
         self._snapshots_shape = None
+
+    @property
+    def opt(self):
+        return self._opt
+
+    @property
+    def tlsq_rank(self):
+        return self._tlsq_rank
+
+    @property
+    def svd_rank(self):
+        return self._Atilde._svd_rank
+
+    @property
+    def rescale_mode(self):
+        return self._Atilde._rescale_mode
+
+    @property
+    def exact(self):
+        return self._Atilde._exact
+
+    @property
+    def forward_backward(self):
+        return self._Atilde._forward_backward
 
     @property
     def dmd_timesteps(self):

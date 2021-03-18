@@ -121,8 +121,8 @@ class OptDMD(DMDBase):
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, factorization="evd"):
-        self.factorization = factorization
-        self.tlsq_rank = tlsq_rank
+        self._factorization = factorization
+        self._tlsq_rank = tlsq_rank
 
         self._Atilde = DMDOptOperator(svd_rank=svd_rank,
             factorization=factorization)
@@ -132,6 +132,10 @@ class OptDMD(DMDBase):
         self._output_space = None
         self._input_snapshots, self._input_snapshots_shape = None, None
         self._output_snapshots, self._output_snapshots_shape = None, None
+
+    @property
+    def factorization(self):
+        return self._factorization
 
     @DMDBase.modes.getter
     def modes(self):

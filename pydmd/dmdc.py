@@ -93,13 +93,17 @@ class DMDc(DMDBase):
             'tlsq_rank': tlsq_rank
         }
 
-        self.opt = opt
+        self._opt = opt
 
         self._B = None
         self._snapshots_shape = None
         self._controlin = None
         self._controlin_shape = None
         self._basis = None
+
+    @property
+    def svd_rank_omega(self):
+        return self._Atilde._svd_rank_omega
 
     @property
     def B(self):

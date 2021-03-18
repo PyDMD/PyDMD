@@ -4,9 +4,6 @@ from unittest import TestCase
 from pydmd.mrdmd import MrDMD
 import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib
-
-matplotlib.use('agg')
 
 def create_data():
     x = np.linspace(-10, 10, 80)

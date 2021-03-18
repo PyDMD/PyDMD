@@ -393,6 +393,14 @@ class MrDMD(DMDBase):
     def _b(self):
         return self._Atilde._b
 
+    @property
+    def max_level(self):
+        return self._max_level
+
+    @property
+    def max_cycles(self):
+        return self._Atilde._max_cycles
+
     def partial_modes(self, level, node=None):
         """
         Return the modes at the specific `level` and at the specific `node`; if

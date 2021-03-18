@@ -56,7 +56,7 @@ class TestOptDmd(TestCase):
     def test_Atilde_shape(self):
         optdmd = OptDMD(svd_rank=3)
         optdmd.fit(X=sample_data)
-        assert optdmd.atilde.shape == (3,3)
+        assert optdmd.atilde.shape == (optdmd.svd_rank, optdmd.svd_rank)
 
     def test_Atilde_values(self):
         optdmd = OptDMD(svd_rank=2)

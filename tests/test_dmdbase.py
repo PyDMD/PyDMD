@@ -13,11 +13,11 @@ sample_data = np.load('tests/test_datasets/input_sample.npy')
 class TestDmdBase(TestCase):
     def test_svd_rank_default(self):
         dmd = DMDBase()
-        assert dmd._Atilde._svd_rank == 0
+        assert dmd.svd_rank == 0
 
     def test_svd_rank(self):
         dmd = DMDBase(svd_rank=3)
-        assert dmd._Atilde._svd_rank == 3
+        assert dmd.svd_rank == 3
 
     def test_tlsq_rank_default(self):
         dmd = DMDBase()
@@ -29,11 +29,11 @@ class TestDmdBase(TestCase):
 
     def test_exact_default(self):
         dmd = DMDBase()
-        assert dmd._Atilde._exact == False
+        assert dmd.exact == False
 
     def test_exact(self):
         dmd = DMDBase(exact=True)
-        assert dmd._Atilde._exact == True
+        assert dmd.exact == True
 
     def test_opt_default(self):
         dmd = DMDBase()

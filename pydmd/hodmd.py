@@ -38,7 +38,11 @@ class HODMD(DMDBase):
         rescale_mode=None, forward_backward=False, d=1):
         super(HODMD, self).__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank,
             exact=exact, opt=opt, rescale_mode=rescale_mode)
-        self.d = d
+        self._d = d
+
+    @property
+    def d(self):
+        return self._d
 
     @DMDBase.modes.getter
     def modes(self):

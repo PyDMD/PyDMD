@@ -83,12 +83,16 @@ class CDMD(DMDBase):
 
     def __init__(self, svd_rank=0, tlsq_rank=0, opt=False,
         rescale_mode=None, forward_backward=False, compression_matrix='uniform'):
-        self.tlsq_rank = tlsq_rank
-        self.opt = opt
-        self.compression_matrix = compression_matrix
+        self._tlsq_rank = tlsq_rank
+        self._opt = opt
+        self._compression_matrix = compression_matrix
 
         self._Atilde = CDMDOperator(svd_rank=svd_rank,
             rescale_mode=rescale_mode, forward_backward=forward_backward)
+
+    @property
+    def compression_matrix(self):
+        return self._compression_matrix
 
     def _compress_snapshots(self):
         """
