@@ -11,6 +11,9 @@ from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .utils import compute_tlsq
 
+from scipy.linalg import pinv2
+
+def pinv(x): return pinv2(x, rcond=10 * np.finfo(float).eps)
 
 class DMD(DMDBase):
     """
@@ -74,4 +77,15 @@ class DMD(DMDBase):
             Predicted output.
 
         """
-        return self._Atilde(X)
+        # --> Predict using the SVD modes as the basis.
+        if self.exact is False:
+            return np.linalg.multi_dot(
+                [self.svd_modes, self.as_numpy_array,
+                self.svd_modes.T.conj(), X]
+            )
+        # --> Predict using the DMD modes as the basis.
+        elif self.exact is True:
+            adjoint_modes = pinv(self.modes)
+            return np.linalg.multi_dot(
+                [self.modes, np.diag(self.eigs), adjoint_modes, X]
+            )

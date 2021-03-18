@@ -1,7 +1,5 @@
 import numpy as np
-from scipy.linalg import sqrtm, pinv2
-
-def pinv(x): return pinv2(x, rcond=10 * np.finfo(float).eps)
+from scipy.linalg import sqrtm
 
 class DMDOperator(object):
     def __init__(self, svd_rank, exact, forward_backward, rescale_mode):
@@ -36,19 +34,8 @@ class DMDOperator(object):
     def shape(self):
         return self.as_numpy_array.shape
 
-    def __call__(self, X):
-        # --> Predict using the SVD modes as the basis.
-        if self._exact is False:
-            return np.linalg.multi_dot(
-                [self._svd_modes, self.as_numpy_array,
-                self._svd_modes.T.conj(), X]
-            )
-        # --> Predict using the DMD modes as the basis.
-        elif self._exact is True:
-            adjoint_modes = pinv(self.modes)
-            return np.linalg.multi_dot(
-                [self.modes, np.diag(self.eigs), adjoint_modes, X]
-            )
+    def __call__(self, snapshot_lowrank_modal_coefficients):
+        return self._Atilde.dot(snapshot_lowrank_modal_coefficients)
 
     @property
     def eigenvalues(self):
