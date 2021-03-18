@@ -10,14 +10,18 @@ import numpy as np
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
+from .utils import compute_tlsq
 
 class DMDControlOperator(DMDOperator):
-    def __init__(self, svd_rank_omega=-1, **kwargs):
-        super(DMDControlOperator, self).__init__(**kwargs)
+    def __init__(self, svd_rank, exact, svd_rank_omega, tlsq_rank):
+        super(DMDControlOperator, self).__init__(svd_rank=svd_rank, exact=exact,
+            rescale_mode=None, forward_backward=False)
         self._svd_rank_omega = svd_rank_omega
+        self._tlsq_rank = tlsq_rank
 
 class DMDBKnownOperator(DMDControlOperator):
     def compute_operator(self, X, Y, B, controlin):
+        X, Y = compute_tlsq(X, Y, self._tlsq_rank)
         Y = Y - B.dot(controlin)
         return super(DMDBKnownOperator, self).compute_operator(X,Y)
 
@@ -76,20 +80,26 @@ class DMDc(DMDBase):
     :type rescale_mode: {'auto'} or None or numpy.ndarray
     :type svd_rank_omega: int or float
     """
-    def __init__(self, tlsq_rank=0, opt=False, **kwargs):
-        super(DMDc, self).__init__(tlsq_rank=tlsq_rank, opt=opt, rescale_mode=None, **kwargs)
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
+        svd_rank_omega=-1):
+
+        # we're going to initialize Atilde when we know if B is known
+        self._Atilde = None
+        # remember the arguments for when we'll need them
+        self._dmd_operator_kwargs = {
+            'svd_rank': svd_rank,
+            'exact': exact,
+            'svd_rank_omega': svd_rank_omega,
+            'tlsq_rank': tlsq_rank
+        }
+
+        self.opt = opt
 
         self._B = None
         self._snapshots_shape = None
         self._controlin = None
         self._controlin_shape = None
         self._basis = None
-
-    def _initialize_dmdoperator(self, **kwargs):
-        # we're going to initialize Atilde when we know if B is known
-        self._Atilde = None
-        # remember the arguments for when we'll need them
-        self._dmd_operator_kwargs = kwargs
 
     @property
     def B(self):

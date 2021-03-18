@@ -34,8 +34,9 @@ def pinv_diag(x):
 
 
 class DMDOptOperator(DMDOperator):
-    def __init__(self, factorization='svd', **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, svd_rank, factorization):
+        super().__init__(svd_rank=svd_rank, exact=True,
+            forward_backward=False, rescale_mode=None)
         self._factorization = factorization
 
     @property
@@ -119,19 +120,18 @@ class OptDMD(DMDBase):
         Default is False.
     """
 
-    def __init__(self, factorization="evd", **kwargs):
-        super(OptDMD, self).__init__(factorization=factorization, **kwargs)
-
+    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, factorization="evd"):
         self.factorization = factorization
+        self.tlsq_rank = tlsq_rank
+
+        self._Atilde = DMDOptOperator(svd_rank=svd_rank,
+            factorization=factorization)
 
         self._svds = None
         self._input_space = None
         self._output_space = None
         self._input_snapshots, self._input_snapshots_shape = None, None
         self._output_snapshots, self._output_snapshots_shape = None, None
-
-    def _initialize_dmdoperator(self, **operator_kwargs):
-        self._Atilde = DMDOptOperator(**operator_kwargs)
 
     @DMDBase.modes.getter
     def modes(self):

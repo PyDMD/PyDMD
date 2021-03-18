@@ -34,8 +34,10 @@ class HODMD(DMDBase):
         Default is 1.
     """
 
-    def __init__(self, d=1, **kwargs):
-        super(HODMD, self).__init__(**kwargs)
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
+        rescale_mode=None, forward_backward=False, d=1):
+        super(HODMD, self).__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank,
+            exact=exact, opt=opt, rescale_mode=rescale_mode)
         self.d = d
 
     @DMDBase.modes.getter

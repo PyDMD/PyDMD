@@ -17,8 +17,9 @@ from .dmdoperator import DMDOperator
 from .utils import compute_tlsq
 
 class SubMrDMDOperator(DMDOperator):
-    def __init__(self, step, rho, **kwargs):
-        super(SubMrDMDOperator, self).__init__(**kwargs)
+    def __init__(self, svd_rank, step, rho):
+        super(SubMrDMDOperator, self).__init__(svd_rank=svd_rank, exact=True,
+            rescale_mode=None, forward_backward=False)
 
         self._step = step
         self._rho = rho
@@ -78,9 +79,9 @@ class SubMrDMDOperator(DMDOperator):
             return super(SubMrDMDOperator, self).eigenvalues[self._slow_modes]
 
 class MrDMDOperator(DMDOperator):
-    def __init__(self, max_cycles=1, max_level=6, tlsq_rank=0, opt=False,
-        **kwargs):
-        super(MrDMDOperator, self).__init__(**kwargs)
+    def __init__(self, svd_rank, tlsq_rank, max_cycles, max_level, opt):
+        super(MrDMDOperator, self).__init__(svd_rank=svd_rank, exact=True,
+            rescale_mode=None, forward_backward=False)
 
         self._tlsq_rank = tlsq_rank
         self._max_cycles = max_cycles
@@ -88,9 +89,6 @@ class MrDMDOperator(DMDOperator):
         self._opt = opt
 
         self._nyq = 8 * self._max_cycles
-
-        # remember for the instances of SubMrDMDOperator
-        self._args = kwargs
 
         # initialization
         self._modes = []
@@ -119,7 +117,8 @@ class MrDMDOperator(DMDOperator):
             Xc, Yc = compute_tlsq(Xc, Yc, self._tlsq_rank)
 
             rho = old_div(float(self._max_cycles), n_samples)
-            sub_operator = SubMrDMDOperator(step=step, rho=rho, **self._args)
+            sub_operator = SubMrDMDOperator(svd_rank=self._svd_rank, step=step,
+                rho=rho)
             sub_operator.compute_operator(Xc, Yc)
 
             modes = sub_operator.modes
@@ -181,16 +180,16 @@ class MrDMD(DMDBase):
     :param int max_level: the maximum number of levels. Defualt is 6.
     """
 
-    def __init__(self, max_level=6, opt=False, tlsq_rank=0, **kwargs):
-        self._initialize_dmdoperator(tlsq_rank=tlsq_rank, max_level=max_level, opt=opt, **kwargs)
+    def __init__(self, svd_rank=0, tlsq_rank=0,  exact=True, opt=False,
+        max_level=6, max_cycles=1):
+
+        self._Atilde = MrDMDOperator(svd_rank=svd_rank, tlsq_rank=tlsq_rank,
+            max_level=max_level, max_cycles=max_cycles, opt=opt)
 
         self._original_time = None
         self._dmd_time = None
 
         self._max_level = max_level
-
-    def _initialize_dmdoperator(self, **kwargs):
-        self._Atilde = MrDMDOperator(**kwargs)
 
     def _index_list(self, level, node):
         """

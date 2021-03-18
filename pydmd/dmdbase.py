@@ -51,8 +51,10 @@ class DMDBase(object):
 
     """
 
-    def __init__(self, tlsq_rank=0, opt=False, **operator_kwargs):
-        self._initialize_dmdoperator(**operator_kwargs)
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
+        rescale_mode=None, forward_backward=False):
+        self._Atilde = DMDOperator(svd_rank=svd_rank, exact=exact,
+            rescale_mode=rescale_mode, forward_backward=forward_backward)
 
         self.tlsq_rank = tlsq_rank
         self.original_time = None
@@ -62,9 +64,6 @@ class DMDBase(object):
         self._b = None  # amplitudes
         self._snapshots = None
         self._snapshots_shape = None
-
-    def _initialize_dmdoperator(self, **kwargs):
-        self._Atilde = DMDOperator(**kwargs)
 
     @property
     def dmd_timesteps(self):

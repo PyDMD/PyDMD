@@ -14,8 +14,9 @@ from .dmdoperator import DMDOperator
 from .utils import compute_tlsq
 
 class CDMDOperator(DMDOperator):
-    def __init__(self, **kwargs):
-        super().__init__(exact=True, **kwargs)
+    def __init__(self, svd_rank, rescale_mode, forward_backward):
+        super().__init__(svd_rank=svd_rank, exact=True,
+            rescale_mode=rescale_mode, forward_backward=forward_backward)
 
     def compute_operator(self, compressedX, compressedY, nonCompressedY):
         U, s, V = self._compute_svd(compressedX)
@@ -80,12 +81,14 @@ class CDMD(DMDBase):
     :type rescale_mode: {'auto'} or None or numpy.ndarray
     """
 
-    def __init__(self, compression_matrix='uniform', **kwargs):
-        super(CDMD, self).__init__(**kwargs)
+    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False,
+        rescale_mode=None, forward_backward=False, compression_matrix='uniform'):
+        self.tlsq_rank = tlsq_rank
+        self.opt = opt
         self.compression_matrix = compression_matrix
 
-    def _initialize_dmdoperator(self, **kwargs):
-        self._Atilde = CDMDOperator(**kwargs)
+        self._Atilde = CDMDOperator(svd_rank=svd_rank,
+            rescale_mode=rescale_mode, forward_backward=forward_backward)
 
     def _compress_snapshots(self):
         """

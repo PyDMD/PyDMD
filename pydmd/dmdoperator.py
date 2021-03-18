@@ -4,8 +4,7 @@ from scipy.linalg import sqrtm, pinv2
 def pinv(x): return pinv2(x, rcond=10 * np.finfo(float).eps)
 
 class DMDOperator(object):
-    def __init__(self, svd_rank=0, exact=False, forward_backward=False,
-        rescale_mode=None):
+    def __init__(self, svd_rank, exact, forward_backward, rescale_mode):
         self._exact = exact
         self._rescale_mode = rescale_mode
         self._svd_rank = svd_rank
