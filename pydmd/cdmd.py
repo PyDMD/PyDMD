@@ -31,7 +31,7 @@ class CDMDOperator(DMDOperator):
 
         self._Atilde = atilde
         self._compute_eigenquantities()
-        self._compute_modes_and_Lambda(nonCompressedY, U, s, V)
+        self._compute_modes(nonCompressedY, U, s, V)
 
         return U, s, V
 

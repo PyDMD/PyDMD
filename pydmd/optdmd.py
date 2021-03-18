@@ -87,7 +87,7 @@ class DMDOptOperator(DMDOperator):
         self._eigenvectors = left_vecs
         self._right_eigenvectors = right_vecs
 
-    def _compute_modes_and_Lambda(self, Y, U, Sigma, V):
+    def _compute_modes(self, Y, U, Sigma, V):
         pass
 
 

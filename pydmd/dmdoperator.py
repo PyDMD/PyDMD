@@ -26,7 +26,7 @@ class DMDOperator(object):
 
         self._Atilde = atilde
         self._compute_eigenquantities()
-        self._compute_modes_and_Lambda(Y, U, s, V)
+        self._compute_modes(Y, U, s, V)
 
         self._svd_modes = U
 
@@ -169,7 +169,7 @@ class DMDOperator(object):
 
         self._eigenvalues, self._eigenvectors = np.linalg.eig(Ahat)
 
-    def _compute_modes_and_Lambda(self, Y, U, Sigma, V):
+    def _compute_modes(self, Y, U, Sigma, V):
         """
         Private method that computes eigenvalues and eigenvectors of the
         high-dimensional operator.

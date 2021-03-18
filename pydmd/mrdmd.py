@@ -32,7 +32,7 @@ class SubMrDMDOperator(DMDOperator):
         self._Atilde = U.T.conj().dot(Yc).dot(V) * np.reciprocal(s)
 
         self._compute_eigenquantities()
-        self._compute_modes_and_Lambda(Yc, U, s, V)
+        self._compute_modes(Yc, U, s, V)
 
         self._slow_modes = (np.abs(old_div(np.log(self.eigenvalues),
             (2. * np.pi * self._step)))) <= self._rho

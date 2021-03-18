@@ -39,14 +39,14 @@ class DMDBUnknownOperator(DMDControlOperator):
         self._Atilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
             np.reciprocal(sp))).dot(Up1.T.conj()).dot(Ur)
         self._compute_eigenquantities()
-        self._compute_modes_and_Lambda(Y, sp, Vp, Up1, Ur)
+        self._compute_modes(Y, sp, Vp, Up1, Ur)
 
         Btilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
             np.reciprocal(sp))).dot(Up2.T.conj())
 
         return Ur, Ur.dot(Btilde)
 
-    def _compute_modes_and_Lambda(self, Y, sp, Vp, Up1, Ur):
+    def _compute_modes(self, Y, sp, Vp, Up1, Ur):
         self._modes = Y.dot(Vp).dot(np.diag(np.reciprocal(sp))).dot(
             Up1.T.conj()).dot(Ur).dot(self.eigenvectors)
         self._Lambda = self.eigenvalues
