@@ -14,11 +14,46 @@ from .dmdoperator import DMDOperator
 from .utils import compute_tlsq
 
 class CDMDOperator(DMDOperator):
+    """
+    DMD operator for Compressed-DMD.
+
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
+    :param rescale_mode: Scale Atilde as shown in 10.1016/j.jneumeth.2015.10.010
+        (section 2.4) before computing its eigendecomposition. None means no
+        rescaling, 'auto' means automatic rescaling using singular values,
+        otherwise the scaling factors.
+    :type rescale_mode: {'auto'} or None or numpy.ndarray
+    :param bool forward_backward: If True, the low-rank operator is computed
+        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
+        False.
+    """
+
     def __init__(self, svd_rank, rescale_mode, forward_backward):
         super().__init__(svd_rank=svd_rank, exact=True,
             rescale_mode=rescale_mode, forward_backward=forward_backward)
 
     def compute_operator(self, compressedX, compressedY, nonCompressedY):
+        """
+        Compute the low-rank operator.
+
+        :param numpy.ndarray compressedX: the compressed version of the matrix
+            containing the snapshots x0,..x{n-1} by column.
+        :param numpy.ndarray compressedY: the compressed version of the matrix
+            containing the snapshots x1,..x{n} by column.
+        :param numpy.ndarray nonCompressedY: the matrix containing the snapshots
+            x1,..x{n} by column.
+        :return: the (truncated) left-singular vectors matrix, the (truncated)
+            singular values array, the (truncated) right-singular vectors
+            matrix of compressedX.
+        :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
+        """
+
         U, s, V = self._compute_svd(compressedX)
 
         atilde = self._least_square_operator(U, s, V, compressedY)
@@ -79,10 +114,13 @@ class CDMD(DMDBase):
             eigendecomposition. None means no rescaling, 'auto' means automatic
             rescaling using singular values, otherwise the scaling factors.
     :type rescale_mode: {'auto'} or None or numpy.ndarray
+    :param bool forward_backward: If True, the low-rank operator is computed
+        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
+        False.
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False,
-        rescale_mode=None, forward_backward=False, compression_matrix='uniform'):
+    def __init__(self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform',
+        opt=False, rescale_mode=None, forward_backward=False):
         self._tlsq_rank = tlsq_rank
         self._opt = opt
         self._compression_matrix = compression_matrix

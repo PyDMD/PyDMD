@@ -3,6 +3,30 @@ from scipy.linalg import sqrtm
 import matplotlib.pyplot as plt
 
 class DMDOperator(object):
+    """
+    Dynamic Mode Decomposition standard operator class. Non-standard ways of
+    computing the low-rank Atilde operator should be coded into subclasses of
+    this class.
+
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
+    :param bool exact: flag to compute either exact DMD or projected DMD.
+        Default is False.
+    :param rescale_mode: Scale Atilde as shown in 10.1016/j.jneumeth.2015.10.010
+        (section 2.4) before computing its eigendecomposition. None means no
+        rescaling, 'auto' means automatic rescaling using singular values,
+        otherwise the scaling factors.
+    :type rescale_mode: {'auto'} or None or numpy.ndarray
+    :param bool forward_backward: If True, the low-rank operator is computed
+        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
+        False.
+    """
+
     def __init__(self, svd_rank, exact, forward_backward, rescale_mode):
         self._exact = exact
         self._rescale_mode = rescale_mode
@@ -10,6 +34,19 @@ class DMDOperator(object):
         self._forward_backward = forward_backward
 
     def compute_operator(self, X, Y):
+        """
+        Compute the low-rank operator.
+
+        :param numpy.ndarray X: matrix containing the snapshots x0,..x{n-1} by
+            column.
+        :param numpy.ndarray Y: matrix containing the snapshots x1,..x{n} by
+            column.
+        :return: the (truncated) left-singular vectors matrix, the (truncated)
+            singular values array, the (truncated) right-singular vectors
+            matrix of X.
+        :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
+        """
+
         U, s, V = self._compute_svd(X)
 
         atilde = self._least_square_operator(U, s, V, Y)
@@ -36,6 +73,16 @@ class DMDOperator(object):
         return self.as_numpy_array.shape
 
     def __call__(self, snapshot_lowrank_modal_coefficients):
+        """
+        Apply the low-rank operator to a vector of the modal coefficients of a
+        snapshot(s).
+
+        :param numpy.ndarray snapshot_lowrank_modal_coefficients: low-rank
+            representation (in modal coefficients) of a snapshot x{n}.
+        :return: low-rank representation (in modal coefficients) of x{n+1}.
+        :rtype: numpy.ndarray
+        """
+
         return self._Atilde.dot(snapshot_lowrank_modal_coefficients)
 
     @property
@@ -76,7 +123,8 @@ class DMDOperator(object):
             the method uses the argument for the truncation; if float between 0
             and 1, the rank is the number of the biggest singular values that
             are needed to reach the 'energy' specified by `svd_rank`; if -1,
-            the method does not compute truncation.
+            the method does not compute truncation. If None, self._svd_rank is
+            used.
         :type svd_rank: int or float
         :return: the truncated left-singular vectors matrix, the truncated
             singular values array, the truncated right-singular vectors matrix.
@@ -144,7 +192,6 @@ class DMDOperator(object):
             # scaling isn't required
             Ahat = self._Atilde
         else:
-            print('upakjiwecbdsicsdiucdbsidbcsdicubisudbc')
             if len(self._rescale_mode) != self.as_numpy_array.shape[0]:
                 raise ValueError('''Scaling by an invalid number of
                         coefficients''')
@@ -160,7 +207,13 @@ class DMDOperator(object):
     def _compute_modes(self, Y, U, Sigma, V):
         """
         Private method that computes eigenvalues and eigenvectors of the
-        high-dimensional operator.
+        high-dimensional operator (stored in self.modes and self.Lambda).
+
+        :param numpy.ndarray Y: matrix containing the snapshots x1,..x{n} by
+            column.
+        :param numpy.ndarray U: (truncated) left singular vectors of X
+        :param numpy.ndarray Sigma: (truncated) singular values of X
+        :param numpy.ndarray V: (truncated) right singular vectors of X
         """
 
         if self._rescale_mode is None:
@@ -184,6 +237,10 @@ class DMDOperator(object):
         self._Lambda = high_dimensional_eigenvalues
 
     def plot_operator(self):
+        """
+        Plot the low-rank Atilde operator
+        """
+
         matrix = self.as_numpy_array
         cmatrix = matrix.real
         rmatrix = matrix.imag

@@ -1,5 +1,6 @@
 """
-Derived module from :meth:`pydmd.dmdbase` for the optimal closed-form solution to dmd.
+Derived module from :meth:`pydmd.dmdbase` for the optimal closed-form solution
+to dmd.
 
 .. note::
 
@@ -34,6 +35,22 @@ def pinv_diag(x):
 
 
 class DMDOptOperator(DMDOperator):
+    """
+    DMD operator for OptDMD.
+
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
+    :param str factorization: compute either the eigenvalue decomposition of
+        the unknown high-dimensional DMD operator (factorization="evd") or
+        its singular value decomposition (factorization="svd"). Default is
+        "evd".
+    """
+
     def __init__(self, svd_rank, factorization):
         super().__init__(svd_rank=svd_rank, exact=True,
             forward_backward=False, rescale_mode=None)
@@ -44,20 +61,31 @@ class DMDOptOperator(DMDOperator):
         if self._factorization == 'evd':
             return self._right_eigenvectors
         else:
-            raise ValueError("Eigenquantities haven't been computed!")
+            raise ValueError("Eigenquantities haven't been computed yet.")
 
     def compute_operator(self, X, Y):
+        """
+        Compute the low-rank operator.
+
+        :param numpy.ndarray X: matrix containing the snapshots x0,..x{n-1} by
+            column.
+        :param numpy.ndarray Y: matrix containing the snapshots x1,..x{n} by
+            column.
+        :return: Left singular vectors of Z, and Q.
+        :rtype: numpy.ndarray, numpy.ndarray
+        """
+
         Ux, Sx, Vx = self._compute_svd(X, -1)
 
         Z = np.linalg.multi_dot(
             [Y, Vx, np.diag(Sx), pinv_diag(Sx), Vx.T.conj()]
-            )
+        )
 
         Uz, _, _ = self._compute_svd(Z)
 
         Q = np.linalg.multi_dot(
             [Uz.T.conj(), Y, Vx, pinv_diag(Sx), Ux.T.conj()]
-            ).T.conj()
+        ).T.conj()
 
         self._Atilde = Q.T.conj().dot(Uz)
         if self._factorization == 'evd':
@@ -65,6 +93,13 @@ class DMDOptOperator(DMDOperator):
 
         return Uz, Q
 
+    """
+        Private method that computes eigenvalues and eigenvectors of the
+        low-dimensional operator.
+
+        :param numpy.ndarray P: Left singular vectors of Z.
+        :param numpy.ndarray Q: The matrix Q.
+    """
     def _compute_eigenquantities(self, P, Q):
         Atilde = self.as_numpy_array
 
@@ -88,7 +123,7 @@ class DMDOptOperator(DMDOperator):
         self._right_eigenvectors = right_vecs
 
     def _compute_modes(self, Y, U, Sigma, V):
-        pass
+        raise NotImplementedError("This function has not been implemented yet.")
 
 
 class OptDMD(DMDBase):
@@ -114,13 +149,11 @@ class OptDMD(DMDBase):
     :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means TLSQ is not applied.
-    :param bool exact: flag to compute either exact DMD or projected DMD.
-        Default is False.
     :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, factorization="evd"):
+    def __init__(self, factorization="evd", svd_rank=0, tlsq_rank=0, opt=False):
         self._factorization = factorization
         self._tlsq_rank = tlsq_rank
 
@@ -147,7 +180,8 @@ class OptDMD(DMDBase):
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
-        :param Y: the input snapshots at sequential timestep, if passed. Default is None.
+        :param Y: the input snapshots at sequential timestep, if passed. Default
+            is None.
         :type Y: numpy.ndarray or iterable
         """
 
@@ -157,8 +191,12 @@ class OptDMD(DMDBase):
             Y = X[:, 1:]    # y = x[k+1]
             X = X[:, :-1]   # x = x[k]
         else:
-            self._input_snapshots, self._input_snapshots_shape = self._col_major_2darray(X)
-            self._output_snapshots, self._output_snapshots_shape = self._col_major_2darray(Y)
+            self._input_snapshots, self._input_snapshots_shape = (
+                self._col_major_2darray(X)
+            )
+            self._output_snapshots, self._output_snapshots_shape = (
+                self._col_major_2darray(Y)
+            )
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
         Uz, Q = self._Atilde.compute_operator(X,Y)

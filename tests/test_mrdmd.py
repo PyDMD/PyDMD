@@ -158,7 +158,7 @@ class TestMrDmd(TestCase):
         assert dmd.dynamics.shape == (2**level - 1, sample_data.shape[1])
 
     def test_reconstructed_data(self):
-        dmd = MrDMD(svd_rank=0, max_level=6, max_cycles=2, exact=True)
+        dmd = MrDMD(svd_rank=0, max_level=6, max_cycles=2)
         dmd.fit(X=sample_data)
         dmd_data = dmd.reconstructed_data
         norm_err = (old_div(

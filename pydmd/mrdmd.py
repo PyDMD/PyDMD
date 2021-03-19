@@ -17,16 +17,41 @@ from .dmdoperator import DMDOperator
 from .utils import compute_tlsq
 
 class SubMrDMDOperator(DMDOperator):
-    def __init__(self, svd_rank, step, rho):
+    """
+    Used by MrDMDOperator in order to compute several quantities of interest
+    over different views of the snapshots matrix.
+
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
+    :param float eigs_divider: The divider of eigs in the evaluation of slow
+        modes.
+    :param float rho: The maximum eigenvalue amplitude of slow modes
+    """
+
+    def __init__(self, svd_rank, eigs_divider, rho):
         super(SubMrDMDOperator, self).__init__(svd_rank=svd_rank, exact=True,
             rescale_mode=None, forward_backward=False)
 
-        self._step = step
+        self._eigs_divider = eigs_divider
         self._rho = rho
 
         self._slow_modes = None
 
     def compute_operator(self, Xc, Yc):
+        """
+        Compute the low-rank operator, the eigenquantities and slow modes.
+
+        :param numpy.ndarray Xc: matrix containing the snapshots x0,..x{n-1} by
+            column.
+        :param numpy.ndarray Yc: matrix containing the snapshots x1,..x{n} by
+            column.
+        """
+
         U, s, V = self._compute_svd(Xc)
 
         self._Atilde = U.T.conj().dot(Yc).dot(V) * np.reciprocal(s)
@@ -35,9 +60,19 @@ class SubMrDMDOperator(DMDOperator):
         self._compute_modes(Yc, U, s, V)
 
         self._slow_modes = (np.abs(old_div(np.log(self.eigenvalues),
-            (2. * np.pi * self._step)))) <= self._rho
+            self._eigs_divider))) <= self._rho
 
     def compute_sub_amplitudes(self, Xc, opt):
+        """
+        Compute the ampltitudes for slow modes of this sub DMD operator.
+
+        :param numpy.ndarray Xc: matrix containing the snapshots x0,..x{n-1} by
+            column.
+        :param bool opt: flag to compute optimized DMD.
+        :return: The amplitudes for each slow mode.
+        :rtype: numpy.ndarray
+        """
+
         if opt:
             # compute the vandermonde matrix
             omega = old_div(np.log(self.eigs), self.original_time['dt'])
@@ -62,8 +97,6 @@ class SubMrDMDOperator(DMDOperator):
 
     @DMDOperator.modes.getter
     def modes(self):
-        # we want to access eigenvalues before setting slow_modes, since
-        # setting slow_modes requires evaluating eigenvalues
         if self._slow_modes is None:
             return super(SubMrDMDOperator, self).modes
         else:
@@ -79,6 +112,25 @@ class SubMrDMDOperator(DMDOperator):
             return super(SubMrDMDOperator, self).eigenvalues[self._slow_modes]
 
 class MrDMDOperator(DMDOperator):
+    """
+    Dynamic Mode Decomposition operator for MrDMD.
+
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
+    :param int tlsq_rank: rank truncation computing Total Least Square. Default
+        is 0, that means TLSQ is not applied.
+    :param int max_cycles: the maximum number of mode oscillations in any given
+        time scale. Default is 1.
+    :param int max_level: the maximum number of levels. Defualt is 6.
+    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
+        Default is False.
+    """
+
     def __init__(self, svd_rank, tlsq_rank, max_cycles, max_level, opt):
         super(MrDMDOperator, self).__init__(svd_rank=svd_rank, exact=True,
             rescale_mode=None, forward_backward=False)
@@ -102,7 +154,17 @@ class MrDMDOperator(DMDOperator):
     def as_numpy_array(self):
         raise RuntimeError("This property isn't defined")
 
-    def compute_operator(self, data_queue):
+    def compute_operator(self, snapshots):
+        """
+        Compute the MrDMD operator, modes, amplitudes and eigenvalues.
+
+        :param numpy.ndarray snapshots: The snapshots (by column).
+        """
+
+        # To avoid recursion function, use FIFO list to simulate the tree
+        # structure
+        data_queue = [snapshots.copy()]
+
         current_bin = 0
         while data_queue:
             Xraw = data_queue.pop(0)
@@ -117,8 +179,8 @@ class MrDMDOperator(DMDOperator):
             Xc, Yc = compute_tlsq(Xc, Yc, self._tlsq_rank)
 
             rho = old_div(float(self._max_cycles), n_samples)
-            sub_operator = SubMrDMDOperator(svd_rank=self._svd_rank, step=step,
-                rho=rho)
+            sub_operator = SubMrDMDOperator(svd_rank=self._svd_rank,
+                eigs_divider=2. * np.pi * step, rho=rho)
             sub_operator.compute_operator(Xc, Yc)
 
             modes = sub_operator.modes
@@ -166,22 +228,15 @@ class MrDMD(DMDBase):
     :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means TLSQ is not applied.
-    :param bool exact: flag to compute either exact DMD or projected DMD.
-        Default is False.
     :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
-    :param rescale_mode: Scale Atilde as shown in
-            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
-            eigendecomposition. None means no rescaling, 'auto' means automatic
-            rescaling using singular values, otherwise the scaling factors.
-    :type rescale_mode: {'auto'} or None or numpy.ndarray
     :param int max_cycles: the maximum number of mode oscillations in any given
         time scale. Default is 1.
     :param int max_level: the maximum number of levels. Defualt is 6.
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0,  exact=True, opt=False,
-        max_level=6, max_cycles=1):
+    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False,
+        max_cycles=1, max_level=6):
 
         self._Atilde = MrDMDOperator(svd_rank=svd_rank, tlsq_rank=tlsq_rank,
             max_level=max_level, max_cycles=max_cycles, opt=opt)
@@ -506,10 +561,6 @@ class MrDMD(DMDBase):
         """
         self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
 
-        # To avoid recursion function, use FIFO list to simulate the tree
-        # structure
-        data_queue = [self._snapshots.copy()]
-
         # Redefine max level if it is too big.
         lvl_threshold = int(np.log(self._snapshots.shape[1]/4.)/np.log(2.)) + 1
         if self._max_level > lvl_threshold:
@@ -517,7 +568,7 @@ class MrDMD(DMDBase):
             print('Too many levels... '
                   'Redefining `max_level` to {}'.format(self._max_level))
 
-        self._Atilde.compute_operator(data_queue)
+        self._Atilde.compute_operator(self._snapshots)
 
         self.dmd_time = {'t0': 0, 'tend': self._snapshots.shape[1], 'dt': 1}
         self.original_time = self.dmd_time.copy()

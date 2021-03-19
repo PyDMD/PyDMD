@@ -15,21 +15,26 @@ class HODMD(DMDBase):
     """
     Higher Order Dynamic Mode Decomposition
 
-    :param int svd_rank: rank truncation in SVD. If 0, the method computes the
-        optimal rank and uses it for truncation; if positive number, the method
-        uses the argument for the truncation; if -1, the method does not
-        compute truncation.
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
-        is 0, that means TLSQ is not applied.
+        is 0, that means no truncation.
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
-    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
-        Default is False.
+    :param bool opt: flag to compute optimized DMD. Default is False.
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
             eigendecomposition. None means no rescaling, 'auto' means automatic
             rescaling using singular values, otherwise the scaling factors.
     :type rescale_mode: {'auto'} or None or numpy.ndarray
+    :param bool forward_backward: If True, the low-rank operator is computed
+        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
+        False.
     :param int d: the new order for spatial dimension of the input snapshots.
         Default is 1.
     """

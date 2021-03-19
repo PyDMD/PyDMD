@@ -37,6 +37,9 @@ class DMD(DMDBase):
             eigendecomposition. None means no rescaling, 'auto' means automatic
             rescaling using singular values, otherwise the scaling factors.
     :type rescale_mode: {'auto'} or None or numpy.ndarray
+    :param bool forward_backward: If True, the low-rank operator is computed
+        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
+        False.
     """
 
     def fit(self, X):
@@ -53,7 +56,7 @@ class DMD(DMDBase):
         Y = self._snapshots[:, 1:]
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        self._Atilde.compute_operator(X,Y)
+        self._svd_modes, _, _ = self._Atilde.compute_operator(X,Y)
 
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
@@ -80,8 +83,8 @@ class DMD(DMDBase):
         # --> Predict using the SVD modes as the basis.
         if self.exact is False:
             return np.linalg.multi_dot(
-                [self.svd_modes, self.as_numpy_array,
-                self.svd_modes.T.conj(), X]
+                [self._svd_modes, self.atilde,
+                self._svd_modes.T.conj(), X]
             )
         # --> Predict using the DMD modes as the basis.
         elif self.exact is True:

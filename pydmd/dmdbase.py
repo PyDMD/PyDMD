@@ -21,10 +21,13 @@ class DMDBase(object):
     """
     Dynamic Mode Decomposition base class.
 
-    :param int svd_rank: rank truncation in SVD. If 0, the method computes the
-        optimal rank and uses it for truncation; if positive number, the method
-        uses the argument for the truncation; if -1, the method does not
-        compute truncation.
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means no truncation.
     :param bool exact: flag to compute either exact DMD or projected DMD.
@@ -35,6 +38,10 @@ class DMDBase(object):
             eigendecomposition. None means no rescaling, 'auto' means automatic
             rescaling using singular values, otherwise the scaling factors.
     :type rescale_mode: {'auto'} or None or numpy.ndarray
+    :param bool forward_backward: If True, the low-rank operator is computed
+        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
+        False.
+
     :cvar dict original_time: dictionary that contains information about the
         time window where the system is sampled:
 
@@ -256,22 +263,15 @@ class DMDBase(object):
 
     def _compute_amplitudes(self):
         """
-        Compute the amplitude coefficients. If `opt` is False the amplitudes
-        are computed by minimizing the error between the modes and the first
-        snapshot; if `opt` is True the amplitudes are computed by minimizing
-        the error between the modes and all the snapshots, at the expense of
-        bigger computational cost.
+        Compute the amplitude coefficients. If `self.opt` is False the
+        amplitudes are computed by minimizing the error between the modes and
+        the first snapshot; if `self.opt` is True the amplitudes are computed by
+        minimizing the error between the modes and all the snapshots, at the
+        expense of bigger computational cost.
 
-        :param numpy.ndarray modes: 2D matrix that contains the modes, stored
-            by column.
-        :param numpy.ndarray snapshots: 2D matrix that contains the original
-            snapshots, stored by column.
-        :param numpy.ndarray eigs: array that contains the eigenvalues of the
-            linear operator.
-        :param bool opt: flag for computing the optimal amplitudes of the DMD
-            modes, minimizing the error between the time evolution and all
-            the original snapshots. If false the amplitudes are computed
-            using only the initial condition, that is snapshots[0].
+        This method uses the class variables self._snapshots (for the
+        snapshots), self.modes and self.eigs.
+
         :return: the amplitudes array
         :rtype: numpy.ndarray
 
