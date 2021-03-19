@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.linalg import sqrtm
+import matplotlib.pyplot as plt
 
 class DMDOperator(object):
     def __init__(self, svd_rank, exact, forward_backward, rescale_mode):
@@ -181,3 +182,20 @@ class DMDOperator(object):
 
         self._modes = high_dimensional_eigenvectors
         self._Lambda = high_dimensional_eigenvalues
+
+    def plot_operator(self):
+        matrix = self.as_numpy_array
+        cmatrix = matrix.real
+        rmatrix = matrix.imag
+
+        if np.linalg.norm(cmatrix) > 1.e-12:
+            fig, axes = plt.subplots(nrows=1, ncols=2)
+
+            axes[0].set_title('Real')
+            axes[0].matshow(rmatrix, cmap='jet')
+            axes[1].set_title('Complex')
+            axes[1].matshow(cmatrix, cmap='jet')
+        else:
+            plt.title('Real')
+            plt.matshow(rmatrix)
+        plt.show()
