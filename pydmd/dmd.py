@@ -80,15 +80,5 @@ class DMD(DMDBase):
             Predicted output.
 
         """
-        # --> Predict using the SVD modes as the basis.
-        if self.exact is False:
-            return np.linalg.multi_dot(
-                [self._svd_modes, self.atilde,
-                self._svd_modes.T.conj(), X]
-            )
-        # --> Predict using the DMD modes as the basis.
-        elif self.exact is True:
-            adjoint_modes = pinv(self.modes)
-            return np.linalg.multi_dot(
-                [self.modes, np.diag(self.eigs), adjoint_modes, X]
-            )
+        return np.linalg.multi_dot([self.modes, np.diag(self.eigs),
+            pinv(self.modes), X])
