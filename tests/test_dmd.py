@@ -356,3 +356,19 @@ class TestDmd(TestCase):
         ])
 
         np.testing.assert_almost_equal(dmd.predict(X.T), expected, decimal=6)
+
+    def test_predict_exact(self):
+        dmd = DMD(exact=True)
+        expected = np.load('tests/test_datasets/input_sample_predict_exact.npy')
+
+        np.testing.assert_almost_equal(dmd
+            .fit(sample_data)
+            .predict(sample_data[:,20:40]), expected, decimal=6)
+
+    def test_predict_nexact(self):
+        dmd = DMD(exact=False)
+        expected = np.load('tests/test_datasets/input_sample_predict_nexact.npy')
+
+        np.testing.assert_almost_equal(dmd
+            .fit(sample_data)
+            .predict(sample_data[:,10:30]), expected, decimal=6)
