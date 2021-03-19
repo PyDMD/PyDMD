@@ -126,13 +126,13 @@ class DMDBUnknownOperator(DMDControlOperator):
 
         Ur, sr, Vr = self._compute_svd(Y, self._svd_rank)
 
-        self._Atilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
-            np.reciprocal(sp))).dot(Up1.T.conj()).dot(Ur)
+        self._Atilde = np.linalg.multi_dot([Ur.T.conj(), Y, Vp,
+            np.diag(np.reciprocal(sp)), Up1.T.conj(), Ur])
         self._compute_eigenquantities()
         self._compute_modes(Y, sp, Vp, Up1, Ur)
 
-        Btilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
-            np.reciprocal(sp))).dot(Up2.T.conj())
+        Btilde = np.linalg.multi_dot([Ur.T.conj(), Y, Vp,
+            np.diag(np.reciprocal(sp)), Up2.T.conj()])
 
         return Ur, Ur.dot(Btilde)
 
@@ -142,8 +142,8 @@ class DMDBUnknownOperator(DMDControlOperator):
         high-dimensional operator (stored in self.modes and self.Lambda).
         """
 
-        self._modes = Y.dot(Vp).dot(np.diag(np.reciprocal(sp))).dot(
-            Up1.T.conj()).dot(Ur).dot(self.eigenvectors)
+        self._modes = np.linalg.multi_dot([Y, Vp, np.diag(np.reciprocal(sp)),
+            Up1.T.conj(), Ur, self.eigenvectors])
         self._Lambda = self.eigenvalues
 
 class DMDc(DMDBase):
@@ -237,7 +237,8 @@ class DMDc(DMDBase):
 
         eigs = np.power(self.eigs,
                         old_div(self.dmd_time['dt'], self.original_time['dt']))
-        A = self.modes.dot(np.diag(eigs)).dot(np.linalg.pinv(self.modes))
+        A = np.linalg.multi_dot([self.modes, np.diag(eigs),
+            np.linalg.pinv(self.modes)])
 
         data = [self._snapshots[:, 0]]
 

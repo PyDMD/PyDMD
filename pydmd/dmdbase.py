@@ -301,8 +301,9 @@ class DMDBase(object):
             P = np.multiply(np.dot(self.modes.conj().T, self.modes),
                             np.conj(np.dot(vander,
                                            vander.conj().T)))
-            tmp = (np.dot(np.dot(U, np.diag(s)), V)).conj().T
-            q = np.conj(np.diag(np.dot(np.dot(vander, tmp), self.modes)))
+
+            tmp = np.linalg.multi_dot([U, np.diag(s), V]).conj().T
+            q = np.conj(np.diag(np.linalg.multi_dot([vander, tmp, self.modes])))
 
             # b optimal
             a = np.linalg.solve(P, q)

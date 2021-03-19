@@ -54,7 +54,8 @@ class SubMrDMDOperator(DMDOperator):
 
         U, s, V = self._compute_svd(Xc)
 
-        self._Atilde = U.T.conj().dot(Yc).dot(V) * np.reciprocal(s)
+        self._Atilde = (np.linalg.multi_dot([U.T.conj(), (Yc), (V)])
+            * np.reciprocal(s))
 
         self._compute_eigenquantities()
         self._compute_modes(Yc, U, s, V)
@@ -85,8 +86,9 @@ class SubMrDMDOperator(DMDOperator):
             P = np.multiply(np.dot(self.modes.conj().T, self.modes),
                             np.conj(np.dot(vander,
                                            vander.conj().T)))
-            tmp = (np.dot(np.dot(U, np.diag(s)), V)).conj().T
-            q = np.conj(np.diag(np.dot(np.dot(vander, tmp), self.modes)))
+
+            tmp = np.linalg.multi_dot([U, np.diag(s), V]).conj().T
+            q = np.conj(np.diag(np.linalg.multi_dot([vander, tmp, self.modes])))
 
             # b optimal
             a = np.linalg.solve(P, q)
