@@ -5,7 +5,6 @@ from pydmd.mrdmd import MrDMD
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 def create_data():
     x = np.linspace(-10, 10, 80)
     t = np.linspace(0, 20, 1600)
@@ -43,7 +42,7 @@ class TestMrDmd(TestCase):
         dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
         dmd.fit(X=sample_data)
         lvl_threshold = int(np.log(sample_data.shape[1]/4.)/np.log(2.)) + 1
-        assert lvl_threshold == dmd.max_level
+        assert lvl_threshold == dmd._max_level
 
     def test_max_level_threshold2(self):
         level = 10
@@ -159,7 +158,7 @@ class TestMrDmd(TestCase):
         assert dmd.dynamics.shape == (2**level - 1, sample_data.shape[1])
 
     def test_reconstructed_data(self):
-        dmd = MrDMD(svd_rank=0, max_level=6, max_cycles=2, exact=True)
+        dmd = MrDMD(svd_rank=0, max_level=6, max_cycles=2)
         dmd.fit(X=sample_data)
         dmd_data = dmd.reconstructed_data
         norm_err = (old_div(

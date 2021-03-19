@@ -15,15 +15,19 @@ from past.utils import old_div
 mpl.rcParams['figure.max_open_warning'] = 0
 import matplotlib.pyplot as plt
 
+from .dmdoperator import DMDOperator
 
 class DMDBase(object):
     """
     Dynamic Mode Decomposition base class.
 
-    :param int svd_rank: rank truncation in SVD. If 0, the method computes the
-        optimal rank and uses it for truncation; if positive number, the method
-        uses the argument for the truncation; if -1, the method does not
-        compute truncation.
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means no truncation.
     :param bool exact: flag to compute either exact DMD or projected DMD.
@@ -34,6 +38,10 @@ class DMDBase(object):
             eigendecomposition. None means no rescaling, 'auto' means automatic
             rescaling using singular values, otherwise the scaling factors.
     :type rescale_mode: {'auto'} or None or numpy.ndarray
+    :param bool forward_backward: If True, the low-rank operator is computed
+        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
+        False.
+
     :cvar dict original_time: dictionary that contains information about the
         time window where the system is sampled:
 
@@ -51,21 +59,42 @@ class DMDBase(object):
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-        rescale_mode=None):
-        self.rescale_mode = rescale_mode
-        self.svd_rank = svd_rank
-        self.tlsq_rank = tlsq_rank
-        self.exact = exact
-        self.opt = opt
+        rescale_mode=None, forward_backward=False):
+        self._Atilde = DMDOperator(svd_rank=svd_rank, exact=exact,
+            rescale_mode=rescale_mode, forward_backward=forward_backward)
+
+        self._tlsq_rank = tlsq_rank
         self.original_time = None
         self.dmd_time = None
+        self._opt = opt
 
-        self._eigs = None
-        self._Atilde = None
-        self._modes = None  # Phi
         self._b = None  # amplitudes
         self._snapshots = None
         self._snapshots_shape = None
+
+    @property
+    def opt(self):
+        return self._opt
+
+    @property
+    def tlsq_rank(self):
+        return self._tlsq_rank
+
+    @property
+    def svd_rank(self):
+        return self.operator._svd_rank
+
+    @property
+    def rescale_mode(self):
+        return self.operator._rescale_mode
+
+    @property
+    def exact(self):
+        return self.operator._exact
+
+    @property
+    def forward_backward(self):
+        return self.operator._forward_backward
 
     @property
     def dmd_timesteps(self):
@@ -99,7 +128,7 @@ class DMDBase(object):
         :return: the matrix containing the DMD modes.
         :rtype: numpy.ndarray
         """
-        return self._modes
+        return self.operator.modes
 
     @property
     def atilde(self):
@@ -108,6 +137,16 @@ class DMDBase(object):
 
         :return: the reduced Koopman operator A.
         :rtype: numpy.ndarray
+        """
+        return self.operator.as_numpy_array
+
+    @property
+    def operator(self):
+        """
+        Get the instance of DMDOperator.
+
+        :return: the instance of DMDOperator
+        :rtype: DMDOperator
         """
         return self._Atilde
 
@@ -119,7 +158,7 @@ class DMDBase(object):
         :return: the eigenvalues from the eigendecomposition of `atilde`.
         :rtype: numpy.ndarray
         """
-        return self._eigs
+        return self.operator.eigenvalues
 
     @property
     def dynamics(self):
@@ -232,187 +271,17 @@ class DMDBase(object):
 
         return snapshots, snapshots_shape
 
-    @staticmethod
-    def _compute_tlsq(X, Y, tlsq_rank):
+    def _compute_amplitudes(self):
         """
-        Compute Total Least Square.
+        Compute the amplitude coefficients. If `self.opt` is False the
+        amplitudes are computed by minimizing the error between the modes and
+        the first snapshot; if `self.opt` is True the amplitudes are computed by
+        minimizing the error between the modes and all the snapshots, at the
+        expense of bigger computational cost.
 
-        :param numpy.ndarray X: the first matrix;
-        :param numpy.ndarray Y: the second matrix;
-        :param int tlsq_rank: the rank for the truncation; If 0, the method
-            does not compute any noise reduction; if positive number, the
-            method uses the argument for the SVD truncation used in the TLSQ
-            method.
-        :return: the denoised matrix X, the denoised matrix Y
-        :rtype: numpy.ndarray, numpy.ndarray
+        This method uses the class variables self._snapshots (for the
+        snapshots), self.modes and self.eigs.
 
-        References:
-        https://arxiv.org/pdf/1703.11004.pdf
-        https://arxiv.org/pdf/1502.03854.pdf
-        """
-        # Do not perform tlsq
-        if tlsq_rank == 0:
-            return X, Y
-
-        V = np.linalg.svd(np.append(X, Y, axis=0), full_matrices=False)[-1]
-        rank = min(tlsq_rank, V.shape[0])
-        VV = V[:rank, :].conj().T.dot(V[:rank, :])
-
-        return X.dot(VV), Y.dot(VV)
-
-    @staticmethod
-    def _compute_svd(X, svd_rank):
-        """
-        Truncated Singular Value Decomposition.
-
-        :param numpy.ndarray X: the matrix to decompose.
-        :param svd_rank: the rank for the truncation; If 0, the method computes
-            the optimal rank and uses it for truncation; if positive interger,
-            the method uses the argument for the truncation; if float between 0
-            and 1, the rank is the number of the biggest singular values that
-            are needed to reach the 'energy' specified by `svd_rank`; if -1,
-            the method does not compute truncation.
-        :type svd_rank: int or float
-        :return: the truncated left-singular vectors matrix, the truncated
-            singular values array, the truncated right-singular vectors matrix.
-        :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
-
-        References:
-        Gavish, Matan, and David L. Donoho, The optimal hard threshold for
-        singular values is, IEEE Transactions on Information Theory 60.8
-        (2014): 5040-5053.
-        """
-        U, s, V = np.linalg.svd(X, full_matrices=False)
-        V = V.conj().T
-
-        if svd_rank == 0:
-            omega = lambda x: 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
-            beta = np.divide(*sorted(X.shape))
-            tau = np.median(s) * omega(beta)
-            rank = np.sum(s > tau)
-        elif svd_rank > 0 and svd_rank < 1:
-            cumulative_energy = np.cumsum(s**2 / (s**2).sum())
-            rank = np.searchsorted(cumulative_energy, svd_rank) + 1
-        elif svd_rank >= 1 and isinstance(svd_rank, int):
-            rank = min(svd_rank, U.shape[1])
-        else:
-            rank = X.shape[1]
-
-        U = U[:, :rank]
-        V = V[:, :rank]
-        s = s[:rank]
-
-        return U, s, V
-
-    @staticmethod
-    def _build_lowrank_op(U, s, V, Y):
-        """
-        Private method that computes the lowrank operator from the singular
-        value decomposition of matrix X and the matrix Y.
-
-        .. math::
-
-            \\mathbf{\\tilde{A}} =
-            \\mathbf{U}^* \\mathbf{Y} \\mathbf{X}^\\dagger \\mathbf{U} =
-            \\mathbf{U}^* \\mathbf{Y} \\mathbf{V} \\mathbf{S}^{-1}
-
-        :param numpy.ndarray U: 2D matrix that contains the left-singular
-            vectors of X, stored by column.
-        :param numpy.ndarray s: 1D array that contains the singular values of X.
-        :param numpy.ndarray V: 2D matrix that contains the right-singular
-            vectors of X, stored by row.
-        :param numpy.ndarray Y: input matrix Y.
-        :return: the lowrank operator
-        :rtype: numpy.ndarray
-        """
-        return U.T.conj().dot(Y).dot(V) * np.reciprocal(s)
-
-    @staticmethod
-    def _eig_from_lowrank_op(Atilde, Y, U, s, V, exact, rescale_mode=None):
-        """
-        Private method that computes eigenvalues and eigenvectors of the
-        high-dimensional operator from the low-dimensional operator and the
-        input matrix.
-
-        :param numpy.ndarray Atilde: the lowrank operator.
-        :param numpy.ndarray Y: input matrix Y.
-        :param numpy.ndarray U: 2D matrix that contains the left-singular
-            vectors of X, stored by column.
-        :param numpy.ndarray s: 1D array that contains the singular values of X.
-        :param numpy.ndarray V: 2D matrix that contains the right-singular
-            vectors of X, stored by row.
-        :param bool exact: if True, the exact modes are computed; otherwise,
-            the projected ones are computed.
-        :param rescale_mode: Scale Atilde as shown in
-            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
-            eigendecomposition. None means no rescaling, 'auto' means automatic
-            rescaling using singular values, otherwise the scaling factors.
-        :type rescale_mode: {'auto'} or None or numpy.ndarray
-        :return: eigenvalues, eigenvectors
-        :rtype: numpy.ndarray, numpy.ndarray
-        """
-
-        if rescale_mode is None:
-            # scaling isn't required
-            Ahat = Atilde
-        else:
-            # rescale using singular values (like in Section 2.4 of
-            # https://arxiv.org/pdf/1409.5496.pdf)
-            if rescale_mode == 'auto':
-                scaling_factors_array = s.copy()
-            # rescale using custom values
-            else:
-                if len(rescale_mode) != len(s):
-                    raise ValueError('''Scaling by an invalid number of
-                        coefficients''')
-
-                scaling_factors_array = rescale_mode
-
-            factors_inv_sqrt = np.diag(np.power(scaling_factors_array, -0.5))
-            factors_sqrt = np.diag(np.power(scaling_factors_array, 0.5))
-            Ahat = factors_inv_sqrt.dot(Atilde).dot(factors_sqrt)
-
-        lowrank_hat_eigenvalues, lowrank_hat_eigenvectors = np.linalg.eig(Ahat)
-
-        # eigenvalues are invariant wrt scaling
-        lowrank_eigenvalues = lowrank_hat_eigenvalues
-
-        if rescale_mode is None:
-            lowrank_eigenvectors = lowrank_hat_eigenvectors
-        else:
-            # compute eigenvalues after scaling
-            lowrank_eigenvectors = factors_sqrt.dot(lowrank_hat_eigenvectors)
-
-        # Compute the eigenvectors of the high-dimensional operator
-        if exact:
-            eigenvectors = ((Y.dot(V) *
-                             np.reciprocal(s)).dot(lowrank_eigenvectors))
-        else:
-            eigenvectors = U.dot(lowrank_eigenvectors)
-
-        # The eigenvalues are the same
-        eigenvalues = lowrank_eigenvalues
-
-        return eigenvalues, eigenvectors
-
-    def _compute_amplitudes(self, modes, snapshots, eigs, opt):
-        """
-        Compute the amplitude coefficients. If `opt` is False the amplitudes
-        are computed by minimizing the error between the modes and the first
-        snapshot; if `opt` is True the amplitudes are computed by minimizing
-        the error between the modes and all the snapshots, at the expense of
-        bigger computational cost.
-
-        :param numpy.ndarray modes: 2D matrix that contains the modes, stored
-            by column.
-        :param numpy.ndarray snapshots: 2D matrix that contains the original
-            snapshots, stored by column.
-        :param numpy.ndarray eigs: array that contains the eigenvalues of the
-            linear operator.
-        :param bool opt: flag for computing the optimal amplitudes of the DMD
-            modes, minimizing the error between the time evolution and all
-            the original snapshots. If false the amplitudes are computed
-            using only the initial condition, that is snapshots[0].
         :return: the amplitudes array
         :rtype: numpy.ndarray
 
@@ -420,25 +289,25 @@ class DMDBase(object):
         Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
         https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document
         """
-        if opt:
+        if self.opt:
             # compute the vandermonde matrix
-            omega = old_div(np.log(eigs), self.original_time['dt'])
+            omega = old_div(np.log(self.eigs), self.original_time['dt'])
             vander = np.exp(
                 np.multiply(*np.meshgrid(omega, self.dmd_timesteps))).T
 
             # perform svd on all the snapshots
             U, s, V = np.linalg.svd(self._snapshots, full_matrices=False)
 
-            P = np.multiply(np.dot(modes.conj().T, modes),
+            P = np.multiply(np.dot(self.modes.conj().T, self.modes),
                             np.conj(np.dot(vander,
                                            vander.conj().T)))
             tmp = (np.dot(np.dot(U, np.diag(s)), V)).conj().T
-            q = np.conj(np.diag(np.dot(np.dot(vander, tmp), modes)))
+            q = np.conj(np.diag(np.dot(np.dot(vander, tmp), self.modes)))
 
             # b optimal
             a = np.linalg.solve(P, q)
         else:
-            a = np.linalg.lstsq(modes, snapshots.T[0], rcond=None)[0]
+            a = np.linalg.lstsq(self.modes, self._snapshots.T[0], rcond=None)[0]
 
         return a
 
@@ -458,7 +327,7 @@ class DMDBase(object):
             size. Default is (8, 8).
         :param str title: title of the plot.
         """
-        if self._eigs is None:
+        if self.eigs is None:
             raise ValueError('The eigenvalues have not been computed.'
                              'You have to perform the fit method.')
 
@@ -467,13 +336,13 @@ class DMDBase(object):
         plt.gcf()
         ax = plt.gca()
 
-        points, = ax.plot(self._eigs.real,
-                          self._eigs.imag,
+        points, = ax.plot(self.eigs.real,
+                          self.eigs.imag,
                           'bo',
                           label='Eigenvalues')
 
         # set limits for axis
-        limit = np.max(np.ceil(np.absolute(self._eigs)))
+        limit = np.max(np.ceil(np.absolute(self.eigs)))
         ax.set_xlim((-limit, limit))
         ax.set_ylim((-limit, limit))
 
@@ -551,7 +420,7 @@ class DMDBase(object):
         :param tuple(int,int) figsize: tuple in inches defining the figure
             size. Default is (8, 8).
         """
-        if self._modes is None:
+        if self.modes is None:
             raise ValueError('The modes have not been computed.'
                              'You have to perform the fit method.')
 
@@ -573,7 +442,7 @@ class DMDBase(object):
         xgrid, ygrid = np.meshgrid(x, y)
 
         if index_mode is None:
-            index_mode = list(range(self._modes.shape[1]))
+            index_mode = list(range(self.modes.shape[1]))
         elif isinstance(index_mode, int):
             index_mode = [index_mode]
 
@@ -587,7 +456,7 @@ class DMDBase(object):
             real_ax = fig.add_subplot(1, 2, 1)
             imag_ax = fig.add_subplot(1, 2, 2)
 
-            mode = self._modes.T[idx].reshape(xgrid.shape, order=order)
+            mode = self.modes.T[idx].reshape(xgrid.shape, order=order)
 
             real = real_ax.pcolor(xgrid,
                                   ygrid,

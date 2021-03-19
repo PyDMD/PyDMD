@@ -266,9 +266,9 @@ class TestDmd(TestCase):
             return vector / np.linalg.norm(vector)
 
         dmd_rescale_normalized_modes = np.apply_along_axis(normalize, 0,
-            dmd_auto_rescale._modes)
+            dmd_auto_rescale.modes)
         dmd_no_rescale_normalized_modes = np.apply_along_axis(normalize, 0,
-            dmd_no_rescale._modes)
+            dmd_no_rescale.modes)
 
         np.testing.assert_almost_equal(dmd_no_rescale_normalized_modes,
             dmd_rescale_normalized_modes, decimal=3)
@@ -287,9 +287,9 @@ class TestDmd(TestCase):
             return vector / np.linalg.norm(vector)
 
         dmd_rescale_normalized_modes = np.apply_along_axis(normalize, 0,
-            dmd_rescale._modes)
+            dmd_rescale.modes)
         dmd_no_rescale_normalized_modes = np.apply_along_axis(normalize, 0,
-            dmd_no_rescale._modes)
+            dmd_no_rescale.modes)
 
         np.testing.assert_almost_equal(dmd_no_rescale_normalized_modes,
             dmd_rescale_normalized_modes, decimal=3)
@@ -312,3 +312,63 @@ class TestDmd(TestCase):
             np.linspace(5,10, 6))
         with self.assertRaises(ValueError):
             dmd_rescale.fit(X=sample_data)
+
+    def test_predict(self):
+        def f1(x,t):
+            return 1./np.cosh(x+3)*np.exp(2.3j*t)
+
+        def f2(x,t):
+            return 2./np.cosh(x)*np.tanh(x)*np.exp(2.8j*t)
+
+        x = np.linspace(-2, 2, 4)
+        t = np.linspace(0, 4*np.pi, 10)
+
+        xgrid, tgrid = np.meshgrid(x, t)
+
+        X1 = f1(xgrid, tgrid)
+        X2 = f2(xgrid, tgrid)
+        X = X1 + X2
+
+        dmd = DMD()
+        dmd.fit(X.T)
+
+        expected = np.array([
+            [ 0.35407111+0.31966903j,  0.0581077 -0.51616519j,
+                -0.4936891 +0.36476117j,  0.70397844+0.05332291j,
+                -0.56648961-0.50687223j,  0.15372065+0.74444603j,
+                0.30751808-0.63550106j, -0.5633934 +0.24365451j,
+                0.47550633+0.20903766j, -0.0985528 -0.46673545j],
+            [ 0.52924739+0.47782492j,  0.08685642-0.77153733j,
+                -0.73794122+0.54522635j,  1.05227097+0.07970435j,
+                -0.8467597 -0.7576467j ,  0.22977376+1.11275987j,
+                0.4596623 -0.94991449j, -0.84213164+0.3642023j ,
+                0.71076254+0.3124588j , -0.14731169-0.69765229j],
+            [-0.49897731-0.45049592j, -0.0818887 +0.72740958j,
+                0.69573498-0.51404236j, -0.99208678-0.0751457j ,
+                0.79832963+0.71431342j, -0.21663195-1.04911604j,
+                -0.43337211+0.89558454j,  0.79396628-0.3433719j ,
+                -0.67011078-0.29458785j,  0.13888626+0.65775036j],
+            [-0.2717424 -0.2453395j , -0.04459648+0.39614632j,
+                0.37889637-0.2799468j , -0.54028918-0.04092425j,
+                0.43476929+0.38901417j, -0.11797748-0.57134724j,
+                -0.23601389+0.48773418j,  0.43239301-0.18699989j,
+                - 0.36494147 - 0.16043216j, 0.07563728 + 0.35821j]
+        ])
+
+        np.testing.assert_almost_equal(dmd.predict(X.T), expected, decimal=6)
+
+    def test_predict_exact(self):
+        dmd = DMD(exact=True)
+        expected = np.load('tests/test_datasets/input_sample_predict_exact.npy')
+
+        np.testing.assert_almost_equal(dmd
+            .fit(sample_data)
+            .predict(sample_data[:,20:40]), expected, decimal=6)
+
+    def test_predict_nexact(self):
+        dmd = DMD(exact=False)
+        expected = np.load('tests/test_datasets/input_sample_predict_nexact.npy')
+
+        np.testing.assert_almost_equal(dmd
+            .fit(sample_data)
+            .predict(sample_data[:,10:30]), expected, decimal=6)

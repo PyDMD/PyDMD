@@ -5,10 +5,146 @@ Reference:
 - Proctor, J.L., Brunton, S.L. and Kutz, J.N., 2016. Dynamic mode decomposition
 with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.
 """
-from .dmdbase import DMDBase
 from past.utils import old_div
 import numpy as np
 
+from .dmdbase import DMDBase
+from .dmdoperator import DMDOperator
+from .utils import compute_tlsq
+
+class DMDControlOperator(DMDOperator):
+    """
+    DMD with control base operator. This should be subclassed in order to
+    implement the appropriate features.
+
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
+    :param svd_rank_omega: the rank for the truncation of the aumented matrix
+        omega composed by the left snapshots matrix and the control. Used only
+        for the `_fit_B_unknown` method of this class. It should be greater or
+        equal than `svd_rank`. For the possible values please refer to the
+        `svd_rank` parameter description above.
+    :type svd_rank_omega: int or float
+    :param int tlsq_rank: rank truncation computing Total Least Square. Default
+        is 0, that means no truncation.
+    """
+
+    def __init__(self, svd_rank, svd_rank_omega, tlsq_rank):
+        super(DMDControlOperator, self).__init__(svd_rank=svd_rank, exact=True,
+            rescale_mode=None, forward_backward=False)
+        self._svd_rank_omega = svd_rank_omega
+        self._tlsq_rank = tlsq_rank
+
+class DMDBKnownOperator(DMDControlOperator):
+    """
+    DMD with control base operator when B is given.
+
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
+    :param svd_rank_omega: the rank for the truncation of the aumented matrix
+        omega composed by the left snapshots matrix and the control. Used only
+        for the `_fit_B_unknown` method of this class. It should be greater or
+        equal than `svd_rank`. For the possible values please refer to the
+        `svd_rank` parameter description above.
+    :type svd_rank_omega: int or float
+    :param int tlsq_rank: rank truncation computing Total Least Square. Default
+        is 0, that means no truncation.
+    """
+
+    def compute_operator(self, X, Y, B, controlin):
+        """
+        Compute the low-rank operator. This is the standard version of the DMD
+        operator, with a correction which depends on B.
+
+        :param numpy.ndarray X: matrix containing the snapshots x0,..x{n-1} by
+            column.
+        :param numpy.ndarray Y: matrix containing the snapshots x1,..x{n} by
+            column.
+        :param numpy.ndarray B: the matrix B.
+        :param numpy.ndarray control: the control input.
+        :return: the (truncated) left-singular vectors matrix, the (truncated)
+            singular values array, the (truncated) right-singular vectors
+            matrix of X.
+        :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
+        """
+        X, Y = compute_tlsq(X, Y, self._tlsq_rank)
+        Y = Y - B.dot(controlin)
+        return super(DMDBKnownOperator, self).compute_operator(X, Y)
+
+class DMDBUnknownOperator(DMDControlOperator):
+    """
+    DMD with control base operator when B is unknown.
+
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
+    :param svd_rank_omega: the rank for the truncation of the aumented matrix
+        omega composed by the left snapshots matrix and the control. Used only
+        for the `_fit_B_unknown` method of this class. It should be greater or
+        equal than `svd_rank`. For the possible values please refer to the
+        `svd_rank` parameter description above.
+    :type svd_rank_omega: int or float
+    :param int tlsq_rank: rank truncation computing Total Least Square. Default
+        is 0, that means no truncation.
+    """
+
+    def compute_operator(self, X, Y, controlin):
+        """
+        Compute the low-rank operator.
+
+        :param numpy.ndarray X: matrix containing the snapshots x0,..x{n-1} by
+            column.
+        :param numpy.ndarray Y: matrix containing the snapshots x1,..x{n} by
+            column.
+        :param numpy.ndarray control: the control input.
+        :return: the (truncated) left-singular vectors matrix of Y, and
+            the product between the left-singular vectors of Y and Btilde.
+        :rtype: numpy.ndarray, numpy.ndarray
+        """
+        snapshots_rows = X.shape[0]
+
+        omega = np.vstack([X, controlin])
+
+        Up, sp, Vp = self._compute_svd(omega, self._svd_rank_omega)
+
+        Up1 = Up[:snapshots_rows, :]
+        Up2 = Up[snapshots_rows:, :]
+
+        Ur, sr, Vr = self._compute_svd(Y, self._svd_rank)
+
+        self._Atilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
+            np.reciprocal(sp))).dot(Up1.T.conj()).dot(Ur)
+        self._compute_eigenquantities()
+        self._compute_modes(Y, sp, Vp, Up1, Ur)
+
+        Btilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
+            np.reciprocal(sp))).dot(Up2.T.conj())
+
+        return Ur, Ur.dot(Btilde)
+
+    def _compute_modes(self, Y, sp, Vp, Up1, Ur):
+        """
+        Private method that computes eigenvalues and eigenvectors of the
+        high-dimensional operator (stored in self.modes and self.Lambda).
+        """
+
+        self._modes = Y.dot(Vp).dot(np.diag(np.reciprocal(sp))).dot(
+            Up1.T.conj()).dot(Ur).dot(self.eigenvectors)
+        self._Lambda = self.eigenvalues
 
 class DMDc(DMDBase):
     """
@@ -32,32 +168,30 @@ class DMDc(DMDBase):
         for the `_fit_B_unknown` method of this class. It should be greater or
         equal than `svd_rank`. For the possible values please refer to the
         `svd_rank` parameter description above.
-    :param rescale_mode: Scale Atilde as shown in
-            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
-            eigendecomposition. None means no rescaling, 'auto' means automatic
-            rescaling using singular values, otherwise the scaling factors.
-    :type rescale_mode: {'auto'} or None or numpy.ndarray
     :type svd_rank_omega: int or float
     """
-    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1,
-        rescale_mode=None):
-        self.svd_rank = svd_rank
-        self.tlsq_rank = tlsq_rank
-        self.opt = opt
-        self.svd_rank_omega = svd_rank_omega
-        self.original_time = None
-        self.rescale_mode = rescale_mode
+    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1):
 
-        self._eigs = None
+        # we're going to initialize Atilde when we know if B is known
         self._Atilde = None
+        # remember the arguments for when we'll need them
+        self._dmd_operator_kwargs = {
+            'svd_rank': svd_rank,
+            'svd_rank_omega': svd_rank_omega,
+            'tlsq_rank': tlsq_rank
+        }
+
+        self._opt = opt
+
         self._B = None
-        self._modes = None  # Phi
-        self._b = None  # amplitudes
-        self._snapshots = None
         self._snapshots_shape = None
         self._controlin = None
         self._controlin_shape = None
         self._basis = None
+
+    @property
+    def svd_rank_omega(self):
+        return self.operator._svd_rank_omega
 
     @property
     def B(self):
@@ -113,61 +247,6 @@ class DMDc(DMDBase):
         data = np.array(data).T
         return data
 
-    def _fit_B_known(self, X, Y, B):
-        """
-        Private method that performs the dynamic mode decomposition algorithm
-        with control when the matrix `B` is provided.
-
-        :param numpy.ndarray X: the first matrix of original snapshots.
-        :param numpy.ndarray Y: the second matrix of original snapshots.
-        :param numpy.ndarray I: the input control matrix.
-        :param numpy.ndarray B: the matrix B.
-        """
-        X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
-
-        U, s, V = self._compute_svd(X, self.svd_rank)
-
-        self._Atilde = U.T.conj().dot(Y - B.dot(self._controlin)).dot(V).dot(
-            np.diag(np.reciprocal(s)))
-        self._eigs, self._modes = self._eig_from_lowrank_op(
-            self._Atilde, (Y - B.dot(self._controlin)), U, s, V, True)
-        self._b = self._compute_amplitudes(self._modes, self._snapshots,
-                                           self._eigs, self.opt)
-
-        self._B = B
-        self._basis = U
-        return self
-
-    def _fit_B_unknown(self, X, Y):
-        """
-        Private method that performs the dynamic mode decomposition algorithm
-        with control when the matrix `B` is not provided.
-
-        :param numpy.ndarray X: the first matrix of original snapshots.
-        :param numpy.ndarray Y: the second matrix of original snapshots.
-        """
-        omega = np.vstack([X, self._controlin])
-
-        Up, sp, Vp = self._compute_svd(omega, self.svd_rank_omega)
-
-        Up1 = Up[:self._snapshots.shape[0], :]
-        Up2 = Up[self._snapshots.shape[0]:, :]
-
-        Ur, sr, Vr = self._compute_svd(Y, self.svd_rank)
-        self._basis = Ur
-
-        self._Atilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
-            np.reciprocal(sp))).dot(Up1.T.conj()).dot(Ur)
-        self._Btilde = Ur.T.conj().dot(Y).dot(Vp).dot(np.diag(
-            np.reciprocal(sp))).dot(Up2.T.conj())
-        self._B = Ur.dot(self._Btilde)
-
-        self._eigs, modes = np.linalg.eig(self._Atilde)
-        self._modes = Y.dot(Vp).dot(np.diag(np.reciprocal(sp))).dot(
-            Up1.T.conj()).dot(Ur).dot(modes)
-
-        self._b = self._compute_amplitudes(self._modes, X, self._eigs, self.opt)
-
     def fit(self, X, I, B=None):
         """
         Compute the Dynamic Modes Decomposition with control given the original
@@ -194,8 +273,16 @@ class DMDc(DMDBase):
         self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
 
         if B is None:
-            self._fit_B_unknown(X, Y)
+            self._Atilde = DMDBUnknownOperator(**self._dmd_operator_kwargs)
+            self._basis, self._B = self.operator.compute_operator(X, Y,
+                self._controlin)
         else:
-            self._fit_B_known(X, Y, B)
+            self._Atilde = DMDBKnownOperator(**self._dmd_operator_kwargs)
+            U, _, _ = self.operator.compute_operator(X, Y, B, self._controlin)
+
+            self._basis = U
+            self._B = B
+
+        self._b = self._compute_amplitudes()
 
         return self

@@ -4,14 +4,16 @@ Derived module from dmdbase.py for classic dmd.
 
 # --> Import standard python packages
 import numpy as np
-from scipy.linalg import pinv2
 
 # --> Import PyDMD base class for DMD.
 from .dmdbase import DMDBase
 
+from .dmdoperator import DMDOperator
+from .utils import compute_tlsq
+
+from scipy.linalg import pinv2
 
 def pinv(x): return pinv2(x, rcond=10 * np.finfo(float).eps)
-
 
 class DMD(DMDBase):
     """
@@ -35,6 +37,9 @@ class DMD(DMDBase):
             eigendecomposition. None means no rescaling, 'auto' means automatic
             rescaling using singular values, otherwise the scaling factors.
     :type rescale_mode: {'auto'} or None or numpy.ndarray
+    :param bool forward_backward: If True, the low-rank operator is computed
+        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
+        False.
     """
 
     def fit(self, X):
@@ -50,24 +55,14 @@ class DMD(DMDBase):
         X = self._snapshots[:, :-1]
         Y = self._snapshots[:, 1:]
 
-        X, Y = self._compute_tlsq(X, Y, self.tlsq_rank)
-
-        U, s, V = self._compute_svd(X, self.svd_rank)
-
-        self._Atilde = self._build_lowrank_op(U, s, V, Y)
-
-        self._svd_modes = U
-
-        self._eigs, self._modes = self._eig_from_lowrank_op(
-            self._Atilde, Y, U, s, V, self.exact,
-            rescale_mode=self.rescale_mode)
+        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
+        self._svd_modes, _, _ = self.operator.compute_operator(X,Y)
 
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
         self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
 
-        self._b = self._compute_amplitudes(self._modes, self._snapshots,
-                                           self._eigs, self.opt)
+        self._b = self._compute_amplitudes()
 
         return self
 
@@ -85,17 +80,5 @@ class DMD(DMDBase):
             Predicted output.
 
         """
-
-        # --> Predict using the SVD modes as the basis.
-        if self.exact is False:
-            Y = np.linalg.multi_dot(
-                [self._svd_modes, self._Atilde, self._svd_modes.T.conj(), X]
-            )
-        # --> Predict using the DMD modes as the basis.
-        elif self.exact is True:
-            adjoint_modes = pinv(self._modes)
-            Y = np.linalg.multi_dot(
-                [self._modes, np.diag(self._eigs), adjoint_modes, X]
-            )
-
-        return Y
+        return np.linalg.multi_dot([self.modes, np.diag(self.eigs),
+            pinv(self.modes), X])

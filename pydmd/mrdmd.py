@@ -13,7 +13,207 @@ import scipy.linalg
 import matplotlib.pyplot as plt
 
 from .dmdbase import DMDBase
+from .dmdoperator import DMDOperator
+from .utils import compute_tlsq
 
+class SubMrDMDOperator(DMDOperator):
+    """
+    Used by MrDMDOperator in order to compute several quantities of interest
+    over different views of the snapshots matrix.
+
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
+    :param float eigs_divider: The divider of eigs in the evaluation of slow
+        modes.
+    :param float rho: The maximum eigenvalue amplitude of slow modes
+    """
+
+    def __init__(self, svd_rank, eigs_divider, rho):
+        super(SubMrDMDOperator, self).__init__(svd_rank=svd_rank, exact=True,
+            rescale_mode=None, forward_backward=False)
+
+        self._eigs_divider = eigs_divider
+        self._rho = rho
+
+        self._slow_modes = None
+
+    def compute_operator(self, Xc, Yc):
+        """
+        Compute the low-rank operator, the eigenquantities and slow modes.
+
+        :param numpy.ndarray Xc: matrix containing the snapshots x0,..x{n-1} by
+            column.
+        :param numpy.ndarray Yc: matrix containing the snapshots x1,..x{n} by
+            column.
+        """
+
+        U, s, V = self._compute_svd(Xc)
+
+        self._Atilde = U.T.conj().dot(Yc).dot(V) * np.reciprocal(s)
+
+        self._compute_eigenquantities()
+        self._compute_modes(Yc, U, s, V)
+
+        self._slow_modes = (np.abs(old_div(np.log(self.eigenvalues),
+            self._eigs_divider))) <= self._rho
+
+    def compute_sub_amplitudes(self, Xc, opt):
+        """
+        Compute the ampltitudes for slow modes of this sub DMD operator.
+
+        :param numpy.ndarray Xc: matrix containing the snapshots x0,..x{n-1} by
+            column.
+        :param bool opt: flag to compute optimized DMD.
+        :return: The amplitudes for each slow mode.
+        :rtype: numpy.ndarray
+        """
+
+        if opt:
+            # compute the vandermonde matrix
+            omega = old_div(np.log(self.eigs), self.original_time['dt'])
+            vander = np.exp(
+                np.multiply(*np.meshgrid(omega, self.dmd_timesteps))).T
+
+            # perform svd on all the snapshots
+            U, s, V = np.linalg.svd(Xc, full_matrices=False)
+
+            P = np.multiply(np.dot(self.modes.conj().T, self.modes),
+                            np.conj(np.dot(vander,
+                                           vander.conj().T)))
+            tmp = (np.dot(np.dot(U, np.diag(s)), V)).conj().T
+            q = np.conj(np.diag(np.dot(np.dot(vander, tmp), self.modes)))
+
+            # b optimal
+            a = np.linalg.solve(P, q)
+        else:
+            a = np.linalg.lstsq(self.modes, Xc.T[0], rcond=None)[0]
+
+        return a
+
+    @DMDOperator.modes.getter
+    def modes(self):
+        if self._slow_modes is None:
+            return super(SubMrDMDOperator, self).modes
+        else:
+            return super(SubMrDMDOperator, self).modes[:, self._slow_modes]
+
+    @DMDOperator.eigenvalues.getter
+    def eigenvalues(self):
+        # we want to access eigenvalues before setting slow_modes, since
+        # setting slow_modes requires evaluating eigenvalues
+        if self._slow_modes is None:
+            return super(SubMrDMDOperator, self).eigenvalues
+        else:
+            return super(SubMrDMDOperator, self).eigenvalues[self._slow_modes]
+
+class MrDMDOperator(DMDOperator):
+    """
+    Dynamic Mode Decomposition operator for MrDMD.
+
+    :param svd_rank: the rank for the truncation; If 0, the method computes the
+        optimal rank and uses it for truncation; if positive interger, the
+        method uses the argument for the truncation; if float between 0 and 1,
+        the rank is the number of the biggest singular values that are needed
+        to reach the 'energy' specified by `svd_rank`; if -1, the method does
+        not compute truncation.
+    :type svd_rank: int or float
+    :param int tlsq_rank: rank truncation computing Total Least Square. Default
+        is 0, that means TLSQ is not applied.
+    :param int max_cycles: the maximum number of mode oscillations in any given
+        time scale. Default is 1.
+    :param int max_level: the maximum number of levels. Defualt is 6.
+    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
+        Default is False.
+    """
+
+    def __init__(self, svd_rank, tlsq_rank, max_cycles, max_level, opt):
+        super(MrDMDOperator, self).__init__(svd_rank=svd_rank, exact=True,
+            rescale_mode=None, forward_backward=False)
+
+        self._tlsq_rank = tlsq_rank
+        self._max_cycles = max_cycles
+        self._max_level = max_level
+        self._opt = opt
+
+        self._nyq = 8 * self._max_cycles
+
+        # initialization
+        self._modes = []
+        self._b = []
+        self._Atilde = []
+        self._eigenvalues = []
+        self._nsamples = []
+        self._steps = []
+
+    @DMDOperator.as_numpy_array.getter
+    def as_numpy_array(self):
+        raise RuntimeError("This property isn't defined")
+
+    def compute_operator(self, snapshots):
+        """
+        Compute the MrDMD operator, modes, amplitudes and eigenvalues.
+
+        :param numpy.ndarray snapshots: The snapshots (by column).
+        """
+
+        # To avoid recursion function, use FIFO list to simulate the tree
+        # structure
+        data_queue = [snapshots.copy()]
+
+        current_bin = 0
+        while data_queue:
+            Xraw = data_queue.pop(0)
+
+            n_samples = Xraw.shape[1]
+
+            step = max(1, int(np.floor(old_div(n_samples, self._nyq))))
+            Xsub = Xraw[:, ::step]
+            Xc = Xsub[:, :-1]
+            Yc = Xsub[:, 1:]
+
+            Xc, Yc = compute_tlsq(Xc, Yc, self._tlsq_rank)
+
+            rho = old_div(float(self._max_cycles), n_samples)
+            sub_operator = SubMrDMDOperator(svd_rank=self._svd_rank,
+                eigs_divider=2. * np.pi * step, rho=rho)
+            sub_operator.compute_operator(Xc, Yc)
+
+            modes = sub_operator.modes
+            eigs = sub_operator.eigenvalues
+            Atilde = sub_operator.as_numpy_array
+            b = sub_operator.compute_sub_amplitudes(Xc, self._opt)
+
+            #---------------------------------------------------------------
+            # DMD Amplitudes and Dynamics
+            #---------------------------------------------------------------
+            Vand = np.vander(np.power(eigs, old_div(1., step)), n_samples, True)
+
+            Psi = (Vand.T * b).T
+
+            self._modes.append(modes)
+            self._b.append(b)
+            self._Atilde.append(Atilde)
+            self._eigenvalues.append(eigs)
+            self._nsamples.append(n_samples)
+            self._steps.append(step)
+
+            if Xraw.dtype == 'float64':
+                Xraw -= modes.dot(Psi).real
+            else:
+                Xraw -= modes.dot(Psi)
+
+            if current_bin < 2**(self._max_level - 1) - 1:
+                current_bin += 1
+                half = int(np.ceil(old_div(Xraw.shape[1], 2)))
+                data_queue.append(Xraw[:, :half])
+                data_queue.append(Xraw[:, half:])
+            else:
+                current_bin += 1
 
 class MrDMD(DMDBase):
     """
@@ -28,34 +228,23 @@ class MrDMD(DMDBase):
     :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means TLSQ is not applied.
-    :param bool exact: flag to compute either exact DMD or projected DMD.
-        Default is False.
     :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
-    :param rescale_mode: Scale Atilde as shown in
-            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
-            eigendecomposition. None means no rescaling, 'auto' means automatic
-            rescaling using singular values, otherwise the scaling factors.
-    :type rescale_mode: {'auto'} or None or numpy.ndarray
     :param int max_cycles: the maximum number of mode oscillations in any given
         time scale. Default is 1.
     :param int max_level: the maximum number of levels. Defualt is 6.
     """
 
-    def __init__(self,
-                 svd_rank=0,
-                 tlsq_rank=0,
-                 exact=False,
-                 opt=False,
-                 max_cycles=1,
-                 max_level=6,
-                 rescale_mode=None):
-        super(MrDMD, self).__init__(svd_rank, tlsq_rank, exact, opt,
-            rescale_mode)
-        self.max_cycles = max_cycles
-        self.max_level = max_level
-        self._nsamples = None
-        self._steps = None
+    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False,
+        max_cycles=1, max_level=6):
+
+        self._Atilde = MrDMDOperator(svd_rank=svd_rank, tlsq_rank=tlsq_rank,
+            max_level=max_level, max_cycles=max_cycles, opt=opt)
+
+        self._original_time = None
+        self._dmd_time = None
+
+        self._max_level = max_level
 
     def _index_list(self, level, node):
         """
@@ -67,7 +256,7 @@ class MrDMD(DMDBase):
         :rtype: int
         :return: the index of the list that contains the binary tree.
         """
-        if level >= self.max_level:
+        if level >= self._max_level:
             raise ValueError("Invalid level: greater than `max_level`")
 
         if node >= 2**level:
@@ -83,9 +272,9 @@ class MrDMD(DMDBase):
         :return: the level of the bin in the binary tree and the node id
             in that level.
         """
-        if index > 2**self.max_level - 2:
-            raise ValueError("Invalid index: maximum index is ({})".format(2**self.max_level - 2))
-        for lvl in range(self.max_level + 1):
+        if index > 2**self._max_level - 2:
+            raise ValueError("Invalid index: maximum index is ({})".format(2**self._max_level - 2))
+        for lvl in range(self._max_level + 1):
             if index < 2**lvl - 1:
                 break
         level = lvl - 1
@@ -101,11 +290,11 @@ class MrDMD(DMDBase):
         :return: the start and end time and the period of the bin
         :rtype: dictionary
         """
-        if level >= self.max_level:
+        if level >= self._max_level:
             raise ValueError(
                 'The level input parameter ({}) has to be less than the '
                 'max_level ({}). Remember that the starting index is 0'.format(
-                    level, self.max_level))
+                    level, self._max_level))
 
         if node >= 2**level:
             raise ValueError("Invalid node")
@@ -127,7 +316,7 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         indexes = []
-        for level in range(self.max_level):
+        for level in range(self._max_level):
             for i in range(2**level):
                 local_times = self.partial_time_interval(level, i)
                 if t0 >= local_times['t0'] and t0 < local_times['tend']:
@@ -153,7 +342,8 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         indexes = self.time_window_bins(t0, tend)
-        return np.concatenate([self._eigs[idx] for idx in indexes])
+        return np.concatenate([self.operator.eigenvalues[idx]
+            for idx in indexes])
 
     def time_window_frequency(self, t0, tend):
         """
@@ -205,12 +395,12 @@ class MrDMD(DMDBase):
             data = np.sum(
                 np.array([
                     self.partial_reconstructed_data(i)
-                    for i in range(self.max_level)
+                    for i in range(self._max_level)
                 ]),
                 axis=0)
         except MemoryError:
             data = np.array(self.partial_reconstructed_data(0))
-            for i in range(1, self.max_level):
+            for i in range(1, self._max_level):
                 data = np.sum([data,
                 np.array(self.partial_reconstructed_data(i))], axis=0)
         return data
@@ -223,7 +413,7 @@ class MrDMD(DMDBase):
         :return: the matrix containing the DMD modes.
         :rtype: numpy.ndarray
         """
-        return np.hstack(tuple(self._modes))
+        return np.hstack(tuple(self.operator.modes))
 
     @property
     def dynamics(self):
@@ -235,7 +425,7 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         return np.vstack(
-            tuple([self.partial_dynamics(i) for i in range(self.max_level)]))
+            tuple([self.partial_dynamics(i) for i in range(self._max_level)]))
 
     @property
     def eigs(self):
@@ -245,7 +435,27 @@ class MrDMD(DMDBase):
         :return: the eigenvalues from the eigendecomposition of `atilde`.
         :rtype: numpy.ndarray
         """
-        return np.concatenate(self._eigs)
+        return np.concatenate(self.operator.eigenvalues)
+
+    @property
+    def _steps(self):
+        return self.operator._steps
+
+    @property
+    def _nsamples(self):
+        return self.operator._nsamples
+
+    @property
+    def _b(self):
+        return self.operator._b
+
+    @property
+    def max_level(self):
+        return self._max_level
+
+    @property
+    def max_cycles(self):
+        return self.operator._max_cycles
 
     def partial_modes(self, level, node=None):
         """
@@ -260,10 +470,10 @@ class MrDMD(DMDBase):
             the given level. Default is None.
         """
         if node:
-            return self._modes[self._index_list(level, node)]
+            return self.operator.modes[self._index_list(level, node)]
 
         indeces = [self._index_list(level, i) for i in range(2**level)]
-        return np.hstack(tuple([self._modes[idx] for idx in indeces]))
+        return np.hstack(tuple([self.operator.modes[idx] for idx in indeces]))
 
     def partial_dynamics(self, level, node=None):
         """
@@ -292,7 +502,7 @@ class MrDMD(DMDBase):
             indeces = [self._index_list(level, i) for i in range(2**level)]
 
         level_dynamics = [
-            dynamic(self._eigs[idx], self._b[idx], self._steps[idx],
+            dynamic(self.operator.eigenvalues[idx], self._b[idx], self._steps[idx],
                     self._nsamples[idx]) for idx in indeces
         ]
         return scipy.linalg.block_diag(*level_dynamics)
@@ -309,16 +519,16 @@ class MrDMD(DMDBase):
             extracted; if None, the time evolution is extracted from all the
             nodes of the given level. Default is None.
         """
-        if level >= self.max_level:
+        if level >= self._max_level:
             raise ValueError(
                 'The level input parameter ({}) has to be less than the'
                 'max_level ({}). Remember that the starting index is 0'.format(
-                    level, self.max_level))
+                    level, self._max_level))
         if node:
-            return self._eigs[self._index_list(level, node)]
+            return self.operator.eigenvalues[self._index_list(level, node)]
 
         indeces = [self._index_list(level, i) for i in range(2**level)]
-        return np.concatenate([self._eigs[idx] for idx in indeces])
+        return np.concatenate([self.operator.eigenvalues[idx] for idx in indeces])
 
     def partial_reconstructed_data(self, level, node=None):
         """
@@ -333,11 +543,11 @@ class MrDMD(DMDBase):
             nodes of the given level. Default is None.
 
         """
-        if level >= self.max_level:
+        if level >= self._max_level:
             raise ValueError(
                 'The level input parameter ({}) has to be less than the '
                 'max_level ({}). Remember that the starting index is 0'.format(
-                    level, self.max_level))
+                    level, self._max_level))
         modes = self.partial_modes(level, node)
         dynamics = self.partial_dynamics(level, node)
 
@@ -352,83 +562,14 @@ class MrDMD(DMDBase):
         """
         self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
 
-        # To avoid recursion function, use FIFO list to simulate the tree
-        # structure
-        data_queue = [self._snapshots.copy()]
-
-        current_bin = 0
-
         # Redefine max level if it is too big.
         lvl_threshold = int(np.log(self._snapshots.shape[1]/4.)/np.log(2.)) + 1
-        if self.max_level > lvl_threshold:
-            self.max_level = lvl_threshold
+        if self._max_level > lvl_threshold:
+            self._max_level = lvl_threshold
             print('Too many levels... '
-                  'Redefining `max_level` to {}'.format(self.max_level))
+                  'Redefining `max_level` to {}'.format(self._max_level))
 
-        # Reset the lists
-        self._eigs = []
-        self._Atilde = []
-        self._modes = []
-        self._b = []
-        self._nsamples = []
-        self._steps = []
-
-        while data_queue:
-            Xraw = data_queue.pop(0)
-
-            n_samples = Xraw.shape[1]
-            # subsamples frequency to detect slow modes
-            nyq = 8 * self.max_cycles
-
-            step = max(1, int(np.floor(old_div(n_samples, nyq))))
-            Xsub = Xraw[:, ::step]
-            Xc = Xsub[:, :-1]
-            Yc = Xsub[:, 1:]
-
-            Xc, Yc = self._compute_tlsq(Xc, Yc, self.tlsq_rank)
-
-            U, s, V = self._compute_svd(Xc, self.svd_rank)
-
-            Atilde = self._build_lowrank_op(U, s, V, Yc)
-
-            eigs, modes = self._eig_from_lowrank_op(Atilde, Yc, U, s, V,
-                self.exact, rescale_mode=self.rescale_mode)
-            rho = old_div(float(self.max_cycles), n_samples)
-            slow_modes = (np.abs(
-                old_div(np.log(eigs), (2. * np.pi * step)))) <= rho
-
-            modes = modes[:, slow_modes]
-            eigs = eigs[slow_modes]
-
-            #---------------------------------------------------------------
-            # DMD Amplitudes and Dynamics
-            #---------------------------------------------------------------
-            Vand = np.vander(
-                np.power(eigs, old_div(1., step)), n_samples, True)
-            b = self._compute_amplitudes(modes, Xc, eigs, self.opt)
-
-            Psi = (Vand.T * b).T
-
-            self._modes.append(modes)
-            self._b.append(b)
-            self._Atilde.append(Atilde)
-            self._eigs.append(eigs)
-            self._nsamples.append(n_samples)
-            self._steps.append(step)
-
-
-            if Xraw.dtype == 'float64':
-                Xraw -= modes.dot(Psi).real
-            else:
-                Xraw -= modes.dot(Psi)
-
-            if current_bin < 2**(self.max_level - 1) - 1:
-                current_bin += 1
-                half = int(np.ceil(old_div(Xraw.shape[1], 2)))
-                data_queue.append(Xraw[:, :half])
-                data_queue.append(Xraw[:, half:])
-            else:
-                current_bin += 1
+        self.operator.compute_operator(self._snapshots)
 
         self.dmd_time = {'t0': 0, 'tend': self._snapshots.shape[1], 'dt': 1}
         self.original_time = self.dmd_time.copy()
@@ -454,7 +595,7 @@ class MrDMD(DMDBase):
         :param int level: plot only the eigenvalues of specific level.
         :param int node: plot only the eigenvalues of specific node.
         """
-        if self._eigs is None:
+        if self.operator.eigenvalues is None:
             raise ValueError('The eigenvalues have not been computed.'
                              'You have to perform the fit method.')
 
@@ -470,12 +611,12 @@ class MrDMD(DMDBase):
 
         if not level:
             cmap = plt.get_cmap('viridis')
-            colors = [cmap(i) for i in np.linspace(0, 1, self.max_level)]
+            colors = [cmap(i) for i in np.linspace(0, 1, self._max_level)]
 
             points = []
-            for lvl in range(self.max_level):
-                indeces = [self._index_list(lvl, i) for i in range(2**lvl)]
-                eigs = np.concatenate([self._eigs[idx] for idx in indeces])
+            for lvl in range(self._max_level):
+                indeces = [self._index_list(lvl, i) for i in range(2 ** lvl)]
+                eigs = np.concatenate([self.operator.eigenvalues[idx] for idx in indeces])
 
                 points.append(
                     ax.plot(eigs.real, eigs.imag, '.', color=colors[lvl])[0])
@@ -524,7 +665,7 @@ class MrDMD(DMDBase):
         else:
             labels = [
                 'Eigenvalues - level {}'.format(i)
-                for i in range(self.max_level)
+                for i in range(self._max_level)
             ]
 
         if show_unit_circle:
