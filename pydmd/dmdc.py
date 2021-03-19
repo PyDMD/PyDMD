@@ -191,7 +191,7 @@ class DMDc(DMDBase):
 
     @property
     def svd_rank_omega(self):
-        return self._Atilde._svd_rank_omega
+        return self.operator._svd_rank_omega
 
     @property
     def B(self):
@@ -274,11 +274,11 @@ class DMDc(DMDBase):
 
         if B is None:
             self._Atilde = DMDBUnknownOperator(**self._dmd_operator_kwargs)
-            self._basis, self._B = self._Atilde.compute_operator(X, Y,
+            self._basis, self._B = self.operator.compute_operator(X, Y,
                 self._controlin)
         else:
             self._Atilde = DMDBKnownOperator(**self._dmd_operator_kwargs)
-            U, _, _ = self._Atilde.compute_operator(X, Y, B, self._controlin)
+            U, _, _ = self.operator.compute_operator(X, Y, B, self._controlin)
 
             self._basis = U
             self._B = B

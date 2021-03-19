@@ -176,7 +176,7 @@ class CDMD(DMDBase):
         Y = compressed_snapshots[:, 1:]
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        U, s, V = self._Atilde.compute_operator(X,Y, self._snapshots[:, 1:])
+        U, s, V = self.operator.compute_operator(X,Y, self._snapshots[:, 1:])
 
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}

@@ -199,7 +199,7 @@ class OptDMD(DMDBase):
             )
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        Uz, Q = self._Atilde.compute_operator(X,Y)
+        Uz, Q = self.operator.compute_operator(X,Y)
 
         if self.factorization == "svd":
             # --> DMD basis for the input space.
@@ -211,7 +211,7 @@ class OptDMD(DMDBase):
         elif self.factorization == "evd":
             # --> Compute DMD eigenvalues and right/left eigenvectors
             self._input_space = self.eigs
-            self._output_space = self._Atilde.right_eigenvectors
+            self._output_space = self.operator.right_eigenvectors
 
         return self
 

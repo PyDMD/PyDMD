@@ -56,7 +56,7 @@ class DMD(DMDBase):
         Y = self._snapshots[:, 1:]
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        self._svd_modes, _, _ = self._Atilde.compute_operator(X,Y)
+        self._svd_modes, _, _ = self.operator.compute_operator(X,Y)
 
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}

@@ -342,7 +342,8 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         indexes = self.time_window_bins(t0, tend)
-        return np.concatenate([self._Atilde.eigenvalues[idx] for idx in indexes])
+        return np.concatenate([self.operator.eigenvalues[idx]
+            for idx in indexes])
 
     def time_window_frequency(self, t0, tend):
         """
@@ -412,7 +413,7 @@ class MrDMD(DMDBase):
         :return: the matrix containing the DMD modes.
         :rtype: numpy.ndarray
         """
-        return np.hstack(tuple(self._Atilde.modes))
+        return np.hstack(tuple(self.operator.modes))
 
     @property
     def dynamics(self):
@@ -434,19 +435,19 @@ class MrDMD(DMDBase):
         :return: the eigenvalues from the eigendecomposition of `atilde`.
         :rtype: numpy.ndarray
         """
-        return np.concatenate(self._Atilde.eigenvalues)
+        return np.concatenate(self.operator.eigenvalues)
 
     @property
     def _steps(self):
-        return self._Atilde._steps
+        return self.operator._steps
 
     @property
     def _nsamples(self):
-        return self._Atilde._nsamples
+        return self.operator._nsamples
 
     @property
     def _b(self):
-        return self._Atilde._b
+        return self.operator._b
 
     @property
     def max_level(self):
@@ -454,7 +455,7 @@ class MrDMD(DMDBase):
 
     @property
     def max_cycles(self):
-        return self._Atilde._max_cycles
+        return self.operator._max_cycles
 
     def partial_modes(self, level, node=None):
         """
@@ -469,10 +470,10 @@ class MrDMD(DMDBase):
             the given level. Default is None.
         """
         if node:
-            return self._Atilde.modes[self._index_list(level, node)]
+            return self.operator.modes[self._index_list(level, node)]
 
         indeces = [self._index_list(level, i) for i in range(2**level)]
-        return np.hstack(tuple([self._Atilde.modes[idx] for idx in indeces]))
+        return np.hstack(tuple([self.operator.modes[idx] for idx in indeces]))
 
     def partial_dynamics(self, level, node=None):
         """
@@ -501,7 +502,7 @@ class MrDMD(DMDBase):
             indeces = [self._index_list(level, i) for i in range(2**level)]
 
         level_dynamics = [
-            dynamic(self._Atilde.eigenvalues[idx], self._b[idx], self._steps[idx],
+            dynamic(self.operator.eigenvalues[idx], self._b[idx], self._steps[idx],
                     self._nsamples[idx]) for idx in indeces
         ]
         return scipy.linalg.block_diag(*level_dynamics)
@@ -524,10 +525,10 @@ class MrDMD(DMDBase):
                 'max_level ({}). Remember that the starting index is 0'.format(
                     level, self._max_level))
         if node:
-            return self._Atilde.eigenvalues[self._index_list(level, node)]
+            return self.operator.eigenvalues[self._index_list(level, node)]
 
         indeces = [self._index_list(level, i) for i in range(2**level)]
-        return np.concatenate([self._Atilde.eigenvalues[idx] for idx in indeces])
+        return np.concatenate([self.operator.eigenvalues[idx] for idx in indeces])
 
     def partial_reconstructed_data(self, level, node=None):
         """
@@ -568,7 +569,7 @@ class MrDMD(DMDBase):
             print('Too many levels... '
                   'Redefining `max_level` to {}'.format(self._max_level))
 
-        self._Atilde.compute_operator(self._snapshots)
+        self.operator.compute_operator(self._snapshots)
 
         self.dmd_time = {'t0': 0, 'tend': self._snapshots.shape[1], 'dt': 1}
         self.original_time = self.dmd_time.copy()
@@ -594,7 +595,7 @@ class MrDMD(DMDBase):
         :param int level: plot only the eigenvalues of specific level.
         :param int node: plot only the eigenvalues of specific node.
         """
-        if self._Atilde.eigenvalues is None:
+        if self.operator.eigenvalues is None:
             raise ValueError('The eigenvalues have not been computed.'
                              'You have to perform the fit method.')
 
@@ -615,7 +616,7 @@ class MrDMD(DMDBase):
             points = []
             for lvl in range(self._max_level):
                 indeces = [self._index_list(lvl, i) for i in range(2 ** lvl)]
-                eigs = np.concatenate([self._Atilde.eigenvalues[idx] for idx in indeces])
+                eigs = np.concatenate([self.operator.eigenvalues[idx] for idx in indeces])
 
                 points.append(
                     ax.plot(eigs.real, eigs.imag, '.', color=colors[lvl])[0])

@@ -73,7 +73,7 @@ class HODMD(DMDBase):
         Y = snaps[:, 1:]
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        U, s, V = self._Atilde.compute_operator(X,Y)
+        U, s, V = self.operator.compute_operator(X,Y)
 
         # Default timesteps
         self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}

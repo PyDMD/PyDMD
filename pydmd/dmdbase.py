@@ -82,19 +82,19 @@ class DMDBase(object):
 
     @property
     def svd_rank(self):
-        return self._Atilde._svd_rank
+        return self.operator._svd_rank
 
     @property
     def rescale_mode(self):
-        return self._Atilde._rescale_mode
+        return self.operator._rescale_mode
 
     @property
     def exact(self):
-        return self._Atilde._exact
+        return self.operator._exact
 
     @property
     def forward_backward(self):
-        return self._Atilde._forward_backward
+        return self.operator._forward_backward
 
     @property
     def dmd_timesteps(self):
@@ -128,7 +128,7 @@ class DMDBase(object):
         :return: the matrix containing the DMD modes.
         :rtype: numpy.ndarray
         """
-        return self._Atilde.modes
+        return self.operator.modes
 
     @property
     def atilde(self):
@@ -138,7 +138,17 @@ class DMDBase(object):
         :return: the reduced Koopman operator A.
         :rtype: numpy.ndarray
         """
-        return self._Atilde.as_numpy_array
+        return self.operator.as_numpy_array
+
+    @property
+    def operator(self):
+        """
+        Get the instance of DMDOperator.
+
+        :return: the instance of DMDOperator
+        :rtype: DMDOperator
+        """
+        return self._Atilde
 
     @property
     def eigs(self):
@@ -148,7 +158,7 @@ class DMDBase(object):
         :return: the eigenvalues from the eigendecomposition of `atilde`.
         :rtype: numpy.ndarray
         """
-        return self._Atilde.eigenvalues
+        return self.operator.eigenvalues
 
     @property
     def dynamics(self):
