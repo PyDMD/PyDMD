@@ -64,8 +64,6 @@ class DMDOperator(object):
         self._compute_eigenquantities()
         self._compute_modes(Y, U, s, V)
 
-        self._svd_modes = U
-
         return U, s, V
 
     @property
@@ -111,7 +109,10 @@ class DMDOperator(object):
 
     @property
     def as_numpy_array(self):
-        return self._Atilde
+        if not hasattr(self, '_Atilde') or self._Atilde is None:
+            raise ValueError('You need to call fit before')
+        else:
+            return self._Atilde
 
     def _compute_svd(self, X, svd_rank=None):
         """
@@ -180,7 +181,7 @@ class DMDOperator(object):
         :return: the lowrank operator
         :rtype: numpy.ndarray
         """
-        return U.T.conj().dot(Y).dot(V) * np.reciprocal(s)
+        return np.linalg.multi_dot([U.T.conj(), Y, V]) * np.reciprocal(s)
 
     def _compute_eigenquantities(self):
         """
@@ -191,7 +192,7 @@ class DMDOperator(object):
         if self._rescale_mode is None:
             # scaling isn't required
             Ahat = self._Atilde
-        else:
+        elif isinstance(self._rescale_mode, np.ndarray):
             if len(self._rescale_mode) != self.as_numpy_array.shape[0]:
                 raise ValueError('''Scaling by an invalid number of
                         coefficients''')
@@ -199,8 +200,17 @@ class DMDOperator(object):
 
             factors_inv_sqrt = np.diag(np.power(scaling_factors_array, -0.5))
             factors_sqrt = np.diag(np.power(scaling_factors_array, 0.5))
+
+            # if an index is 0, we get inf when taking the reciprocal
+            for idx,item in enumerate(scaling_factors_array):
+                if item == 0:
+                    factors_inv_sqrt[idx] = 0
+
             Ahat = np.linalg.multi_dot([factors_inv_sqrt, self.as_numpy_array,
                 factors_sqrt])
+        else:
+            raise ValueError('Invalid value for rescale_mode: {} of type {}'
+                .format(self._rescale_mode, type(self._rescale_mode)))
 
         self._eigenvalues, self._eigenvectors = np.linalg.eig(Ahat)
 
