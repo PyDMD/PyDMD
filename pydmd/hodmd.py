@@ -37,12 +37,22 @@ class HODMD(DMDBase):
         False.
     :param int d: the new order for spatial dimension of the input snapshots.
         Default is 1.
+    :param int amplitudes_snapshot_index: The (temporal) index of the snapshot
+        used to compute DMD modes amplitudes. The reconstruction will generally
+        be better in time instants near the chosen snapshot; however increasing
+        this value may lead to wrong results when the system presents small
+        eigenvalues. For this reason a manual selection of the number of
+        eigenvalues in the system may be needed (check svd_rank). Also setting
+        svd_rank to a value between 0 and 1 can lead to better results. Default
+        value is 0.
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-        rescale_mode=None, forward_backward=False, d=1):
+        rescale_mode=None, forward_backward=False, d=1,
+        amplitudes_snapshot_index=0):
         super(HODMD, self).__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank,
-            exact=exact, opt=opt, rescale_mode=rescale_mode)
+            exact=exact, opt=opt, rescale_mode=rescale_mode,
+            amplitudes_snapshot_index=amplitudes_snapshot_index)
         self._d = d
 
     @property

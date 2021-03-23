@@ -40,6 +40,14 @@ class DMD(DMDBase):
     :param bool forward_backward: If True, the low-rank operator is computed
         like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
         False.
+    :param int amplitudes_snapshot_index: The (temporal) index of the snapshot
+        used to compute DMD modes amplitudes. The reconstruction will generally
+        be better in time instants near the chosen snapshot; however increasing
+        this value may lead to wrong results when the system presents small
+        eigenvalues. For this reason a manual selection of the number of
+        eigenvalues in the system may be needed (check svd_rank). Also setting
+        svd_rank to a value between 0 and 1 can lead to better results. Default
+        value is 0.
     """
 
     def fit(self, X):

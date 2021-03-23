@@ -371,4 +371,15 @@ class TestDmd(TestCase):
 
         np.testing.assert_almost_equal(dmd
             .fit(sample_data)
-            .predict(sample_data[:,10:30]), expected, decimal=6)
+            .predict(sample_data[:, 10:30]), expected, decimal=6)
+
+
+    def test_advanced_snapshot_parameter(self):
+        dmd = DMD(svd_rank=0.99)
+        dmd.fit(sample_data)
+
+        dmd2 = DMD(svd_rank=0.99, amplitudes_snapshot_index=-1)
+        dmd2.fit(sample_data)
+
+        np.testing.assert_almost_equal(dmd2.reconstructed_data.real,
+            dmd.reconstructed_data.real, decimal=6)

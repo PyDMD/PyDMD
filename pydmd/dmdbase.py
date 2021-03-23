@@ -41,6 +41,14 @@ class DMDBase(object):
     :param bool forward_backward: If True, the low-rank operator is computed
         like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
         False.
+    :param int amplitudes_snapshot_index: The (temporal) index of the snapshot
+        used to compute DMD modes amplitudes. The reconstruction will generally
+        be better in time instants near the chosen snapshot; however increasing
+        this value may lead to wrong results when the system presents small
+        eigenvalues. For this reason a manual selection of the number of
+        eigenvalues in the system may be needed (check svd_rank). Also setting
+        svd_rank to a value between 0 and 1 can lead to better results. Default
+        value is 0.
 
     :cvar dict original_time: dictionary that contains information about the
         time window where the system is sampled:
@@ -59,7 +67,8 @@ class DMDBase(object):
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-        rescale_mode=None, forward_backward=False):
+        rescale_mode=None, forward_backward=False,
+        amplitudes_snapshot_index=0):
         self._Atilde = DMDOperator(svd_rank=svd_rank, exact=exact,
             rescale_mode=rescale_mode, forward_backward=forward_backward)
 
@@ -67,6 +76,7 @@ class DMDBase(object):
         self.original_time = None
         self.dmd_time = None
         self._opt = opt
+        self._amplitudes_snapshot_index = amplitudes_snapshot_index
 
         self._b = None  # amplitudes
         self._snapshots = None
@@ -160,6 +170,22 @@ class DMDBase(object):
         """
         return self.operator.eigenvalues
 
+    def _translate_eigs_exponent(self, tpow):
+        """
+        Get the eigenvalues of A tilde.
+
+        :param tpow: the exponent(s) of Sigma in the original DMD formula.
+        :type tpow: int or np.ndarray
+        :return: the eigenvalues from the eigendecomposition of `atilde`.
+        :rtype: numpy.ndarray
+        """
+
+        if self._amplitudes_snapshot_index < 0:
+            # we take care of negative indexes: -n becomes T - n
+            return tpow - (self.snapshots.shape[1] + self._amplitudes_snapshot_index)
+        else:
+            return tpow - self._amplitudes_snapshot_index
+
     @property
     def dynamics(self):
         """
@@ -180,7 +206,14 @@ class DMDBase(object):
         tpow = old_div(self.dmd_timesteps - self.original_time['t0'],
                        self.original_time['dt'])
 
-        return np.power(temp, tpow) * self._b[:, None]
+        # The new formula is x_(k+j) = \Phi \Lambda^k \Phi^(-1) x_j.
+        # Since j is fixed, for a given snapshot "u" we have the following
+        # formula:
+        # x_u = \Phi \Lambda^{u-j} \Phi^(-1) x_j
+        # Therefore tpow must be scaled appropriately.
+        tpow = self._translate_eigs_exponent(tpow)
+
+        return (np.power(temp, tpow) * self._b[:, None])
 
     @property
     def reconstructed_data(self):
@@ -308,7 +341,9 @@ class DMDBase(object):
             # b optimal
             a = np.linalg.solve(P, q)
         else:
-            a = np.linalg.lstsq(self.modes, self._snapshots.T[0], rcond=None)[0]
+            a = np.linalg.lstsq(self.modes,
+                self._snapshots.T[self._amplitudes_snapshot_index],
+                rcond=None)[0]
 
         return a
 
