@@ -161,25 +161,17 @@ class DMDc(DMDBase):
     :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means no truncation.
-    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
+    :param opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
+    :type opt: bool or int
     :param svd_rank_omega: the rank for the truncation of the aumented matrix
         omega composed by the left snapshots matrix and the control. Used only
         for the `_fit_B_unknown` method of this class. It should be greater or
         equal than `svd_rank`. For the possible values please refer to the
         `svd_rank` parameter description above.
     :type svd_rank_omega: int or float
-    :param int amplitudes_snapshot_index: The (temporal) index of the snapshot
-        used to compute DMD modes amplitudes. The reconstruction will generally
-        be better in time instants near the chosen snapshot; however increasing
-        this value may lead to wrong results when the system presents small
-        eigenvalues. For this reason a manual selection of the number of
-        eigenvalues in the system may be needed (check svd_rank). Also setting
-        svd_rank to a value between 0 and 1 can lead to better results. Default
-        value is 0.
     """
-    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1,
-        amplitudes_snapshot_index=0):
+    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1):
 
         # we're going to initialize Atilde when we know if B is known
         self._Atilde = None
@@ -191,7 +183,6 @@ class DMDc(DMDBase):
         }
 
         self._opt = opt
-        self._amplitudes_snapshot_index = amplitudes_snapshot_index
 
         self._B = None
         self._snapshots_shape = None

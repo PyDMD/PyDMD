@@ -63,29 +63,25 @@ class TestDmdBase(TestCase):
         with self.assertRaises(ValueError):
             dmd.plot_snapshots_2D()
 
-    def test_advanced_snapshot_parameter(self):
-        dmd = DMDBase()
-        assert dmd._amplitudes_snapshot_index == 0
-
     def test_advanced_snapshot_parameter2(self):
-        dmd = DMDBase(amplitudes_snapshot_index=5)
-        assert dmd._amplitudes_snapshot_index == 5
+        dmd = DMDBase(opt=5)
+        assert dmd.opt == 5
 
     def test_translate_tpow_positive(self):
-        dmd = DMDBase(amplitudes_snapshot_index=4)
+        dmd = DMDBase(opt=4)
 
         assert dmd._translate_eigs_exponent(10) == 6
         assert dmd._translate_eigs_exponent(0) == -4
 
     def test_translate_tpow_negative(self):
-        dmd = DMDBase(amplitudes_snapshot_index=-1)
+        dmd = DMDBase(opt=-1)
         dmd._snapshots = sample_data
 
         assert dmd._translate_eigs_exponent(10) == 10 - (sample_data.shape[1] - 1)
         assert dmd._translate_eigs_exponent(0) == 1 - sample_data.shape[1]
 
     def test_translate_tpow_vector(self):
-        dmd = DMDBase(amplitudes_snapshot_index=-1)
+        dmd = DMDBase(opt=-1)
         dmd._snapshots = sample_data
 
         tpow = np.ndarray([0,1,2,3,5,6,7,11])

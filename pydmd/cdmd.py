@@ -107,8 +107,9 @@ class CDMD(DMDBase):
         is '`uniform`'.
     :type compression_matrix: {'linear', 'sparse', 'uniform', 'sample'} or
         numpy.ndarray
-    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
+    :param opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
         Default is False.
+    :type opt: bool or int.
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
             eigendecomposition. None means no rescaling, 'auto' means automatic
@@ -117,21 +118,11 @@ class CDMD(DMDBase):
     :param bool forward_backward: If True, the low-rank operator is computed
         like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
         False.
-    :param int amplitudes_snapshot_index: The (temporal) index of the snapshot
-        used to compute DMD modes amplitudes. The reconstruction will generally
-        be better in time instants near the chosen snapshot; however increasing
-        this value may lead to wrong results when the system presents small
-        eigenvalues. For this reason a manual selection of the number of
-        eigenvalues in the system may be needed (check svd_rank). Also setting
-        svd_rank to a value between 0 and 1 can lead to better results. Default
-        value is 0.
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform',
-        opt=False, rescale_mode=None, forward_backward=False,
-        amplitudes_snapshot_index=0):
+        opt=False, rescale_mode=None, forward_backward=False):
 
-        self._amplitudes_snapshot_index = amplitudes_snapshot_index
         self._tlsq_rank = tlsq_rank
         self._opt = opt
         self._compression_matrix = compression_matrix

@@ -378,7 +378,7 @@ class TestDmd(TestCase):
         dmd = DMD(svd_rank=0.99)
         dmd.fit(sample_data)
 
-        dmd2 = DMD(svd_rank=0.99, amplitudes_snapshot_index=-1)
+        dmd2 = DMD(svd_rank=0.99, opt=-1)
         dmd2.fit(sample_data)
 
         np.testing.assert_almost_equal(dmd2.reconstructed_data.real,

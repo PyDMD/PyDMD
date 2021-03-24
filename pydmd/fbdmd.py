@@ -22,26 +22,19 @@ class FbDMD(DMD):
         is 0, that means no truncation.
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
-    :param bool opt: flag to compute optimized DMD. Default is False.
+    :param opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
+        Default is False.
+    :type opt: bool or int
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
             eigendecomposition. None means no rescaling, 'auto' means automatic
             rescaling using singular values, otherwise the scaling factors.
     :type rescale_mode: {'auto'} or None or numpy.ndarray
-    :param int amplitudes_snapshot_index: The (temporal) index of the snapshot
-        used to compute DMD modes amplitudes. The reconstruction will generally
-        be better in time instants near the chosen snapshot; however increasing
-        this value may lead to wrong results when the system presents small
-        eigenvalues. For this reason a manual selection of the number of
-        eigenvalues in the system may be needed (check svd_rank). Also setting
-        svd_rank to a value between 0 and 1 can lead to better results. Default
-        value is 0.
 
     Reference: Dawson et al. https://arxiv.org/abs/1507.02264
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-        rescale_mode=None, amplitudes_snapshot_index=0):
+        rescale_mode=None):
         super().__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank, exact=exact,
-            opt=opt, rescale_mode=rescale_mode, forward_backward=True,
-            amplitudes_snapshot_index=amplitudes_snapshot_index)
+            opt=opt, rescale_mode=rescale_mode, forward_backward=True)
