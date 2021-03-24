@@ -107,8 +107,9 @@ class CDMD(DMDBase):
         is '`uniform`'.
     :type compression_matrix: {'linear', 'sparse', 'uniform', 'sample'} or
         numpy.ndarray
-    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
-        Default is False.
+    :param opt: argument to control the computation of DMD modes amplitudes. See
+        :class:`DMDBase`. Default is False.
+    :type opt: bool or int
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
             eigendecomposition. None means no rescaling, 'auto' means automatic
@@ -121,6 +122,7 @@ class CDMD(DMDBase):
 
     def __init__(self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform',
         opt=False, rescale_mode=None, forward_backward=False):
+
         self._tlsq_rank = tlsq_rank
         self._opt = opt
         self._compression_matrix = compression_matrix

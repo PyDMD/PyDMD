@@ -161,8 +161,9 @@ class DMDc(DMDBase):
     :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means no truncation.
-    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
-        Default is False.
+    :param opt: argument to control the computation of DMD modes amplitudes. See
+        :class:`DMDBase`. Default is False.
+    :type opt: bool or int
     :param svd_rank_omega: the rank for the truncation of the aumented matrix
         omega composed by the left snapshots matrix and the control. Used only
         for the `_fit_B_unknown` method of this class. It should be greater or

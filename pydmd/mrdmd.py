@@ -129,8 +129,9 @@ class MrDMDOperator(DMDOperator):
     :param int max_cycles: the maximum number of mode oscillations in any given
         time scale. Default is 1.
     :param int max_level: the maximum number of levels. Defualt is 6.
-    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
-        Default is False.
+    :param bool opt: flag to compute optimal amplitudes. Default is False.
+        Doesn't support changing the temporal index of the snapshot used for the
+        computation of DMD modes amplitudes.
     """
 
     def __init__(self, svd_rank, tlsq_rank, max_cycles, max_level, opt):
@@ -230,8 +231,9 @@ class MrDMD(DMDBase):
     :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means TLSQ is not applied.
-    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
-        Default is False.
+    :param bool opt: flag to compute optimal amplitudes. Default is False.
+        Doesn't support changing the temporal index of the snapshot used for the
+        computation of DMD modes amplitudes.
     :param int max_cycles: the maximum number of mode oscillations in any given
         time scale. Default is 1.
     :param int max_level: the maximum number of levels. Defualt is 6.

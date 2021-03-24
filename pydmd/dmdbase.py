@@ -32,7 +32,18 @@ class DMDBase(object):
         is 0, that means no truncation.
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
-    :param bool opt: flag to compute optimized DMD. Default is False.
+    :param opt: If True, amplitudes are computed like in optimized DMD  (see
+        :func:`~dmdbase.DMDBase._compute_amplitudes` for reference). If
+        False, amplitudes are computed following the standard algorithm. If
+        `opt` is an integer, it is used as the (temporal) index of the snapshot
+        used to compute DMD modes amplitudes (following the standard algorithm).
+        The reconstruction will generally be better in time instants near the
+        chosen snapshot; however increasing `opt` may lead to wrong results when
+        the system presents small eigenvalues. For this reason a manual
+        selection of the number of eigenvalues considered for the analyisis may
+        be needed (check `svd_rank`). Also setting `svd_rank` to a value between
+        0 and 1 may give better results. Default is False.
+    :type opt: bool or int
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
             eigendecomposition. None means no rescaling, 'auto' means automatic
@@ -160,6 +171,27 @@ class DMDBase(object):
         """
         return self.operator.eigenvalues
 
+    def _translate_eigs_exponent(self, tpow):
+        """
+        Get the eigenvalues of A tilde.
+
+        :param tpow: the exponent(s) of Sigma in the original DMD formula.
+        :type tpow: int or np.ndarray
+        :return: the eigenvalues from the eigendecomposition of `atilde`.
+        :rtype: numpy.ndarray
+        """
+
+        if isinstance(self.opt, bool):
+            amplitudes_snapshot_index = 0
+        else:
+            amplitudes_snapshot_index = self.opt
+
+        if amplitudes_snapshot_index < 0:
+            # we take care of negative indexes: -n becomes T - n
+            return tpow - (self.snapshots.shape[1] + amplitudes_snapshot_index)
+        else:
+            return tpow - amplitudes_snapshot_index
+
     @property
     def dynamics(self):
         """
@@ -180,7 +212,14 @@ class DMDBase(object):
         tpow = old_div(self.dmd_timesteps - self.original_time['t0'],
                        self.original_time['dt'])
 
-        return np.power(temp, tpow) * self._b[:, None]
+        # The new formula is x_(k+j) = \Phi \Lambda^k \Phi^(-1) x_j.
+        # Since j is fixed, for a given snapshot "u" we have the following
+        # formula:
+        # x_u = \Phi \Lambda^{u-j} \Phi^(-1) x_j
+        # Therefore tpow must be scaled appropriately.
+        tpow = self._translate_eigs_exponent(tpow)
+
+        return (np.power(temp, tpow) * self._b[:, None])
 
     @property
     def reconstructed_data(self):
@@ -289,7 +328,7 @@ class DMDBase(object):
         Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
         https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document
         """
-        if self.opt:
+        if isinstance(self.opt, bool) and self.opt:
             # compute the vandermonde matrix
             omega = old_div(np.log(self.eigs), self.original_time['dt'])
             vander = np.exp(
@@ -308,7 +347,14 @@ class DMDBase(object):
             # b optimal
             a = np.linalg.solve(P, q)
         else:
-            a = np.linalg.lstsq(self.modes, self._snapshots.T[0], rcond=None)[0]
+            if isinstance(self.opt, bool):
+                amplitudes_snapshot_index = 0
+            else:
+                amplitudes_snapshot_index = self.opt
+
+            a = np.linalg.lstsq(self.modes,
+                self._snapshots.T[amplitudes_snapshot_index],
+                rcond=None)[0]
 
         return a
 

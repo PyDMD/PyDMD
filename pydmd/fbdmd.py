@@ -22,7 +22,9 @@ class FbDMD(DMD):
         is 0, that means no truncation.
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
-    :param bool opt: flag to compute optimized DMD. Default is False.
+    :param opt: argument to control the computation of DMD modes amplitudes. See
+        :class:`DMDBase`. Default is False.
+    :type opt: bool or int
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
             eigendecomposition. None means no rescaling, 'auto' means automatic
