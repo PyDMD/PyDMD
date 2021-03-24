@@ -149,8 +149,9 @@ class OptDMD(DMDBase):
     :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means TLSQ is not applied.
-    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
-        Default is False.
+    :param opt: argument to control the computation of DMD modes amplitudes. See
+        :class:`DMDBase`. Default is False.
+    :type opt: bool or int
     """
 
     def __init__(self, factorization="evd", svd_rank=0, tlsq_rank=0, opt=False):

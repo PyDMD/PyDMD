@@ -32,8 +32,7 @@ class DMDBase(object):
         is 0, that means no truncation.
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
-    :param opt: flag to control the computation of DMD amplitudes. If True,
-        amplitudes are computed like in optimized DMD  (see
+    :param opt: If True, amplitudes are computed like in optimized DMD  (see
         :func:`~dmdbase.DMDBase._compute_amplitudes` for reference). If
         False, amplitudes are computed following the standard algorithm. If
         `opt` is an integer, it is used as the (temporal) index of the snapshot
