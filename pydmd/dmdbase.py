@@ -173,12 +173,14 @@ class DMDBase(object):
 
     def _translate_eigs_exponent(self, tpow):
         """
-        Get the eigenvalues of A tilde.
+        Transforms the exponent of the eigenvalues in the dynamics formula
+        according to the selected value of `self.opt` (check the documentation
+        for `opt` in :func:`__init__ <dmdbase.DMDBase.__init__>`).
 
         :param tpow: the exponent(s) of Sigma in the original DMD formula.
         :type tpow: int or np.ndarray
-        :return: the eigenvalues from the eigendecomposition of `atilde`.
-        :rtype: numpy.ndarray
+        :return: the exponent(s) adjusted according to `self.opt`
+        :rtype: int or np.ndarray
         """
 
         if isinstance(self.opt, bool):
