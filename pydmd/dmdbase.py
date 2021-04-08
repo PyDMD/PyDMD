@@ -252,6 +252,17 @@ class DMDBase(object):
         return np.log(self.eigs).imag / (2 * np.pi * self.original_time['dt'])
 
     @property
+    def time_window_growth_rate(self, t0, tend): #TODO check
+        """
+        Get the growth rate values relative to the modes.
+
+        :return: the Floquet values
+        :rtype: numpy.ndarray
+        """
+        return self.eigs.real / self.original_time['dt']
+
+
+    @property
     def amplitudes(self):
         """
         Get the coefficients that minimize the error between the original

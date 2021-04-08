@@ -2,6 +2,7 @@ from __future__ import division
 from past.utils import old_div
 from unittest import TestCase
 from pydmd.mrdmd import MrDMD
+from pydmd import DMD
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -39,100 +40,71 @@ sample_data = create_data()
 class TestMrDmd(TestCase):
     def test_max_level_threshold(self):
         level = 10
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        dmd.fit(X=sample_data)
+        dmd = DMD()
+        mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
+        mrdmd.fit(X=sample_data)
         lvl_threshold = int(np.log(sample_data.shape[1]/4.)/np.log(2.)) + 1
-        assert lvl_threshold == dmd._max_level
-
-    def test_max_level_threshold2(self):
-        level = 10
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        dmd.fit(X=sample_data)
-        assert dmd._steps[-1] == 1
-
-    def test_index_list(self):
-        level = 5
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        assert dmd._index_list(3, 0) == 7
-
-    def test_index_list2(self):
-        level = 5
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        with self.assertRaises(ValueError):
-            dmd._index_list(3, 10)
-
-    def test_index_list_reversed(self):
-        level = 3
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        assert dmd._index_list_reversed(6) == (2, 3)
-
-    def test_index_list_reversed2(self):
-        level = 3
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        with self.assertRaises(ValueError):
-            dmd._index_list_reversed(7)
+        assert lvl_threshold == mrdmd.max_level
 
     def test_partial_time_interval(self):
         level = 4
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        dmd.original_time = {'t0': 0, 'tend': 8, 'dt': 1}
-        ans = {'t0': 6.0, 'tend': 7.0, 'dt': 1.0}
-        assert dmd.partial_time_interval(3, 6) == ans
+        dmd = DMD()
+        mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
+        mrdmd.fit(X=sample_data)
+        ans = {'t0': 1200, 'tend': 1400.0, 'delta': 200.0}
+        assert mrdmd.partial_time_interval(3, 6) == ans
 
     def test_partial_time_interval2(self):
         level = 4
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        dmd.original_time = {'t0': 0, 'tend': 8, 'dt': 1}
+        dmd = DMD()
+        mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
         with self.assertRaises(ValueError):
-            dmd.partial_time_interval(4, 0)
+            mrdmd.partial_time_interval(5, 0)
 
     def test_partial_time_interval3(self):
         level = 4
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        dmd.original_time = {'t0': 0, 'tend': 8, 'dt': 1}
+        dmd = DMD()
+        mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
         with self.assertRaises(ValueError):
-            dmd.partial_time_interval(3, 8)
+            mrdmd.partial_time_interval(3, 8)
 
     def test_time_window_bins(self):
         level = 4
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        dmd.original_time = {'t0': 0, 'tend': 9, 'dt': 1}
-        comparison = dmd.time_window_bins(0, 9) == np.arange(2**level-1)
-        assert comparison.all()
+        dmd = DMD()
+        mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
+        mrdmd.fit(X=sample_data)
+        assert len(mrdmd.time_window_bins(0, 1600)) == 2**5-1 
 
     def test_time_window_bins2(self):
         level = 3
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        dmd.original_time = {'t0': 0, 'tend': 4, 'dt': 1}
-        comparison = dmd.time_window_bins(1, 2) == np.array([0, 1, 4])
-        assert comparison.all()
+        dmd = DMD()
+        mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
+        mrdmd.fit(X=sample_data)
+        expected_bins = np.array([
+            [0, 0],
+            [1, 0],
+            [2, 0],
+            [2, 1],
+            [3, 1],
+            [3, 2]])
+        np.testing.assert_array_equal(mrdmd.time_window_bins(200, 600), expected_bins)
 
-    def test_time_window_bins3(self):
-        level = 3
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        dmd.original_time = {'t0': 0, 'tend': 4, 'dt': 1}
-        comparison = dmd.time_window_bins(0, 3) == np.arange(6)
-        assert comparison.all()
-
-    def test_time_window_bins4(self):
-        level = 3
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        dmd.original_time = {'t0': 0, 'tend': 4, 'dt': 1}
-        comparison = dmd.time_window_bins(1, 3) == np.array([0, 1, 2, 4, 5])
-        assert comparison.all()
 
     def test_time_window_eigs(self):
-        level = 3
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        dmd.fit(X=sample_data)
-        assert len(dmd.time_window_eigs(0, dmd._snapshots.shape[1])) == 7
+        level = 2
+        dmd = DMD()
+        mrdmd = MrDMD(dmd, max_level=level, max_cycles=1)
+        mrdmd.fit(X=sample_data)
+        assert len(mrdmd.time_window_eigs(0, 1600)) == 15
 
     def test_time_window_frequency(self):
-        level = 3
-        dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
-        dmd.fit(X=sample_data)
-        assert len(dmd.time_window_frequency(0, dmd._snapshots.shape[1])) == 7
+        level = 2
+        dmd = DMD()
+        mrdmd = MrDMD(dmd, max_level=level, max_cycles=1)
+        mrdmd.fit(X=sample_data)
+        assert len(mrdmd.time_window_frequency(0, 1600)) == 15
 
+    """
     def test_time_window_growth_rate(self):
         level = 3
         dmd = MrDMD(svd_rank=1, max_level=level, max_cycles=2)
@@ -301,3 +273,4 @@ class TestMrDmd(TestCase):
         dmd.fit(X=sample_data)
         dmd.plot_eigs(show_axes=False, show_unit_circle=False, level=1, node=0)
         plt.close()
+    """
