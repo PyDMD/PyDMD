@@ -26,11 +26,15 @@ class BinaryTree(object):
 
     def __getitem__(self, val):
         level_, bin_ = val
-        if level_ >= len(self):
+        if level_ > self.depth:
             raise ValueError(
-                'The level input parameter ({}) has to be less than the '
+                'The level input parameter ({}) has to be less or equal than the '
                 'max_level ({}). Remember that the starting index is 0'.format(
-                    level, self.max_level))
+                    level_, self.depth))
+
+        if bin_ >= 2**level_:
+            raise ValueError("Invalid node")
+
         return self.tree[2**level_ + bin_ - 1]
 
     def __setitem__(self, val, item):
@@ -80,10 +84,38 @@ class MrDMD(DMDBase):
             self.max_level = max_level
             self._build_tree()
 
+    def __iter__(self):
+        return self.dmd_tree.__iter__()
+
     @property
-    def n_bins(self):
-        """ """
-        return len(self.dmd_tree)
+    def original_time(self):
+        """
+        Returns the dictionary that contains information about the
+        time window where the system is sampled:
+
+           - `t0` is the time of the first input snapshot;
+           - `tend` is the time of the last input snapshot;
+           - `dt` is the delta time between the snapshots.
+
+        :return: the original time window information.
+        :rtype: dict
+        """
+        return self._original_time
+
+    @property
+    def dmd_time(self):
+        """
+        Returns the dictionary that contains information about the
+        time window where the system is reconstructed:
+
+           - `t0` is the time of the first input snapshot;
+           - `tend` is the time of the last input snapshot;
+           - `dt` is the delta time between the snapshots.
+
+        :return: the reconstruction time window information.
+        :rtype: dict
+        """
+        return self._dmd_time
 
     @property
     def modes(self):
@@ -93,7 +125,8 @@ class MrDMD(DMDBase):
         :return: the matrix containing the DMD modes.
         :rtype: numpy.ndarray
         """
-        return np.hstack(tuple(self._modes))
+        return np.hstack(
+            tuple([self.partial_modes(i) for i in range(self.max_level + 1)]))
 
     @property
     def dynamics(self):
@@ -105,7 +138,7 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         return np.vstack(
-            tuple([self.partial_dynamics(i) for i in range(self.max_level)]))
+            tuple([self.partial_dynamics(i) for i in range(self.max_level + 1)]))
 
     @property
     def eigs(self):
@@ -115,7 +148,7 @@ class MrDMD(DMDBase):
         :return: the eigenvalues from the eigendecomposition of `atilde`.
         :rtype: numpy.ndarray
         """
-        return np.concatenate(self._eigs)
+        return np.concatenate([dmd.eigs for dmd in self])
 
     @property
     def reconstructed_data(self):
@@ -207,7 +240,8 @@ class MrDMD(DMDBase):
         :return: the Floquet values for that time window.
         :rtype: numpy.ndarray
         """
-        return self.time_window_eigs(t0, tend).real/self.original_time['dt']
+        indexes = self.time_window_bins(t0, tend)
+        return np.concatenate([self.dmd_tree[idx].growth_rate for idx in indexes])
 
     def time_window_amplitudes(self, t0, tend):
         """
@@ -220,76 +254,7 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         indexes = self.time_window_bins(t0, tend)
-        return np.concatenate([self._b[idx] for idx in indexes])
-
-
-    # @property
-    # def original_time(self):
-        # """
-        # Returns the dictionary that contains information about the
-        # time window where the system is sampled:
-
-           # - `t0` is the time of the first input snapshot;
-           # - `tend` is the time of the last input snapshot;
-           # - `dt` is the delta time between the snapshots.
-
-        # :return: the original time window information.
-        # :rtype: dict
-        # """
-        # return self._original_time
-
-    # @original_time.setter
-    # def original_time(self, new_time):
-        # self._original_time = new_time
-
-        # # set recursively the time windows
-        # for level in self.dmd_tree.levels:
-            # for leaf in self.dmd_tree.index_leaves(level):
-        
-                # full_period = self.original_time['tend'] - self.original_time['t0']
-                # period = full_period / 2**level
-                # t0 = self.original_time['t0'] + period*leaf
-                # tend = t0 + period
-                # self.dmd_tree[level, leaf].dmd_time = TimeWindowDict(
-                        # t0 = t0, 
-                        # tend = tend - new_time['dt'], 
-                        # dt = new_time['dt'],
-                        # mutable=False)
-
-    # @property
-    # def dmd_time(self):
-        # """
-        # Returns the dictionary that contains information about the
-        # time window where the system is reconstructed:
-
-           # - `t0` is the time of the first input snapshot;
-           # - `tend` is the time of the last input snapshot;
-           # - `dt` is the delta time between the snapshots.
-
-        # :return: the reconstruction time window information.
-        # :rtype: dict
-        # """
-        # return self._dmd_time
-
-    # @dmd_time.setter
-    # def dmd_time(self, new_time):
-        # self._dmd_time = new_time
-        # print('@@@@@', new_time)
-
-        # # set recursively the time windows
-        # for level in self.dmd_tree.levels:
-            # for leaf in self.dmd_tree.index_leaves(level):
-
-                # full_period = self.dmd_time['tend'] - self.dmd_time['t0']
-                # period = full_period / 2**level
-                # t0 = self.dmd_time['t0'] + period*leaf
-                # tend = t0 + period
-                # self.dmd_tree[level, leaf].dmd_time = TimeWindowDict(
-                        # t0 = t0, 
-                        # tend = tend - new_time['dt'], 
-                        # dt = new_time['dt'],
-                        # mutable=False)
-                # print(level, leaf, self.dmd_tree[level, leaf].dmd_time)
+        return np.concatenate([self.dmd_tree[idx].amplitudes for idx in indexes])
 
 
     def partial_modes(self, level, node=None):
@@ -303,44 +268,47 @@ class MrDMD(DMDBase):
         :param int node: the index of the node from where the modes are
             extracted; if None, the modes are extracted from all the nodes of
             the given level. Default is None.
-        """
-        if node:
-            return self._modes[self._index_list(level, node)]
 
-        indeces = [self._index_list(level, i) for i in range(2**level)]
-        return np.hstack(tuple([self._modes[idx] for idx in indeces]))
+        :return: the selected modes stored by columns
+        :rtype: numpy.ndarray
+        """
+        leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
+
+        modes = np.hstack([
+            self.dmd_tree[level, leaf].modes
+            for leaf in leaves
+        ])
+
+        return modes
 
     def partial_dynamics(self, level, node=None):
         """
         Return the time evolution of the specific `level` and of the specific
         `node`; if `node` is not specified, the method returns the time
-        evolution of the given `level` (all the nodes).
+        evolution of the given `level` (all the nodes). The dynamics are always
+        reported to the original time window. 
 
         :param int level: the index of the level from where the time evolution
             is extracted.
         :param int node: the index of the node from where the time evolution is
             extracted; if None, the time evolution is extracted from all the
             nodes of the given level. Default is None.
+
+        :return: the selected dynamics stored by row
+        :rtype: numpy.ndarray
         """
+        leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
 
-        def dynamic(eigs, amplitudes, step, nsamples):
-            omega = old_div(
-                np.log(np.power(eigs, old_div(1., step))),
-                self.original_time['dt'])
-            partial_timestep = np.arange(nsamples) * self.dmd_time['dt']
-            vander = np.exp(np.multiply(*np.meshgrid(omega, partial_timestep)))
-            return (vander * amplitudes).T
+        dynamics = []
+        for i, leaf in enumerate(leaves):
+            d = self.dmd_tree[level, leaf].dynamics
+            base = np.zeros(shape=(d.shape[0], 1600), dtype=d.dtype) #TODO
+            time_interval = self.partial_time_interval(level, leaf)
+            base[:, int(time_interval['t0']):int(time_interval['tend'])] = d
+            dynamics.append(base)
 
-        if node:
-            indeces = [self._index_list(level, node)]
-        else:
-            indeces = [self._index_list(level, i) for i in range(2**level)]
-
-        level_dynamics = [
-            dynamic(self._eigs[idx], self._b[idx], self._steps[idx],
-                    self._nsamples[idx]) for idx in indeces
-        ]
-        return scipy.linalg.block_diag(*level_dynamics)
+        dynamics = np.vstack(dynamics)
+        return dynamics
 
     def partial_eigs(self, level, node=None):
         """
@@ -353,17 +321,12 @@ class MrDMD(DMDBase):
         :param int node: the index of the node from where the eigenvalues is
             extracted; if None, the time evolution is extracted from all the
             nodes of the given level. Default is None.
-        """
-        if level >= self.max_level:
-            raise ValueError(
-                'The level input parameter ({}) has to be less than the'
-                'max_level ({}). Remember that the starting index is 0'.format(
-                    level, self.max_level))
-        if node:
-            return self._eigs[self._index_list(level, node)]
 
-        indeces = [self._index_list(level, i) for i in range(2**level)]
-        return np.concatenate([self._eigs[idx] for idx in indeces])
+        :return: the selected eigs
+        :rtype: numpy.ndarray
+        """
+        leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
+        return np.concatenate([self.dmd_tree[level, leaf].eigs for leaf in leaves])
 
     def partial_reconstructed_data(self, level, node=None):
         """
@@ -377,12 +340,9 @@ class MrDMD(DMDBase):
             extracted; if None, the time evolution is extracted from all the
             nodes of the given level. Default is None.
 
+        :return: the selected reconstruction from dmd operators
+        :rtype: numpy.ndarray
         """
-        if level >= self.max_level:
-            raise ValueError(
-                'The level input parameter ({}) has to be less than the '
-                'max_level ({}). Remember that the starting index is 0'.format(
-                    level, self.max_level))
         modes = self.partial_modes(level, node)
         dynamics = self.partial_dynamics(level, node)
 
@@ -411,6 +371,22 @@ class MrDMD(DMDBase):
         t0 = self.original_time['t0'] + period*leaf
         tend = t0 + period
         return {'t0': t0, 'tend': tend, 'delta': period}
+
+    def enumerate(self):
+        """
+
+        Example:
+        
+        >>> mrdmd = MrDMD(DMD())
+        >>> mrdmd.fit(X)
+        >>> for level, leaf, dmd in mrdmd:
+        >>>     print(level, leaf, dmd.eigs)
+        
+        """
+        for level in self.dmd_tree.levels:
+            for leaf in self.dmd_tree.index_leaves(level):
+                yield level, leaf, self.dmd_tree[level, leaf]
+        
 
     def fit(self, X):
         """
@@ -453,8 +429,8 @@ class MrDMD(DMDBase):
             X -= newX
 
 
-        self.dmd_time = dict(t0 = 0, tend = self._snapshots.shape[1], dt= 1)
-        self.original_time = self.dmd_time.copy()
+        self._dmd_time = dict(t0 = 0, tend = self._snapshots.shape[1], dt= 1)
+        self._original_time = self.dmd_time.copy()
 
         return self
 
@@ -477,7 +453,7 @@ class MrDMD(DMDBase):
         :param int level: plot only the eigenvalues of specific level.
         :param int node: plot only the eigenvalues of specific node.
         """
-        if self._eigs is None:
+        if self.eigs is None:
             raise ValueError('The eigenvalues have not been computed.'
                              'You have to perform the fit method.')
 
@@ -493,15 +469,14 @@ class MrDMD(DMDBase):
 
         if not level:
             cmap = plt.get_cmap('viridis')
-            colors = [cmap(i) for i in np.linspace(0, 1, self.max_level)]
+            colors = [cmap(i) for i in np.linspace(0, 1, len(self.dmd_tree.levels))]
 
             points = []
-            for lvl in range(self.max_level):
-                indeces = [self._index_list(lvl, i) for i in range(2**lvl)]
-                eigs = np.concatenate([self._eigs[idx] for idx in indeces])
+            for level in self.dmd_tree.levels:
+                eigs = self.partial_eigs(level)
 
                 points.append(
-                    ax.plot(eigs.real, eigs.imag, '.', color=colors[lvl])[0])
+                    ax.plot(eigs.real, eigs.imag, '.', color=colors[level])[0])
         else:
             points = []
             points.append(

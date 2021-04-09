@@ -252,7 +252,7 @@ class DMDBase(object):
         return np.log(self.eigs).imag / (2 * np.pi * self.original_time['dt'])
 
     @property
-    def time_window_growth_rate(self, t0, tend): #TODO check
+    def growth_rate(self): # To check
         """
         Get the growth rate values relative to the modes.
 
