@@ -41,6 +41,10 @@ class DMD(DMDBase):
     :param bool forward_backward: If True, the low-rank operator is computed
         like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
         False.
+    :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by
+        magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
+        part to break ties) if `sorted_eigs='real'`. Default: False.
+    :type sorted_eigs: {'real', 'abs'} or False
     """
 
     def fit(self, X):

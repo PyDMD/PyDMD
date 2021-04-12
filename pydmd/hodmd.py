@@ -39,12 +39,17 @@ class HODMD(DMDBase):
         False.
     :param int d: the new order for spatial dimension of the input snapshots.
         Default is 1.
+    :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by
+        magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
+        part to break ties) if `sorted_eigs='real'`. Default: False.
+    :type sorted_eigs: {'real', 'abs'} or False
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-        rescale_mode=None, forward_backward=False, d=1):
+        rescale_mode=None, forward_backward=False, d=1, sorted_eigs=False):
         super(HODMD, self).__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank,
-            exact=exact, opt=opt, rescale_mode=rescale_mode)
+            exact=exact, opt=opt, rescale_mode=rescale_mode,
+            sorted_eigs=sorted_eigs)
         self._d = d
 
     @property

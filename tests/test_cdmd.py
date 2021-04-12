@@ -227,3 +227,11 @@ class TestCDmd(TestCase):
         dmd.fit(X=sample_data)
         error_norm = np.linalg.norm(dmd.reconstructed_data - sample_data, 1)
         assert error_norm < 1e-10
+
+    def test_sorted_eigs_default(self):
+        dmd = CDMD(compression_matrix='sparse')
+        assert dmd.operator._sorted_eigs == False
+
+    def test_sorted_eigs_param(self):
+        dmd = CDMD(compression_matrix='sparse', sorted_eigs='real')
+        assert dmd.operator._sorted_eigs == 'real'

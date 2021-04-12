@@ -87,3 +87,11 @@ class TestDmdBase(TestCase):
         tpow = np.ndarray([0,1,2,3,5,6,7,11])
         for idx,x in enumerate(dmd._translate_eigs_exponent(tpow)):
             assert x == dmd._translate_eigs_exponent(tpow[idx])
+
+    def test_sorted_eigs_default(self):
+        dmd = DMDBase()
+        assert dmd.operator._sorted_eigs == False
+
+    def test_sorted_eigs_param(self):
+        dmd = DMDBase(sorted_eigs='real')
+        assert dmd.operator._sorted_eigs == 'real'

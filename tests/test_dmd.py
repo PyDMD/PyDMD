@@ -383,3 +383,146 @@ class TestDmd(TestCase):
 
         np.testing.assert_almost_equal(dmd2.reconstructed_data.real,
             dmd.reconstructed_data.real, decimal=6)
+
+
+    def test_sorted_eigs_default(self):
+        dmd = DMD()
+        assert dmd.operator._sorted_eigs == False
+
+    def test_sorted_eigs_set_real(self):
+        dmd = DMD(sorted_eigs='real')
+        assert dmd.operator._sorted_eigs == 'real'
+
+    def test_sorted_eigs_abs_right_eigs(self):
+        dmd = DMD(svd_rank=20, sorted_eigs='abs')
+        dmd.fit(sample_data)
+
+        dmd2 = DMD(svd_rank=20)
+        dmd2.fit(sample_data)
+
+        assert len(dmd.eigs) == len(dmd2.eigs)
+        assert set(dmd.eigs) == set(dmd2.eigs)
+
+        previous = dmd.eigs[0]
+        for eig in dmd.eigs[1:]:
+            assert abs(previous) <= abs(eig)
+            previous = eig
+
+    def test_sorted_eigs_abs_right_eigenvectors(self):
+        dmd = DMD(svd_rank=20, sorted_eigs='abs')
+        dmd.fit(sample_data)
+
+        dmd2 = DMD(svd_rank=20)
+        dmd2.fit(sample_data)
+
+        for idx, eig in enumerate(dmd2.eigs):
+            eigenvector = dmd2.operator.eigenvectors.T[idx]
+            for idx_new, eig_new in enumerate(dmd.eigs):
+                if eig_new == eig:
+                    assert all(dmd.operator.eigenvectors.T[idx_new] == eigenvector)
+                    break
+
+    def test_sorted_eigs_abs_right_modes(self):
+        dmd = DMD(svd_rank=20, sorted_eigs='abs')
+        dmd.fit(sample_data)
+
+        dmd2 = DMD(svd_rank=20)
+        dmd2.fit(sample_data)
+
+        for idx, eig in enumerate(dmd2.eigs):
+            mode = dmd2.modes.T[idx]
+            for idx_new, eig_new in enumerate(dmd.eigs):
+                if eig_new == eig:
+                    np.testing.assert_almost_equal(dmd.modes.T[idx_new], mode,
+                        decimal=6)
+                    break
+
+    def test_sorted_eigs_real_right_eigs(self):
+        dmd = DMD(svd_rank=20, sorted_eigs='real')
+        dmd.fit(sample_data)
+
+        dmd2 = DMD(svd_rank=20)
+        dmd2.fit(sample_data)
+
+        assert len(dmd.eigs) == len(dmd2.eigs)
+        assert set(dmd.eigs) == set(dmd2.eigs)
+
+        previous = complex(dmd.eigs[0])
+        for eig in dmd.eigs[1:]:
+            x = complex(eig)
+            assert x.real > previous.real or (x.real == previous.real and x.imag >= previous.imag)
+            previous = x
+
+    def test_sorted_eigs_real_right_eigenvectors(self):
+        dmd = DMD(svd_rank=20, sorted_eigs='real')
+        dmd.fit(sample_data)
+
+        dmd2 = DMD(svd_rank=20)
+        dmd2.fit(sample_data)
+
+        for idx, eig in enumerate(dmd2.eigs):
+            eigenvector = dmd2.operator.eigenvectors.T[idx]
+            for idx_new, eig_new in enumerate(dmd.eigs):
+                if eig_new == eig:
+                    assert all(dmd.operator.eigenvectors.T[idx_new] == eigenvector)
+                    break
+
+    def test_sorted_eigs_real_right_modes(self):
+        dmd = DMD(svd_rank=20, sorted_eigs='real')
+        dmd.fit(sample_data)
+
+        dmd2 = DMD(svd_rank=20)
+        dmd2.fit(sample_data)
+
+        for idx, eig in enumerate(dmd2.eigs):
+            mode = dmd2.modes.T[idx]
+            for idx_new, eig_new in enumerate(dmd.eigs):
+                if eig_new == eig:
+                    np.testing.assert_almost_equal(dmd.modes.T[idx_new], mode,
+                        decimal=6)
+                    break
+
+    def test_sorted_eigs_dynamics(self):
+        dmd = DMD(svd_rank=20, sorted_eigs='abs')
+        dmd.fit(sample_data)
+
+        dmd2 = DMD(svd_rank=20)
+        dmd2.fit(sample_data)
+
+        for idx, eig in enumerate(dmd2.eigs):
+            dynamic = dmd2.dynamics[idx]
+            for idx_new, eig_new in enumerate(dmd.eigs):
+                if eig_new == eig:
+                    np.testing.assert_almost_equal(dmd.dynamics[idx_new],
+                        dynamic, decimal=6)
+                    break
+
+    def test_sorted_eigs_frequency(self):
+        dmd = DMD(svd_rank=20, sorted_eigs='abs')
+        dmd.fit(sample_data)
+
+        dmd2 = DMD(svd_rank=20)
+        dmd2.fit(sample_data)
+
+        for idx, eig in enumerate(dmd2.eigs):
+            frq = dmd2.frequency[idx]
+            for idx_new, eig_new in enumerate(dmd.eigs):
+                if eig_new == eig:
+                    np.testing.assert_almost_equal(dmd.frequency[idx_new],
+                        frq, decimal=6)
+                    break
+
+    def test_sorted_eigs_amplitudes(self):
+        dmd = DMD(svd_rank=20, sorted_eigs='abs')
+        dmd.fit(sample_data)
+
+        dmd2 = DMD(svd_rank=20)
+        dmd2.fit(sample_data)
+
+        for idx, eig in enumerate(dmd2.eigs):
+            amp = dmd2.amplitudes[idx]
+            for idx_new, eig_new in enumerate(dmd.eigs):
+                if eig_new == eig:
+                    np.testing.assert_almost_equal(dmd.amplitudes[idx_new],
+                        amp, decimal=6)
+                    break
