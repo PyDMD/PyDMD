@@ -258,3 +258,11 @@ class TestHODmd(TestCase):
         dmd.fit(X=sample_data)
         dmd.plot_eigs(show_axes=False, show_unit_circle=False)
         plt.close()
+
+    def test_sorted_eigs_default(self):
+        dmd = HODMD()
+        assert dmd.operator._sorted_eigs == False
+
+    def test_sorted_eigs_param(self):
+        dmd = HODMD(sorted_eigs='real')
+        assert dmd.operator._sorted_eigs == 'real'

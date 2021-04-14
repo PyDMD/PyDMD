@@ -30,11 +30,16 @@ class FbDMD(DMD):
             eigendecomposition. None means no rescaling, 'auto' means automatic
             rescaling using singular values, otherwise the scaling factors.
     :type rescale_mode: {'auto'} or None or numpy.ndarray
+    :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by
+        magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
+        part to break ties) if `sorted_eigs='real'`. Default: False.
+    :type sorted_eigs: {'real', 'abs'} or False
 
     Reference: Dawson et al. https://arxiv.org/abs/1507.02264
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-        rescale_mode=None):
+        rescale_mode=None, sorted_eigs=False):
         super().__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank, exact=exact,
-            opt=opt, rescale_mode=rescale_mode, forward_backward=True)
+            opt=opt, rescale_mode=rescale_mode, forward_backward=True,
+            sorted_eigs=sorted_eigs)

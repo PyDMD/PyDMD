@@ -36,7 +36,7 @@ class DMDControlOperator(DMDOperator):
 
     def __init__(self, svd_rank, svd_rank_omega, tlsq_rank):
         super(DMDControlOperator, self).__init__(svd_rank=svd_rank, exact=True,
-            rescale_mode=None, forward_backward=False)
+            rescale_mode=None, forward_backward=False, sorted_eigs=False)
         self._svd_rank_omega = svd_rank_omega
         self._tlsq_rank = tlsq_rank
 

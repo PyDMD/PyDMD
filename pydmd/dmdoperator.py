@@ -25,13 +25,18 @@ class DMDOperator(object):
     :param bool forward_backward: If True, the low-rank operator is computed
         like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
         False.
+    :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by
+        magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
+        part to break ties) if `sorted_eigs='real'`. Default: False.
+    :type sorted_eigs: {'real', 'abs'} or False
     """
 
-    def __init__(self, svd_rank, exact, forward_backward, rescale_mode):
+    def __init__(self, svd_rank, exact, forward_backward, rescale_mode, sorted_eigs):
         self._exact = exact
         self._rescale_mode = rescale_mode
         self._svd_rank = svd_rank
         self._forward_backward = forward_backward
+        self._sorted_eigs = sorted_eigs
 
     def compute_operator(self, X, Y):
         """
@@ -213,6 +218,28 @@ class DMDOperator(object):
                 .format(self._rescale_mode, type(self._rescale_mode)))
 
         self._eigenvalues, self._eigenvectors = np.linalg.eig(Ahat)
+
+        if self._sorted_eigs != False and self._sorted_eigs is not None:
+            if self._sorted_eigs == 'abs':
+                k = lambda tp: abs(tp[0])
+            elif self._sorted_eigs == 'real':
+                def k(tp):
+                    eig = tp[0]
+                    if isinstance(eig, complex):
+                        return (eig.real, eig.imag)
+                    else:
+                        return (eig.real, 0)
+            else:
+                raise ValueError('Invalid value for sorted_eigs: {}'.format(
+                    self._sorted_eigs))
+
+            # each column is an eigenvector, therefore we take the
+            # transpose to associate each row (former column) to an
+            # eigenvalue before sorting
+            a,b = zip(*sorted(zip(self._eigenvalues, self._eigenvectors.T), key=k))
+            self._eigenvalues = np.array([eig for eig in a])
+            # we restore the original condition (eigenvectors in columns)
+            self._eigenvectors = np.array([vec for vec in b]).T
 
     def _compute_modes(self, Y, U, Sigma, V):
         """

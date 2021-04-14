@@ -32,11 +32,16 @@ class CDMDOperator(DMDOperator):
     :param bool forward_backward: If True, the low-rank operator is computed
         like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
         False.
+    :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by
+        magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
+        part to break ties) if `sorted_eigs='real'`. Default: False.
+    :type sorted_eigs: {'real', 'abs'} or False
     """
 
-    def __init__(self, svd_rank, rescale_mode, forward_backward):
+    def __init__(self, svd_rank, rescale_mode, forward_backward, sorted_eigs):
         super().__init__(svd_rank=svd_rank, exact=True,
-            rescale_mode=rescale_mode, forward_backward=forward_backward)
+            rescale_mode=rescale_mode, forward_backward=forward_backward,
+            sorted_eigs=sorted_eigs)
 
     def compute_operator(self, compressedX, compressedY, nonCompressedY):
         """
@@ -118,17 +123,26 @@ class CDMD(DMDBase):
     :param bool forward_backward: If True, the low-rank operator is computed
         like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
         False.
+    :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by
+        magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
+        part to break ties) if `sorted_eigs='real'`.
+    :type sorted_eigs: {'real', 'abs'} or False
+    :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by
+        magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
+        part to break ties) if `sorted_eigs='real'`. Default: False.
+    :type sorted_eigs: {'real', 'abs'} or False
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform',
-        opt=False, rescale_mode=None, forward_backward=False):
+        opt=False, rescale_mode=None, forward_backward=False, sorted_eigs=False):
 
         self._tlsq_rank = tlsq_rank
         self._opt = opt
         self._compression_matrix = compression_matrix
 
         self._Atilde = CDMDOperator(svd_rank=svd_rank,
-            rescale_mode=rescale_mode, forward_backward=forward_backward)
+            rescale_mode=rescale_mode, forward_backward=forward_backward,
+            sorted_eigs=sorted_eigs)
 
     @property
     def compression_matrix(self):
