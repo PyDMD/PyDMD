@@ -392,10 +392,10 @@ class DMDBase(object):
         :param tuple(int,int) figsize: tuple in inches defining the figure
             size. Default is (8, 8).
         :param str title: title of the plot.
-        :narrow_view bool: if True, the plot will show only the smallest
+        :param narrow_view bool: if True, the plot will show only the smallest
             rectangular area which contains all the eigenvalues, with a padding
             of 0.05. Not compatible with `show_axes=True`. Default is False.
-        :dpi int: If not None, the given value is passed to ``plt.figure``.
+        :param dpi int: If not None, the given value is passed to ``plt.figure``.
         """
         if self.eigs is None:
             raise ValueError('The eigenvalues have not been computed.'
