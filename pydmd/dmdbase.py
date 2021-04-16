@@ -380,10 +380,11 @@ class DMDBase(object):
                   show_axes=True,
                   show_unit_circle=True,
                   figsize=(8, 8),
-                  title=''):
+                  title='',
+                  narrow_view=False,
+                  dpi=None):
         """
         Plot the eigenvalues.
-
         :param bool show_axes: if True, the axes will be showed in the plot.
             Default is True.
         :param bool show_unit_circle: if True, the circle with unitary radius
@@ -391,12 +392,20 @@ class DMDBase(object):
         :param tuple(int,int) figsize: tuple in inches defining the figure
             size. Default is (8, 8).
         :param str title: title of the plot.
+        :narrow_view bool: if True, the plot will show only the smallest
+            rectangular area which contains all the eigenvalues, with a padding
+            of 0.05. Not compatible with `show_axes=True`. Default is False.
+        :dpi int: If not None, the given value is passed to ``plt.figure``.
         """
         if self.eigs is None:
             raise ValueError('The eigenvalues have not been computed.'
                              'You have to perform the fit method.')
 
-        plt.figure(figsize=figsize)
+        if dpi is not None:
+            plt.figure(figsize=figsize, dpi=dpi)
+        else:
+            plt.figure(figsize=figsize)
+
         plt.title(title)
         plt.gcf()
         ax = plt.gca()
@@ -406,10 +415,21 @@ class DMDBase(object):
                           'bo',
                           label='Eigenvalues')
 
-        # set limits for axis
-        limit = np.max(np.ceil(np.absolute(self.eigs)))
-        ax.set_xlim((-limit, limit))
-        ax.set_ylim((-limit, limit))
+        if narrow_view:
+            supx = max(self.eigs.real) + 0.05
+            infx = min(self.eigs.real) - 0.05
+
+            supy = max(self.eigs.imag) + 0.05
+            infy = min(self.eigs.imag) - 0.05
+
+            # set limits for axis
+            ax.set_xlim((infx, supx))
+            ax.set_ylim((infy, supy))
+        else:
+            # set limits for axis
+            limit = np.max(np.ceil(np.absolute(self.eigs)))
+            ax.set_xlim((-limit, limit))
+            ax.set_ylim((-limit, limit))
 
         plt.ylabel('Imaginary part')
         plt.xlabel('Real part')
@@ -428,8 +448,6 @@ class DMDBase(object):
         for line in gridlines:
             line.set_linestyle('-.')
         ax.grid(True)
-
-        ax.set_aspect('equal')
 
         # x and y axes
         if show_axes:
@@ -450,6 +468,8 @@ class DMDBase(object):
                            loc=1))
         else:
             ax.add_artist(plt.legend([points], ['Eigenvalues'], loc=1))
+
+        ax.set_aspect('equal')
 
         plt.show()
 

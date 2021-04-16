@@ -53,6 +53,14 @@ class TestDmdBase(TestCase):
         with self.assertRaises(ValueError):
             dmd.plot_eigs(show_axes=True, show_unit_circle=True)
 
+    def test_plot_eigs_narrowview_empty(self):
+        dmd = DMDBase()
+        # max/min throws an error if the array is empty (max used on empty
+        # array)
+        dmd.operator._eigenvalues = np.array([], dtype=np.complex)
+        with self.assertRaises(ValueError):
+            dmd.plot_eigs(show_axes=False, narrow_view=True, dpi=200)
+
     def test_plot_modes_2D(self):
         dmd = DMDBase()
         with self.assertRaises(ValueError):
