@@ -382,7 +382,8 @@ class DMDBase(object):
                   figsize=(8, 8),
                   title='',
                   narrow_view=False,
-                  dpi=None):
+                  dpi=None,
+                  filename=None):
         """
         Plot the eigenvalues.
         :param bool show_axes: if True, the axes will be showed in the plot.
@@ -396,6 +397,7 @@ class DMDBase(object):
             rectangular area which contains all the eigenvalues, with a padding
             of 0.05. Not compatible with `show_axes=True`. Default is False.
         :param dpi int: If not None, the given value is passed to ``plt.figure``.
+        :param str filename: if specified, the plot is saved at `filename`.
         """
         if self.eigs is None:
             raise ValueError('The eigenvalues have not been computed.'
@@ -471,7 +473,10 @@ class DMDBase(object):
 
         ax.set_aspect('equal')
 
-        plt.show()
+        if filename:
+            plt.savefig(filename)
+        else:
+            plt.show()
 
     def plot_modes_2D(self,
                       index_mode=None,

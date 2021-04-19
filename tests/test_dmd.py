@@ -181,6 +181,12 @@ class TestDmd(TestCase):
         dmd.plot_eigs(show_axes=False, show_unit_circle=False)
         plt.close()
 
+    def test_plot_eigs_3(self):
+        dmd = DMD()
+        dmd.fit(X=sample_data)
+        dmd.plot_eigs(show_axes=False, show_unit_circle=True, filename='eigs.png')
+        self.addCleanup(os.remove, 'eigs.png')
+
     def test_plot_modes_1(self):
         dmd = DMD()
         dmd.fit(X=sample_data)
