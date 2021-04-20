@@ -1,5 +1,6 @@
 from unittest import TestCase
 from pydmd.dmdbase import DMDBase
+from pydmd import DMD
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -103,3 +104,13 @@ class TestDmdBase(TestCase):
     def test_sorted_eigs_param(self):
         dmd = DMDBase(sorted_eigs='real')
         assert dmd.operator._sorted_eigs == 'real'
+
+    def test_select_modes(self):
+        def stable_modes(dmd_object):
+            toll = 1e-3
+            return np.abs(np.abs(dmd_object.eigs) - 1) < toll
+        dmd = DMD(svd_rank=10)
+        dmd.fit(sample_data)
+        exp = dmd.reconstructed_data
+        dmd.select_modes(stable_modes)
+        np.testing.assert_array_almost_equal(exp, dmd.reconstructed_data)

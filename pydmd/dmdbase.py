@@ -376,6 +376,41 @@ class DMDBase(object):
 
         return a
 
+
+    def select_modes(self, func):
+        """
+        Select the DMD modes by using the given `func`.
+        `func` has to be a callable function which takes as input the DMD
+        object itself and return a numpy.ndarray of boolean where `False`
+        indicates that the corresponding mode will be discarded.
+
+        :param callable func: the function to select the modes
+
+        Example:
+
+        >>> def stable_modes(dmd_object):
+        >>>    toll = 1e-3
+        >>>    return np.abs(np.abs(dmd.eigs) - 1) < toll
+        >>> dmd = DMD(svd_rank=10)
+        >>> dmd.fit(sample_data)
+        >>> dmd.select_modes(stable_modes)
+        """
+        selected_indeces = func(self)
+
+        self.operator._eigenvalues = self.operator._eigenvalues[selected_indeces]
+        self.operator._Lambda = self.operator._Lambda[selected_indeces]
+
+        self.operator._eigenvectors = self.operator._eigenvectors[:, selected_indeces]
+        self.operator._modes = self.operator._modes[:, selected_indeces]
+
+        self.operator._Atilde = np.linalg.multi_dot([
+            self.operator._eigenvectors,
+            np.diag(self.operator._eigenvalues),
+            np.linalg.pinv(self.operator._eigenvectors)])
+
+        self._b = self._compute_amplitudes()
+
+
     def plot_eigs(self,
                   show_axes=True,
                   show_unit_circle=True,
