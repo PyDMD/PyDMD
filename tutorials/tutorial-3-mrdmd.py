@@ -2,7 +2,7 @@
 
 # Tutorial 3: Multiresolution DMD: different time scales
 
-# In this tutorial we will show the possibilities of the multiresolution dynamic modes decomposition (mrDMD) with respect to the classical DMD. We follow a wonderful blog post written by Robert Taylor [available here](http://www.pyrunner.com/weblog/2016/08/05/mrdmd-python/). We did not use his implementation of the mrDMD but only the sample data and the structure of the tutorial. You can find a mathematical reference for the mrDMD by Kutz et al. [here](http://epubs.siam.org/doi/pdf/10.1137/15M1023543). 
+# In this tutorial we will show the possibilities of the multiresolution dynamic modes decomposition (mrDMD) with respect to the classical DMD. We follow a wonderful blog post written by Robert Taylor [available here](http://www.pyrunner.com/weblog/2016/08/05/mrdmd-python/). We did not use his implementation of the mrDMD but only the sample data and the structure of the tutorial. You can find a mathematical reference for the mrDMD by Kutz et al. [here](http://epubs.siam.org/doi/pdf/10.1137/15M1023543).
 # For the advanced settings of the DMD base class please refer to [this tutorial](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial-2-adv-dmd.ipynb).
 
 # First of all we just import the MrDMD and DMD classes from the pydmd package, we set matplotlib for the notebook and we import numpy.
@@ -13,7 +13,7 @@ from pydmd import DMD
 import numpy as np
 
 
-# The code below generates a spatio-temporal example dataset. The data can be thought of as 80 locations or signals (the x-axis) being sampled 1600 times at a constant rate in time (the t-axis). It contains many features at varying time scales, like oscillating sines and cosines, one-time events, and random noise. 
+# The code below generates a spatio-temporal example dataset. The data can be thought of as 80 locations or signals (the x-axis) being sampled 1600 times at a constant rate in time (the t-axis). It contains many features at varying time scales, like oscillating sines and cosines, one-time events, and random noise.
 
 def create_sample_data():
     x = np.linspace(-10, 10, 80)
@@ -58,7 +58,7 @@ def make_plot(X, x=None, y=None, figsize=(12, 8), title=''):
     plt.show()
 
 
-# Let us start by creating the dataset and plot the data in order to have a first idea of the problem. 
+# Let us start by creating the dataset and plot the data in order to have a first idea of the problem.
 
 sample_data = create_sample_data()
 x = np.linspace(-10, 10, 80)
@@ -75,7 +75,8 @@ make_plot(first_dmd.reconstructed_data.T, x=x, y=t)
 
 # Now we do the same but using the mrDMD instead. The result is remarkable even with the svd rank truncation (experiment changing the input parameters).
 
-dmd = MrDMD(svd_rank=-1, max_level=7, max_cycles=1)
+sub_dmd = DMD(svd_rank=-1)
+dmd = MrDMD(sub_dmd, max_level=7, max_cycles=1)
 dmd.fit(X=sample_data)
 make_plot(dmd.reconstructed_data.T, x=x, y=t)
 
@@ -93,9 +94,9 @@ dmd.plot_eigs(show_axes=True, show_unit_circle=True, figsize=(8, 8), level=3, no
 
 
 # The idea is to extract the slow modes at each iteration, where a slow mode is a mode with a relative low frequency. This just means that the mode changes somewhat slowly as the system evolves in time. Thus the mrDMD is able to catch different time events.
-# 
+#
 # The general mrDMD algorithm is as follows:
-# 
+#
 # 1. Compute DMD for available data.
 # 2. Determine fast and slow modes.
 # 3. Find the best DMD approximation to the available data constructed from the slow modes only.
@@ -104,7 +105,7 @@ dmd.plot_eigs(show_axes=True, show_unit_circle=True, figsize=(8, 8), level=3, no
 # 6. Repeat the procedure for the first half of data (including this step).
 # 7. Repeat the procedure for the second half of data (including this step).
 
-# Let us have a look at the modes for the first two levels and the corresponding time evolution. At the first level we have two very slow modes, while at the second one there are 5 modes. 
+# Let us have a look at the modes for the first two levels and the corresponding time evolution. At the first level we have two very slow modes, while at the second one there are 5 modes.
 
 
 pmodes = dmd.partial_modes(level=0)
@@ -113,13 +114,13 @@ fig = plt.plot(x, pmodes.real)
 pdyna = dmd.partial_dynamics(level=0)
 fig = plt.plot(t, pdyna.real.T)
 
-# Notice the discontinuities in the time evolution where the data were split. 
+# Notice the discontinuities in the time evolution where the data were split.
 
 pdyna = dmd.partial_dynamics(level=1)
 print('The number of modes in the level number 1 is {}'.format(pdyna.shape[0]))
 fig = plt.plot(t, pdyna.real.T)
 
-# Now we recreate the original data by adding levels together. For each level, starting with the first (note that the starting index is 0), we construct an approximation of the data. 
+# Now we recreate the original data by adding levels together. For each level, starting with the first (note that the starting index is 0), we construct an approximation of the data.
 
 pdata = dmd.partial_reconstructed_data(level=0)
 make_plot(pdata.T, x=x, y=t, title='level 0', figsize=(7.5, 5))

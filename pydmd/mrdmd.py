@@ -56,19 +56,8 @@ class MrDMD(DMDBase):
     """
     Multi-resolution Dynamic Mode Decomposition
 
-    :param svd_rank: the rank for the truncation; If 0, the method computes the
-        optimal rank and uses it for truncation; if positive interger, the
-        method uses the argument for the truncation; if float between 0 and 1,
-        the rank is the number of the biggest singular values that are needed
-        to reach the 'energy' specified by `svd_rank`; if -1, the method does
-        not compute truncation.
-    :type svd_rank: int or float
-    :param int tlsq_rank: rank truncation computing Total Least Square. Default
-        is 0, that means TLSQ is not applied.
-    :param bool exact: flag to compute either exact DMD or projected DMD.
-        Default is False.
-    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.
-        Default is False.
+    :param DMDBase dmd: an instance of a subclass of `DMDBase`, used to
+        recursively analyze the dataset.
     :param int max_cycles: the maximum number of mode oscillations in any given
         time scale. Default is 1.
     :param int max_level: the maximum number of levels. Defualt is 6.
@@ -162,7 +151,7 @@ class MrDMD(DMDBase):
 
         for level in self.dmd_tree.levels[1:]:
             x += np.hstack([
-                self.dmd_tree[level, lead].reconstructed_data 
+                self.dmd_tree[level, lead].reconstructed_data
                 for lead in self.dmd_tree.index_leaves(level)
             ])
 
@@ -172,7 +161,7 @@ class MrDMD(DMDBase):
         """
         Build the internal binary tree that contain the DMD subclasses.
         """
-        self.dmd_tree = BinaryTree(self.max_level) 
+        self.dmd_tree = BinaryTree(self.max_level)
 
         # Empty init
         for level in self.dmd_tree.levels:
@@ -286,7 +275,7 @@ class MrDMD(DMDBase):
         Return the time evolution of the specific `level` and of the specific
         `node`; if `node` is not specified, the method returns the time
         evolution of the given `level` (all the nodes). The dynamics are always
-        reported to the original time window. 
+        reported to the original time window.
 
         :param int level: the index of the level from where the time evolution
             is extracted.
@@ -376,17 +365,17 @@ class MrDMD(DMDBase):
         """
 
         Example:
-        
+
         >>> mrdmd = MrDMD(DMD())
         >>> mrdmd.fit(X)
         >>> for level, leaf, dmd in mrdmd:
         >>>     print(level, leaf, dmd.eigs)
-        
+
         """
         for level in self.dmd_tree.levels:
             for leaf in self.dmd_tree.index_leaves(level):
                 yield level, leaf, self.dmd_tree[level, leaf]
-        
+
 
     def fit(self, X):
         """
@@ -423,7 +412,7 @@ class MrDMD(DMDBase):
                 current_dmd._b = current_dmd._compute_amplitudes()
 
             newX = np.hstack([
-                self.dmd_tree[level, leaf].reconstructed_data 
+                self.dmd_tree[level, leaf].reconstructed_data
                 for leaf in self.dmd_tree.index_leaves(level)
             ])
             X -= newX
