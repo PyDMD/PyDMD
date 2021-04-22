@@ -385,6 +385,8 @@ class DMDBase(object):
         `func` has to be a callable function which takes as input the DMD
         object itself and return a numpy.ndarray of boolean where `False`
         indicates that the corresponding mode will be discarded.
+        The class :class:`ModesSelectors` contains some pre-packed selector
+        functions.
 
         :param callable func: the function to select the modes
 
@@ -422,8 +424,8 @@ class DMDBase(object):
         functions and immediate usability. For instance, to select the first
         x modes by integral contributions one would call:
 
-        >>> from DMDBase.ModesSelectors import integral_contribution
-        >>> dmd.select_modes(integral_contribution(x))
+        >>> from pydmd import DMDBase
+        >>> dmd.select_modes(DMDBase.ModesSelectors.integral_contribution(x))
         """
 
         @staticmethod
@@ -462,7 +464,7 @@ class DMDBase(object):
             http://dx.doi.org/10.1016/j.euromechflu.2016.11.015
 
             :param numpy.ndarray mode: the DMD mode.
-            :param numpy.ndarray mode: the dynamic of the given DMD mode, as
+            :param numpy.ndarray dynamic: the dynamic of the given DMD mode, as
                 returned by `dmd.dynamics[mode_index]`.
             :return float: the integral contribution of the given DMD mode.
             """
