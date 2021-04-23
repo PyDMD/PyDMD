@@ -166,10 +166,146 @@
 <span class="sd">- Proctor, J.L., Brunton, S.L. and Kutz, J.N., 2016. Dynamic mode decomposition</span>
 <span class="sd">with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
 <span class="kn">from</span> <span class="nn">past.utils</span> <span class="kn">import</span> <span class="n">old_div</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
+<span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_tlsq</span>
+
+<span class="k">class</span> <span class="nc">DMDControlOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DMD with control base operator. This should be subclassed in order to</span>
+<span class="sd">    implement the appropriate features.</span>
+
+<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes the</span>
+<span class="sd">        optimal rank and uses it for truncation; if positive interger, the</span>
+<span class="sd">        method uses the argument for the truncation; if float between 0 and 1,</span>
+<span class="sd">        the rank is the number of the biggest singular values that are needed</span>
+<span class="sd">        to reach the &#39;energy&#39; specified by `svd_rank`; if -1, the method does</span>
+<span class="sd">        not compute truncation.</span>
+<span class="sd">    :type svd_rank: int or float</span>
+<span class="sd">    :param svd_rank_omega: the rank for the truncation of the aumented matrix</span>
+<span class="sd">        omega composed by the left snapshots matrix and the control. Used only</span>
+<span class="sd">        for the `_fit_B_unknown` method of this class. It should be greater or</span>
+<span class="sd">        equal than `svd_rank`. For the possible values please refer to the</span>
+<span class="sd">        `svd_rank` parameter description above.</span>
+<span class="sd">    :type svd_rank_omega: int or float</span>
+<span class="sd">    :param int tlsq_rank: rank truncation computing Total Least Square. Default</span>
+<span class="sd">        is 0, that means no truncation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">svd_rank</span><span class="p">,</span> <span class="n">svd_rank_omega</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DMDControlOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank_omega</span> <span class="o">=</span> <span class="n">svd_rank_omega</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tlsq_rank</span> <span class="o">=</span> <span class="n">tlsq_rank</span>
+
+<span class="k">class</span> <span class="nc">DMDBKnownOperator</span><span class="p">(</span><span class="n">DMDControlOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DMD with control base operator when B is given.</span>
+
+<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes the</span>
+<span class="sd">        optimal rank and uses it for truncation; if positive interger, the</span>
+<span class="sd">        method uses the argument for the truncation; if float between 0 and 1,</span>
+<span class="sd">        the rank is the number of the biggest singular values that are needed</span>
+<span class="sd">        to reach the &#39;energy&#39; specified by `svd_rank`; if -1, the method does</span>
+<span class="sd">        not compute truncation.</span>
+<span class="sd">    :type svd_rank: int or float</span>
+<span class="sd">    :param svd_rank_omega: the rank for the truncation of the aumented matrix</span>
+<span class="sd">        omega composed by the left snapshots matrix and the control. Used only</span>
+<span class="sd">        for the `_fit_B_unknown` method of this class. It should be greater or</span>
+<span class="sd">        equal than `svd_rank`. For the possible values please refer to the</span>
+<span class="sd">        `svd_rank` parameter description above.</span>
+<span class="sd">    :type svd_rank_omega: int or float</span>
+<span class="sd">    :param int tlsq_rank: rank truncation computing Total Least Square. Default</span>
+<span class="sd">        is 0, that means no truncation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">controlin</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the low-rank operator. This is the standard version of the DMD</span>
+<span class="sd">        operator, with a correction which depends on B.</span>
+
+<span class="sd">        :param numpy.ndarray X: matrix containing the snapshots x0,..x{n-1} by</span>
+<span class="sd">            column.</span>
+<span class="sd">        :param numpy.ndarray Y: matrix containing the snapshots x1,..x{n} by</span>
+<span class="sd">            column.</span>
+<span class="sd">        :param numpy.ndarray B: the matrix B.</span>
+<span class="sd">        :param numpy.ndarray control: the control input.</span>
+<span class="sd">        :return: the (truncated) left-singular vectors matrix, the (truncated)</span>
+<span class="sd">            singular values array, the (truncated) right-singular vectors</span>
+<span class="sd">            matrix of X.</span>
+<span class="sd">        :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">compute_tlsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tlsq_rank</span><span class="p">)</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">B</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">controlin</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">DMDBKnownOperator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">compute_operator</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">DMDBUnknownOperator</span><span class="p">(</span><span class="n">DMDControlOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DMD with control base operator when B is unknown.</span>
+
+<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes the</span>
+<span class="sd">        optimal rank and uses it for truncation; if positive interger, the</span>
+<span class="sd">        method uses the argument for the truncation; if float between 0 and 1,</span>
+<span class="sd">        the rank is the number of the biggest singular values that are needed</span>
+<span class="sd">        to reach the &#39;energy&#39; specified by `svd_rank`; if -1, the method does</span>
+<span class="sd">        not compute truncation.</span>
+<span class="sd">    :type svd_rank: int or float</span>
+<span class="sd">    :param svd_rank_omega: the rank for the truncation of the aumented matrix</span>
+<span class="sd">        omega composed by the left snapshots matrix and the control. Used only</span>
+<span class="sd">        for the `_fit_B_unknown` method of this class. It should be greater or</span>
+<span class="sd">        equal than `svd_rank`. For the possible values please refer to the</span>
+<span class="sd">        `svd_rank` parameter description above.</span>
+<span class="sd">    :type svd_rank_omega: int or float</span>
+<span class="sd">    :param int tlsq_rank: rank truncation computing Total Least Square. Default</span>
+<span class="sd">        is 0, that means no truncation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">controlin</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the low-rank operator.</span>
+
+<span class="sd">        :param numpy.ndarray X: matrix containing the snapshots x0,..x{n-1} by</span>
+<span class="sd">            column.</span>
+<span class="sd">        :param numpy.ndarray Y: matrix containing the snapshots x1,..x{n} by</span>
+<span class="sd">            column.</span>
+<span class="sd">        :param numpy.ndarray control: the control input.</span>
+<span class="sd">        :return: the (truncated) left-singular vectors matrix of Y, and</span>
+<span class="sd">            the product between the left-singular vectors of Y and Btilde.</span>
+<span class="sd">        :rtype: numpy.ndarray, numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">snapshots_rows</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="n">controlin</span><span class="p">])</span>
+
+        <span class="n">Up</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="n">Vp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_svd</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank_omega</span><span class="p">)</span>
+
+        <span class="n">Up1</span> <span class="o">=</span> <span class="n">Up</span><span class="p">[:</span><span class="n">snapshots_rows</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">Up2</span> <span class="o">=</span> <span class="n">Up</span><span class="p">[</span><span class="n">snapshots_rows</span><span class="p">:,</span> <span class="p">:]</span>
+
+        <span class="n">Ur</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="n">Vr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_svd</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="n">Ur</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Vp</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">sp</span><span class="p">)),</span> <span class="n">Up1</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">Ur</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_eigenquantities</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_modes</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="n">Vp</span><span class="p">,</span> <span class="n">Up1</span><span class="p">,</span> <span class="n">Ur</span><span class="p">)</span>
+
+        <span class="n">Btilde</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="n">Ur</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Vp</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">sp</span><span class="p">)),</span> <span class="n">Up2</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()])</span>
+
+        <span class="k">return</span> <span class="n">Ur</span><span class="p">,</span> <span class="n">Ur</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Btilde</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="n">Vp</span><span class="p">,</span> <span class="n">Up1</span><span class="p">,</span> <span class="n">Ur</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Private method that computes eigenvalues and eigenvectors of the</span>
+<span class="sd">        high-dimensional operator (stored in self.modes and self.Lambda).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="n">Y</span><span class="p">,</span> <span class="n">Vp</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">sp</span><span class="p">)),</span>
+            <span class="n">Up1</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">Ur</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvectors</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Lambda</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span>
 
 <div class="viewcode-block" id="DMDc"><a class="viewcode-back" href="../../dmdc.html#pydmd.dmdc.DMDc">[docs]</a><span class="k">class</span> <span class="nc">DMDc</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -186,8 +322,9 @@
 <span class="sd">    :type svd_rank: int or float</span>
 <span class="sd">    :param int tlsq_rank: rank truncation computing Total Least Square. Default</span>
 <span class="sd">        is 0, that means no truncation.</span>
-<span class="sd">    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.</span>
-<span class="sd">        Default is False.</span>
+<span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes. See</span>
+<span class="sd">        :class:`DMDBase`. Default is False.</span>
+<span class="sd">    :type opt: bool or int</span>
 <span class="sd">    :param svd_rank_omega: the rank for the truncation of the aumented matrix</span>
 <span class="sd">        omega composed by the left snapshots matrix and the control. Used only</span>
 <span class="sd">        for the `_fit_B_unknown` method of this class. It should be greater or</span>
@@ -196,22 +333,27 @@
 <span class="sd">    :type svd_rank_omega: int or float</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">svd_rank_omega</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank</span> <span class="o">=</span> <span class="n">svd_rank</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tlsq_rank</span> <span class="o">=</span> <span class="n">tlsq_rank</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">opt</span> <span class="o">=</span> <span class="n">opt</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank_omega</span> <span class="o">=</span> <span class="n">svd_rank_omega</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># we&#39;re going to initialize Atilde when we know if B is known</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># remember the arguments for when we&#39;ll need them</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_operator_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;svd_rank&#39;</span><span class="p">:</span> <span class="n">svd_rank</span><span class="p">,</span>
+            <span class="s1">&#39;svd_rank_omega&#39;</span><span class="p">:</span> <span class="n">svd_rank_omega</span><span class="p">,</span>
+            <span class="s1">&#39;tlsq_rank&#39;</span><span class="p">:</span> <span class="n">tlsq_rank</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_opt</span> <span class="o">=</span> <span class="n">opt</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_B</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Phi</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># amplitudes</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_controlin_shape</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">svd_rank_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_svd_rank_omega</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">B</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -257,7 +399,8 @@
 
         <span class="n">eigs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">,</span>
                         <span class="n">old_div</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">]))</span>
-        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">eigs</span><span class="p">))</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">))</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">eigs</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">)])</span>
 
         <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]]</span>
 
@@ -266,61 +409,6 @@
 
         <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
         <span class="k">return</span> <span class="n">data</span></div>
-
-<div class="viewcode-block" id="DMDc._fit_B_known"><a class="viewcode-back" href="../../dmdc.html#pydmd.dmdc.DMDc._fit_B_known">[docs]</a>    <span class="k">def</span> <span class="nf">_fit_B_known</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Private method that performs the dynamic mode decomposition algorithm</span>
-<span class="sd">        with control when the matrix `B` is provided.</span>
-
-<span class="sd">        :param numpy.ndarray X: the first matrix of original snapshots.</span>
-<span class="sd">        :param numpy.ndarray Y: the second matrix of original snapshots.</span>
-<span class="sd">        :param numpy.ndarray I: the input control matrix.</span>
-<span class="sd">        :param numpy.ndarray B: the matrix B.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_tlsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tlsq_rank</span><span class="p">)</span>
-
-        <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_svd</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="n">B</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span><span class="p">))</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">s</span><span class="p">)))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_from_lowrank_op</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span><span class="p">,</span> <span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="n">B</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span><span class="p">)),</span> <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span>
-                                           <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_B</span> <span class="o">=</span> <span class="n">B</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="n">U</span>
-        <span class="k">return</span> <span class="bp">self</span></div>
-
-<div class="viewcode-block" id="DMDc._fit_B_unknown"><a class="viewcode-back" href="../../dmdc.html#pydmd.dmdc.DMDc._fit_B_unknown">[docs]</a>    <span class="k">def</span> <span class="nf">_fit_B_unknown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Private method that performs the dynamic mode decomposition algorithm</span>
-<span class="sd">        with control when the matrix `B` is not provided.</span>
-
-<span class="sd">        :param numpy.ndarray X: the first matrix of original snapshots.</span>
-<span class="sd">        :param numpy.ndarray Y: the second matrix of original snapshots.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span><span class="p">])</span>
-
-        <span class="n">Up</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="n">Vp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_svd</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank_omega</span><span class="p">)</span>
-        
-        <span class="n">Up1</span> <span class="o">=</span> <span class="n">Up</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:]</span>
-        <span class="n">Up2</span> <span class="o">=</span> <span class="n">Up</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:,</span> <span class="p">:]</span>
-
-        <span class="n">Ur</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="n">Vr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_svd</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="n">Ur</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">Ur</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Vp</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">sp</span><span class="p">)))</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Up1</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Ur</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_Btilde</span> <span class="o">=</span> <span class="n">Ur</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Vp</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">sp</span><span class="p">)))</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Up2</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_B</span> <span class="o">=</span> <span class="n">Ur</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Btilde</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">,</span> <span class="n">modes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Vp</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">sp</span><span class="p">)))</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
-            <span class="n">Up1</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Ur</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">modes</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="DMDc.fit"><a class="viewcode-back" href="../../dmdc.html#pydmd.dmdc.DMDc.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -348,9 +436,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;t0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;tend&#39;</span><span class="p">:</span> <span class="n">n_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
 
         <span class="k">if</span> <span class="n">B</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fit_B_unknown</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">DMDBUnknownOperator</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_dmd_operator_kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">compute_operator</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_fit_B_known</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">DMDBKnownOperator</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_dmd_operator_kwargs</span><span class="p">)</span>
+            <span class="n">U</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">compute_operator</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="n">U</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_B</span> <span class="o">=</span> <span class="n">B</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_amplitudes</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span></div></div>
 </pre></div>
@@ -366,7 +462,7 @@
     <p>
         &#169; Copyright Copyright 2017-2021, PyDMD contributors.
       <span class="lastupdated">
-        Last updated on Jan 23, 2021.
+        Last updated on Apr 23, 2021.
       </span>
 
     </p>

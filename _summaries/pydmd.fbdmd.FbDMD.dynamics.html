@@ -196,13 +196,17 @@
 <dt id="pydmd.fbdmd.FbDMD.dynamics">
 <code class="sig-prename descclassname">FbDMD.</code><code class="sig-name descname">dynamics</code><a class="headerlink" href="#pydmd.fbdmd.FbDMD.dynamics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the time evolution of each mode.</p>
-<dl class="field-list simple">
+<div class="math">
+<p><span class="math">\mathbf{x}(t) \approx
+\sum_{k=1}^{r} \boldsymbol{\phi}_{k} \exp \left( \omega_{k} t \right) b_{k} =
+\sum_{k=1}^{r} \boldsymbol{\phi}_{k} \left( \lambda_{k} \right)^{\left( t / \Delta t \right)} b_{k}</span></p>
+</div><dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the matrix that contains all the time evolution, stored by
 row.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -225,7 +229,7 @@ row.</p>
     <p>
         &#169; Copyright Copyright 2017-2021, PyDMD contributors.
       <span class="lastupdated">
-        Last updated on Jan 23, 2021.
+        Last updated on Apr 23, 2021.
       </span>
 
     </p>

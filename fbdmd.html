@@ -210,7 +210,7 @@
 <td><p>Get the eigenvalues of A tilde.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.fbdmd.FbDMD.fit.html#pydmd.fbdmd.FbDMD.fit" title="pydmd.fbdmd.FbDMD.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FbDMD.fit</span></code></a></p></td>
-<td><p>Compute the Dynamics Modes Decomposition to the input data.</p></td>
+<td><p>Compute the Dynamic Modes Decomposition to the input data.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.fbdmd.FbDMD.modes.html#pydmd.fbdmd.FbDMD.modes" title="pydmd.fbdmd.FbDMD.modes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FbDMD.modes</span></code></a></p></td>
 <td><p>Get the matrix containing the DMD modes, stored by column.</p></td>
@@ -237,8 +237,8 @@
 </table>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-name descname">FbDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/fbdmd.html#FbDMD"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
+<em class="property">class </em><code class="sig-name descname">FbDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">sorted_eigs=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/fbdmd.html#FbDMD"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmd.DMD</span></code></p>
 <p>Forward/backward DMD class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -250,26 +250,22 @@ the rank is the number of the biggest singular values that are needed
 to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1, the method does
 not compute truncation.</p></li>
 <li><p><strong>tlsq_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation computing Total Least Square. Default
-is 0, that means TLSQ is not applied.</p></li>
+is 0, that means no truncation.</p></li>
 <li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute either exact DMD or projected DMD.
 Default is False.</p></li>
-<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute optimal amplitudes. See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>.
-Default is False.</p></li>
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes. See
+<code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
+eigendecomposition. None means no rescaling, ‘auto’ means automatic
+rescaling using singular values, otherwise the scaling factors.</p></li>
+<li><p><strong>sorted_eigs</strong> (<em>{'real'</em><em>, </em><em>'abs'}</em><em> or </em><em>False</em>) – Sort eigenvalues (and modes/dynamics accordingly) by
+magnitude if <cite>sorted_eigs=’abs’</cite>, by real part (and then by imaginary
+part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p></li>
 </ul>
 </dd>
 </dl>
 <p>Reference: Dawson et al. <a class="reference external" href="https://arxiv.org/abs/1507.02264">https://arxiv.org/abs/1507.02264</a></p>
-<dl class="method">
-<dt>
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/fbdmd.html#FbDMD.fit"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Compute the Dynamics Modes Decomposition to the input data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -290,7 +286,7 @@ Default is False.</p></li>
     <p>
         &#169; Copyright Copyright 2017-2021, PyDMD contributors.
       <span class="lastupdated">
-        Last updated on Jan 23, 2021.
+        Last updated on Apr 23, 2021.
       </span>
 
     </p>

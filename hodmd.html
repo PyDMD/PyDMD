@@ -240,34 +240,65 @@ Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.</p>
 </table>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-name descname">HODMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">d=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hodmd.html#HODMD"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="sig-name descname">HODMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">d=1</em>, <em class="sig-param">sorted_eigs=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hodmd.html#HODMD"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
 <p>Higher Order Dynamic Mode Decomposition</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation in SVD. If 0, the method computes the
-optimal rank and uses it for truncation; if positive number, the method
-uses the argument for the truncation; if -1, the method does not
-compute truncation.</p></li>
+<li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If 0, the method computes the
+optimal rank and uses it for truncation; if positive interger, the
+method uses the argument for the truncation; if float between 0 and 1,
+the rank is the number of the biggest singular values that are needed
+to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1, the method does
+not compute truncation.</p></li>
 <li><p><strong>tlsq_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation computing Total Least Square. Default
-is 0, that means TLSQ is not applied.</p></li>
+is 0, that means no truncation.</p></li>
 <li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute either exact DMD or projected DMD.
 Default is False.</p></li>
-<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute optimal amplitudes. See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>.
-Default is False.</p></li>
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes. See
+<code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
+eigendecomposition. None means no rescaling, ‘auto’ means automatic
+rescaling using singular values, otherwise the scaling factors.</p></li>
+<li><p><strong>forward_backward</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, the low-rank operator is computed
+like in fbDMD (reference: <a class="reference external" href="https://arxiv.org/abs/1507.02264">https://arxiv.org/abs/1507.02264</a>). Default is
+False.</p></li>
 <li><p><strong>d</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the new order for spatial dimension of the input snapshots.
 Default is 1.</p></li>
+<li><p><strong>sorted_eigs</strong> (<em>{'real'</em><em>, </em><em>'abs'}</em><em> or </em><em>False</em>) – Sort eigenvalues (and modes/dynamics accordingly) by
+magnitude if <cite>sorted_eigs=’abs’</cite>, by real part (and then by imaginary
+part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">d</code></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt>
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hodmd.html#HODMD.fit"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the Dynamic Modes Decomposition to the input data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">modes</code></dt>
+<dd><p>Get the matrix containing the DMD modes, stored by column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the matrix containing the DMD modes.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -292,7 +323,7 @@ Default is 1.</p></li>
     <p>
         &#169; Copyright Copyright 2017-2021, PyDMD contributors.
       <span class="lastupdated">
-        Last updated on Jan 23, 2021.
+        Last updated on Apr 23, 2021.
       </span>
 
     </p>

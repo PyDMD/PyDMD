@@ -165,14 +165,16 @@
 
 <span class="c1"># --&gt; Import standard python packages</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">pinv2</span>
 
 <span class="c1"># --&gt; Import PyDMD base class for DMD.</span>
 <span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
 
+<span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_tlsq</span>
+
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">pinv2</span>
 
 <span class="k">def</span> <span class="nf">pinv</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">pinv2</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="mi">10</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
-
 
 <div class="viewcode-block" id="DMD"><a class="viewcode-back" href="../../dmd.html#pydmd.dmd.DMD">[docs]</a><span class="k">class</span> <span class="nc">DMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -189,8 +191,21 @@
 <span class="sd">        is 0, that means TLSQ is not applied.</span>
 <span class="sd">    :param bool exact: flag to compute either exact DMD or projected DMD.</span>
 <span class="sd">        Default is False.</span>
-<span class="sd">    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.</span>
-<span class="sd">        Default is False.</span>
+<span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes. See</span>
+<span class="sd">        :class:`DMDBase`. Default is False.</span>
+<span class="sd">    :type opt: bool or int</span>
+<span class="sd">    :param rescale_mode: Scale Atilde as shown in</span>
+<span class="sd">            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its</span>
+<span class="sd">            eigendecomposition. None means no rescaling, &#39;auto&#39; means automatic</span>
+<span class="sd">            rescaling using singular values, otherwise the scaling factors.</span>
+<span class="sd">    :type rescale_mode: {&#39;auto&#39;} or None or numpy.ndarray</span>
+<span class="sd">    :param bool forward_backward: If True, the low-rank operator is computed</span>
+<span class="sd">        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is</span>
+<span class="sd">        False.</span>
+<span class="sd">    :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by</span>
+<span class="sd">        magnitude if `sorted_eigs=&#39;abs&#39;`, by real part (and then by imaginary</span>
+<span class="sd">        part to break ties) if `sorted_eigs=&#39;real&#39;`. Default: False.</span>
+<span class="sd">    :type sorted_eigs: {&#39;real&#39;, &#39;abs&#39;} or False</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="DMD.fit"><a class="viewcode-back" href="../../dmd.html#pydmd.dmd.DMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
@@ -206,23 +221,14 @@
         <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
 
-        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_tlsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tlsq_rank</span><span class="p">)</span>
-
-        <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_svd</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_lowrank_op</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_svd_modes</span> <span class="o">=</span> <span class="n">U</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_from_lowrank_op</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exact</span><span class="p">)</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">compute_tlsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tlsq_rank</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_svd_modes</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">compute_operator</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
 
         <span class="c1"># Default timesteps</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;t0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;tend&#39;</span><span class="p">:</span> <span class="n">n_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;t0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;tend&#39;</span><span class="p">:</span> <span class="n">n_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span>
-                                           <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_amplitudes</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -240,20 +246,8 @@
 <span class="sd">            Predicted output.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># --&gt; Predict using the SVD modes as the basis.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exact</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
-                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_svd_modes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_svd_modes</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">X</span><span class="p">]</span>
-            <span class="p">)</span>
-        <span class="c1"># --&gt; Predict using the DMD modes as the basis.</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">exact</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">adjoint_modes</span> <span class="o">=</span> <span class="n">pinv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">)</span>
-            <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
-                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">),</span> <span class="n">adjoint_modes</span><span class="p">,</span> <span class="n">X</span><span class="p">]</span>
-            <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">Y</span></div></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">),</span>
+            <span class="n">pinv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">),</span> <span class="n">X</span><span class="p">])</span></div></div>
 </pre></div>
 
            </div>
@@ -267,7 +261,7 @@
     <p>
         &#169; Copyright Copyright 2017-2021, PyDMD contributors.
       <span class="lastupdated">
-        Last updated on Jan 23, 2021.
+        Last updated on Apr 23, 2021.
       </span>
 
     </p>

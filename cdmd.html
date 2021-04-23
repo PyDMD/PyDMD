@@ -243,7 +243,7 @@ As a reference consult this work by Erichson, Brunton and Kutz:
 </table>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-name descname">CDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">compression_matrix='uniform'</em>, <em class="sig-param">opt=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/cdmd.html#CDMD"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="sig-name descname">CDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">compression_matrix='uniform'</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">sorted_eigs=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/cdmd.html#CDMD"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
 <p>Compressed Dynamic Mode Decomposition.</p>
 <p>Compute the dynamic mode decomposition after the multiplication of the
@@ -275,12 +275,25 @@ not compute truncation.</p></li>
 <li><p><strong>tlsq_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation computing Total Least Square. Default
 is 0, that means TLSQ is not applied.</p></li>
 <li><p><strong>compression_matrix</strong> (<em>{'linear'</em><em>, </em><em>'sparse'</em><em>, </em><em>'uniform'</em><em>, </em><em>'sample'}</em><em> or
-</em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a>) – the matrix that pre-multiplies the snapshots
+</em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – the matrix that pre-multiplies the snapshots
 matrix in order to compress it; if <cite>compression_matrix</cite> is a
 numpy.ndarray, its dimension must be (<cite>nsnaps</cite>, <cite>ndim</cite>). Default value
 is ‘<cite>uniform</cite>’.</p></li>
-<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute optimal amplitudes. See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>.
-Default is False.</p></li>
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes. See
+<code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
+eigendecomposition. None means no rescaling, ‘auto’ means automatic
+rescaling using singular values, otherwise the scaling factors.</p></li>
+<li><p><strong>forward_backward</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, the low-rank operator is computed
+like in fbDMD (reference: <a class="reference external" href="https://arxiv.org/abs/1507.02264">https://arxiv.org/abs/1507.02264</a>). Default is
+False.</p></li>
+<li><p><strong>sorted_eigs</strong> (<em>{'real'</em><em>, </em><em>'abs'}</em><em> or </em><em>False</em>) – Sort eigenvalues (and modes/dynamics accordingly) by
+magnitude if <cite>sorted_eigs=’abs’</cite>, by real part (and then by imaginary
+part to break ties) if <cite>sorted_eigs=’real’</cite>.</p></li>
+<li><p><strong>sorted_eigs</strong> – Sort eigenvalues (and modes/dynamics accordingly) by
+magnitude if <cite>sorted_eigs=’abs’</cite>, by real part (and then by imaginary
+part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p></li>
 </ul>
 </dd>
 </dl>
@@ -294,10 +307,15 @@ it by the chosen <cite>compression_matrix</cite>.</p>
 <dd class="field-odd"><p>the compressed snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">compression_matrix</code></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt>
@@ -305,7 +323,7 @@ it by the chosen <cite>compression_matrix</cite>.</p>
 <dd><p>Compute the Dynamic Modes Decomposition to the input data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.19)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -330,7 +348,7 @@ it by the chosen <cite>compression_matrix</cite>.</p>
     <p>
         &#169; Copyright Copyright 2017-2021, PyDMD contributors.
       <span class="lastupdated">
-        Last updated on Jan 23, 2021.
+        Last updated on Apr 23, 2021.
       </span>
 
     </p>

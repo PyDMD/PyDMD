@@ -172,103 +172,164 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy.linalg</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 
 <span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
+
+<span class="k">class</span> <span class="nc">BinaryTree</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tree</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="n">level_</span><span class="p">,</span> <span class="n">bin_</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">if</span> <span class="n">level_</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;The level input parameter (</span><span class="si">{}</span><span class="s1">) has to be less or equal than the &#39;</span>
+                <span class="s1">&#39;max_level (</span><span class="si">{}</span><span class="s1">). Remember that the starting index is 0&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">level_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">bin_</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="o">**</span><span class="n">level_</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid node&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="p">[</span><span class="mi">2</span><span class="o">**</span><span class="n">level_</span> <span class="o">+</span> <span class="n">bin_</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="n">level_</span><span class="p">,</span> <span class="n">bin_</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="p">[</span><span class="mi">2</span><span class="o">**</span><span class="n">level_</span> <span class="o">+</span> <span class="n">bin_</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">levels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">index_leaves</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+        <span class="k">return</span>  <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="n">level</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="MrDMD"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD">[docs]</a><span class="k">class</span> <span class="nc">MrDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Multi-resolution Dynamic Mode Decomposition</span>
 
-<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes the</span>
-<span class="sd">        optimal rank and uses it for truncation; if positive interger, the</span>
-<span class="sd">        method uses the argument for the truncation; if float between 0 and 1,</span>
-<span class="sd">        the rank is the number of the biggest singular values that are needed</span>
-<span class="sd">        to reach the &#39;energy&#39; specified by `svd_rank`; if -1, the method does</span>
-<span class="sd">        not compute truncation.</span>
-<span class="sd">    :type svd_rank: int or float</span>
-<span class="sd">    :param int tlsq_rank: rank truncation computing Total Least Square. Default</span>
-<span class="sd">        is 0, that means TLSQ is not applied.</span>
-<span class="sd">    :param bool exact: flag to compute either exact DMD or projected DMD.</span>
-<span class="sd">        Default is False.</span>
-<span class="sd">    :param bool opt: flag to compute optimal amplitudes. See :class:`DMDBase`.</span>
-<span class="sd">        Default is False.</span>
+<span class="sd">    :param DMDBase dmd: an instance of a subclass of `DMDBase`, used to</span>
+<span class="sd">        recursively analyze the dataset.</span>
 <span class="sd">    :param int max_cycles: the maximum number of mode oscillations in any given</span>
 <span class="sd">        time scale. Default is 1.</span>
 <span class="sd">    :param int max_level: the maximum number of levels. Defualt is 6.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                 <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                 <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">max_cycles</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                 <span class="n">max_level</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">MrDMD</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">svd_rank</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="p">,</span> <span class="n">exact</span><span class="p">,</span> <span class="n">opt</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_cycles</span> <span class="o">=</span> <span class="n">max_cycles</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">=</span> <span class="n">max_level</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_nsamples</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_steps</span> <span class="o">=</span> <span class="kc">None</span>
+                 <span class="n">dmd</span><span class="p">,</span>
+                 <span class="n">max_level</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                 <span class="n">max_cycles</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 
-<div class="viewcode-block" id="MrDMD._index_list"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD._index_list">[docs]</a>    <span class="k">def</span> <span class="nf">_index_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmd</span> <span class="o">=</span> <span class="n">dmd</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_cycles</span> <span class="o">=</span> <span class="n">max_cycles</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">=</span> <span class="n">max_level</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_build_tree</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">original_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Private method that return the right index element from a given level</span>
-<span class="sd">        and node.</span>
+<span class="sd">        Returns the dictionary that contains information about the</span>
+<span class="sd">        time window where the system is sampled:</span>
 
-<span class="sd">        :param int level: the level in the binary tree.</span>
-<span class="sd">        :param int node: the node id.</span>
-<span class="sd">        :rtype: int</span>
-<span class="sd">        :return: the index of the list that contains the binary tree.</span>
+<span class="sd">           - `t0` is the time of the first input snapshot;</span>
+<span class="sd">           - `tend` is the time of the last input snapshot;</span>
+<span class="sd">           - `dt` is the delta time between the snapshots.</span>
+
+<span class="sd">        :return: the original time window information.</span>
+<span class="sd">        :rtype: dict</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">level</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid level: greater than `max_level`&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original_time</span>
 
-        <span class="k">if</span> <span class="n">node</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="o">**</span><span class="n">level</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid node&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="n">level</span> <span class="o">+</span> <span class="n">node</span> <span class="o">-</span> <span class="mi">1</span></div>
-
-<div class="viewcode-block" id="MrDMD._index_list_reversed"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD._index_list_reversed">[docs]</a>    <span class="k">def</span> <span class="nf">_index_list_reversed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dmd_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Method that return the level and node given the index of the bin.</span>
+<span class="sd">        Returns the dictionary that contains information about the</span>
+<span class="sd">        time window where the system is reconstructed:</span>
 
-<span class="sd">        :param int index: the index of the bin in the binary tree.</span>
-<span class="sd">        :return: the level of the bin in the binary tree and the node id</span>
-<span class="sd">            in that level.</span>
+<span class="sd">           - `t0` is the time of the first input snapshot;</span>
+<span class="sd">           - `tend` is the time of the last input snapshot;</span>
+<span class="sd">           - `dt` is the delta time between the snapshots.</span>
+
+<span class="sd">        :return: the reconstruction time window information.</span>
+<span class="sd">        :rtype: dict</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">-</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid index: maximum index is (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">lvl</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">**</span><span class="n">lvl</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">break</span>
-        <span class="n">level</span> <span class="o">=</span> <span class="n">lvl</span> <span class="o">-</span> <span class="mi">1</span>
-        <span class="n">node</span> <span class="o">=</span> <span class="n">index</span> <span class="o">-</span> <span class="mi">2</span><span class="o">**</span><span class="n">level</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="k">return</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_time</span>
 
-<div class="viewcode-block" id="MrDMD.partial_time_interval"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_time_interval">[docs]</a>    <span class="k">def</span> <span class="nf">partial_time_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Evaluate the start and end time and the period of a given bin.</span>
+<span class="sd">        Get the matrix containing the DMD modes, stored by column.</span>
 
-<span class="sd">        :param int level: the level in the binary tree.</span>
-<span class="sd">        :param int node: the node id.</span>
-<span class="sd">        :return: the start and end time and the period of the bin</span>
-<span class="sd">        :rtype: dictionary</span>
+<span class="sd">        :return: the matrix containing the DMD modes.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">level</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s1">&#39;The level input parameter (</span><span class="si">{}</span><span class="s1">) has to be less than the &#39;</span>
-                <span class="s1">&#39;max_level (</span><span class="si">{}</span><span class="s1">). Remember that the starting index is 0&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
+            <span class="nb">tuple</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">partial_modes</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]))</span>
 
-        <span class="k">if</span> <span class="n">node</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="o">**</span><span class="n">level</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid node&quot;</span><span class="p">)</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the time evolution of each mode.</span>
 
-        <span class="n">full_period</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;tend&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">]</span>
-        <span class="n">period</span> <span class="o">=</span> <span class="n">full_period</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">level</span>
-        <span class="n">t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">period</span><span class="o">*</span><span class="n">node</span>
-        <span class="n">tend</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="n">period</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;t0&#39;</span><span class="p">:</span> <span class="n">t0</span><span class="p">,</span> <span class="s1">&#39;tend&#39;</span><span class="p">:</span><span class="n">tend</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">:</span><span class="n">period</span><span class="p">}</span></div>
+<span class="sd">        :return: the matrix that contains all the time evolution, stored by</span>
+<span class="sd">                row.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
+            <span class="nb">tuple</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">partial_dynamics</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the eigenvalues of A tilde.</span>
+
+<span class="sd">        :return: the eigenvalues from the eigendecomposition of `atilde`.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span> <span class="k">for</span> <span class="n">dmd</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the reconstructed data.</span>
+
+<span class="sd">        :return: the matrix that contains the reconstructed snapshots.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reconstructed_data</span>
+
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">x</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">lead</span><span class="p">]</span><span class="o">.</span><span class="n">reconstructed_data</span>
+                <span class="k">for</span> <span class="n">lead</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">index_leaves</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+            <span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">x</span>
+
+<div class="viewcode-block" id="MrDMD._build_tree"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD._build_tree">[docs]</a>    <span class="k">def</span> <span class="nf">_build_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the internal binary tree that contain the DMD subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span> <span class="o">=</span> <span class="n">BinaryTree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">)</span>
+
+        <span class="c1"># Empty init</span>
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">levels</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">index_leaves</span><span class="p">(</span><span class="n">level</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd</span><span class="p">)</span></div>
+
+
 
 <div class="viewcode-block" id="MrDMD.time_window_bins"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_bins">[docs]</a>    <span class="k">def</span> <span class="nf">time_window_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -281,19 +342,16 @@
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">indexes</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">level</span><span class="p">):</span>
-                <span class="n">local_times</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_time_interval</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">t0</span> <span class="o">&gt;=</span> <span class="n">local_times</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">t0</span> <span class="o">&lt;</span> <span class="n">local_times</span><span class="p">[</span><span class="s1">&#39;tend&#39;</span><span class="p">]:</span>
-                    <span class="n">indexes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_list</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
-                <span class="k">if</span> <span class="n">tend</span> <span class="o">&gt;</span> <span class="n">local_times</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">tend</span> <span class="o">&lt;=</span> <span class="n">local_times</span><span class="p">[</span><span class="s1">&#39;tend&#39;</span><span class="p">]:</span>
-                    <span class="n">indexes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_list</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
-                <span class="k">if</span> <span class="n">t0</span> <span class="o">&lt;=</span> <span class="n">local_times</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">tend</span> <span class="o">&gt;=</span> <span class="n">local_times</span><span class="p">[</span><span class="s1">&#39;tend&#39;</span><span class="p">]:</span>
-                    <span class="n">indexes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_list</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
-        <span class="c1"># Remove duplicates if they exist</span>
-        <span class="c1"># indexes = list(dict.fromkeys(indexes)) # Python 3.7 or later (preserve order)</span>
-        <span class="n">indexes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">indexes</span><span class="p">))</span> <span class="c1"># Any Python version, but does not preserve order</span>
-        <span class="n">indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">indexes</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">levels</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">index_leaves</span><span class="p">(</span><span class="n">level</span><span class="p">):</span>
+
+                <span class="n">local_times</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_time_interval</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">t0</span> <span class="o">&gt;=</span> <span class="n">local_times</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">t0</span> <span class="o">&lt;</span> <span class="n">local_times</span><span class="p">[</span><span class="s1">&#39;tend&#39;</span><span class="p">])</span>\
+                   <span class="ow">or</span> <span class="p">(</span><span class="n">tend</span> <span class="o">&gt;</span> <span class="n">local_times</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">tend</span> <span class="o">&lt;=</span> <span class="n">local_times</span><span class="p">[</span><span class="s1">&#39;tend&#39;</span><span class="p">])</span>\
+                   <span class="ow">or</span> <span class="p">(</span><span class="n">t0</span> <span class="o">&lt;=</span> <span class="n">local_times</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">tend</span> <span class="o">&gt;=</span> <span class="n">local_times</span><span class="p">[</span><span class="s1">&#39;tend&#39;</span><span class="p">]):</span>
+                    <span class="n">indexes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">))</span>
+
+        <span class="n">indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">indexes</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">indexes</span></div>
 
 <div class="viewcode-block" id="MrDMD.time_window_eigs"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_eigs">[docs]</a>    <span class="k">def</span> <span class="nf">time_window_eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
@@ -307,7 +365,7 @@
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">indexes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_window_bins</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">])</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">eigs</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="MrDMD.time_window_frequency"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_frequency">[docs]</a>    <span class="k">def</span> <span class="nf">time_window_frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -319,8 +377,8 @@
 <span class="sd">        :return: the frequencies for that time window.</span>
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">eigs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_window_eigs</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">eigs</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">])</span></div>
+        <span class="n">indexes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_window_bins</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">frequency</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="MrDMD.time_window_growth_rate"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_growth_rate">[docs]</a>    <span class="k">def</span> <span class="nf">time_window_growth_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -332,7 +390,8 @@
 <span class="sd">        :return: the Floquet values for that time window.</span>
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_window_eigs</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">]</span></div>
+        <span class="n">indexes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_window_bins</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">growth_rate</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="MrDMD.time_window_amplitudes"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_amplitudes">[docs]</a>    <span class="k">def</span> <span class="nf">time_window_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -345,61 +404,8 @@
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">indexes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_window_bins</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">])</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">amplitudes</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">])</span></div>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the reconstructed data.</span>
-
-<span class="sd">        :return: the matrix that contains the reconstructed snapshots.</span>
-<span class="sd">        :rtype: numpy.ndarray</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">partial_reconstructed_data</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">)</span>
-                <span class="p">]),</span>
-                <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">MemoryError</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partial_reconstructed_data</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">):</span>
-                <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">data</span><span class="p">,</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">partial_reconstructed_data</span><span class="p">(</span><span class="n">i</span><span class="p">))],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">data</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the matrix containing the DMD modes, stored by column.</span>
-
-<span class="sd">        :return: the matrix containing the DMD modes.</span>
-<span class="sd">        :rtype: numpy.ndarray</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">))</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the time evolution of each mode.</span>
-
-<span class="sd">        :return: the matrix that contains all the time evolution, stored by</span>
-<span class="sd">                row.</span>
-<span class="sd">        :rtype: numpy.ndarray</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span>
-            <span class="nb">tuple</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">partial_dynamics</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">)]))</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get the eigenvalues of A tilde.</span>
-
-<span class="sd">        :return: the eigenvalues from the eigendecomposition of `atilde`.</span>
-<span class="sd">        :rtype: numpy.ndarray</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MrDMD.partial_modes"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_modes">[docs]</a>    <span class="k">def</span> <span class="nf">partial_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -412,44 +418,47 @@
 <span class="sd">        :param int node: the index of the node from where the modes are</span>
 <span class="sd">            extracted; if None, the modes are extracted from all the nodes of</span>
 <span class="sd">            the given level. Default is None.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">node</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_list</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="p">)]</span>
 
-        <span class="n">indeces</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_list</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">level</span><span class="p">)]</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="nb">tuple</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indeces</span><span class="p">]))</span></div>
+<span class="sd">        :return: the selected modes stored by columns</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">leaves</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">index_leaves</span><span class="p">(</span><span class="n">level</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
+
+        <span class="n">modes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">]</span><span class="o">.</span><span class="n">modes</span>
+            <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="n">leaves</span>
+        <span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">modes</span></div>
 
 <div class="viewcode-block" id="MrDMD.partial_dynamics"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_dynamics">[docs]</a>    <span class="k">def</span> <span class="nf">partial_dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the time evolution of the specific `level` and of the specific</span>
 <span class="sd">        `node`; if `node` is not specified, the method returns the time</span>
-<span class="sd">        evolution of the given `level` (all the nodes).</span>
+<span class="sd">        evolution of the given `level` (all the nodes). The dynamics are always</span>
+<span class="sd">        reported to the original time window.</span>
 
 <span class="sd">        :param int level: the index of the level from where the time evolution</span>
 <span class="sd">            is extracted.</span>
 <span class="sd">        :param int node: the index of the node from where the time evolution is</span>
 <span class="sd">            extracted; if None, the time evolution is extracted from all the</span>
 <span class="sd">            nodes of the given level. Default is None.</span>
+
+<span class="sd">        :return: the selected dynamics stored by row</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">leaves</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">index_leaves</span><span class="p">(</span><span class="n">level</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
 
-        <span class="k">def</span> <span class="nf">dynamic</span><span class="p">(</span><span class="n">eigs</span><span class="p">,</span> <span class="n">amplitudes</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">nsamples</span><span class="p">):</span>
-            <span class="n">omega</span> <span class="o">=</span> <span class="n">old_div</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">eigs</span><span class="p">,</span> <span class="n">old_div</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="n">step</span><span class="p">))),</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">])</span>
-            <span class="n">partial_timestep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nsamples</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">]</span>
-            <span class="n">vander</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">partial_timestep</span><span class="p">)))</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">vander</span> <span class="o">*</span> <span class="n">amplitudes</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">dynamics</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">leaves</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">]</span><span class="o">.</span><span class="n">dynamics</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1600</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="c1">#TODO</span>
+            <span class="n">time_interval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_time_interval</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">)</span>
+            <span class="n">base</span><span class="p">[:,</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_interval</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">]):</span><span class="nb">int</span><span class="p">(</span><span class="n">time_interval</span><span class="p">[</span><span class="s1">&#39;tend&#39;</span><span class="p">])]</span> <span class="o">=</span> <span class="n">d</span>
+            <span class="n">dynamics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">node</span><span class="p">:</span>
-            <span class="n">indeces</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_list</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="p">)]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">indeces</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_list</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">level</span><span class="p">)]</span>
-
-        <span class="n">level_dynamics</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">dynamic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_steps</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_nsamples</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indeces</span>
-        <span class="p">]</span>
-        <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="n">level_dynamics</span><span class="p">)</span></div>
+        <span class="n">dynamics</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">dynamics</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dynamics</span></div>
 
 <div class="viewcode-block" id="MrDMD.partial_eigs"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_eigs">[docs]</a>    <span class="k">def</span> <span class="nf">partial_eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -462,17 +471,12 @@
 <span class="sd">        :param int node: the index of the node from where the eigenvalues is</span>
 <span class="sd">            extracted; if None, the time evolution is extracted from all the</span>
 <span class="sd">            nodes of the given level. Default is None.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">level</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s1">&#39;The level input parameter (</span><span class="si">{}</span><span class="s1">) has to be less than the&#39;</span>
-                <span class="s1">&#39;max_level (</span><span class="si">{}</span><span class="s1">). Remember that the starting index is 0&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">node</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_list</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="p">)]</span>
 
-        <span class="n">indeces</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_list</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">level</span><span class="p">)]</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indeces</span><span class="p">])</span></div>
+<span class="sd">        :return: the selected eigs</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">leaves</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">index_leaves</span><span class="p">(</span><span class="n">level</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">]</span><span class="o">.</span><span class="n">eigs</span> <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="n">leaves</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="MrDMD.partial_reconstructed_data"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_reconstructed_data">[docs]</a>    <span class="k">def</span> <span class="nf">partial_reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -486,16 +490,53 @@
 <span class="sd">            extracted; if None, the time evolution is extracted from all the</span>
 <span class="sd">            nodes of the given level. Default is None.</span>
 
+<span class="sd">        :return: the selected reconstruction from dmd operators</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">level</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s1">&#39;The level input parameter (</span><span class="si">{}</span><span class="s1">) has to be less than the &#39;</span>
-                <span class="s1">&#39;max_level (</span><span class="si">{}</span><span class="s1">). Remember that the starting index is 0&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">))</span>
         <span class="n">modes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_modes</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
         <span class="n">dynamics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_dynamics</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">modes</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dynamics</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MrDMD.partial_time_interval"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_time_interval">[docs]</a>    <span class="k">def</span> <span class="nf">partial_time_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the start and end time and the period of a given bin.</span>
+
+<span class="sd">        :param int level: the level in the binary tree.</span>
+<span class="sd">        :param int node: the node id.</span>
+<span class="sd">        :return: the start and end time and the period of the bin</span>
+<span class="sd">        :rtype: dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;The level input parameter (</span><span class="si">{}</span><span class="s1">) has to be less than the &#39;</span>
+                <span class="s1">&#39;max_level (</span><span class="si">{}</span><span class="s1">). Remember that the starting index is 0&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">level</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">leaf</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="o">**</span><span class="n">level</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid node&quot;</span><span class="p">)</span>
+
+        <span class="n">full_period</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;tend&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">]</span>
+        <span class="n">period</span> <span class="o">=</span> <span class="n">full_period</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="n">level</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">period</span><span class="o">*</span><span class="n">leaf</span>
+        <span class="n">tend</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="n">period</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;t0&#39;</span><span class="p">:</span> <span class="n">t0</span><span class="p">,</span> <span class="s1">&#39;tend&#39;</span><span class="p">:</span> <span class="n">tend</span><span class="p">,</span> <span class="s1">&#39;delta&#39;</span><span class="p">:</span> <span class="n">period</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="MrDMD.enumerate"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.enumerate">[docs]</a>    <span class="k">def</span> <span class="nf">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        &gt;&gt;&gt; mrdmd = MrDMD(DMD())</span>
+<span class="sd">        &gt;&gt;&gt; mrdmd.fit(X)</span>
+<span class="sd">        &gt;&gt;&gt; for level, leaf, dmd in mrdmd:</span>
+<span class="sd">        &gt;&gt;&gt;     print(level, leaf, dmd.eigs)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">levels</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">index_leaves</span><span class="p">(</span><span class="n">level</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">]</span></div>
+
 
 <div class="viewcode-block" id="MrDMD.fit"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -506,86 +547,40 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
-        <span class="c1"># To avoid recursion function, use FIFO list to simulate the tree</span>
-        <span class="c1"># structure</span>
-        <span class="n">data_queue</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">copy</span><span class="p">()]</span>
-
-        <span class="n">current_bin</span> <span class="o">=</span> <span class="mi">0</span>
-
         <span class="c1"># Redefine max level if it is too big.</span>
         <span class="n">lvl_threshold</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mf">4.</span><span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">&gt;</span> <span class="n">lvl_threshold</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">=</span> <span class="n">lvl_threshold</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_build_tree</span><span class="p">()</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Too many levels... &#39;</span>
                   <span class="s1">&#39;Redefining `max_level` to </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">))</span>
 
-        <span class="c1"># Reset the lists</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_nsamples</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_steps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">levels</span><span class="p">:</span>
 
-        <span class="k">while</span> <span class="n">data_queue</span><span class="p">:</span>
-            <span class="n">Xraw</span> <span class="o">=</span> <span class="n">data_queue</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">n_leaf</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">level</span>
+            <span class="n">Xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">n_leaf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-            <span class="n">n_samples</span> <span class="o">=</span> <span class="n">Xraw</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="c1"># subsamples frequency to detect slow modes</span>
-            <span class="n">nyq</span> <span class="o">=</span> <span class="mi">8</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_cycles</span>
+            <span class="k">for</span> <span class="n">leaf</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">Xs</span><span class="p">):</span>
+                <span class="n">current_dmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">]</span>
+                <span class="n">current_dmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
-            <span class="n">step</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">old_div</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">nyq</span><span class="p">))))</span>
-            <span class="n">Xsub</span> <span class="o">=</span> <span class="n">Xraw</span><span class="p">[:,</span> <span class="p">::</span><span class="n">step</span><span class="p">]</span>
-            <span class="n">Xc</span> <span class="o">=</span> <span class="n">Xsub</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">Yc</span> <span class="o">=</span> <span class="n">Xsub</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
+                <span class="n">rho</span> <span class="o">=</span> <span class="n">old_div</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_cycles</span><span class="p">),</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">slow_modes</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
+                    <span class="n">old_div</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">current_dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))))</span> <span class="o">&lt;=</span> <span class="n">rho</span>
+                <span class="n">current_dmd</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvalues</span> <span class="o">=</span> <span class="n">current_dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">[</span><span class="n">slow_modes</span><span class="p">]</span>
+                <span class="n">current_dmd</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="n">current_dmd</span><span class="o">.</span><span class="n">modes</span><span class="p">[:,</span> <span class="n">slow_modes</span><span class="p">]</span>
+                <span class="n">current_dmd</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="n">current_dmd</span><span class="o">.</span><span class="n">_compute_amplitudes</span><span class="p">()</span>
 
-            <span class="n">Xc</span><span class="p">,</span> <span class="n">Yc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_tlsq</span><span class="p">(</span><span class="n">Xc</span><span class="p">,</span> <span class="n">Yc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tlsq_rank</span><span class="p">)</span>
-
-            <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_svd</span><span class="p">(</span><span class="n">Xc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank</span><span class="p">)</span>
-
-            <span class="n">Atilde</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_lowrank_op</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">Yc</span><span class="p">)</span>
-
-            <span class="n">eigs</span><span class="p">,</span> <span class="n">modes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_from_lowrank_op</span><span class="p">(</span><span class="n">Atilde</span><span class="p">,</span> <span class="n">Yc</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span>
-                                                    <span class="bp">self</span><span class="o">.</span><span class="n">exact</span><span class="p">)</span>
-            <span class="n">rho</span> <span class="o">=</span> <span class="n">old_div</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_cycles</span><span class="p">),</span> <span class="n">n_samples</span><span class="p">)</span>
-            <span class="n">slow_modes</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
-                <span class="n">old_div</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">eigs</span><span class="p">),</span> <span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">step</span><span class="p">))))</span> <span class="o">&lt;=</span> <span class="n">rho</span>
-
-            <span class="n">modes</span> <span class="o">=</span> <span class="n">modes</span><span class="p">[:,</span> <span class="n">slow_modes</span><span class="p">]</span>
-            <span class="n">eigs</span> <span class="o">=</span> <span class="n">eigs</span><span class="p">[</span><span class="n">slow_modes</span><span class="p">]</span>
-
-            <span class="c1">#---------------------------------------------------------------</span>
-            <span class="c1"># DMD Amplitudes and Dynamics</span>
-            <span class="c1">#---------------------------------------------------------------</span>
-            <span class="n">Vand</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vander</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">eigs</span><span class="p">,</span> <span class="n">old_div</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="n">step</span><span class="p">)),</span> <span class="n">n_samples</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-            <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_amplitudes</span><span class="p">(</span><span class="n">modes</span><span class="p">,</span> <span class="n">Xc</span><span class="p">,</span> <span class="n">eigs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="p">)</span>
-
-            <span class="n">Psi</span> <span class="o">=</span> <span class="p">(</span><span class="n">Vand</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">modes</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Atilde</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eigs</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_nsamples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+            <span class="n">newX</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">]</span><span class="o">.</span><span class="n">reconstructed_data</span>
+                <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">index_leaves</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+            <span class="p">])</span>
+            <span class="n">X</span> <span class="o">-=</span> <span class="n">newX</span>
 
 
-            <span class="k">if</span> <span class="n">Xraw</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;float64&#39;</span><span class="p">:</span>
-                <span class="n">Xraw</span> <span class="o">-=</span> <span class="n">modes</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Psi</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">Xraw</span> <span class="o">-=</span> <span class="n">modes</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Psi</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">current_bin</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">current_bin</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="n">half</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">old_div</span><span class="p">(</span><span class="n">Xraw</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">)))</span>
-                <span class="n">data_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Xraw</span><span class="p">[:,</span> <span class="p">:</span><span class="n">half</span><span class="p">])</span>
-                <span class="n">data_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Xraw</span><span class="p">[:,</span> <span class="n">half</span><span class="p">:])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">current_bin</span> <span class="o">+=</span> <span class="mi">1</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;t0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;tend&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;dt&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_time</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">t0</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dt</span><span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
@@ -608,7 +603,7 @@
 <span class="sd">        :param int level: plot only the eigenvalues of specific level.</span>
 <span class="sd">        :param int node: plot only the eigenvalues of specific node.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The eigenvalues have not been computed.&#39;</span>
                              <span class="s1">&#39;You have to perform the fit method.&#39;</span><span class="p">)</span>
 
@@ -624,15 +619,14 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">level</span><span class="p">:</span>
             <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;viridis&#39;</span><span class="p">)</span>
-            <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmap</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">)]</span>
+            <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmap</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">levels</span><span class="p">))]</span>
 
             <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">lvl</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">):</span>
-                <span class="n">indeces</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_list</span><span class="p">(</span><span class="n">lvl</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">lvl</span><span class="p">)]</span>
-                <span class="n">eigs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indeces</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">levels</span><span class="p">:</span>
+                <span class="n">eigs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_eigs</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
 
                 <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">eigs</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">lvl</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">eigs</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">level</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -700,7 +694,7 @@
     <p>
         &#169; Copyright Copyright 2017-2021, PyDMD contributors.
       <span class="lastupdated">
-        Last updated on Jan 23, 2021.
+        Last updated on Apr 23, 2021.
       </span>
 
     </p>

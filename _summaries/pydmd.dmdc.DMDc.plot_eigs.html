@@ -164,18 +164,25 @@
 <h1>pydmd.dmdc.DMDc.plot_eigs<a class="headerlink" href="#pydmd-dmdc-dmdc-plot-eigs" title="Permalink to this headline">¶</a></h1>
 <dl class="method">
 <dt id="pydmd.dmdc.DMDc.plot_eigs">
-<code class="sig-prename descclassname">DMDc.</code><code class="sig-name descname">plot_eigs</code><span class="sig-paren">(</span><em class="sig-param">show_axes=True</em>, <em class="sig-param">show_unit_circle=True</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em>, <em class="sig-param">title=''</em><span class="sig-paren">)</span><a class="headerlink" href="#pydmd.dmdc.DMDc.plot_eigs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot the eigenvalues.</p>
+<code class="sig-prename descclassname">DMDc.</code><code class="sig-name descname">plot_eigs</code><span class="sig-paren">(</span><em class="sig-param">show_axes=True</em>, <em class="sig-param">show_unit_circle=True</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em>, <em class="sig-param">title=''</em>, <em class="sig-param">narrow_view=False</em>, <em class="sig-param">dpi=None</em>, <em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pydmd.dmdc.DMDc.plot_eigs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the eigenvalues.
+:param bool show_axes: if True, the axes will be showed in the plot.</p>
+<blockquote>
+<div><p>Default is True.</p>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>show_axes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the axes will be showed in the plot.
-Default is True.</p></li>
 <li><p><strong>show_unit_circle</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the circle with unitary radius
 and center in the origin will be showed. Default is True.</p></li>
 <li><p><strong>figsize</strong> (<em>tuple</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – tuple in inches defining the figure
 size. Default is (8, 8).</p></li>
 <li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – title of the plot.</p></li>
+<li><p><strong>bool</strong> (<em>narrow_view</em>) – if True, the plot will show only the smallest
+rectangular area which contains all the eigenvalues, with a padding
+of 0.05. Not compatible with <cite>show_axes=True</cite>. Default is False.</p></li>
+<li><p><strong>int</strong> (<em>dpi</em>) – If not None, the given value is passed to <code class="docutils literal notranslate"><span class="pre">plt.figure</span></code>.</p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -195,7 +202,7 @@ size. Default is (8, 8).</p></li>
     <p>
         &#169; Copyright Copyright 2017-2021, PyDMD contributors.
       <span class="lastupdated">
-        Last updated on Jan 23, 2021.
+        Last updated on Apr 23, 2021.
       </span>
 
     </p>
