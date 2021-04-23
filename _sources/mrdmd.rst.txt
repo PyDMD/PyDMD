@@ -1,4 +1,4 @@
-MrDMD 
+MrDMD
 =================
 
 .. currentmodule:: pydmd.mrdmd
@@ -9,7 +9,6 @@ MrDMD
 	:toctree: _summaries
 	:nosignatures:
 
-	MrDMD._index_list
 	MrDMD.atilde
 	MrDMD.dmd_timesteps
 	MrDMD.dynamics

@@ -1,4 +1,4 @@
-DMDBase 
+DMDBase
 =================
 
 .. currentmodule:: pydmd.dmdbase
@@ -9,12 +9,8 @@ DMDBase
 	:toctree: _summaries
 	:nosignatures:
 
-	DMDBase._build_lowrank_op
 	DMDBase._col_major_2darray
 	DMDBase._compute_amplitudes
-	DMDBase._compute_svd
-	DMDBase._compute_tlsq
-	DMDBase._eig_from_lowrank_op
 	DMDBase.atilde
 	DMDBase.dmd_timesteps
 	DMDBase.dynamics

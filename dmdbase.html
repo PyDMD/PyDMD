@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>DMDBase &mdash; PyDMD 0.3.2 documentation</title>
+  <title>DMDBase &mdash; PyDMD 0.3.3 documentation</title>
   
 
   
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.3.2
+                0.3.3
               </div>
             
           
@@ -199,23 +199,11 @@
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._build_lowrank_op</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._col_major_2darray.html#pydmd.dmdbase.DMDBase._col_major_2darray" title="pydmd.dmdbase.DMDBase._col_major_2darray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._col_major_2darray</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._col_major_2darray.html#pydmd.dmdbase.DMDBase._col_major_2darray" title="pydmd.dmdbase.DMDBase._col_major_2darray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._col_major_2darray</span></code></a></p></td>
 <td><p>Private method that takes as input the snapshots and stores them into a 2D matrix, by column.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._compute_amplitudes.html#pydmd.dmdbase.DMDBase._compute_amplitudes" title="pydmd.dmdbase.DMDBase._compute_amplitudes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._compute_amplitudes</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._compute_amplitudes.html#pydmd.dmdbase.DMDBase._compute_amplitudes" title="pydmd.dmdbase.DMDBase._compute_amplitudes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._compute_amplitudes</span></code></a></p></td>
 <td><p>Compute the amplitude coefficients.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._compute_svd</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._compute_tlsq</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._eig_from_lowrank_op</span></code></p></td>
-<td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.atilde.html#pydmd.dmdbase.DMDBase.atilde" title="pydmd.dmdbase.DMDBase.atilde"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.atilde</span></code></a></p></td>
 <td><p>Get the reduced Koopman operator A, called A tilde.</p></td>
@@ -321,6 +309,108 @@ window where the system is reconstructed:</p>
 </ul>
 </dd>
 </dl>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-name descname">ModesSelectors</code><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.ModesSelectors"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A container class which defines some static methods for pre-packed
+modes selectors functions to be used in <cite>select_modes</cite>.</p>
+<p><cite>functools.partial</cite> is used to provide both parametrization of the
+functions and immediate usability. For instance, to select the first
+x modes by integral contributions one would call:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydmd</span> <span class="kn">import</span> <span class="n">DMDBase</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">select_modes</span><span class="p">(</span><span class="n">DMDBase</span><span class="o">.</span><span class="n">ModesSelectors</span><span class="o">.</span><span class="n">integral_contribution</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_compute_integral_contribution</code><span class="sig-paren">(</span><em class="sig-param">mode</em>, <em class="sig-param">dynamic</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.ModesSelectors._compute_integral_contribution"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute the integral contribution across time of the given DMD mode,
+given the mode and its dynamic, as shown in
+<a class="reference external" href="http://dx.doi.org/10.1016/j.euromechflu.2016.11.015">http://dx.doi.org/10.1016/j.euromechflu.2016.11.015</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – the DMD mode.</p></li>
+<li><p><strong>dynamic</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – the dynamic of the given DMD mode, as
+returned by <cite>dmd.dynamics[mode_index]</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return float</dt>
+<dd class="field-even"><p>the integral contribution of the given DMD mode.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_integral_contribution</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.ModesSelectors._integral_contribution"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Complete function of the modes selector <cite>integral_contribution</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the number of DMD modes to be selected.</p>
+</dd>
+<dt class="field-even">Return np.ndarray</dt>
+<dd class="field-even"><p>an array of bool, where each “True” index means
+that the corresponding DMD mode is selected.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_stable_modes</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">max_distance_from_unity</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.ModesSelectors._stable_modes"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Complete function of the modes selector <cite>stable_modes</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_distance_from_unity</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the maximum distance from the
+unit circle.</p>
+</dd>
+<dt class="field-even">Return np.ndarray</dt>
+<dd class="field-even"><p>an array of bool, where each “True” index means
+that the corresponding DMD mode is selected.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">integral_contribution</code><span class="sig-paren">(</span><em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.ModesSelectors.integral_contribution"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Select the
+Reference: <a class="reference external" href="http://dx.doi.org/10.1016/j.euromechflu.2016.11.015">http://dx.doi.org/10.1016/j.euromechflu.2016.11.015</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the number of DMD modes to be selected.</p>
+</dd>
+<dt class="field-even">Return callable</dt>
+<dd class="field-even"><p>function which can be used as the parameter
+of <cite>DMDBase.select_modes</cite> to select DMD modes according to
+the criteria of integral contribution.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">stable_modes</code><span class="sig-paren">(</span><em class="sig-param">max_distance_from_unity</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.ModesSelectors.stable_modes"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Select all the modes such that the magnitude of the corresponding
+eigenvalue is in <cite>(1-max_distance_from_unity,1+max_distance_from_unity)</cite>,
+non inclusive.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_distance_from_unity</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the maximum distance from the
+unit circle.</p>
+</dd>
+<dt class="field-even">Return callable</dt>
+<dd class="field-even"><p>function which can be used as the parameter
+of <cite>DMDBase.select_modes</cite> to select DMD modes according to
+the criteria of stability.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="method">
 <dt>
 <em class="property">static </em><code class="sig-name descname">_col_major_2darray</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._col_major_2darray"><span class="viewcode-link">[source]</span></a></dt>
@@ -659,6 +749,31 @@ size. Default is (8, 8).</p></li>
 <dt>
 <em class="property">property </em><code class="sig-name descname">rescale_mode</code></dt>
 <dd></dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">select_modes</code><span class="sig-paren">(</span><em class="sig-param">func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.select_modes"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Select the DMD modes by using the given <cite>func</cite>.
+<cite>func</cite> has to be a callable function which takes as input the DMD
+object itself and return a numpy.ndarray of boolean where <cite>False</cite>
+indicates that the corresponding mode will be discarded.
+The class <code class="xref py py-class docutils literal notranslate"><span class="pre">ModesSelectors</span></code> contains some pre-packed selector
+functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>func</strong> (<em>callable</em>) – the function to select the modes</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">stable_modes</span><span class="p">(</span><span class="n">dmd</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">toll</span> <span class="o">=</span> <span class="mf">1e-3</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">toll</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span> <span class="o">=</span> <span class="n">DMD</span><span class="p">(</span><span class="n">svd_rank</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sample_data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">select_modes</span><span class="p">(</span><span class="n">stable_modes</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
 
 <dl class="method">
 <dt>
