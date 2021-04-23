@@ -1,5 +1,6 @@
 from unittest import TestCase
 from pydmd.dmdbase import DMDBase
+from pydmd import DMD
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -103,3 +104,52 @@ class TestDmdBase(TestCase):
     def test_sorted_eigs_param(self):
         dmd = DMDBase(sorted_eigs='real')
         assert dmd.operator._sorted_eigs == 'real'
+
+    def test_select_modes(self):
+        def stable_modes(dmd_object):
+            toll = 1e-3
+            return np.abs(np.abs(dmd_object.eigs) - 1) < toll
+        dmd = DMD(svd_rank=10)
+        dmd.fit(sample_data)
+        exp = dmd.reconstructed_data
+        dmd.select_modes(stable_modes)
+        np.testing.assert_array_almost_equal(exp, dmd.reconstructed_data)
+
+    def test_stable_modes(self):
+        class FakeDMD:
+            pass
+
+        fake_dmd = FakeDMD()
+        setattr(fake_dmd, 'eigs', np.array([1 + 1e-4, 2, 1 - 1e-2, 5, 1, 1 - 0.5*1e-3]))
+
+        expected_result = np.array([False for _ in range(6)])
+        expected_result[[0, 4, 5]] = True
+
+        assert all(DMDBase.ModesSelectors.stable_modes(1e-3)(fake_dmd) == expected_result)
+
+    def test_compute_integral_contribution(self):
+        np.testing.assert_almost_equal(DMDBase.ModesSelectors._compute_integral_contribution(
+            np.array([5,0,0,1]), np.array([1,-2,3,-5,6])
+        ), 442, decimal=1)
+
+    def test_integral_contribution(self):
+        class FakeDMD:
+            pass
+
+        fake_dmd = FakeDMD()
+        setattr(fake_dmd, 'dynamics', np.array([[i for _ in range(10)] for i in range(4)]))
+        setattr(fake_dmd, 'modes', np.ones((20, 4)))
+        setattr(fake_dmd, 'dmd_time', None)
+        setattr(fake_dmd, 'original_time', None)
+
+        expected_result = np.array([False for _ in range(4)])
+        expected_result[[2, 3]] = True
+
+        assert all(DMDBase.ModesSelectors.integral_contribution(2)(fake_dmd) == expected_result)
+
+    def test_integral_contribution_reconstruction(self):
+        dmd = DMD(svd_rank=10)
+        dmd.fit(sample_data)
+        exp = dmd.reconstructed_data
+        dmd.select_modes(DMDBase.ModesSelectors.integral_contribution(2))
+        np.testing.assert_array_almost_equal(exp, dmd.reconstructed_data)

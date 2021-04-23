@@ -23,8 +23,6 @@ DMDc
 	DMDc.plot_snapshots_2D
 	DMDc.reconstructed_data
 	DMDc.snapshots
-    DMDc._fit_B_known
-    DMDc._fit_B_unknown
 
 
 .. autoclass:: DMDc
