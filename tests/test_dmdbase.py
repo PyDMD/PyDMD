@@ -153,3 +153,19 @@ class TestDmdBase(TestCase):
         exp = dmd.reconstructed_data
         dmd.select_modes(DMDBase.ModesSelectors.integral_contribution(2))
         np.testing.assert_array_almost_equal(exp, dmd.reconstructed_data)
+
+    def test_enforce_ratio_y(self):
+        dmd = DMDBase()
+        supx, infx, supy, infy = dmd._enforce_ratio(10, 20, 10, 0, 0)
+
+        dx = supx - infx
+        dy = supy - infy
+        np.testing.assert_almost_equal(max(dx,dy) / min(dx,dy), 10, decimal=6)
+
+    def test_enforce_ratio_x(self):
+        dmd = DMDBase()
+        supx, infx, supy, infy = dmd._enforce_ratio(10, 0, 0, 20, 10)
+
+        dx = supx - infx
+        dy = supy - infy
+        np.testing.assert_almost_equal(max(dx,dy) / min(dx,dy), 10, decimal=6)
