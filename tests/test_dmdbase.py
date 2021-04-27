@@ -169,3 +169,25 @@ class TestDmdBase(TestCase):
         dx = supx - infx
         dy = supy - infy
         np.testing.assert_almost_equal(max(dx,dy) / min(dx,dy), 10, decimal=6)
+
+
+    def test_plot_limits_narrow(self):
+        dmd = DMDBase()
+        dmd.operator._eigenvalues = np.array([complex(1,2), complex(-1,-2)])
+
+        tp = dmd._plot_limits(True)
+
+        assert len(tp) == 4
+
+        supx, infx, supy, infy = tp
+        assert supx == 1.05
+        assert infx == -1.05
+        assert supy == 2.05
+        assert infy == -2.05
+
+    def test_plot_limits(self):
+        dmd = DMDBase()
+        dmd.operator._eigenvalues = np.array([complex(-2,2), complex(3,-3)])
+
+        limit = dmd._plot_limits(False)
+        assert limit == 5

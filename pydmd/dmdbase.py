@@ -555,6 +555,20 @@ class DMDBase(object):
         return (supx,infx,supy,infy)
 
 
+    def _plot_limits(self, narrow_view):
+        if narrow_view:
+            supx = max(self.eigs.real) + 0.05
+            infx = min(self.eigs.real) - 0.05
+
+            supy = max(self.eigs.imag) + 0.05
+            infy = min(self.eigs.imag) - 0.05
+
+            return self._enforce_ratio(8, supx, infx, supy,
+                infy)
+        else:
+            return np.max(np.ceil(np.absolute(self.eigs)))
+
+
     def plot_eigs(self,
                   show_axes=True,
                   show_unit_circle=True,
@@ -597,14 +611,7 @@ class DMDBase(object):
                           label='Eigenvalues')
 
         if narrow_view:
-            supx = max(self.eigs.real) + 0.05
-            infx = min(self.eigs.real) - 0.05
-
-            supy = max(self.eigs.imag) + 0.05
-            infy = min(self.eigs.imag) - 0.05
-
-            supx, infx, supy, infy = self._enforce_ratio(8, supx, infx, supy,
-                infy)
+            supx, infx, supy, infy = self._plot_limits(narrow_view)
 
             # set limits for axis
             ax.set_xlim((infx, supx))
@@ -622,7 +629,8 @@ class DMDBase(object):
                             arrowprops=dict(arrowstyle="->"))
         else:
             # set limits for axis
-            limit = np.max(np.ceil(np.absolute(self.eigs)))
+            limit = self._plot_limits(narrow_view)
+
             ax.set_xlim((-limit, limit))
             ax.set_ylim((-limit, limit))
 
