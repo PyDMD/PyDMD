@@ -619,14 +619,17 @@ class DMDBase(object):
 
             # x and y axes
             if show_axes:
+                endx = np.min([supx, 1.])
                 ax.annotate('',
-                            xy=(np.min([supx, 1.]), 0.),
+                            xy=(endx, 0.),
                             xytext=(np.max([infx, -1.]), 0.),
-                            arrowprops=dict(arrowstyle="->"))
+                            arrowprops=dict(arrowstyle=("->" if endx == 1. else '-')))
+
+                endy = np.min([supy, 1.])
                 ax.annotate('',
-                            xy=(0., np.min([supy, 1.])),
+                            xy=(0., endy),
                             xytext=(0., np.max([infy, -1.])),
-                            arrowprops=dict(arrowstyle="->"))
+                            arrowprops=dict(arrowstyle=("->" if endy == 1. else '-')))
         else:
             # set limits for axis
             limit = self._plot_limits(narrow_view)
