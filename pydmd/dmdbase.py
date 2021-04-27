@@ -514,6 +514,61 @@ class DMDBase(object):
             return partial(DMDBase.ModesSelectors._integral_contribution, n=n)
 
 
+    def _enforce_ratio(self, goal_ratio, supx, infx, supy, infy):
+        """
+        Computes the right value of `supx,infx,supy,infy` to obtain the desired
+        ratio in :func:`plot_eigs`. Ratio is defined as
+        ::
+            dx = supx - infx
+            dy = supy - infy
+            max(dx,dy) / min(dx,dy)
+
+        :param float goal_ratio: the desired ratio.
+        :param float supx: the old value of `supx`, to be adjusted.
+        :param float infx: the old value of `infx`, to be adjusted.
+        :param float supy: the old value of `supy`, to be adjusted.
+        :param float infy: the old value of `infy`, to be adjusted.
+        :return tuple: a tuple which contains the updated values of
+            `supx,infx,supy,infy` in this order.
+        """
+
+        dx = supx - infx
+        if dx == 0:
+            dx = 1.e-16
+        dy = supy - infy
+        if dy == 0:
+            dy = 1.e-16
+        ratio = max(dx, dy) / min(dx, dy)
+
+        if ratio >= goal_ratio:
+            if dx < dy:
+                goal_size = dy / goal_ratio
+
+                supx += (goal_size - dx) / 2
+                infx -= (goal_size - dx) / 2
+            elif dy < dx:
+                goal_size = dx / goal_ratio
+
+                supy += (goal_size - dy) / 2
+                infy -= (goal_size - dy) / 2
+
+        return (supx,infx,supy,infy)
+
+
+    def _plot_limits(self, narrow_view):
+        if narrow_view:
+            supx = max(self.eigs.real) + 0.05
+            infx = min(self.eigs.real) - 0.05
+
+            supy = max(self.eigs.imag) + 0.05
+            infy = min(self.eigs.imag) - 0.05
+
+            return self._enforce_ratio(8, supx, infx, supy,
+                infy)
+        else:
+            return np.max(np.ceil(np.absolute(self.eigs)))
+
+
     def plot_eigs(self,
                   show_axes=True,
                   show_unit_circle=True,
@@ -556,20 +611,42 @@ class DMDBase(object):
                           label='Eigenvalues')
 
         if narrow_view:
-            supx = max(self.eigs.real) + 0.05
-            infx = min(self.eigs.real) - 0.05
-
-            supy = max(self.eigs.imag) + 0.05
-            infy = min(self.eigs.imag) - 0.05
+            supx, infx, supy, infy = self._plot_limits(narrow_view)
 
             # set limits for axis
             ax.set_xlim((infx, supx))
             ax.set_ylim((infy, supy))
+
+            # x and y axes
+            if show_axes:
+                endx = np.min([supx, 1.])
+                ax.annotate('',
+                            xy=(endx, 0.),
+                            xytext=(np.max([infx, -1.]), 0.),
+                            arrowprops=dict(arrowstyle=("->" if endx == 1. else '-')))
+
+                endy = np.min([supy, 1.])
+                ax.annotate('',
+                            xy=(0., endy),
+                            xytext=(0., np.max([infy, -1.])),
+                            arrowprops=dict(arrowstyle=("->" if endy == 1. else '-')))
         else:
             # set limits for axis
-            limit = np.max(np.ceil(np.absolute(self.eigs)))
+            limit = self._plot_limits(narrow_view)
+
             ax.set_xlim((-limit, limit))
             ax.set_ylim((-limit, limit))
+
+            # x and y axes
+            if show_axes:
+                ax.annotate('',
+                            xy=(np.max([limit * 0.8, 1.]), 0.),
+                            xytext=(np.min([-limit * 0.8, -1.]), 0.),
+                            arrowprops=dict(arrowstyle="->"))
+                ax.annotate('',
+                            xy=(0., np.max([limit * 0.8, 1.])),
+                            xytext=(0., np.min([-limit * 0.8, -1.])),
+                            arrowprops=dict(arrowstyle="->"))
 
         plt.ylabel('Imaginary part')
         plt.xlabel('Real part')
@@ -589,25 +666,14 @@ class DMDBase(object):
             line.set_linestyle('-.')
         ax.grid(True)
 
-        # x and y axes
-        if show_axes:
-            ax.annotate('',
-                        xy=(np.max([limit * 0.8, 1.]), 0.),
-                        xytext=(np.min([-limit * 0.8, -1.]), 0.),
-                        arrowprops=dict(arrowstyle="->"))
-            ax.annotate('',
-                        xy=(0., np.max([limit * 0.8, 1.])),
-                        xytext=(0., np.min([-limit * 0.8, -1.])),
-                        arrowprops=dict(arrowstyle="->"))
-
         # legend
         if show_unit_circle:
             ax.add_artist(
                 plt.legend([points, unit_circle],
                            ['Eigenvalues', 'Unit circle'],
-                           loc=1))
+                           loc='best'))
         else:
-            ax.add_artist(plt.legend([points], ['Eigenvalues'], loc=1))
+            ax.add_artist(plt.legend([points], ['Eigenvalues'], loc='best'))
 
         ax.set_aspect('equal')
 
