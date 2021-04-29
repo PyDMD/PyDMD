@@ -43,22 +43,74 @@ class HODMD(DMDBase):
         magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
         part to break ties) if `sorted_eigs='real'`. Default: False.
     :type sorted_eigs: {'real', 'abs'} or False
+    :param reconstruction_method: Due to how HODMD is defined, we have several
+        versions of the same snapshot. The parameter `reconstruction_method`
+        allows changing how these versions are combined in `reconstructed_data`.
+        If `'first'`, only the first version is selected (default behavior);
+        if `'mean'` we take the mean of all the versions; if the parameter is an
+        array of floats of size `d`, the return value is the weighted average
+        of the versions.
+    :type reconstruction_method: {'first', 'mean'} or array-like
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-        rescale_mode=None, forward_backward=False, d=1, sorted_eigs=False):
+        rescale_mode=None, forward_backward=False, d=1, sorted_eigs=False,
+        reconstruction_method='first'):
         super(HODMD, self).__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank,
             exact=exact, opt=opt, rescale_mode=rescale_mode,
             sorted_eigs=sorted_eigs)
         self._d = d
 
+        if isinstance(reconstruction_method, list):
+            if len(reconstruction_method) != d:
+                raise ValueError('The length of the array of weights must be equal to d')
+        elif isinstance(reconstruction_method, np.ndarray):
+            if reconstruction_method.ndim > 1 or reconstruction_method.shape[0] != d:
+                raise ValueError('The length of the array of weights must be equal to d')
+        self._reconstruction_method = reconstruction_method
+
     @property
     def d(self):
         return self._d
 
-    @DMDBase.modes.getter
-    def modes(self):
-        return super(HODMD, self).modes[:self._snapshots.shape[0], :]
+    def reconstructions_of_timeindex(self, timeindex=None):
+        rec = super(HODMD, self).reconstructed_data
+        space_dim = rec.shape[0] // self.d
+        time_instants = rec.shape[1] + self.d - 1
+
+        # for each time instance, we take the mean of all its appearences.
+        # each snapshot appears at most d times (for instance, the first and the
+        # last appear only once).
+        reconstructed_snapshots = np.full((time_instants, self.d, space_dim), np.nan, dtype=np.complex128)
+
+        for time_slice_idx in range(rec.shape[1]):
+            time_slice = rec[:, time_slice_idx]
+
+            for i in range(self.d):
+                mx = time_slice[space_dim * i : space_dim * (i + 1)]
+                if not np.ma.is_masked(mx):
+                    reconstructed_snapshots[time_slice_idx + i, i] = mx
+
+        if timeindex is None:
+            return reconstructed_snapshots
+        else:
+            return reconstructed_snapshots[timeindex]
+
+    @property
+    def reconstructed_data(self):
+        rec = self.reconstructions_of_timeindex()
+        rec = np.ma.array(rec, mask=np.isnan(rec))
+
+        if self._reconstruction_method == 'first':
+            return rec[:,0].T
+        elif self._reconstruction_method == 'mean':
+            return np.mean(rec, axis=1).T
+        elif (isinstance(self._reconstruction_method, list) or
+            isinstance(self._reconstruction_method, np.ndarray)):
+            return np.average(rec, axis=1, weights=self._reconstruction_method).T
+        else:
+            raise ValueError("The reconstruction method wasn't recognized: {}"
+                .format(self._reconstruction_method))
 
     def fit(self, X):
         """
@@ -67,17 +119,17 @@ class HODMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
-        snaps = np.concatenate(
+        snp, self._snapshots_shape = self._col_major_2darray(X)
+        self._snapshots = np.concatenate(
             [
-                self._snapshots[:, i:self._snapshots.shape[1] - self.d + i + 1]
+                snp[:, i:snp.shape[1] - self.d + i + 1]
                 for i in range(self.d)
             ],
             axis=0)
 
         n_samples = self._snapshots.shape[1]
-        X = snaps[:, :-1]
-        Y = snaps[:, 1:]
+        X = self._snapshots[:, :-1]
+        Y = self._snapshots[:, 1:]
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
         U, s, V = self.operator.compute_operator(X,Y)

@@ -266,3 +266,47 @@ class TestHODmd(TestCase):
     def test_sorted_eigs_param(self):
         dmd = HODMD(sorted_eigs='real')
         assert dmd.operator._sorted_eigs == 'real'
+
+
+    def test_reconstruction_method_constructor_error(self):
+        with self.assertRaises(ValueError):
+            HODMD(reconstruction_method=[1, 2, 3], d=4)
+
+        with self.assertRaises(ValueError):
+            HODMD(reconstruction_method=np.array([1, 2, 3]), d=4)
+
+        with self.assertRaises(ValueError):
+            HODMD(reconstruction_method=np.array([[1, 2, 3], [3, 4, 5]]), d=3)
+
+
+    def test_reconstruction_method_default_constructor(self):
+        assert HODMD()._reconstruction_method == 'first'
+
+    def test_reconstruction_method_constructor(self):
+        assert HODMD(reconstruction_method='mean')._reconstruction_method == 'mean'
+        assert HODMD(reconstruction_method=[3])._reconstruction_method == [3]
+        assert all(HODMD(reconstruction_method=np.array([1, 2]), d=2)._reconstruction_method == np.array([1, 2]))
+
+    def test_nonan_nomask(self):
+        dmd = HODMD(d=3)
+        dmd.fit(X=sample_data)
+        for timeindex in range(sample_data.shape[1]):
+            ds = dmd.reconstructions_of_timeindex(timeindex)
+            for mx in ds:
+                assert not np.ma.is_masked(mx)
+                assert np.nan not in mx
+
+    def test_rec_method_first(self):
+        dmd = HODMD(d=3, reconstruction_method='first')
+        dmd.fit(X=sample_data)
+        assert (dmd.reconstructed_data == dmd.reconstructions_of_timeindex()[:,0].T).all()
+
+    def test_rec_method_mean(self):
+        dmd = HODMD(d=3, reconstruction_method='mean')
+        dmd.fit(X=sample_data)
+        assert (dmd.reconstructed_data.T[2] == np.mean(dmd.reconstructions_of_timeindex(2), axis=0).T).all()
+
+    def test_rec_method_weighted(self):
+        dmd = HODMD(d=2, reconstruction_method=[10,20])
+        dmd.fit(X=sample_data)
+        assert (dmd.reconstructed_data.T[4] == np.average(dmd.reconstructions_of_timeindex(4), axis=0, weights=[10,20]).T).all()
