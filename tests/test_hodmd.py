@@ -290,11 +290,16 @@ class TestHODmd(TestCase):
     def test_nonan_nomask(self):
         dmd = HODMD(d=3)
         dmd.fit(X=sample_data)
+        rec = dmd.reconstructed_data
+
+        assert not isinstance(rec, np.ma.MaskedArray)
+        assert not np.nan in rec
+
+    def test_extract_versions_nonan(self):
+        dmd = HODMD(d=3)
+        dmd.fit(X=sample_data)
         for timeindex in range(sample_data.shape[1]):
-            ds = dmd.reconstructions_of_timeindex(timeindex)
-            for mx in ds:
-                assert not np.ma.is_masked(mx)
-                assert np.nan not in mx
+            assert not np.nan in dmd.reconstructions_of_timeindex(timeindex)
 
     def test_rec_method_first(self):
         dmd = HODMD(d=3, reconstruction_method='first')
