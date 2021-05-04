@@ -10,10 +10,9 @@
     <a href="https://github.com/mathLab/PyDMD/blob/master/LICENSE" target="_blank">
         <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square">
     </a>
-	<a href="https://badge.fury.io/py/pydmd">
-		<img src="https://badge.fury.io/py/pydmd.svg" alt="PyPI version"
-		height="18">
-	</a>
+    <a href="https://badge.fury.io/py/pydmd"  target="_blank">
+        <img alt="PyPI version" src="https://badge.fury.io/py/pydmd.svg">
+    </a>
     <a href="https://travis-ci.org/mathLab/PyDMD" target="_blank">
         <img alt="Build Status" src="https://travis-ci.org/mathLab/PyDMD.svg">
     </a>
