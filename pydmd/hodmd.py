@@ -74,6 +74,20 @@ class HODMD(DMDBase):
         return self._d
 
     def reconstructions_of_timeindex(self, timeindex=None):
+        """
+        Build a collection of all the available versions of the given
+        `timeindex`. The indexing of time instants is the same used for
+        :func:`reconstructed_data`. For each time instant there are at least one
+        and at most `d` versions. If `timeindex` is `None` the function returns
+        the whole collection, for all the time instants.
+
+        :param int timeindex: The index of the time snapshot.
+        :return: a collection of all the available versions for the given
+            time snapshot, or for all the time snapshots if `timeindex` is
+            `None` (in the second case, time varies along the first dimension
+            of the array returned).
+        :rtype: numpy.ndarray or list
+        """
         rec = super(HODMD, self).reconstructed_data
         space_dim = rec.shape[0] // self.d
         time_instants = rec.shape[1] + self.d - 1
@@ -83,18 +97,21 @@ class HODMD(DMDBase):
         # last appear only once).
         reconstructed_snapshots = np.full((time_instants, self.d, space_dim), np.nan, dtype=np.complex128)
 
+        first_empty = np.zeros((time_instants,), dtype=np.int8)
+
         for time_slice_idx in range(rec.shape[1]):
             time_slice = rec[:, time_slice_idx]
 
             for i in range(self.d):
+                time_idx = time_slice_idx + i
                 mx = time_slice[space_dim * i : space_dim * (i + 1)]
-                if not np.ma.is_masked(mx):
-                    reconstructed_snapshots[time_slice_idx + i, i] = mx
+                reconstructed_snapshots[time_idx, first_empty[time_idx]] = mx
+                first_empty[time_idx] += 1
 
         if timeindex is None:
             return reconstructed_snapshots
         else:
-            return reconstructed_snapshots[timeindex]
+            return reconstructed_snapshots[timeindex][:first_empty[timeindex]]
 
     @property
     def reconstructed_data(self):
@@ -102,15 +119,17 @@ class HODMD(DMDBase):
         rec = np.ma.array(rec, mask=np.isnan(rec))
 
         if self._reconstruction_method == 'first':
-            return rec[:,0].T
+            result = rec[:,0].T
         elif self._reconstruction_method == 'mean':
-            return np.mean(rec, axis=1).T
+            result = np.mean(rec, axis=1).T
         elif (isinstance(self._reconstruction_method, list) or
             isinstance(self._reconstruction_method, np.ndarray)):
-            return np.average(rec, axis=1, weights=self._reconstruction_method).T
+            result = np.average(rec, axis=1, weights=self._reconstruction_method).T
         else:
             raise ValueError("The reconstruction method wasn't recognized: {}"
                 .format(self._reconstruction_method))
+
+        return result.filled(fill_value=0)
 
     def fit(self, X):
         """
