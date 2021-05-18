@@ -58,7 +58,7 @@ class DMDOperator(object):
 
         if self._forward_backward:
             # b stands for "backward"
-            bU, bs, bV = self._compute_svd(Y, svd_rank=self._svd_rank)
+            bU, bs, bV = self._compute_svd(Y, svd_rank=len(s))
             atilde_back = self._least_square_operator(bU, bs, bV, X)
             atilde = sqrtm(atilde.dot(np.linalg.inv(atilde_back)))
 
