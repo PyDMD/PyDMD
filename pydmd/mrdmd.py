@@ -13,7 +13,7 @@ import scipy.linalg
 import matplotlib.pyplot as plt
 from copy import deepcopy
 
-from .dmdbase import DMDBase
+from .dmdbase import DMDBase, DMDTimeDict
 
 class BinaryTree(object):
 
@@ -418,8 +418,10 @@ class MrDMD(DMDBase):
             X -= newX
 
 
-        self._dmd_time = dict(t0 = 0, tend = self._snapshots.shape[1], dt= 1)
-        self._original_time = self.dmd_time.copy()
+        self._dmd_time = DMDTimeDict(
+            dict(t0 = 0, tend = self._snapshots.shape[1], dt= 1))
+        self._original_time = DMDTimeDict(
+            dict(t0 = 0, tend = self._snapshots.shape[1], dt= 1))
 
         return self
 

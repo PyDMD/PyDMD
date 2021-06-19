@@ -6,7 +6,7 @@ Derived module from dmdbase.py for classic dmd.
 import numpy as np
 
 # --> Import PyDMD base class for DMD.
-from .dmdbase import DMDBase
+from .dmdbase import DMDBase, DMDTimeDict
 
 from .dmdoperator import DMDOperator
 from .utils import compute_tlsq
@@ -64,8 +64,8 @@ class DMD(DMDBase):
         self._svd_modes, _, _ = self.operator.compute_operator(X,Y)
 
         # Default timesteps
-        self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
-        self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
+        self.original_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
+        self.dmd_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
 
         self._b = self._compute_amplitudes()
 

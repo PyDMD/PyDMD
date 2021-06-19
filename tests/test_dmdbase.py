@@ -191,3 +191,10 @@ class TestDmdBase(TestCase):
 
         limit = dmd._plot_limits(False)
         assert limit == 5
+
+    def test_dmd_time_wrong_key(self):
+        dmd = DMD(svd_rank=10)
+        dmd.fit(sample_data)
+
+        with self.assertRaises(KeyError):
+            dmd.dmd_time['tstart'] = 10

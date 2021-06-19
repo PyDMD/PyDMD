@@ -7,7 +7,7 @@ Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.
 """
 import numpy as np
 
-from .dmdbase import DMDBase
+from .dmdbase import DMDBase, DMDTimeDict
 from .utils import compute_tlsq
 
 
@@ -154,8 +154,8 @@ class HODMD(DMDBase):
         U, s, V = self.operator.compute_operator(X,Y)
 
         # Default timesteps
-        self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
-        self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
+        self.original_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
+        self.dmd_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
 
         self._b = self._compute_amplitudes()
 
