@@ -864,3 +864,10 @@ class DMDBase(object):
 
         if not filename:
             plt.show()
+
+class DMDTimeDict(dict):
+    def __setitem__(self, key, value):
+        if key in ['t0', 'tend', 'dt']:
+            dict.__setitem__(self, key, value)
+        else:
+            raise KeyError('DMDBase.dmd_time accepts only the following keys: "t0", "tend", "dt", {} is not allowed.'.format(key))

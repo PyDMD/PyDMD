@@ -8,7 +8,7 @@ import numpy as np
 import scipy.sparse
 from scipy.linalg import sqrtm
 
-from .dmdbase import DMDBase
+from .dmdbase import DMDBase, DMDTimeDict
 from .dmdoperator import DMDOperator
 
 from .utils import compute_tlsq
@@ -195,8 +195,8 @@ class CDMD(DMDBase):
         U, s, V = self.operator.compute_operator(X,Y, self._snapshots[:, 1:])
 
         # Default timesteps
-        self.original_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
-        self.dmd_time = {'t0': 0, 'tend': n_samples - 1, 'dt': 1}
+        self.original_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
+        self.dmd_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
 
         self._b = self._compute_amplitudes()
 
