@@ -11,6 +11,7 @@ Code Documentation
    mrdmd
    fbdmd
    cdmd
+   hankeldmd
    hodmd
    dmdc
    optdmd

@@ -14,7 +14,7 @@ from .utils import compute_tlsq
 
 class HankelDMD(DMDBase):
     """
-    Higher Order Dynamic Mode Decomposition
+    Hankel Dynamic Mode Decomposition
 
     :param svd_rank: the rank for the truncation; If 0, the method computes the
         optimal rank and uses it for truncation; if positive interger, the
@@ -90,7 +90,6 @@ class HankelDMD(DMDBase):
         :rtype: numpy.ndarray or list
         """
         rec = super().reconstructed_data
-        print('pippo', rec.shape)
         space_dim = rec.shape[0] // self.d
         time_instants = rec.shape[1] + self.d - 1
 

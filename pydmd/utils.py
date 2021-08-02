@@ -30,6 +30,7 @@ def compute_tlsq(X, Y, tlsq_rank):
 def compute_svd(X, svd_rank=0):
     """
     Truncated Singular Value Decomposition.
+
     :param numpy.ndarray X: the matrix to decompose.
     :param svd_rank: the rank for the truncation; If 0, the method computes
         the optimal rank and uses it for truncation; if positive interger,
@@ -41,6 +42,7 @@ def compute_svd(X, svd_rank=0):
     :return: the truncated left-singular vectors matrix, the truncated
         singular values array, the truncated right-singular vectors matrix.
     :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
+
     References:
     Gavish, Matan, and David L. Donoho, The optimal hard threshold for
     singular values is, IEEE Transactions on Information Theory 60.8
