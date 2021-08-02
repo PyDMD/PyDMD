@@ -1,6 +1,6 @@
 from builtins import range
 from unittest import TestCase
-from pydmd.hodmd import HODMD
+from pydmd import HankelDMD
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -34,35 +34,33 @@ noisy_data = create_noisy_data()
 
 class TestHODmd(TestCase):
     def test_shape(self):
-        dmd = HODMD(svd_rank=-1, d=2, svd_rank_extra=-1)
+        dmd = HankelDMD(svd_rank=-1)
         dmd.fit(X=sample_data)
-        print(dmd.modes.shape, sample_data.shape)
-        assert dmd.modes.shape[1] == sample_data.shape[1] - 2
+        assert dmd.modes.shape[1] == sample_data.shape[1] - 1
 
     def test_truncation_shape(self):
-        dmd = HODMD(svd_rank=3)
+        dmd = HankelDMD(svd_rank=3)
         dmd.fit(X=sample_data)
         assert dmd.modes.shape[1] == 3
 
     def test_rank(self):
-        dmd = HODMD(svd_rank=0.9)
+        dmd = HankelDMD(svd_rank=0.9)
         dmd.fit(X=sample_data)
         assert len(dmd.eigs) == 2
 
     def test_Atilde_shape(self):
-        dmd = HODMD(svd_rank=3)
+        dmd = HankelDMD(svd_rank=3)
         dmd.fit(X=sample_data)
         assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
 
     def test_d(self):
         single_data = np.sin(np.linspace(0, 10, 100))
-        dmd = HODMD(svd_rank=-1, d=50, opt=True, svd_rank_extra=-1)
+        dmd = HankelDMD(svd_rank=-1, d=50, opt=True)
         dmd.fit(single_data)
         assert np.allclose(dmd.reconstructed_data.flatten(), single_data)
-        assert dmd.d == 50
 
     def test_Atilde_values(self):
-        dmd = HODMD(svd_rank=2)
+        dmd = HankelDMD(svd_rank=2)
         dmd.fit(X=sample_data)
         exact_atilde = np.array(
             [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
@@ -70,18 +68,17 @@ class TestHODmd(TestCase):
         np.testing.assert_allclose(exact_atilde, dmd.atilde)
 
     def test_eigs_1(self):
-        dmd = HODMD(svd_rank=-1, svd_rank_extra=-1)
+        dmd = HankelDMD(svd_rank=-1)
         dmd.fit(X=sample_data)
-        print('eig',len(dmd.eigs))
         assert len(dmd.eigs) == 14
 
     def test_eigs_2(self):
-        dmd = HODMD(svd_rank=5)
+        dmd = HankelDMD(svd_rank=5)
         dmd.fit(X=sample_data)
-        assert len(dmd.eigs) == 4
+        assert len(dmd.eigs) == 5
 
     def test_eigs_3(self):
-        dmd = HODMD(svd_rank=2)
+        dmd = HankelDMD(svd_rank=2)
         dmd.fit(X=sample_data)
         expected_eigs = np.array([
             -8.09016994e-01 + 5.87785252e-01j, -4.73868662e-01 + 8.80595532e-01j
@@ -89,44 +86,71 @@ class TestHODmd(TestCase):
         np.testing.assert_almost_equal(dmd.eigs, expected_eigs, decimal=6)
 
     def test_dynamics_1(self):
-        dmd = HODMD(svd_rank=5)
+        dmd = HankelDMD(svd_rank=5)
         dmd.fit(X=sample_data)
-        assert dmd.dynamics.shape == (4, sample_data.shape[1])
+        assert dmd.dynamics.shape == (5, sample_data.shape[1])
+
+    def test_dynamics_2(self):
+        dmd = HankelDMD(svd_rank=1)
+        dmd.fit(X=sample_data)
+        expected_dynamics = np.array([[
+            -2.20639502 - 9.10168802e-16j, 1.55679980 - 1.49626864e+00j,
+            -0.08375915 + 2.11149018e+00j, -1.37280962 - 1.54663768e+00j,
+            2.01748787 + 1.60312745e-01j, -1.53222592 + 1.25504678e+00j,
+            0.23000498 - 1.92462280e+00j, 1.14289644 + 1.51396355e+00j,
+            -1.83310653 - 2.93174173e-01j, 1.49222925 - 1.03626336e+00j,
+            -0.35015209 + 1.74312867e+00j, -0.93504202 - 1.46738182e+00j,
+            1.65485808 + 4.01263449e-01j, -1.43976061 + 8.39117825e-01j,
+            0.44682540 - 1.56844403e+00j
+        ]])
+        np.testing.assert_allclose(dmd.dynamics, expected_dynamics)
 
     def test_dynamics_opt_1(self):
-        dmd = HODMD(svd_rank=5, opt=True)
+        dmd = HankelDMD(svd_rank=5, opt=True)
         dmd.fit(X=sample_data)
-        print(dmd.dynamics.shape)
-        assert dmd.dynamics.shape == (4, sample_data.shape[1])
+        assert dmd.dynamics.shape == (5, sample_data.shape[1])
 
+    def test_dynamics_opt_2(self):
+        dmd = HankelDMD(svd_rank=1, opt=True)
+        dmd.fit(X=sample_data)
+        expected_dynamics = np.array([[
+            -4.56004133 - 6.48054238j, 7.61228319 + 1.4801793j,
+            -6.37489962 + 4.11788355j, 1.70548899 - 7.22866146j,
+            3.69875496 + 6.25701574j, -6.85298745 - 1.90654427j,
+            6.12829151 - 3.30212967j, -2.08469012 + 6.48584004j,
+            -2.92745126 - 5.99004747j, 6.12772217 + 2.24123565j,
+            -5.84352626 + 2.57413711j, 2.37745273 - 5.77906544j,
+            2.24158249 + 5.68989493j, -5.44023459 - 2.49457492j,
+            5.53024740 - 1.92916437j
+        ]])
+        np.testing.assert_allclose(dmd.dynamics, expected_dynamics)
 
     def test_reconstructed_data(self):
-        dmd = HODMD(d=2)
+        dmd = HankelDMD()
         dmd.fit(X=sample_data)
-        dmd.reconstructions_of_timeindex(2)
         dmd_data = dmd.reconstructed_data
         np.testing.assert_allclose(dmd_data, sample_data)
 
     def test_original_time(self):
-        dmd = HODMD(svd_rank=2)
+        dmd = HankelDMD(svd_rank=2)
         dmd.fit(X=sample_data)
         expected_dict = {'dt': 1, 't0': 0, 'tend': 14}
         np.testing.assert_equal(dmd.original_time, expected_dict)
 
     def test_original_timesteps(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         dmd.fit(X=sample_data)
         np.testing.assert_allclose(dmd.original_timesteps,
                                    np.arange(sample_data.shape[1]))
 
     def test_dmd_time_1(self):
-        dmd = HODMD(svd_rank=2)
+        dmd = HankelDMD(svd_rank=2)
         dmd.fit(X=sample_data)
         expected_dict = {'dt': 1, 't0': 0, 'tend': 14}
         np.testing.assert_equal(dmd.dmd_time, expected_dict)
 
     def test_dmd_time_2(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         dmd.fit(X=sample_data)
         dmd.dmd_time['t0'] = 10
         dmd.dmd_time['tend'] = 14
@@ -134,7 +158,7 @@ class TestHODmd(TestCase):
         np.testing.assert_allclose(dmd.reconstructed_data, expected_data)
 
     def test_dmd_time_3(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         dmd.fit(X=sample_data)
         dmd.dmd_time['t0'] = 8
         dmd.dmd_time['tend'] = 11
@@ -142,131 +166,129 @@ class TestHODmd(TestCase):
         np.testing.assert_allclose(dmd.reconstructed_data, expected_data)
 
     def test_dmd_time_4(self):
-        dmd = HODMD(svd_rank=3)
+        dmd = HankelDMD(svd_rank=3)
         dmd.fit(X=sample_data)
         dmd.dmd_time['t0'] = 20
         dmd.dmd_time['tend'] = 20
-        expected_data = np.array([[7.29383297e+00 + 0.0j],
-                                  [5.69109796e+00 + 2.74068833e+00j],
-                                  [           0.0 + 0.0j]])
+        expected_data = np.array([[-7.29383297e+00 - 4.90248179e-14j],
+                                  [-5.69109796e+00 - 2.74068833e+00j],
+                                  [3.38410649e-83 + 3.75677740e-83j]])
         np.testing.assert_almost_equal(dmd.dynamics, expected_data, decimal=6)
 
     def test_plot_eigs_1(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         dmd.fit(X=sample_data)
         dmd.plot_eigs(show_axes=True, show_unit_circle=True)
         plt.close()
 
     def test_plot_eigs_2(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         dmd.fit(X=sample_data)
         dmd.plot_eigs(show_axes=False, show_unit_circle=False)
         plt.close()
 
-    """
     def test_plot_modes_1(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         dmd.fit(X=sample_data)
         with self.assertRaises(ValueError):
             dmd.plot_modes_2D()
 
     def test_plot_modes_2(self):
-        dmd = HODMD(svd_rank=-1)
+        dmd = HankelDMD(svd_rank=-1)
         dmd.fit(X=sample_data)
-        dmd.plot_modes_2D((1, 2, 5), x=np.arange(1), y=np.arange(15))
+        dmd.plot_modes_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
         plt.close()
 
     def test_plot_modes_3(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
         dmd.fit(X=snapshots)
         dmd.plot_modes_2D()
         plt.close()
 
     def test_plot_modes_4(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
         dmd.fit(X=snapshots)
         dmd.plot_modes_2D(index_mode=1)
         plt.close()
 
     def test_plot_modes_5(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
         dmd.fit(X=snapshots)
         dmd.plot_modes_2D(index_mode=1, filename='tmp.png')
         self.addCleanup(os.remove, 'tmp.1.png')
-    """
 
     def test_plot_snapshots_1(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         dmd.fit(X=sample_data)
         with self.assertRaises(ValueError):
             dmd.plot_snapshots_2D()
 
     def test_plot_snapshots_2(self):
-        dmd = HODMD(svd_rank=-1)
+        dmd = HankelDMD(svd_rank=-1)
         dmd.fit(X=sample_data)
         dmd.plot_snapshots_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
         plt.close()
 
     def test_plot_snapshots_3(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
         dmd.fit(X=snapshots)
         dmd.plot_snapshots_2D()
         plt.close()
 
     def test_plot_snapshots_4(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
         dmd.fit(X=snapshots)
         dmd.plot_snapshots_2D(index_snap=2)
         plt.close()
 
     def test_plot_snapshots_5(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
         dmd.fit(X=snapshots)
         dmd.plot_snapshots_2D(index_snap=2, filename='tmp.png')
         self.addCleanup(os.remove, 'tmp.2.png')
 
     def test_tdmd_plot(self):
-        dmd = HODMD(tlsq_rank=3)
+        dmd = HankelDMD(tlsq_rank=3)
         dmd.fit(X=sample_data)
         dmd.plot_eigs(show_axes=False, show_unit_circle=False)
         plt.close()
 
     def test_sorted_eigs_default(self):
-        dmd = HODMD()
+        dmd = HankelDMD()
         assert dmd.operator._sorted_eigs == False
 
     def test_sorted_eigs_param(self):
-        dmd = HODMD(sorted_eigs='real')
+        dmd = HankelDMD(sorted_eigs='real')
         assert dmd.operator._sorted_eigs == 'real'
 
 
     def test_reconstruction_method_constructor_error(self):
         with self.assertRaises(ValueError):
-            HODMD(reconstruction_method=[1, 2, 3], d=4)
+            HankelDMD(reconstruction_method=[1, 2, 3], d=4)
 
         with self.assertRaises(ValueError):
-            HODMD(reconstruction_method=np.array([1, 2, 3]), d=4)
+            HankelDMD(reconstruction_method=np.array([1, 2, 3]), d=4)
 
         with self.assertRaises(ValueError):
-            HODMD(reconstruction_method=np.array([[1, 2, 3], [3, 4, 5]]), d=3)
+            HankelDMD(reconstruction_method=np.array([[1, 2, 3], [3, 4, 5]]), d=3)
 
 
     def test_reconstruction_method_default_constructor(self):
-        assert HODMD()._reconstruction_method == 'first'
+        assert HankelDMD()._reconstruction_method == 'first'
 
     def test_reconstruction_method_constructor(self):
-        assert HODMD(reconstruction_method='mean')._reconstruction_method == 'mean'
-        assert HODMD(reconstruction_method=[3])._reconstruction_method == [3]
-        assert all(HODMD(reconstruction_method=np.array([1, 2]), d=2)._reconstruction_method == np.array([1, 2]))
+        assert HankelDMD(reconstruction_method='mean')._reconstruction_method == 'mean'
+        assert HankelDMD(reconstruction_method=[3])._reconstruction_method == [3]
+        assert all(HankelDMD(reconstruction_method=np.array([1, 2]), d=2)._reconstruction_method == np.array([1, 2]))
 
     def test_nonan_nomask(self):
-        dmd = HODMD(d=3)
+        dmd = HankelDMD(d=3)
         dmd.fit(X=sample_data)
         rec = dmd.reconstructed_data
 
@@ -274,38 +296,22 @@ class TestHODmd(TestCase):
         assert not np.nan in rec
 
     def test_extract_versions_nonan(self):
-        dmd = HODMD(d=3)
+        dmd = HankelDMD(d=3)
         dmd.fit(X=sample_data)
         for timeindex in range(sample_data.shape[1]):
             assert not np.nan in dmd.reconstructions_of_timeindex(timeindex)
 
     def test_rec_method_first(self):
-        dmd = HODMD(d=3, reconstruction_method='first')
+        dmd = HankelDMD(d=3, reconstruction_method='first')
         dmd.fit(X=sample_data)
         assert (dmd.reconstructed_data == dmd.reconstructions_of_timeindex()[:,0].T).all()
 
     def test_rec_method_mean(self):
-        dmd = HODMD(d=3, reconstruction_method='mean')
+        dmd = HankelDMD(d=3, reconstruction_method='mean')
         dmd.fit(X=sample_data)
         assert (dmd.reconstructed_data.T[2] == np.mean(dmd.reconstructions_of_timeindex(2), axis=0).T).all()
 
     def test_rec_method_weighted(self):
-        dmd = HODMD(d=2, svd_rank_extra=-1,reconstruction_method=[10,20])
+        dmd = HankelDMD(d=2, reconstruction_method=[10,20])
         dmd.fit(X=sample_data)
         assert (dmd.reconstructed_data.T[4] == np.average(dmd.reconstructions_of_timeindex(4), axis=0, weights=[10,20]).T).all()
-    """
-    def test_dynamics_opt_2(self):
-        dmd = HODMD(svd_rank=1, opt=True)
-        dmd.fit(X=sample_data)
-        expected_dynamics = np.array([[
-            -5.03688923-6.13804898j,  7.71392231+0.99781981j,
-            -6.17317754+4.46645858j, 1.40580999-7.33054163j,
-            3.91802381+6.17354485j, -6.93951835-1.77423468j,
-            6.14189948-3.39268579j, -2.10431578+6.54348298j,
-            -2.89133864-6.08093842j, 6.14488387+2.39737718j,
-            -5.99329708+2.41468142j,  2.6548298 -5.74598891j,
-            1.96322997+5.8815406j, -5.34888809-2.87815739j,
-            5.74815609-1.53732875j
-        ]])
-        np.testing.assert_allclose(dmd.dynamics, expected_dynamics)
-    """

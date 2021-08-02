@@ -1,5 +1,5 @@
 """
-Derived module from dmdbase.py for higher order dmd.
+Derived module from hankeldmd.py for higher order dmd.
 
 Reference:
 - S. L Clainche, J. M. Vega, Higher Order Dynamic Mode Decomposition.
@@ -7,11 +7,11 @@ Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.
 """
 import numpy as np
 
-from .dmdbase import DMDBase, DMDTimeDict
-from .utils import compute_tlsq
+from .hankeldmd import HankelDMD
+from .utils import compute_tlsq, compute_svd
 
 
-class HODMD(DMDBase):
+class HODMD(HankelDMD):
     """
     Higher Order Dynamic Mode Decomposition
 
@@ -45,105 +45,66 @@ class HODMD(DMDBase):
     :type sorted_eigs: {'real', 'abs'} or False
     :param reconstruction_method: Due to how HODMD is defined, we have several
         versions of the same snapshot. The parameter `reconstruction_method`
-        allows changing how these versions are combined in `reconstructed_data`.
-        If `'first'`, only the first version is selected (default behavior);
-        if `'mean'` we take the mean of all the versions; if the parameter is an
-        array of floats of size `d`, the return value is the weighted average
-        of the versions.
+        allows changing how these versions are combined in
+        `reconstructed_data`.  If `'first'`, only the first version is selected
+        (default behavior); if `'mean'` we take the mean of all the versions;
+        if the parameter is an array of floats of size `d`, the return value is
+        the weighted average of the versions.
     :type reconstruction_method: {'first', 'mean'} or array-like
+    :param svd_rank_extra: the rank for the initial reduction of the input
+        data, performed before the rearrangement of the input data to the
+        (pseudo) Hankel matrix format; If 0, the method computes the optimal
+        rank and uses it for truncation; if positive interger, the method uses
+        the argument for the truncation; if float between 0 and 1, the rank is
+        the number of the biggest singular values that are needed to reach the
+        'energy' specified by `svd_rank`; if -1, the method does not compute
+        truncation.
+    :type svd_rank: int or float
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-        rescale_mode=None, forward_backward=False, d=1, sorted_eigs=False,
-        reconstruction_method='first'):
-        super(HODMD, self).__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank,
-            exact=exact, opt=opt, rescale_mode=rescale_mode,
-            sorted_eigs=sorted_eigs)
-        self._d = d
+                 rescale_mode=None, forward_backward=False, d=1,
+                 sorted_eigs=False, reconstruction_method='first',
+                 svd_rank_extra=0):
+        super().__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank, exact=exact,
+                         opt=opt, rescale_mode=rescale_mode,
+                         forward_backward=forward_backward, d=d,
+                         sorted_eigs=sorted_eigs,
+                         reconstruction_method=reconstruction_method)
 
-        if isinstance(reconstruction_method, list):
-            if len(reconstruction_method) != d:
-                raise ValueError('The length of the array of weights must be equal to d')
-        elif isinstance(reconstruction_method, np.ndarray):
-            if reconstruction_method.ndim > 1 or reconstruction_method.shape[0] != d:
-                raise ValueError('The length of the array of weights must be equal to d')
-        self._reconstruction_method = reconstruction_method
-
-    @property
-    def d(self):
-        return self._d
+        self.svd_rank_extra = svd_rank_extra  # TODO improve names
+        self.U_extra = None
 
     def reconstructions_of_timeindex(self, timeindex=None):
         """
         Build a collection of all the available versions of the given
         `timeindex`. The indexing of time instants is the same used for
-        :func:`reconstructed_data`. For each time instant there are at least one
-        and at most `d` versions.
-
-        If `timeindex` is `None` the function returns the whole collection, for
-        all the time instants.
+        :func:`reconstructed_data`. For each time instant there are at least
+        one and at most `d` versions.  If `timeindex` is `None` the function
+        returns the whole collection, for all the time instants.
 
         :param int timeindex: The index of the time snapshot.
         :return: A collection of all the available versions for the requested
             time instants, represented by a matrix (or tensor).
-
             Axes:
-
             0. Number of time instants;
             1. Copies of the snapshot;
             2. Space dimension of the snapshot.
-
             The first axis is omitted if only one single time instant is
             selected, in this case the output becomes a 2D matrix.
         :rtype: numpy.ndarray
         """
-        rec = super(HODMD, self).reconstructed_data
-        space_dim = rec.shape[0] // self.d
-        time_instants = rec.shape[1] + self.d - 1
-
-        # for each time instance, we take the mean of all its appearences.
-        # each snapshot appears at most d times (for instance, the first and the
-        # last appear only once).
-        reconstructed_snapshots = np.full((time_instants, self.d, space_dim), np.nan, dtype=np.complex128)
-
-        # first_empty is a 1D array which contains the index on the second axis
-        # of reconstructed_snapshots at which we have the first "empty" copy of
-        # the corresponding item. we have a variable number of copies of each
-        # time instants, the number depends on the position in time of the
-        # snapshot and on the value of d.
-        first_empty = np.zeros((time_instants,), dtype=np.int8)
-
-        for time_slice_idx in range(rec.shape[1]):
-            time_slice = rec[:, time_slice_idx]
-
-            for i in range(self.d):
-                time_idx = time_slice_idx + i
-                mx = time_slice[space_dim * i : space_dim * (i + 1)]
-                reconstructed_snapshots[time_idx, first_empty[time_idx]] = mx
-                first_empty[time_idx] += 1
-
-        if timeindex is None:
-            return reconstructed_snapshots
+        snapshots = super().reconstructions_of_timeindex(timeindex)
+        if snapshots.ndim == 2:  # single time instant
+            snapshots = self.U_extra.dot(snapshots.T).T
+        elif snapshots.ndim == 3:  # all time instants
+            snapshots = np.array([
+                self.U_extra.dot(snapshot.T).T
+                for snapshot in snapshots])
         else:
-            return reconstructed_snapshots[timeindex][:first_empty[timeindex]]
+            raise RuntimeError
 
-    @property
-    def reconstructed_data(self):
-        rec = self.reconstructions_of_timeindex()
-        rec = np.ma.array(rec, mask=np.isnan(rec))
-
-        if self._reconstruction_method == 'first':
-            result = rec[:,0].T
-        elif self._reconstruction_method == 'mean':
-            result = np.mean(rec, axis=1).T
-        elif (isinstance(self._reconstruction_method, list) or
-            isinstance(self._reconstruction_method, np.ndarray)):
-            result = np.average(rec, axis=1, weights=self._reconstruction_method).T
-        else:
-            raise ValueError("The reconstruction method wasn't recognized: {}"
-                .format(self._reconstruction_method))
-
-        return result.filled(fill_value=0)
+        return snapshots
 
     def fit(self, X):
         """
@@ -151,26 +112,13 @@ class HODMD(DMDBase):
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
+
         """
-        snp, self._snapshots_shape = self._col_major_2darray(X)
-        self._snapshots = np.concatenate(
-            [
-                snp[:, i:snp.shape[1] - self.d + i + 1]
-                for i in range(self.d)
-            ],
-            axis=0)
+        org_snp, snapshots_shape = self._col_major_2darray(X)
 
-        n_samples = self._snapshots.shape[1]
-        X = self._snapshots[:, :-1]
-        Y = self._snapshots[:, 1:]
+        self.U_extra, _, _ = compute_svd(org_snp, self.svd_rank_extra)
+        snp = self.U_extra.T.dot(org_snp)
 
-        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        U, s, V = self.operator.compute_operator(X,Y)
-
-        # Default timesteps
-        self.original_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
-        self.dmd_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
-
-        self._b = self._compute_amplitudes()
-
-        return self
+        super().fit(snp)
+        self._snapshots_shape = snapshots_shape
+        self._snapshots = org_snp
