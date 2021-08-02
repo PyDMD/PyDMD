@@ -19,6 +19,7 @@ HODMD
 	HODMD.plot_eigs
 	HODMD.plot_modes_2D
 	HODMD.plot_snapshots_2D
+	HODMD.reconstructions_of_timeindex
 	HODMD.reconstructed_data
 	HODMD.snapshots
 

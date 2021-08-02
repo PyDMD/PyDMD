@@ -78,15 +78,24 @@ class HODMD(DMDBase):
         Build a collection of all the available versions of the given
         `timeindex`. The indexing of time instants is the same used for
         :func:`reconstructed_data`. For each time instant there are at least one
-        and at most `d` versions. If `timeindex` is `None` the function returns
-        the whole collection, for all the time instants.
+        and at most `d` versions.
+
+        If `timeindex` is `None` the function returns the whole collection, for
+        all the time instants.
 
         :param int timeindex: The index of the time snapshot.
-        :return: a collection of all the available versions for the given
-            time snapshot, or for all the time snapshots if `timeindex` is
-            `None` (in the second case, time varies along the first dimension
-            of the array returned).
-        :rtype: numpy.ndarray or list
+        :return: A collection of all the available versions for the requested
+            time instants, represented by a matrix (or tensor).
+
+            Axes:
+
+            0. Number of time instants;
+            1. Copies of the snapshot;
+            2. Space dimension of the snapshot.
+
+            The first axis is omitted if only one single time instant is
+            selected, in this case the output becomes a 2D matrix.
+        :rtype: numpy.ndarray
         """
         rec = super(HODMD, self).reconstructed_data
         space_dim = rec.shape[0] // self.d
@@ -97,6 +106,11 @@ class HODMD(DMDBase):
         # last appear only once).
         reconstructed_snapshots = np.full((time_instants, self.d, space_dim), np.nan, dtype=np.complex128)
 
+        # first_empty is a 1D array which contains the index on the second axis
+        # of reconstructed_snapshots at which we have the first "empty" copy of
+        # the corresponding item. we have a variable number of copies of each
+        # time instants, the number depends on the position in time of the
+        # snapshot and on the value of d.
         first_empty = np.zeros((time_instants,), dtype=np.int8)
 
         for time_slice_idx in range(rec.shape[1]):
