@@ -122,3 +122,5 @@ class HODMD(HankelDMD):
         super().fit(snp)
         self._snapshots_shape = snapshots_shape
         self._snapshots = org_snp
+
+        return self
