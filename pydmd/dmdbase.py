@@ -12,12 +12,13 @@ import matplotlib as mpl
 import numpy as np
 from past.utils import old_div
 
-mpl.rcParams['figure.max_open_warning'] = 0
+mpl.rcParams["figure.max_open_warning"] = 0
 import matplotlib.pyplot as plt
 
 from .dmdoperator import DMDOperator
 
 from functools import partial
+
 
 class DMDBase(object):
     """
@@ -75,11 +76,23 @@ class DMDBase(object):
 
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-        rescale_mode=None, forward_backward=False, sorted_eigs=False):
-        self._Atilde = DMDOperator(svd_rank=svd_rank, exact=exact,
-            rescale_mode=rescale_mode, forward_backward=forward_backward,
-            sorted_eigs=sorted_eigs)
+    def __init__(
+        self,
+        svd_rank=0,
+        tlsq_rank=0,
+        exact=False,
+        opt=False,
+        rescale_mode=None,
+        forward_backward=False,
+        sorted_eigs=False,
+    ):
+        self._Atilde = DMDOperator(
+            svd_rank=svd_rank,
+            exact=exact,
+            rescale_mode=rescale_mode,
+            forward_backward=forward_backward,
+            sorted_eigs=sorted_eigs,
+        )
 
         self._tlsq_rank = tlsq_rank
         self.original_time = None
@@ -122,9 +135,11 @@ class DMDBase(object):
         :return: the time intervals of the original snapshots.
         :rtype: numpy.ndarray
         """
-        return np.arange(self.dmd_time['t0'],
-                         self.dmd_time['tend'] + self.dmd_time['dt'],
-                         self.dmd_time['dt'])
+        return np.arange(
+            self.dmd_time["t0"],
+            self.dmd_time["tend"] + self.dmd_time["dt"],
+            self.dmd_time["dt"],
+        )
 
     @property
     def original_timesteps(self):
@@ -134,9 +149,11 @@ class DMDBase(object):
         :return: the time intervals of the original snapshots.
         :rtype: numpy.ndarray
         """
-        return np.arange(self.original_time['t0'],
-                         self.original_time['tend'] + self.original_time['dt'],
-                         self.original_time['dt'])
+        return np.arange(
+            self.original_time["t0"],
+            self.original_time["tend"] + self.original_time["dt"],
+            self.original_time["dt"],
+        )
 
     @property
     def modes(self):
@@ -217,9 +234,13 @@ class DMDBase(object):
         :rtype: numpy.ndarray
 
         """
-        temp = np.outer(self.eigs, np.ones(self.dmd_timesteps.shape[0]))
-        tpow = old_div(self.dmd_timesteps - self.original_time['t0'],
-                       self.original_time['dt'])
+        temp = np.repeat(
+            self.eigs[:, None], self.dmd_timesteps.shape[0], axis=1
+        )
+        tpow = old_div(
+            self.dmd_timesteps - self.original_time["t0"],
+            self.original_time["dt"],
+        )
 
         # The new formula is x_(k+j) = \Phi \Lambda^k \Phi^(-1) x_j.
         # Since j is fixed, for a given snapshot "u" we have the following
@@ -228,7 +249,7 @@ class DMDBase(object):
         # Therefore tpow must be scaled appropriately.
         tpow = self._translate_eigs_exponent(tpow)
 
-        return (np.power(temp, tpow) * self._b[:, None])
+        return np.power(temp, tpow) * self.amplitudes[:, None]
 
     @property
     def reconstructed_data(self):
@@ -258,18 +279,17 @@ class DMDBase(object):
         :return: the array that contains the frequencies of the eigenvalues.
         :rtype: numpy.ndarray
         """
-        return np.log(self.eigs).imag / (2 * np.pi * self.original_time['dt'])
+        return np.log(self.eigs).imag / (2 * np.pi * self.original_time["dt"])
 
     @property
-    def growth_rate(self): # To check
+    def growth_rate(self):  # To check
         """
         Get the growth rate values relative to the modes.
 
         :return: the Floquet values
         :rtype: numpy.ndarray
         """
-        return self.eigs.real / self.original_time['dt']
-
+        return self.eigs.real / self.original_time["dt"]
 
     @property
     def amplitudes(self):
@@ -290,8 +310,10 @@ class DMDBase(object):
         Not implemented, it has to be implemented in subclasses.
         """
         raise NotImplementedError(
-            'Subclass must implement abstract method {}.fit'.format(
-                self.__class__.__name__))
+            "Subclass must implement abstract method {}.fit".format(
+                self.__class__.__name__
+            )
+        )
 
     @staticmethod
     def _col_major_2darray(X):
@@ -315,7 +337,7 @@ class DMDBase(object):
             input_shapes = [np.asarray(x).shape for x in X]
 
             if len(set(input_shapes)) != 1:
-                raise ValueError('Snapshots have not the same dimension.')
+                raise ValueError("Snapshots have not the same dimension.")
 
             snapshots_shape = input_shapes[0]
             snapshots = np.transpose([np.asarray(x).flatten() for x in X])
@@ -325,8 +347,10 @@ class DMDBase(object):
         if cond_number > 10e4:
             warnings.warn(
                 "Input data matrix X has condition number {}. "
-                "Consider preprocessing data, passing in augmented data matrix, or regularization methods."
-                .format(cond_number))
+                "Consider preprocessing data, passing in augmented data matrix, or regularization methods.".format(
+                    cond_number
+                )
+            )
 
         return snapshots, snapshots_shape
 
@@ -350,19 +374,23 @@ class DMDBase(object):
         """
         if isinstance(self.opt, bool) and self.opt:
             # compute the vandermonde matrix
-            omega = old_div(np.log(self.eigs), self.original_time['dt'])
+            omega = old_div(np.log(self.eigs), self.original_time["dt"])
             vander = np.exp(
-                np.multiply(*np.meshgrid(omega, self.dmd_timesteps))).T
+                np.multiply(*np.meshgrid(omega, self.dmd_timesteps))
+            ).T
 
             # perform svd on all the snapshots
             U, s, V = np.linalg.svd(self._snapshots, full_matrices=False)
 
-            P = np.multiply(np.dot(self.modes.conj().T, self.modes),
-                            np.conj(np.dot(vander,
-                                           vander.conj().T)))
+            P = np.multiply(
+                np.dot(self.modes.conj().T, self.modes),
+                np.conj(np.dot(vander, vander.conj().T)),
+            )
 
             tmp = np.linalg.multi_dot([U, np.diag(s), V]).conj().T
-            q = np.conj(np.diag(np.linalg.multi_dot([vander, tmp, self.modes])))
+            q = np.conj(
+                np.diag(np.linalg.multi_dot([vander, tmp, self.modes]))
+            )
 
             # b optimal
             a = np.linalg.solve(P, q)
@@ -372,12 +400,13 @@ class DMDBase(object):
             else:
                 amplitudes_snapshot_index = self.opt
 
-            a = np.linalg.lstsq(self.modes,
+            a = np.linalg.lstsq(
+                self.modes,
                 self._snapshots.T[amplitudes_snapshot_index],
-                rcond=None)[0]
+                rcond=None,
+            )[0]
 
         return a
-
 
     def select_modes(self, func):
         """
@@ -401,19 +430,25 @@ class DMDBase(object):
         """
         selected_indeces = func(self)
 
-        self.operator._eigenvalues = self.operator._eigenvalues[selected_indeces]
+        self.operator._eigenvalues = self.operator._eigenvalues[
+            selected_indeces
+        ]
         self.operator._Lambda = self.operator._Lambda[selected_indeces]
 
-        self.operator._eigenvectors = self.operator._eigenvectors[:, selected_indeces]
+        self.operator._eigenvectors = self.operator._eigenvectors[
+            :, selected_indeces
+        ]
         self.operator._modes = self.operator._modes[:, selected_indeces]
 
-        self.operator._Atilde = np.linalg.multi_dot([
-            self.operator._eigenvectors,
-            np.diag(self.operator._eigenvalues),
-            np.linalg.pinv(self.operator._eigenvectors)])
+        self.operator._Atilde = np.linalg.multi_dot(
+            [
+                self.operator._eigenvectors,
+                np.diag(self.operator._eigenvalues),
+                np.linalg.pinv(self.operator._eigenvectors),
+            ]
+        )
 
         self._b = self._compute_amplitudes()
-
 
     class ModesSelectors:
         """
@@ -453,8 +488,10 @@ class DMDBase(object):
                 of `DMDBase.select_modes` to select DMD modes according to
                 the criteria of stability.
             """
-            return partial(DMDBase.ModesSelectors._stable_modes,
-                max_distance_from_unity=max_distance_from_unity)
+            return partial(
+                DMDBase.ModesSelectors._stable_modes,
+                max_distance_from_unity=max_distance_from_unity,
+            )
 
         @staticmethod
         def _compute_integral_contribution(mode, dynamic):
@@ -468,7 +505,7 @@ class DMDBase(object):
                 returned by `dmd.dynamics[mode_index]`.
             :return float: the integral contribution of the given DMD mode.
             """
-            return pow(np.linalg.norm(mode),2) * sum(np.abs(dynamic))
+            return pow(np.linalg.norm(mode), 2) * sum(np.abs(dynamic))
 
         @staticmethod
         def _integral_contribution(dmd, n):
@@ -491,8 +528,10 @@ class DMDBase(object):
             dmd.dmd_time = temp
 
             n_of_modes = modes.shape[1]
-            integral_contributions = [DMDBase.ModesSelectors._compute_integral_contribution(*tp)
-                for tp in zip(modes.T, dynamics)]
+            integral_contributions = [
+                DMDBase.ModesSelectors._compute_integral_contribution(*tp)
+                for tp in zip(modes.T, dynamics)
+            ]
 
             indexes_first_n = np.array(integral_contributions).argsort()[-n:]
 
@@ -512,7 +551,6 @@ class DMDBase(object):
                 the criteria of integral contribution.
             """
             return partial(DMDBase.ModesSelectors._integral_contribution, n=n)
-
 
     def _enforce_ratio(self, goal_ratio, supx, infx, supy, infy):
         """
@@ -534,10 +572,10 @@ class DMDBase(object):
 
         dx = supx - infx
         if dx == 0:
-            dx = 1.e-16
+            dx = 1.0e-16
         dy = supy - infy
         if dy == 0:
-            dy = 1.e-16
+            dy = 1.0e-16
         ratio = max(dx, dy) / min(dx, dy)
 
         if ratio >= goal_ratio:
@@ -552,8 +590,7 @@ class DMDBase(object):
                 supy += (goal_size - dy) / 2
                 infy -= (goal_size - dy) / 2
 
-        return (supx,infx,supy,infy)
-
+        return (supx, infx, supy, infy)
 
     def _plot_limits(self, narrow_view):
         if narrow_view:
@@ -563,20 +600,20 @@ class DMDBase(object):
             supy = max(self.eigs.imag) + 0.05
             infy = min(self.eigs.imag) - 0.05
 
-            return self._enforce_ratio(8, supx, infx, supy,
-                infy)
+            return self._enforce_ratio(8, supx, infx, supy, infy)
         else:
             return np.max(np.ceil(np.absolute(self.eigs)))
 
-
-    def plot_eigs(self,
-                  show_axes=True,
-                  show_unit_circle=True,
-                  figsize=(8, 8),
-                  title='',
-                  narrow_view=False,
-                  dpi=None,
-                  filename=None):
+    def plot_eigs(
+        self,
+        show_axes=True,
+        show_unit_circle=True,
+        figsize=(8, 8),
+        title="",
+        narrow_view=False,
+        dpi=None,
+        filename=None,
+    ):
         """
         Plot the eigenvalues.
         :param bool show_axes: if True, the axes will be showed in the plot.
@@ -593,8 +630,10 @@ class DMDBase(object):
         :param str filename: if specified, the plot is saved at `filename`.
         """
         if self.eigs is None:
-            raise ValueError('The eigenvalues have not been computed.'
-                             'You have to perform the fit method.')
+            raise ValueError(
+                "The eigenvalues have not been computed."
+                "You have to perform the fit method."
+            )
 
         if dpi is not None:
             plt.figure(figsize=figsize, dpi=dpi)
@@ -605,10 +644,9 @@ class DMDBase(object):
         plt.gcf()
         ax = plt.gca()
 
-        points, = ax.plot(self.eigs.real,
-                          self.eigs.imag,
-                          'bo',
-                          label='Eigenvalues')
+        (points,) = ax.plot(
+            self.eigs.real, self.eigs.imag, "bo", label="Eigenvalues"
+        )
 
         if narrow_view:
             supx, infx, supy, infy = self._plot_limits(narrow_view)
@@ -619,17 +657,21 @@ class DMDBase(object):
 
             # x and y axes
             if show_axes:
-                endx = np.min([supx, 1.])
-                ax.annotate('',
-                            xy=(endx, 0.),
-                            xytext=(np.max([infx, -1.]), 0.),
-                            arrowprops=dict(arrowstyle=("->" if endx == 1. else '-')))
+                endx = np.min([supx, 1.0])
+                ax.annotate(
+                    "",
+                    xy=(endx, 0.0),
+                    xytext=(np.max([infx, -1.0]), 0.0),
+                    arrowprops=dict(arrowstyle=("->" if endx == 1.0 else "-")),
+                )
 
-                endy = np.min([supy, 1.])
-                ax.annotate('',
-                            xy=(0., endy),
-                            xytext=(0., np.max([infy, -1.])),
-                            arrowprops=dict(arrowstyle=("->" if endy == 1. else '-')))
+                endy = np.min([supy, 1.0])
+                ax.annotate(
+                    "",
+                    xy=(0.0, endy),
+                    xytext=(0.0, np.max([infy, -1.0])),
+                    arrowprops=dict(arrowstyle=("->" if endy == 1.0 else "-")),
+                )
         else:
             # set limits for axis
             limit = self._plot_limits(narrow_view)
@@ -639,56 +681,67 @@ class DMDBase(object):
 
             # x and y axes
             if show_axes:
-                ax.annotate('',
-                            xy=(np.max([limit * 0.8, 1.]), 0.),
-                            xytext=(np.min([-limit * 0.8, -1.]), 0.),
-                            arrowprops=dict(arrowstyle="->"))
-                ax.annotate('',
-                            xy=(0., np.max([limit * 0.8, 1.])),
-                            xytext=(0., np.min([-limit * 0.8, -1.])),
-                            arrowprops=dict(arrowstyle="->"))
+                ax.annotate(
+                    "",
+                    xy=(np.max([limit * 0.8, 1.0]), 0.0),
+                    xytext=(np.min([-limit * 0.8, -1.0]), 0.0),
+                    arrowprops=dict(arrowstyle="->"),
+                )
+                ax.annotate(
+                    "",
+                    xy=(0.0, np.max([limit * 0.8, 1.0])),
+                    xytext=(0.0, np.min([-limit * 0.8, -1.0])),
+                    arrowprops=dict(arrowstyle="->"),
+                )
 
-        plt.ylabel('Imaginary part')
-        plt.xlabel('Real part')
+        plt.ylabel("Imaginary part")
+        plt.xlabel("Real part")
 
         if show_unit_circle:
-            unit_circle = plt.Circle((0., 0.),
-                                     1.,
-                                     color='green',
-                                     fill=False,
-                                     label='Unit circle',
-                                     linestyle='--')
+            unit_circle = plt.Circle(
+                (0.0, 0.0),
+                1.0,
+                color="green",
+                fill=False,
+                label="Unit circle",
+                linestyle="--",
+            )
             ax.add_artist(unit_circle)
 
         # Dashed grid
         gridlines = ax.get_xgridlines() + ax.get_ygridlines()
         for line in gridlines:
-            line.set_linestyle('-.')
+            line.set_linestyle("-.")
         ax.grid(True)
 
         # legend
         if show_unit_circle:
             ax.add_artist(
-                plt.legend([points, unit_circle],
-                           ['Eigenvalues', 'Unit circle'],
-                           loc='best'))
+                plt.legend(
+                    [points, unit_circle],
+                    ["Eigenvalues", "Unit circle"],
+                    loc="best",
+                )
+            )
         else:
-            ax.add_artist(plt.legend([points], ['Eigenvalues'], loc='best'))
+            ax.add_artist(plt.legend([points], ["Eigenvalues"], loc="best"))
 
-        ax.set_aspect('equal')
+        ax.set_aspect("equal")
 
         if filename:
             plt.savefig(filename)
         else:
             plt.show()
 
-    def plot_modes_2D(self,
-                      index_mode=None,
-                      filename=None,
-                      x=None,
-                      y=None,
-                      order='C',
-                      figsize=(8, 8)):
+    def plot_modes_2D(
+        self,
+        index_mode=None,
+        filename=None,
+        x=None,
+        y=None,
+        order="C",
+        figsize=(8, 8),
+    ):
         """
         Plot the DMD Modes.
 
@@ -715,17 +768,21 @@ class DMDBase(object):
             size. Default is (8, 8).
         """
         if self.modes is None:
-            raise ValueError('The modes have not been computed.'
-                             'You have to perform the fit method.')
+            raise ValueError(
+                "The modes have not been computed."
+                "You have to perform the fit method."
+            )
 
         if x is None and y is None:
             if self._snapshots_shape is None:
                 raise ValueError(
-                    'No information about the original shape of the snapshots.')
+                    "No information about the original shape of the snapshots."
+                )
 
             if len(self._snapshots_shape) != 2:
                 raise ValueError(
-                    'The dimension of the input snapshots is not 2D.')
+                    "The dimension of the input snapshots is not 2D."
+                )
 
         # If domain dimensions have not been passed as argument,
         # use the snapshots dimensions
@@ -745,51 +802,57 @@ class DMDBase(object):
 
         for idx in index_mode:
             fig = plt.figure(figsize=figsize)
-            fig.suptitle('DMD Mode {}'.format(idx))
+            fig.suptitle("DMD Mode {}".format(idx))
 
             real_ax = fig.add_subplot(1, 2, 1)
             imag_ax = fig.add_subplot(1, 2, 2)
 
             mode = self.modes.T[idx].reshape(xgrid.shape, order=order)
 
-            real = real_ax.pcolor(xgrid,
-                                  ygrid,
-                                  mode.real,
-                                  cmap='jet',
-                                  vmin=mode.real.min(),
-                                  vmax=mode.real.max())
-            imag = imag_ax.pcolor(xgrid,
-                                  ygrid,
-                                  mode.imag,
-                                  vmin=mode.imag.min(),
-                                  vmax=mode.imag.max())
+            real = real_ax.pcolor(
+                xgrid,
+                ygrid,
+                mode.real,
+                cmap="jet",
+                vmin=mode.real.min(),
+                vmax=mode.real.max(),
+            )
+            imag = imag_ax.pcolor(
+                xgrid,
+                ygrid,
+                mode.imag,
+                vmin=mode.imag.min(),
+                vmax=mode.imag.max(),
+            )
 
             fig.colorbar(real, ax=real_ax)
             fig.colorbar(imag, ax=imag_ax)
 
-            real_ax.set_aspect('auto')
-            imag_ax.set_aspect('auto')
+            real_ax.set_aspect("auto")
+            imag_ax.set_aspect("auto")
 
-            real_ax.set_title('Real')
-            imag_ax.set_title('Imag')
+            real_ax.set_title("Real")
+            imag_ax.set_title("Imag")
 
             # padding between elements
-            plt.tight_layout(pad=2.)
+            plt.tight_layout(pad=2.0)
 
             if filename:
-                plt.savefig('{0}.{1}{2}'.format(basename, idx, ext))
+                plt.savefig("{0}.{1}{2}".format(basename, idx, ext))
                 plt.close(fig)
 
         if not filename:
             plt.show()
 
-    def plot_snapshots_2D(self,
-                          index_snap=None,
-                          filename=None,
-                          x=None,
-                          y=None,
-                          order='C',
-                          figsize=(8, 8)):
+    def plot_snapshots_2D(
+        self,
+        index_snap=None,
+        filename=None,
+        x=None,
+        y=None,
+        order="C",
+        figsize=(8, 8),
+    ):
         """
         Plot the snapshots.
 
@@ -816,16 +879,18 @@ class DMDBase(object):
             size. Default is (8, 8).
         """
         if self._snapshots is None:
-            raise ValueError('Input snapshots not found.')
+            raise ValueError("Input snapshots not found.")
 
         if x is None and y is None:
             if self._snapshots_shape is None:
                 raise ValueError(
-                    'No information about the original shape of the snapshots.')
+                    "No information about the original shape of the snapshots."
+                )
 
             if len(self._snapshots_shape) != 2:
                 raise ValueError(
-                    'The dimension of the input snapshots is not 2D.')
+                    "The dimension of the input snapshots is not 2D."
+                )
 
         # If domain dimensions have not been passed as argument,
         # use the snapshots dimensions
@@ -845,29 +910,37 @@ class DMDBase(object):
 
         for idx in index_snap:
             fig = plt.figure(figsize=figsize)
-            fig.suptitle('Snapshot {}'.format(idx))
+            fig.suptitle("Snapshot {}".format(idx))
 
-            snapshot = (self._snapshots.T[idx].real.reshape(xgrid.shape,
-                                                            order=order))
+            snapshot = self._snapshots.T[idx].real.reshape(
+                xgrid.shape, order=order
+            )
 
-            contour = plt.pcolor(xgrid,
-                                 ygrid,
-                                 snapshot,
-                                 vmin=snapshot.min(),
-                                 vmax=snapshot.max())
+            contour = plt.pcolor(
+                xgrid,
+                ygrid,
+                snapshot,
+                vmin=snapshot.min(),
+                vmax=snapshot.max(),
+            )
 
             fig.colorbar(contour)
 
             if filename:
-                plt.savefig('{0}.{1}{2}'.format(basename, idx, ext))
+                plt.savefig("{0}.{1}{2}".format(basename, idx, ext))
                 plt.close(fig)
 
         if not filename:
             plt.show()
 
+
 class DMDTimeDict(dict):
     def __setitem__(self, key, value):
-        if key in ['t0', 'tend', 'dt']:
+        if key in ["t0", "tend", "dt"]:
             dict.__setitem__(self, key, value)
         else:
-            raise KeyError('DMDBase.dmd_time accepts only the following keys: "t0", "tend", "dt", {} is not allowed.'.format(key))
+            raise KeyError(
+                'DMDBase.dmd_time accepts only the following keys: "t0", "tend", "dt", {} is not allowed.'.format(
+                    key
+                )
+            )
