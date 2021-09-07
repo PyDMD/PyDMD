@@ -106,22 +106,43 @@ class HankelDMD(DMDBase):
     def d(self):
         return self._d
 
-    def _hankel_first_occurrence(self, time, is_original_t0=False):
-        if is_original_t0:
-            return 0
-        else:
-            return max(
-                0,
-                (time - self.original_time["t0"]) // self.dmd_time["dt"]
-                - (self.original_time["t0"] + self.d - 1),
-            )
+    def _hankel_first_occurrence(self, time):
+        """
+        For a given `t` such that there is :math:`k \in \mathbb{N}` such that
+        :math:`t = t_0 + k dt`, return the index of the first column in Hankel
+        pseudo matrix (see also :func:`_pseudo_hankel_matrix`) which contains
+        the snapshot corresponding to `t`.
+
+        :param time: The time corresponding to the requested snapshot.
+        :return: The index of the first appeareance of `time` in the columns of
+            Hankel pseudo matrix.
+        :rtype: int
+        """
+        return max(
+            0,
+            (time - self.original_time["t0"]) // self.dmd_time["dt"]
+            - (self.original_time["t0"] + self.d - 1),
+        )
 
     def _update_sub_dmd_time(self):
+        """
+        Update the time dictionaries (`dmd_time` and `original_time`) of
+        the auxiliary DMD instance `HankelDMD._sub_dmd` after an update of the
+        time dictionaries of the time dictionaries of this instance of the
+        higher level instance of `HankelDMD`.
+        """
         self._sub_dmd.dmd_time["t0"] = self._hankel_first_occurrence(
             self.dmd_time["t0"]
         )
         self._sub_dmd.dmd_time["tend"] = self._hankel_first_occurrence(
             self.dmd_time["tend"]
+        )
+
+        self._sub_dmd.original_time["t0"] = self._hankel_first_occurrence(
+            self.original_time["t0"]
+        )
+        self._sub_dmd.original_time["tend"] = self._hankel_first_occurrence(
+            self.original_time["tend"]
         )
 
     def reconstructions_of_timeindex(self, timeindex=None):

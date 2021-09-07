@@ -136,7 +136,8 @@ class HODMD(HankelDMD):
         if org_snp.shape[0] == 1:
             self.U_extra, _, _ = compute_svd(org_snp, -1)
             warnings.warn(
-                "The parameter 'svd_rank_extra={}' has been ignored because the given system is a scalar function".format(
+                """The parameter 'svd_rank_extra={}' has been ignored because
+the given system is a scalar function""".format(
                     self.svd_rank_extra
                 )
             )
