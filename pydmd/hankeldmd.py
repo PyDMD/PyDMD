@@ -138,13 +138,6 @@ class HankelDMD(DMDBase):
             self.dmd_time["tend"]
         )
 
-        self._sub_dmd.original_time["t0"] = self._hankel_first_occurrence(
-            self.original_time["t0"]
-        )
-        self._sub_dmd.original_time["tend"] = self._hankel_first_occurrence(
-            self.original_time["tend"]
-        )
-
     def reconstructions_of_timeindex(self, timeindex=None):
         """
         Build a collection of all the available versions of the given
@@ -212,6 +205,16 @@ class HankelDMD(DMDBase):
                     self._reconstruction_method
                 )
             )
+
+        # we want to return only the requested timesteps
+        time_index = min(
+            self.d - 1,
+            int(
+                (self.dmd_time["t0"] - self.original_time["t0"])
+                // self.dmd_time["dt"]
+            ),
+        )
+        result = result[:, time_index : time_index + len(self.dmd_timesteps)]
 
         return result.filled(fill_value=0)
 

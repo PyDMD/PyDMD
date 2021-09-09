@@ -390,7 +390,6 @@ class TestHankelDmd(TestCase):
         assert len(dmd.dmd_timesteps) == 64
 
     def test_first_occurences(self):
-        dmd = HankelDMD()
         x = np.linspace(0, 10, 64)
         arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
         dmd = HankelDMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
@@ -415,6 +414,13 @@ class TestHankelDmd(TestCase):
         assert dmd._hankel_first_occurrence(x[3]) == 1
         assert dmd._hankel_first_occurrence(x[-1] + dmd.dmd_time["dt"]) == 62
 
+        dmd.dmd_time["t0"] = x[len(x) // 2]
+        dmd.dmd_time["tend"] = x[-1] + dmd.dmd_time["dt"] * 20
+
+        a = dmd._hankel_first_occurrence(dmd.dmd_time["t0"])
+        b = len(x) // 2 - 2
+        assert dmd._hankel_first_occurrence(dmd.dmd_time["t0"]) == len(x) // 2 - 2
+
     def test_update_sub_dmd_time(self):
         dmd = HankelDMD()
         x = np.linspace(0, 10, 64)
@@ -431,4 +437,27 @@ class TestHankelDmd(TestCase):
         assert (
             dmd._sub_dmd.dmd_time["tend"]
             == dmd._sub_dmd.original_time["tend"] + 20
+        )
+
+    def test_hankel_2d(self):
+        def fnc(x):
+            return np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
+
+        x = np.linspace(0, 10, 64)
+        snapshots = np.vstack([fnc(x), -fnc(x)])
+
+        dmd = HankelDMD(svd_rank=0, exact=True, opt=True, d=30).fit(snapshots)
+
+        dmd.original_time["dt"] = dmd.dmd_time["dt"] = x[1] - x[0]
+        dmd.original_time["t0"] = dmd.dmd_time["t0"] = x[0]
+        dmd.original_time["tend"] = dmd.dmd_time["tend"] = x[-1]
+
+        dmd.dmd_time["t0"] = x[len(x) // 2]
+        dmd.dmd_time["tend"] = x[-1] + dmd.dmd_time["dt"] * 20
+
+        assert len(dmd.dmd_timesteps) == dmd.reconstructed_data.shape[1]
+
+        np.testing.assert_allclose(
+            dmd.reconstructed_data,
+            np.vstack([fnc(dmd.dmd_timesteps), -fnc(dmd.dmd_timesteps)]),
         )
