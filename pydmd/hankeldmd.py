@@ -10,6 +10,7 @@ import numpy as np
 
 from .dmdbase import DMDBase, DMDTimeDict
 from .utils import compute_tlsq
+from .dmd import DMD
 
 
 class HankelDMD(DMDBase):
@@ -54,25 +55,88 @@ class HankelDMD(DMDBase):
     :type reconstruction_method: {'first', 'mean'} or array-like
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-        rescale_mode=None, forward_backward=False, d=1, sorted_eigs=False,
-        reconstruction_method='first'):
-        super().__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank,
-            exact=exact, opt=opt, rescale_mode=rescale_mode,
-            sorted_eigs=sorted_eigs)
+    def __init__(
+        self,
+        svd_rank=0,
+        tlsq_rank=0,
+        exact=False,
+        opt=False,
+        rescale_mode=None,
+        forward_backward=False,
+        d=1,
+        sorted_eigs=False,
+        reconstruction_method="first",
+    ):
+        super().__init__(
+            svd_rank=svd_rank,
+            tlsq_rank=tlsq_rank,
+            exact=exact,
+            opt=opt,
+            rescale_mode=rescale_mode,
+            sorted_eigs=sorted_eigs,
+        )
         self._d = d
 
         if isinstance(reconstruction_method, list):
             if len(reconstruction_method) != d:
-                raise ValueError('The length of the array of weights must be equal to d')
+                raise ValueError(
+                    "The length of the array of weights must be equal to d"
+                )
         elif isinstance(reconstruction_method, np.ndarray):
-            if reconstruction_method.ndim > 1 or reconstruction_method.shape[0] != d:
-                raise ValueError('The length of the array of weights must be equal to d')
+            if (
+                reconstruction_method.ndim > 1
+                or reconstruction_method.shape[0] != d
+            ):
+                raise ValueError(
+                    "The length of the array of weights must be equal to d"
+                )
         self._reconstruction_method = reconstruction_method
+
+        self._sub_dmd = DMD(
+            svd_rank=svd_rank,
+            tlsq_rank=tlsq_rank,
+            exact=exact,
+            opt=opt,
+            rescale_mode=rescale_mode,
+            forward_backward=forward_backward,
+            sorted_eigs=sorted_eigs,
+        )
 
     @property
     def d(self):
         return self._d
+
+    def _hankel_first_occurrence(self, time):
+        """
+        For a given `t` such that there is :math:`k \in \mathbb{N}` such that
+        :math:`t = t_0 + k dt`, return the index of the first column in Hankel
+        pseudo matrix (see also :func:`_pseudo_hankel_matrix`) which contains
+        the snapshot corresponding to `t`.
+
+        :param time: The time corresponding to the requested snapshot.
+        :return: The index of the first appeareance of `time` in the columns of
+            Hankel pseudo matrix.
+        :rtype: int
+        """
+        return max(
+            0,
+            (time - self.original_time["t0"]) // self.dmd_time["dt"]
+            - (self.original_time["t0"] + self.d - 1),
+        )
+
+    def _update_sub_dmd_time(self):
+        """
+        Update the time dictionaries (`dmd_time` and `original_time`) of
+        the auxiliary DMD instance `HankelDMD._sub_dmd` after an update of the
+        time dictionaries of the time dictionaries of this instance of the
+        higher level instance of `HankelDMD`.
+        """
+        self._sub_dmd.dmd_time["t0"] = self._hankel_first_occurrence(
+            self.dmd_time["t0"]
+        )
+        self._sub_dmd.dmd_time["tend"] = self._hankel_first_occurrence(
+            self.dmd_time["tend"]
+        )
 
     def reconstructions_of_timeindex(self, timeindex=None):
         """
@@ -89,7 +153,9 @@ class HankelDMD(DMDBase):
             of the array returned).
         :rtype: numpy.ndarray or list
         """
-        rec = super().reconstructed_data
+        self._update_sub_dmd_time()
+
+        rec = self._sub_dmd.reconstructed_data
         space_dim = rec.shape[0] // self.d
         time_instants = rec.shape[1] + self.d - 1
 
@@ -97,7 +163,8 @@ class HankelDMD(DMDBase):
         # each snapshot appears at most d times (for instance, the first and
         # the last appear only once).
         reconstructed_snapshots = np.full(
-            (time_instants, self.d, space_dim), np.nan, dtype=np.complex128)
+            (time_instants, self.d, space_dim), np.nan, dtype=np.complex128
+        )
 
         first_empty = np.zeros((time_instants,), dtype=np.int8)
 
@@ -113,24 +180,41 @@ class HankelDMD(DMDBase):
         if timeindex is None:
             return reconstructed_snapshots
         else:
-            return reconstructed_snapshots[timeindex][:first_empty[timeindex]]
+            return reconstructed_snapshots[timeindex][: first_empty[timeindex]]
 
     @property
     def reconstructed_data(self):
+        self._update_sub_dmd_time()
+
         rec = self.reconstructions_of_timeindex()
         rec = np.ma.array(rec, mask=np.isnan(rec))
 
-        if self._reconstruction_method == 'first':
-            result = rec[:,0].T
-        elif self._reconstruction_method == 'mean':
+        if self._reconstruction_method == "first":
+            result = rec[:, 0].T
+        elif self._reconstruction_method == "mean":
             result = np.mean(rec, axis=1).T
-        elif (isinstance(self._reconstruction_method, list) or
-            isinstance(self._reconstruction_method, np.ndarray)):
-            result = np.average(rec, axis=1,
-                                weights=self._reconstruction_method).T
+        elif isinstance(self._reconstruction_method, list) or isinstance(
+            self._reconstruction_method, np.ndarray
+        ):
+            result = np.average(
+                rec, axis=1, weights=self._reconstruction_method
+            ).T
         else:
-            raise ValueError("The reconstruction method wasn't recognized: {}"
-                .format(self._reconstruction_method))
+            raise ValueError(
+                "The reconstruction method wasn't recognized: {}".format(
+                    self._reconstruction_method
+                )
+            )
+
+        # we want to return only the requested timesteps
+        time_index = min(
+            self.d - 1,
+            int(
+                (self.dmd_time["t0"] - self.original_time["t0"])
+                // self.dmd_time["dt"]
+            ),
+        )
+        result = result[:, time_index : time_index + len(self.dmd_timesteps)]
 
         return result.filled(fill_value=0)
 
@@ -155,11 +239,25 @@ class HankelDMD(DMDBase):
 
         """
         return np.concatenate(
-            [
-                X[:, i:X.shape[1] - self.d + i + 1]
-                for i in range(self.d)
-            ],
-            axis=0)
+            [X[:, i : X.shape[1] - self.d + i + 1] for i in range(self.d)],
+            axis=0,
+        )
+
+    @property
+    def modes(self):
+        return self._sub_dmd.modes
+
+    @property
+    def amplitudes(self):
+        return self._sub_dmd.amplitudes
+
+    @property
+    def operator(self):
+        return self._sub_dmd.operator
+
+    @property
+    def svd_rank(self):
+        return self._sub_dmd.svd_rank
 
     def fit(self, X):
         """
@@ -170,18 +268,13 @@ class HankelDMD(DMDBase):
         """
         snp, self._snapshots_shape = self._col_major_2darray(X)
         self._snapshots = self._pseudo_hankel_matrix(snp)
-
-        n_samples = self._snapshots.shape[1]
-        X = self._snapshots[:, :-1]
-        Y = self._snapshots[:, 1:]
-
-        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        U, s, V = self.operator.compute_operator(X,Y)
+        self._sub_dmd.fit(self._snapshots)
 
         # Default timesteps
-        self.original_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
-        self.dmd_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
-
-        self._b = self._compute_amplitudes()
+        n_samples = snp.shape[1]
+        self.original_time = DMDTimeDict(
+            {"t0": 0, "tend": n_samples - 1, "dt": 1}
+        )
+        self.dmd_time = DMDTimeDict({"t0": 0, "tend": n_samples - 1, "dt": 1})
 
         return self

@@ -4,6 +4,7 @@ from pydmd.hodmd import HODMD
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pytest
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -150,6 +151,20 @@ class TestHODmd(TestCase):
                                   [5.69109796e+00 + 2.74068833e+00j],
                                   [           0.0 + 0.0j]])
         np.testing.assert_almost_equal(dmd.dynamics, expected_data, decimal=6)
+
+    def test_dmd_time_5(self):
+        x = np.linspace(0, 10, 64)
+        y = np.cos(x)*np.sin(np.cos(x)) + np.cos(x*.2)
+
+        dmd = HODMD(svd_rank=-1, exact=True, opt=True, d=30, svd_rank_extra=-1)
+        dmd.fit(y)
+
+        dmd.original_time['dt'] = dmd.dmd_time['dt'] = x[1] - x[0]
+        dmd.original_time['t0'] = dmd.dmd_time['t0'] = x[0]
+        dmd.original_time['tend'] = dmd.dmd_time['tend'] = x[-1]
+
+        # assert that the shape of the output is correct
+        assert dmd.reconstructed_data.shape == (1,64)
 
     def test_plot_eigs_1(self):
         dmd = HODMD()
@@ -309,3 +324,9 @@ class TestHODmd(TestCase):
         ]])
         np.testing.assert_allclose(dmd.dynamics, expected_dynamics)
     """
+
+    def test_scalar_func_warning(self):
+        x = np.linspace(0, 10, 64)
+        arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
+        # we check that this does not fail
+        dmd = HODMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)

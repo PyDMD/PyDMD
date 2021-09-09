@@ -7,6 +7,8 @@ Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.
 """
 import numpy as np
 
+import warnings
+
 from .hankeldmd import HankelDMD
 from .utils import compute_tlsq, compute_svd
 
@@ -62,15 +64,30 @@ class HODMD(HankelDMD):
     :type svd_rank: int or float
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-                 rescale_mode=None, forward_backward=False, d=1,
-                 sorted_eigs=False, reconstruction_method='first',
-                 svd_rank_extra=0):
-        super().__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank, exact=exact,
-                         opt=opt, rescale_mode=rescale_mode,
-                         forward_backward=forward_backward, d=d,
-                         sorted_eigs=sorted_eigs,
-                         reconstruction_method=reconstruction_method)
+    def __init__(
+        self,
+        svd_rank=0,
+        tlsq_rank=0,
+        exact=False,
+        opt=False,
+        rescale_mode=None,
+        forward_backward=False,
+        d=1,
+        sorted_eigs=False,
+        reconstruction_method="first",
+        svd_rank_extra=0,
+    ):
+        super().__init__(
+            svd_rank=svd_rank,
+            tlsq_rank=tlsq_rank,
+            exact=exact,
+            opt=opt,
+            rescale_mode=rescale_mode,
+            forward_backward=forward_backward,
+            d=d,
+            sorted_eigs=sorted_eigs,
+            reconstruction_method=reconstruction_method,
+        )
 
         self.svd_rank_extra = svd_rank_extra  # TODO improve names
         self.U_extra = None
@@ -98,9 +115,9 @@ class HODMD(HankelDMD):
         if snapshots.ndim == 2:  # single time instant
             snapshots = self.U_extra.dot(snapshots.T).T
         elif snapshots.ndim == 3:  # all time instants
-            snapshots = np.array([
-                self.U_extra.dot(snapshot.T).T
-                for snapshot in snapshots])
+            snapshots = np.array(
+                [self.U_extra.dot(snapshot.T).T for snapshot in snapshots]
+            )
         else:
             raise RuntimeError
 
@@ -116,9 +133,21 @@ class HODMD(HankelDMD):
         """
         org_snp, snapshots_shape = self._col_major_2darray(X)
 
-        self.U_extra, _, _ = compute_svd(org_snp, self.svd_rank_extra)
+        if org_snp.shape[0] == 1:
+            self.U_extra, _, _ = compute_svd(org_snp, -1)
+            warnings.warn(
+                """The parameter 'svd_rank_extra={}' has been ignored because
+the given system is a scalar function""".format(
+                    self.svd_rank_extra
+                )
+            )
+        else:
+            self.U_extra, _, _ = compute_svd(org_snp, self.svd_rank_extra)
+
         snp = self.U_extra.T.dot(org_snp)
 
         super().fit(snp)
         self._snapshots_shape = snapshots_shape
         self._snapshots = org_snp
+
+        return self
