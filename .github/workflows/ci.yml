@@ -1,0 +1,38 @@
+name: "Testing"
+
+on:
+  push:
+  pull_request_target:
+    branches:
+      - master
+
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.8]
+        
+    steps:
+    - uses: actions/checkout@v2
+
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install numpy scipy matplotlib pytest pytest-cov future
+
+    - name: Test with pytest
+      env:
+        CODACY_API_TOKEN: ${{ secrets.CODACY_API_TOKEN }}
+      run: |
+        python3 -m pytest --cov-report term --cov-report xml:cobertura.xml --cov=ezyrb
+        bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r cobertura.xml  -t $CODACY_API_TOKEN
+        
