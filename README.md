@@ -16,11 +16,11 @@
     <a href="https://travis-ci.org/mathLab/PyDMD" target="_blank">
         <img alt="Build Status" src="https://travis-ci.org/mathLab/PyDMD.svg">
     </a>
-    <a href="https://coveralls.io/github/mathLab/PyDMD" target="_blank">
-        <img alt="Coverage Status" src="https://coveralls.io/repos/github/mathLab/PyDMD/badge.svg">
+    <a href="https://www.codacy.com/gh/mathLab/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Coverage">
+      <img src="https://app.codacy.com/project/badge/Coverage/c36adbea2e4a44eb8c0e4505b75e8245"/>
     </a>
-    <a href="https://www.codacy.com/app/mathLab/PyDMD?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Grade" target="_blank">
-        <img alt="Codacy Badge" src="https://api.codacy.com/project/badge/Grade/75f02cdeed684c25a273eaffb0d89880">
+    <a href="https://www.codacy.com/gh/mathLab/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Grade">
+      <img src="https://app.codacy.com/project/badge/Grade/c36adbea2e4a44eb8c0e4505b75e8245"/>
     </a>
 </p>
 
