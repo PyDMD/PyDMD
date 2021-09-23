@@ -186,7 +186,7 @@ class TestMrDmd(TestCase):
         mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
         mrdmd.fit(X=sample_data)
         pdynamics = mrdmd.partial_dynamics(level, 3)
-        assert pdynamics.shape == (rank, sample_data.shape[1])
+        assert pdynamics.shape == (rank, sample_data.shape[1] // 2**level)
 
     def test_eigs2(self):
         max_level = 5
@@ -235,7 +235,7 @@ class TestMrDmd(TestCase):
         mrdmd = MrDMD(dmd, max_level=max_level, max_cycles=2)
         mrdmd.fit(X=sample_data)
         pdata = mrdmd.partial_reconstructed_data(level, 3)
-        assert pdata.shape == sample_data.shape
+        assert pdata.shape == (sample_data.shape[0], sample_data.shape[1] // 2**level)
 
     def test_wrong_partial_reconstructed(self):
         max_level = 5
