@@ -291,9 +291,9 @@ class MrDMD(DMDBase):
         dynamics = []
         for i, leaf in enumerate(leaves):
             d = self.dmd_tree[level, leaf].dynamics
-            base = np.zeros(shape=(d.shape[0], 1600), dtype=d.dtype) #TODO
+            base = np.zeros(shape=(d.shape[0], self._snapshots.shape[1]), dtype=d.dtype)
             time_interval = self.partial_time_interval(level, leaf)
-            base[:, int(time_interval['t0']):int(time_interval['tend'])] = d
+            base[:, int(time_interval['t0']):int(time_interval['t0'])+d.shape[1]] = d
             dynamics.append(base)
 
         dynamics = np.vstack(dynamics)
