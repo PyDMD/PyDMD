@@ -295,9 +295,13 @@ class TestHODmd(TestCase):
             assert not np.nan in dmd.reconstructions_of_timeindex(timeindex)
 
     def test_rec_method_first(self):
-        dmd = HODMD(d=3, reconstruction_method='first')
+        dmd = HODMD(d=3, reconstruction_method="first")
         dmd.fit(X=sample_data)
-        assert (dmd.reconstructed_data == dmd.reconstructions_of_timeindex()[:,0].T).all()
+
+        rec = dmd.reconstructed_data
+        allrec = dmd.reconstructions_of_timeindex()
+        for i in range(rec.shape[1]):
+            assert (rec[:,i] == allrec[i, min(i,dmd.d-1)]).all()
 
     def test_rec_method_mean(self):
         dmd = HODMD(d=3, reconstruction_method='mean')
