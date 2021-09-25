@@ -183,6 +183,17 @@ class HankelDMD(DMDBase):
             return reconstructed_snapshots[timeindex]
 
     def _first_reconstructions(self, reconstructions):
+        """Return the first occurrence of each snapshot available in the given
+        matrix (which must be the result of `self._sub_dmd.reconstructed_data`,
+        or have the same shape).
+
+        :param reconstructions: A matrix of (higher-order) snapshots having
+            shape `(space*self.d, time_instants)`
+        :type reconstructions: np.ndarray
+        :return: The first snapshot that occurs in `reconstructions` for each
+            available time instant.
+        :rtype: np.ndarray
+        """
         first_nonmasked_idx = np.repeat(
             np.array(range(reconstructions.shape[0]))[:, None], 2, axis=1
         )
