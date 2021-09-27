@@ -286,7 +286,6 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
-        print(leaves)
         dynamics = block_diag(*tuple(dmd.dynamics
             for dmd in map(lambda leaf: self.dmd_tree[level, leaf], leaves)))
         return dynamics
