@@ -159,28 +159,49 @@ class HankelDMD(DMDBase):
         space_dim = rec.shape[0] // self.d
         time_instants = rec.shape[1] + self.d - 1
 
-        # for each time instance, we take the mean of all its appearences.
-        # each snapshot appears at most d times (for instance, the first and
-        # the last appear only once).
+        # for each time instance, we collect all its appearences.
+        # each snapshot appears at most d times (for instance, the first appears
+        # only once).
         reconstructed_snapshots = np.full(
-            (time_instants, self.d, space_dim), np.nan, dtype=np.complex128
+            (time_instants, self.d, space_dim), np.nan, dtype=rec.dtype
         )
 
-        first_empty = np.zeros((time_instants,), dtype=np.int8)
+        c_idxes = (
+            np.array(range(self.d))[:, None]
+            .repeat(2, axis=1)[None, :]
+            .repeat(rec.shape[1], axis=0)
+        )
+        c_idxes[:,:,0] += np.array(range(rec.shape[1]))[:, None]
 
-        for time_slice_idx in range(rec.shape[1]):
-            time_slice = rec[:, time_slice_idx]
-
-            for i in range(self.d):
-                time_idx = time_slice_idx + i
-                mx = time_slice[space_dim * i : space_dim * (i + 1)]
-                reconstructed_snapshots[time_idx, first_empty[time_idx]] = mx
-                first_empty[time_idx] += 1
+        reconstructed_snapshots[c_idxes[:, :, 0], c_idxes[:, :, 1]] = np.array(
+            np.swapaxes(np.split(rec.T, self.d, axis=1), 0,1)
+        )
 
         if timeindex is None:
             return reconstructed_snapshots
         else:
-            return reconstructed_snapshots[timeindex][: first_empty[timeindex]]
+            return reconstructed_snapshots[timeindex]
+
+    def _first_reconstructions(self, reconstructions):
+        """Return the first occurrence of each snapshot available in the given
+        matrix (which must be the result of `self._sub_dmd.reconstructed_data`,
+        or have the same shape).
+
+        :param reconstructions: A matrix of (higher-order) snapshots having
+            shape `(space*self.d, time_instants)`
+        :type reconstructions: np.ndarray
+        :return: The first snapshot that occurs in `reconstructions` for each
+            available time instant.
+        :rtype: np.ndarray
+        """
+        first_nonmasked_idx = np.repeat(
+            np.array(range(reconstructions.shape[0]))[:, None], 2, axis=1
+        )
+        first_nonmasked_idx[self.d - 1 :, 1] = self.d - 1
+
+        return reconstructions[
+            first_nonmasked_idx[:, 0], first_nonmasked_idx[:, 1]
+        ].T
 
     @property
     def reconstructed_data(self):
@@ -190,7 +211,7 @@ class HankelDMD(DMDBase):
         rec = np.ma.array(rec, mask=np.isnan(rec))
 
         if self._reconstruction_method == "first":
-            result = rec[:, 0].T
+            result = self._first_reconstructions(rec)
         elif self._reconstruction_method == "mean":
             result = np.mean(rec, axis=1).T
         elif isinstance(self._reconstruction_method, list) or isinstance(
