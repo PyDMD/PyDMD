@@ -84,6 +84,9 @@ We made some tutorial examples. Please refer to the official GitHub repository f
 - `Tutorial 5 <tutorial5fbdmd.html>`_ - Here we show the forward-backward dynamic mode decomposition on a dataset coming from a fluid dynamics problem.
 - `Tutorial 6 <tutorial6hodmd.html>`_ - Here we show the higher order dynamic mode decomposition applied on 1D snapshots.
 - `Tutorial 7 <tutorial7dmdc.html>`_ - Here we show the dynamic mode decomposition incorporanting the effect of control, on a toy dataset.
+- `Tutorial 8 <tutorial8comparison.html>`_ - Here we show the comparison between standard DMD and the optimal closed-form DMD.
+- `Developers Tutorial 1 <dev-tutorial1.html>`_ - Here we show the procedure to extending PyDMD by adding a new version of DMD.
+
 
 
 References
