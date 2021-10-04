@@ -12,6 +12,7 @@ import numpy as np
 import scipy.linalg
 import matplotlib.pyplot as plt
 from copy import deepcopy
+from scipy.linalg import block_diag
 
 from .dmdbase import DMDBase, DMDTimeDict
 
@@ -114,8 +115,7 @@ class MrDMD(DMDBase):
         :return: the matrix containing the DMD modes.
         :rtype: numpy.ndarray
         """
-        return np.hstack(
-            tuple([self.partial_modes(i) for i in range(self.max_level + 1)]))
+        return np.hstack([self.partial_modes(i) for i in range(self.max_level + 1)])
 
     @property
     def dynamics(self):
@@ -126,8 +126,7 @@ class MrDMD(DMDBase):
                 row.
         :rtype: numpy.ndarray
         """
-        return np.vstack(
-            tuple([self.partial_dynamics(i) for i in range(self.max_level + 1)]))
+        return np.vstack([self.partial_dynamics(i) for i in range(self.max_level + 1)])
 
     @property
     def eigs(self):
@@ -287,16 +286,8 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
-
-        dynamics = []
-        for i, leaf in enumerate(leaves):
-            d = self.dmd_tree[level, leaf].dynamics
-            base = np.zeros(shape=(d.shape[0], 1600), dtype=d.dtype) #TODO
-            time_interval = self.partial_time_interval(level, leaf)
-            base[:, int(time_interval['t0']):int(time_interval['tend'])] = d
-            dynamics.append(base)
-
-        dynamics = np.vstack(dynamics)
+        dynamics = block_diag(*tuple(dmd.dynamics
+            for dmd in map(lambda leaf: self.dmd_tree[level, leaf], leaves)))
         return dynamics
 
     def partial_eigs(self, level, node=None):

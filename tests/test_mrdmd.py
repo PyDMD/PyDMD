@@ -6,9 +6,9 @@ from pydmd import DMD
 import matplotlib.pyplot as plt
 import numpy as np
 
-def create_data():
+def create_data(t_size=1600):
     x = np.linspace(-10, 10, 80)
-    t = np.linspace(0, 20, 1600)
+    t = np.linspace(0, 20, t_size)
     Xm, Tm = np.meshgrid(x, t)
 
     D = np.exp(-np.power(old_div(Xm, 2), 2)) * np.exp(0.8j * Tm)
@@ -75,7 +75,7 @@ class TestMrDmd(TestCase):
         dmd = DMD()
         mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
         mrdmd.fit(X=sample_data)
-        assert len(mrdmd.time_window_bins(0, 1600)) == 2**5-1 
+        assert len(mrdmd.time_window_bins(0, 1600)) == 2**5-1
 
     def test_time_window_bins2(self):
         level = 3
@@ -186,7 +186,7 @@ class TestMrDmd(TestCase):
         mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
         mrdmd.fit(X=sample_data)
         pdynamics = mrdmd.partial_dynamics(level, 3)
-        assert pdynamics.shape == (rank, sample_data.shape[1])
+        assert pdynamics.shape == (rank, sample_data.shape[1] // 2**level)
 
     def test_eigs2(self):
         max_level = 5
@@ -235,7 +235,7 @@ class TestMrDmd(TestCase):
         mrdmd = MrDMD(dmd, max_level=max_level, max_cycles=2)
         mrdmd.fit(X=sample_data)
         pdata = mrdmd.partial_reconstructed_data(level, 3)
-        assert pdata.shape == sample_data.shape
+        assert pdata.shape == (sample_data.shape[0], sample_data.shape[1] // 2**level)
 
     def test_wrong_partial_reconstructed(self):
         max_level = 5
@@ -300,4 +300,14 @@ class TestMrDmd(TestCase):
         dmd = DMD()
         mrdmd = MrDMD(dmd, max_level=level, max_cycles=1)
         mrdmd.fit(X=sample_data)
+        np.testing.assert_array_almost_equal(mrdmd.reconstructed_data, mrdmd.modes @ mrdmd.dynamics)
+
+    def test_consistency2(self):
+        import sys
+        import numpy
+        numpy.set_printoptions(threshold=sys.maxsize)
+
+        mrdmd = MrDMD(DMD(), max_level=5, max_cycles=1)
+        mrdmd.fit(X=create_data(t_size=1400))
+
         np.testing.assert_array_almost_equal(mrdmd.reconstructed_data, mrdmd.modes @ mrdmd.dynamics)
