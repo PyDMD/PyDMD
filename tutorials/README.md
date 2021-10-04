@@ -1,28 +1,34 @@
 # Tutorials
 
-In this folder you can find a collection of useful Notebooks containing several tutorials, in order to understand the principles and the potential of **PyDMD**. An additional PDF tutorial ([DSWeb contest winner](https://dsweb.siam.org/The-Magazine/All-Issues/dsweb-2019-contest-tutorials-on-dynamical-systems-software)) is available [here](tutorial_dsweb.pdf).
+In this folder we collect several useful tutorials in order to understand the principles and the potential of **PyGeM**. Please read the following table for details about the tutorials.
+An additional PDF tutorial ([DSWeb contest winner](https://dsweb.siam.org/The-Magazine/All-Issues/dsweb-2019-contest-tutorials-on-dynamical-systems-software)) is available [here](tutorial_dsweb.pdf).
 
-#### [Tutorial 1](tutorial-1-dmd.ipynb)
-Here we show a basic application of the standard dynamic mode decomposition on a simple system in order to reconstruct and analyze it.
 
-#### [Tutorial 2](tutorial-2-adv-dmd.ipynb)
-Here we show a more complex application of the standard dynamic mode decomposition on a 2D system evolving in time, focusing on the advanced settings the class provides.
+| Name  | Description   | PyDMD used classes |
+|-------|---------------|--------------------|
+| Tutorial1&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial1/tutorial-1-dmd.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial1/tutorial-1-dmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial1ffd.html)]| basic usage of standard DMD | `pydmd.DMD` |
+| Tutorial2&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial2/tutorial-2-adv-dmd.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial2/tutorial-2-adv-dmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial2advdmd.html)] | advanced features of standard DMD | `pydmd.DMD`  |
+| Tutorial3&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial3/tutorial-3-mrdmd.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial3/tutorial-3-mrdmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial3mrdmd.html)] | multi-resolution DMD for transient phenomena | `pydmd.MrDMD` |
+| Tutorial4&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial4/tutorial-4-cdmd.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial4/tutorial-4-cdmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial4cdmd.html)] | compress DMD for computation speedup | `pydmd.CDMD`  |
+| Tutorial5&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial5/tutorial-5-fbdmd.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial5/tutorial-5-fbdmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial-5-fbdmd.html)] | forward-backward DMD for CFD model analysis | `pydmd.FbDMD`  |
+| Tutorial6&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial6/tutorial-6-hodmd.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial6/tutorial-6-hodmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial6hodmd.html)] | higher-order DMD applied to scalar time-series | `pydmd.HODMD`  |
+| Tutorial7&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial7/tutorial-7-dmdc.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial7/tutorial-7-dmdc.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial7dmdc.html)] | DMD with control | `pydmd.DMDC`  |
 
-#### [Tutorial 3](tutorial-3-mrdmd.ipynb)
-Here we show the application of the multi-resolution dynamic mode decomposition on a system that contains transient time events.
+| Tutorial8&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial8/tutorial-8-comparisons.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial8/tutorial-8-comparisons.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial8comparison.html)] | comparison between DMD and optimal closed-form DMD | `pydmd.OptDMD`  |
 
-#### [Tutorial 4](tutorial-4-cdmd.ipynb)
-Here we show the application of the compressed dynamic mode decomposition in order to decrease the computational cost required by decomposition.
 
-#### [Tutorial 5](tutorial-5-fbdmd.ipynb)
-Here we show the forward-backward dynamic mode decomposition on a dataset coming from a fluid dynamics problem.
 
-#### [Tutorial 6](tutorial-6-hodmd.ipynb)
-Here we show the higher order dynamic mode decomposition applied on 1D snapshots.
 
-#### [Tutorial 7](tutorial-7-dmdc.ipynb)
-Here we show the dynamic mode decomposition incorporanting the effect of
-control, on a toy dataset.
+# Tutorials for Developers
+
+We collect here also the resources for helping developers to contribute to **PyDMD**.
+
+
+| Name  | Description   | PyDMD used classes |
+|-------|---------------|--------------------|
+| Tutorial1&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/developers-tutorial1/developers-help-1.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/developers-tutorial1/developers-help-1.py),&#160;[.html](http://mathlab.github.io/PyDMD/dev-tutorial1.html)]| implementing a new version of DMD | `pydmd.DMDBase` |
+
+
 
 #### More to come...
 We plan to add more tutorials but the time is often against us. If you want to contribute with a notebook on a feature not covered yet we will be very happy and give you support on editing!
