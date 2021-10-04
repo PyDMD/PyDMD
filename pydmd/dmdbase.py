@@ -356,10 +356,7 @@ class DMDBase(object):
 
     def _optimal_dmd_matrixes(self):
         # compute the vandermonde matrix
-        omega = old_div(np.log(self.eigs), self.original_time["dt"])
-        vander = np.exp(
-            np.multiply(*np.meshgrid(omega, self.dmd_timesteps))
-        ).T
+        vander = np.vander(self.eigs, len(self.dmd_timesteps), True)
 
         # perform svd on all the snapshots
         U, s, V = np.linalg.svd(self._snapshots, full_matrices=False)
