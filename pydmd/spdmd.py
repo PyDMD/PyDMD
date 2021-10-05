@@ -122,7 +122,7 @@ class SpDMD(DMD):
 
     def fit(self, X):
         """
-        Compute the Dynamic Modes Decomposition to the input data.
+        Compute the Dynamic Modes Decomposition of the input data.
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
@@ -153,13 +153,13 @@ class SpDMD(DMD):
         return self
 
     def _update_alpha(self, beta, lmbd):
-        """Update the vector :math:`\alpha_k` of DMD amplitudes.
+        """Update the vector :math:`\\alpha_k` of DMD amplitudes.
 
-        :param np.ndarray beta: Current value of :math:`\beta_k` (vector of
+        :param np.ndarray beta: Current value of :math:`\\beta_k` (vector of
             non-zero amplitudes).
-        :param np.ndarray lmbd: Current value of :math:`\lambda_k` (vector of
+        :param np.ndarray lmbd: Current value of :math:`\\lambda_k` (vector of
             Lagrande multipliers).
-        :return: The updated value :math:`\alpha_{k+1}`.
+        :return: The updated value :math:`\\alpha_{k+1}`.
         :rtype: np.ndarray
         """
 
@@ -170,13 +170,13 @@ class SpDMD(DMD):
         )
 
     def _update_beta(self, alpha, lmbd):
-        """Update the vector :math:`\beta` of non-zero amplitudes.
+        """Update the vector :math:`\\beta` of non-zero amplitudes.
 
-        :param np.ndarray alpha: Updated value of :math:`\alpha_{k+1}` (vector
+        :param np.ndarray alpha: Updated value of :math:`\\alpha_{k+1}` (vector
             of DMD amplitudes).
-        :param np.ndarray lmbd: Current value of :math:`\lambda_k` (vector
+        :param np.ndarray lmbd: Current value of :math:`\\lambda_k` (vector
             of Lagrange multipliers).
-        :return: The updated value :math:`\beta_{k+1}`.
+        :return: The updated value :math:`\\beta_{k+1}`.
         :rtype: np.ndarray
         """
 
@@ -185,15 +185,15 @@ class SpDMD(DMD):
         )
 
     def _update_lagrangian(self, alpha, beta, lmbd):
-        """Update the vector :math:`\lambda` of Lagrange multipliers.
+        """Update the vector :math:`\\lambda` of Lagrange multipliers.
 
-        :param np.ndarray alpha: Updated value of :math:`\alpha_{k+1}` (vector
+        :param np.ndarray alpha: Updated value of :math:`\\alpha_{k+1}` (vector
             of DMD amplitudes).
-        :param np.ndarray beta: Updated value of :math:`\beta_{k+1}` (vector of
+        :param np.ndarray beta: Updated value of :math:`\\beta_{k+1}` (vector of
             non-zero amplitudes).
-        :param np.ndarray lmbd: Current value of :math:`\lambda_k` (vector
+        :param np.ndarray lmbd: Current value of :math:`\\lambda_k` (vector
             of Lagrange multipliers).
-        :return: The updated value :math:`\lambda_{k+1}`.
+        :return: The updated value :math:`\\lambda_{k+1}`.
         :rtype: np.ndarray
         """
 
@@ -202,12 +202,12 @@ class SpDMD(DMD):
     def _update(self, beta, lmbd):
         """Operate an entire step of ADMM.
 
-        :param np.ndarray beta: Current value of :math:`\beta_k` (vector of
+        :param np.ndarray beta: Current value of :math:`\\beta_k` (vector of
             non-zero amplitudes).
-        :param np.ndarray lmbd: Current value of :math:`\lambda_k` (vector of
+        :param np.ndarray lmbd: Current value of :math:`\\lambda_k` (vector of
             Lagrande multipliers).
         :return: A tuple containing the updated values
-            :math:`\alpha_{k+1},\beta_{k+1},\lambda_{k+1}` (in this order).
+            :math:`\\alpha_{k+1},\\beta_{k+1},\\lambda_{k+1}` (in this order).
         :rtype: tuple
         """
         a_new = self._update_alpha(beta, lmbd)
@@ -219,13 +219,13 @@ class SpDMD(DMD):
     def _loop_condition(self, alpha, beta, lmbd, old_beta):
         """Check whether ADMM can stop now, or should perform another iteration.
 
-        :param np.ndarray alpha: Current value of :math:`\alpha_k` (vector
+        :param np.ndarray alpha: Current value of :math:`\\alpha_k` (vector
             of DMD amplitudes).
-        :param np.ndarray beta: Current value of :math:`\beta_k` (vector of
+        :param np.ndarray beta: Current value of :math:`\\beta_k` (vector of
             non-zero amplitudes).
-        :param np.ndarray lmbd: Current value of :math:`\lambda_k` (vector
+        :param np.ndarray lmbd: Current value of :math:`\\lambda_k` (vector
             of Lagrange multipliers).
-        :param np.ndarray old_beta: Old value of :math:`\beta_{k-1}` (vector of
+        :param np.ndarray old_beta: Old value of :math:`\\beta_{k-1}` (vector of
             non-zero amplitudes).
         :return bool: `True` if ADMM can stop now, `False` otherwise.
         """

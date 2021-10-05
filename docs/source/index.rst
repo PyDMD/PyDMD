@@ -15,9 +15,9 @@ PyDMD is a Python package that uses Dynamic Mode Decomposition for a data-driven
 
 Dynamic Mode Decomposition (DMD) is a model reduction algorithm developed by Schmid (see "Dynamic mode decomposition of numerical and experimental data"). Since then has emerged as a powerful tool for analyzing the dynamics of nonlinear systems. DMD relies only on the high-fidelity measurements, like experimental data and numerical simulations, so it is an equation-free algorithm. Its popularity is also due to the fact that it does not make any assumptions about the underlying system. See Kutz ("Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems") for a comprehensive overview of the algorithm and its connections to the Koopman-operator analysis, initiated in Koopman ("Hamiltonian systems and transformation in Hilbert space"), along with examples in computational fluid dynamics.
 
-In the last years many variants arose, such as multiresolution DMD, compressed DMD, forward backward DMD, and higher order DMD among others, in order to deal with noisy data, big dataset, or spurius data for example. 
+In the last years many variants arose, such as multiresolution DMD, compressed DMD, forward backward DMD, and higher order DMD among others, in order to deal with noisy data, big dataset, or spurius data for example.
 
-In the PyDMD package we implemented in Python the majority of the variants mentioned above with a user friendly interface. We also provide many tutorials that show all the characteristics of the software, ranging from the basic use case to the most sofisticated one allowed by the package. 
+In the PyDMD package we implemented in Python the majority of the variants mentioned above with a user friendly interface. We also provide many tutorials that show all the characteristics of the software, ranging from the basic use case to the most sofisticated one allowed by the package.
 
 The research in the field is growing both in computational fluid dynamic and in structural mechanics, due to the equation-free nature of the model.
 
@@ -29,7 +29,7 @@ PyDMD requires requires numpy, scipy, matplotlib, sphinx (for the documentation)
 Installing via PIP
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Mac and Linux users can install pre-built binary packages using pip.
-To install the package just type: 
+To install the package just type:
 ::
 
     pip install pydmd
@@ -85,6 +85,7 @@ We made some tutorial examples. Please refer to the official GitHub repository f
 - `Tutorial 6 <tutorial6hodmd.html>`_ - Here we show the higher order dynamic mode decomposition applied on 1D snapshots.
 - `Tutorial 7 <tutorial7dmdc.html>`_ - Here we show the dynamic mode decomposition incorporanting the effect of control, on a toy dataset.
 - `Tutorial 8 <tutorial8comparison.html>`_ - Here we show the comparison between standard DMD and the optimal closed-form DMD.
+- `Tutorial 9 <tutorial9spdmd.html>`_ - Here we show the sparsity-promoting DMD on a dataset coming from an heat transfer problem.
 - `Developers Tutorial 1 <dev-tutorial1.html>`_ - Here we show the procedure to extending PyDMD by adding a new version of DMD.
 
 
