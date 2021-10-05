@@ -13,8 +13,8 @@ An additional PDF tutorial ([DSWeb contest winner](https://dsweb.siam.org/The-Ma
 | Tutorial5&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial5/tutorial-5-fbdmd.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial5/tutorial-5-fbdmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial-5-fbdmd.html)] | forward-backward DMD for CFD model analysis | `pydmd.FbDMD`  |
 | Tutorial6&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial6/tutorial-6-hodmd.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial6/tutorial-6-hodmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial6hodmd.html)] | higher-order DMD applied to scalar time-series | `pydmd.HODMD`  |
 | Tutorial7&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial7/tutorial-7-dmdc.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial7/tutorial-7-dmdc.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial7dmdc.html)] | DMD with control | `pydmd.DMDC`  |
-
 | Tutorial8&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial8/tutorial-8-comparisons.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial8/tutorial-8-comparisons.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial8comparison.html)] | comparison between DMD and optimal closed-form DMD | `pydmd.OptDMD`  |
+| Tutorial9&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial9/tutorial-9-spdmd.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial9/tutorial-9-spdmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial9spdmd.html)] | sparsity-promoting DMD | `pydmd.OptDMD`  |
 
 
 
