@@ -1,12 +1,8 @@
-"""
-Derived module from dmdbase.py for classic dmd.
-"""
+"""Derived module from dmdbase.py for sparsity-promoting DMD."""
 
 # --> Import standard python packages
 import numpy as np
-
-# --> Import PyDMD base class for DMD.
-from .dmd import DMD
+from numpy.linalg import solve
 
 from scipy.sparse import (
     csc_matrix as sparse,
@@ -14,11 +10,14 @@ from scipy.sparse import (
     hstack as sphstack,
 )
 from scipy.sparse.linalg import spsolve
-from numpy.linalg import solve
+
+# --> Import PyDMD base class for DMD.
+from .dmd import DMD
 
 
 def soft_thresholding_operator(v, k):
-    """Soft-thresholding operator as defined in 10.1063/1.4863670.
+    """
+    Soft-thresholding operator as defined in 10.1063/1.4863670.
 
     :param np.ndarray v: The vector on which we apply the operator.
     :param float k: The threshold.
@@ -120,6 +119,10 @@ class SpDMD(DMD):
         self._release_memory = release_memory
         self._zero_absolute_tolerance = zero_absolute_tolerance
 
+        self._P = None
+        self._q = None
+        self._Plow = None
+
     def fit(self, X):
         """
         Compute the Dynamic Modes Decomposition of the input data.
@@ -146,15 +149,15 @@ class SpDMD(DMD):
 
         # release memory
         if self._release_memory:
-            del self._P
-            del self._q
-            del self._Plow
+            self._P = None
+            self._q = None
+            self._Plow = None
 
         return self
 
     def _update_alpha(self, beta, lmbd):
-        """Update the vector :math:`\\alpha_k` of DMD amplitudes.
-
+        """
+        Update the vector :math:`\\alpha_k` of DMD amplitudes.
         :param np.ndarray beta: Current value of :math:`\\beta_k` (vector of
             non-zero amplitudes).
         :param np.ndarray lmbd: Current value of :math:`\\lambda_k` (vector of
@@ -170,8 +173,8 @@ class SpDMD(DMD):
         )
 
     def _update_beta(self, alpha, lmbd):
-        """Update the vector :math:`\\beta` of non-zero amplitudes.
-
+        """
+        Update the vector :math:`\\beta` of non-zero amplitudes.
         :param np.ndarray alpha: Updated value of :math:`\\alpha_{k+1}` (vector
             of DMD amplitudes).
         :param np.ndarray lmbd: Current value of :math:`\\lambda_k` (vector
@@ -185,8 +188,8 @@ class SpDMD(DMD):
         )
 
     def _update_lagrangian(self, alpha, beta, lmbd):
-        """Update the vector :math:`\\lambda` of Lagrange multipliers.
-
+        """
+        Update the vector :math:`\\lambda` of Lagrange multipliers.
         :param np.ndarray alpha: Updated value of :math:`\\alpha_{k+1}` (vector
             of DMD amplitudes).
         :param np.ndarray beta: Updated value of :math:`\\beta_{k+1}` (vector of
@@ -200,8 +203,8 @@ class SpDMD(DMD):
         return lmbd + (alpha - beta) * self.rho
 
     def _update(self, beta, lmbd):
-        """Operate an entire step of ADMM.
-
+        """
+        Operate an entire step of ADMM.
         :param np.ndarray beta: Current value of :math:`\\beta_k` (vector of
             non-zero amplitudes).
         :param np.ndarray lmbd: Current value of :math:`\\lambda_k` (vector of
@@ -217,8 +220,8 @@ class SpDMD(DMD):
         return a_new, b_new, l_new
 
     def _loop_condition(self, alpha, beta, lmbd, old_beta):
-        """Check whether ADMM can stop now, or should perform another iteration.
-
+        """
+        Check whether ADMM can stop now, or should perform another iteration.
         :param np.ndarray alpha: Current value of :math:`\\alpha_k` (vector
             of DMD amplitudes).
         :param np.ndarray beta: Current value of :math:`\\beta_k` (vector of
@@ -243,13 +246,13 @@ class SpDMD(DMD):
         return primal_residual < eps_primal and dual_residual < eps_dual
 
     def _find_zero_amplitudes(self):
-        """Use ADMM to find which amplitudes (i.e. their position in the
+        """
+        Use ADMM to find which amplitudes (i.e. their position in the
         DMD amplitudes array) which can be set to zero according to the given
         parameters. Note that this method does not compute amplitudes, but
         only which amplitudes are to be set to 0. Optimal amplitudes should be
         computed separately afterwards
         (see :func:`_find_sparsity_promoting_amplitudes`).
-
         :return np.ndarray: A boolean vector whose `True` items correspond to
             amplitudes which should be set to 0.
         """
@@ -285,12 +288,13 @@ class SpDMD(DMD):
         return np.abs(old_beta) < self._zero_absolute_tolerance
 
     def _optimal_amplitudes(self, zero_amplitudes):
-        """Find the optimal DMD amplitudes with the constraint that the given
+        """
+        Find the optimal DMD amplitudes with the constraint that the given
         indexes should be set to 0.
-
         :param np.ndarray zero_amplitudes: Boolean vector.
-        :return np.ndarray: Vector of optimal DMD amplitudes. Amplitudes at indexes
-            corresponding to `True` indexes in `zero_amplitudes` are set to 0.
+        :return np.ndarray: Vector of optimal DMD amplitudes. Amplitudes at
+            indexes corresponding to `True` indexes in `zero_amplitudes` are set
+            to 0.
         """
 
         n_amplitudes = len(self.amplitudes)
