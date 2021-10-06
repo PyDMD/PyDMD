@@ -82,23 +82,22 @@ class SpDMD(DMD):
     """
 
     def __init__(
-        self,
-        svd_rank=0,
-        tlsq_rank=0,
-        opt=False,
-        rescale_mode=None,
-        forward_backward=False,
-        sorted_eigs=False,
-        abs_tolerance=1.0e-6,
-        rel_tolerance=1.0e-4,
-        max_iterations=10000,
-        rho=1,
-        gamma=10,
-        verbose=True,
-        enforce_zero=True,
-        release_memory=True,
-        zero_absolute_tolerance=1.e-12
-    ):
+            self,
+            svd_rank=0,
+            tlsq_rank=0,
+            opt=False,
+            rescale_mode=None,
+            forward_backward=False,
+            sorted_eigs=False,
+            abs_tolerance=1.0e-6,
+            rel_tolerance=1.0e-4,
+            max_iterations=10000,
+            rho=1,
+            gamma=10,
+            verbose=True,
+            enforce_zero=True,
+            release_memory=True,
+            zero_absolute_tolerance=1.e-12):
         super().__init__(
             svd_rank=svd_rank,
             tlsq_rank=tlsq_rank,
@@ -126,11 +125,9 @@ class SpDMD(DMD):
     def fit(self, X):
         """
         Compute the Dynamic Modes Decomposition of the input data.
-
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-
         # we call method fit() of the superclass to set all the needed fields
         super().fit(X)
         P, q = self._optimal_dmd_matrixes()
@@ -165,9 +162,7 @@ class SpDMD(DMD):
         :return: The updated value :math:`\\alpha_{k+1}`.
         :rtype: np.ndarray
         """
-
         uk = beta - lmbd / self.rho
-
         return solve(
             self._Plow.conj().T, solve(self._Plow, self._q + uk * self.rho / 2)
         )
@@ -182,7 +177,6 @@ class SpDMD(DMD):
         :return: The updated value :math:`\\beta_{k+1}`.
         :rtype: np.ndarray
         """
-
         return soft_thresholding_operator(
             alpha + lmbd / self.rho, self.gamma / self.rho
         )
@@ -199,7 +193,6 @@ class SpDMD(DMD):
         :return: The updated value :math:`\\lambda_{k+1}`.
         :rtype: np.ndarray
         """
-
         return lmbd + (alpha - beta) * self.rho
 
     def _update(self, beta, lmbd):
@@ -232,7 +225,6 @@ class SpDMD(DMD):
             non-zero amplitudes).
         :return bool: `True` if ADMM can stop now, `False` otherwise.
         """
-
         primal_residual = np.linalg.norm(alpha - beta)
         dual_residual = self.rho * np.linalg.norm(beta - old_beta)
 
@@ -256,7 +248,6 @@ class SpDMD(DMD):
         :return np.ndarray: A boolean vector whose `True` items correspond to
             amplitudes which should be set to 0.
         """
-
         n_amplitudes = len(self.amplitudes)
 
         # initial values of lmbd and beta are all 0
@@ -296,7 +287,6 @@ class SpDMD(DMD):
             indexes corresponding to `True` indexes in `zero_amplitudes` are set
             to 0.
         """
-
         n_amplitudes = len(self.amplitudes)
         n_of_zero = np.count_nonzero(zero_amplitudes)
 
