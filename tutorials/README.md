@@ -1,6 +1,6 @@
 # Tutorials
 
-In this folder we collect several useful tutorials in order to understand the principles and the potential of **PyGeM**. Please read the following table for details about the tutorials.
+In this folder we collect several useful tutorials in order to understand the principles and the potential of **PyDMD**. Please read the following table for details about the tutorials.
 An additional PDF tutorial ([DSWeb contest winner](https://dsweb.siam.org/The-Magazine/All-Issues/dsweb-2019-contest-tutorials-on-dynamical-systems-software)) is available [here](tutorial_dsweb.pdf).
 
 
