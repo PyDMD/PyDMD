@@ -354,6 +354,26 @@ class DMDBase(object):
 
         return snapshots, snapshots_shape
 
+    def _optimal_dmd_matrixes(self):
+        # compute the vandermonde matrix
+        vander = np.vander(self.eigs, len(self.dmd_timesteps), True)
+
+        # perform svd on all the snapshots
+        U, s, V = np.linalg.svd(self._snapshots, full_matrices=False)
+
+        P = np.multiply(
+            np.dot(self.modes.conj().T, self.modes),
+            np.conj(np.dot(vander, vander.conj().T)),
+        )
+
+        tmp = np.linalg.multi_dot([U, np.diag(s), V]).conj().T
+        q = np.conj(
+            np.diag(np.linalg.multi_dot([vander, tmp, self.modes]))
+        )
+
+        return P,q
+
+
     def _compute_amplitudes(self):
         """
         Compute the amplitude coefficients. If `self.opt` is False the
@@ -373,27 +393,8 @@ class DMDBase(object):
         https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document
         """
         if isinstance(self.opt, bool) and self.opt:
-            # compute the vandermonde matrix
-            omega = old_div(np.log(self.eigs), self.original_time["dt"])
-            vander = np.exp(
-                np.multiply(*np.meshgrid(omega, self.dmd_timesteps))
-            ).T
-
-            # perform svd on all the snapshots
-            U, s, V = np.linalg.svd(self._snapshots, full_matrices=False)
-
-            P = np.multiply(
-                np.dot(self.modes.conj().T, self.modes),
-                np.conj(np.dot(vander, vander.conj().T)),
-            )
-
-            tmp = np.linalg.multi_dot([U, np.diag(s), V]).conj().T
-            q = np.conj(
-                np.diag(np.linalg.multi_dot([vander, tmp, self.modes]))
-            )
-
             # b optimal
-            a = np.linalg.solve(P, q)
+            a = np.linalg.solve(*self._optimal_dmd_matrixes())
         else:
             if isinstance(self.opt, bool):
                 amplitudes_snapshot_index = 0

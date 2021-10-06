@@ -15,3 +15,4 @@ Code Documentation
    hodmd
    dmdc
    optdmd
+   spdmd
