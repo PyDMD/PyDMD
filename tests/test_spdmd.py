@@ -120,14 +120,14 @@ class TestSpDmd(TestCase):
 
     def test_release_memory_releases(self):
         o = SpDMD(release_memory=True).fit(data)
-        assert not hasattr(o, "_P")
-        assert not hasattr(o, "_Plow")
-        assert not hasattr(o, "_q")
+        assert o._P is None
+        assert o._Plow is None
+        assert o._q is None
 
         o = SpDMD(release_memory=False).fit(data)
-        assert hasattr(o, "_P")
-        assert hasattr(o, "_Plow")
-        assert hasattr(o, "_q")
+        assert o._P is not None
+        assert o._Plow is not None
+        assert o._q is not None
 
     def test_update_lagrangian(self):
         alpha = np.random.rand(10)
