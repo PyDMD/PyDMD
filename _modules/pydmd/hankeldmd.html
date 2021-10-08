@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pydmd.hankeldmd &mdash; PyDMD 0.4 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> PyDMD
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>pydmd.hankeldmd</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pydmd.hankeldmd</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Derived module from dmdbase.py for hankel dmd.</span>
+
+<span class="sd">Reference:</span>
+<span class="sd">- H. Arbabi, I. Mezic, Ergodic theory, dynamic mode decomposition, and</span>
+<span class="sd">computation of spectral properties of the Koopman operator. SIAM Journal on</span>
+<span class="sd">Applied Dynamical Systems, 2017, 16.4: 2096-2126.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span><span class="p">,</span> <span class="n">DMDTimeDict</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_tlsq</span>
+<span class="kn">from</span> <span class="nn">.dmd</span> <span class="kn">import</span> <span class="n">DMD</span>
+
+
+<div class="viewcode-block" id="HankelDMD"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD">[docs]</a><span class="k">class</span> <span class="nc">HankelDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hankel Dynamic Mode Decomposition</span>
+
+<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes the</span>
+<span class="sd">        optimal rank and uses it for truncation; if positive interger, the</span>
+<span class="sd">        method uses the argument for the truncation; if float between 0 and 1,</span>
+<span class="sd">        the rank is the number of the biggest singular values that are needed</span>
+<span class="sd">        to reach the &#39;energy&#39; specified by `svd_rank`; if -1, the method does</span>
+<span class="sd">        not compute truncation.</span>
+<span class="sd">    :type svd_rank: int or float</span>
+<span class="sd">    :param int tlsq_rank: rank truncation computing Total Least Square. Default</span>
+<span class="sd">        is 0, that means no truncation.</span>
+<span class="sd">    :param bool exact: flag to compute either exact DMD or projected DMD.</span>
+<span class="sd">        Default is False.</span>
+<span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes. See</span>
+<span class="sd">        :class:`DMDBase`. Default is False.</span>
+<span class="sd">    :type opt: bool or int</span>
+<span class="sd">    :param rescale_mode: Scale Atilde as shown in</span>
+<span class="sd">            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its</span>
+<span class="sd">            eigendecomposition. None means no rescaling, &#39;auto&#39; means automatic</span>
+<span class="sd">            rescaling using singular values, otherwise the scaling factors.</span>
+<span class="sd">    :type rescale_mode: {&#39;auto&#39;} or None or numpy.ndarray</span>
+<span class="sd">    :param bool forward_backward: If True, the low-rank operator is computed</span>
+<span class="sd">        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is</span>
+<span class="sd">        False.</span>
+<span class="sd">    :param int d: the new order for spatial dimension of the input snapshots.</span>
+<span class="sd">        Default is 1.</span>
+<span class="sd">    :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by</span>
+<span class="sd">        magnitude if `sorted_eigs=&#39;abs&#39;`, by real part (and then by imaginary</span>
+<span class="sd">        part to break ties) if `sorted_eigs=&#39;real&#39;`. Default: False.</span>
+<span class="sd">    :type sorted_eigs: {&#39;real&#39;, &#39;abs&#39;} or False</span>
+<span class="sd">    :param reconstruction_method: Due to how HODMD is defined, we have several</span>
+<span class="sd">        versions of the same snapshot. The parameter `reconstruction_method`</span>
+<span class="sd">        allows changing how these versions are combined in `reconstructed_data`.</span>
+<span class="sd">        If `&#39;first&#39;`, only the first version is selected (default behavior);</span>
+<span class="sd">        if `&#39;mean&#39;` we take the mean of all the versions; if the parameter is an</span>
+<span class="sd">        array of floats of size `d`, the return value is the weighted average</span>
+<span class="sd">        of the versions.</span>
+<span class="sd">    :type reconstruction_method: {&#39;first&#39;, &#39;mean&#39;} or array-like</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">d</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">reconstruction_method</span><span class="o">=</span><span class="s2">&quot;first&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span>
+            <span class="n">tlsq_rank</span><span class="o">=</span><span class="n">tlsq_rank</span><span class="p">,</span>
+            <span class="n">exact</span><span class="o">=</span><span class="n">exact</span><span class="p">,</span>
+            <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span>
+            <span class="n">rescale_mode</span><span class="o">=</span><span class="n">rescale_mode</span><span class="p">,</span>
+            <span class="n">sorted_eigs</span><span class="o">=</span><span class="n">sorted_eigs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_d</span> <span class="o">=</span> <span class="n">d</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reconstruction_method</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reconstruction_method</span><span class="p">)</span> <span class="o">!=</span> <span class="n">d</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;The length of the array of weights must be equal to d&quot;</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reconstruction_method</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">reconstruction_method</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span>
+                <span class="ow">or</span> <span class="n">reconstruction_method</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">d</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;The length of the array of weights must be equal to d&quot;</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruction_method</span> <span class="o">=</span> <span class="n">reconstruction_method</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span> <span class="o">=</span> <span class="n">DMD</span><span class="p">(</span>
+            <span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span>
+            <span class="n">tlsq_rank</span><span class="o">=</span><span class="n">tlsq_rank</span><span class="p">,</span>
+            <span class="n">exact</span><span class="o">=</span><span class="n">exact</span><span class="p">,</span>
+            <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span>
+            <span class="n">rescale_mode</span><span class="o">=</span><span class="n">rescale_mode</span><span class="p">,</span>
+            <span class="n">forward_backward</span><span class="o">=</span><span class="n">forward_backward</span><span class="p">,</span>
+            <span class="n">sorted_eigs</span><span class="o">=</span><span class="n">sorted_eigs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span>
+
+<div class="viewcode-block" id="HankelDMD._hankel_first_occurrence"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._hankel_first_occurrence">[docs]</a>    <span class="k">def</span> <span class="nf">_hankel_first_occurrence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For a given `t` such that there is :math:`k \in \mathbb{N}` such that</span>
+<span class="sd">        :math:`t = t_0 + k dt`, return the index of the first column in Hankel</span>
+<span class="sd">        pseudo matrix (see also :func:`_pseudo_hankel_matrix`) which contains</span>
+<span class="sd">        the snapshot corresponding to `t`.</span>
+
+<span class="sd">        :param time: The time corresponding to the requested snapshot.</span>
+<span class="sd">        :return: The index of the first appeareance of `time` in the columns of</span>
+<span class="sd">            Hankel pseudo matrix.</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">])</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+            <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="HankelDMD._update_sub_dmd_time"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._update_sub_dmd_time">[docs]</a>    <span class="k">def</span> <span class="nf">_update_sub_dmd_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the time dictionaries (`dmd_time` and `original_time`) of</span>
+<span class="sd">        the auxiliary DMD instance `HankelDMD._sub_dmd` after an update of the</span>
+<span class="sd">        time dictionaries of the time dictionaries of this instance of the</span>
+<span class="sd">        higher level instance of `HankelDMD`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hankel_first_occurrence</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;tend&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hankel_first_occurrence</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;tend&quot;</span><span class="p">]</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="HankelDMD.reconstructions_of_timeindex"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD.reconstructions_of_timeindex">[docs]</a>    <span class="k">def</span> <span class="nf">reconstructions_of_timeindex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeindex</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a collection of all the available versions of the given</span>
+<span class="sd">        `timeindex`. The indexing of time instants is the same used for</span>
+<span class="sd">        :func:`reconstructed_data`. For each time instant there are at least</span>
+<span class="sd">        one and at most `d` versions. If `timeindex` is `None` the function</span>
+<span class="sd">        returns the whole collection, for all the time instants.</span>
+
+<span class="sd">        :param int timeindex: The index of the time snapshot.</span>
+<span class="sd">        :return: a collection of all the available versions for the given</span>
+<span class="sd">            time snapshot, or for all the time snapshots if `timeindex` is</span>
+<span class="sd">            `None` (in the second case, time varies along the first dimension</span>
+<span class="sd">            of the array returned).</span>
+<span class="sd">        :rtype: numpy.ndarray or list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_sub_dmd_time</span><span class="p">()</span>
+
+        <span class="n">rec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">reconstructed_data</span>
+        <span class="n">space_dim</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span>
+        <span class="n">time_instants</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="c1"># for each time instance, we collect all its appearences.</span>
+        <span class="c1"># each snapshot appears at most d times (for instance, the first appears</span>
+        <span class="c1"># only once).</span>
+        <span class="n">reconstructed_snapshots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">time_instants</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="n">space_dim</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="p">)</span>
+
+        <span class="n">c_idxes</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">))[:,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">c_idxes</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))[:,</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="n">reconstructed_snapshots</span><span class="p">[</span><span class="n">c_idxes</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">c_idxes</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">timeindex</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">reconstructed_snapshots</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">reconstructed_snapshots</span><span class="p">[</span><span class="n">timeindex</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="HankelDMD._first_reconstructions"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._first_reconstructions">[docs]</a>    <span class="k">def</span> <span class="nf">_first_reconstructions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reconstructions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the first occurrence of each snapshot available in the given</span>
+<span class="sd">        matrix (which must be the result of `self._sub_dmd.reconstructed_data`,</span>
+<span class="sd">        or have the same shape).</span>
+
+<span class="sd">        :param reconstructions: A matrix of (higher-order) snapshots having</span>
+<span class="sd">            shape `(space*self.d, time_instants)`</span>
+<span class="sd">        :type reconstructions: np.ndarray</span>
+<span class="sd">        :return: The first snapshot that occurs in `reconstructions` for each</span>
+<span class="sd">            available time instant.</span>
+<span class="sd">        :rtype: np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">first_nonmasked_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">reconstructions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="n">first_nonmasked_idx</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">reconstructions</span><span class="p">[</span>
+            <span class="n">first_nonmasked_idx</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">first_nonmasked_idx</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">T</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_sub_dmd_time</span><span class="p">()</span>
+
+        <span class="n">rec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reconstructions_of_timeindex</span><span class="p">()</span>
+        <span class="n">rec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">rec</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruction_method</span> <span class="o">==</span> <span class="s2">&quot;first&quot;</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_first_reconstructions</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruction_method</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reconstruction_method</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruction_method</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+        <span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span>
+                <span class="n">rec</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reconstruction_method</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The reconstruction method wasn&#39;t recognized: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruction_method</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># we want to return only the requested timesteps</span>
+        <span class="n">time_index</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">])</span>
+                <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[:,</span> <span class="n">time_index</span> <span class="p">:</span> <span class="n">time_index</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_timesteps</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="HankelDMD._pseudo_hankel_matrix"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._pseudo_hankel_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">_pseudo_hankel_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for arranging the input snapshots `X` into the (pseudo) Hankel</span>
+<span class="sd">        matrix. The attribute `d` controls the shape of the output matrix.</span>
+<span class="sd">        :Example:</span>
+
+<span class="sd">            &gt;&gt;&gt; from pydmd import HankelDMD</span>
+<span class="sd">            &gt;&gt;&gt; dmd = HankelDMD(d=2)</span>
+<span class="sd">            &gt;&gt;&gt; a = np.array([[1, 2, 3, 4, 5]])</span>
+<span class="sd">            &gt;&gt;&gt; dmd._pseudo_hankel_matrix(a)</span>
+<span class="sd">            array([[1, 2, 3, 4],</span>
+<span class="sd">                   [2, 3, 4, 5]])</span>
+<span class="sd">            &gt;&gt;&gt; dmd = pydmd.hankeldmd.HankelDMD(d=4)</span>
+<span class="sd">            &gt;&gt;&gt; dmd._pseudo_hankel_matrix(a)</span>
+<span class="sd">            array([[1, 2],</span>
+<span class="sd">                   [2, 3],</span>
+<span class="sd">                   [3, 4],</span>
+<span class="sd">                   [4, 5]])</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">X</span><span class="p">[:,</span> <span class="n">i</span> <span class="p">:</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">)],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">modes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">amplitudes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">operator</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">svd_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">svd_rank</span>
+
+<div class="viewcode-block" id="HankelDMD.fit"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the Dynamic Modes Decomposition to the input data.</span>
+
+<span class="sd">        :param X: the input snapshots.</span>
+<span class="sd">        :type X: numpy.ndarray or iterable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">snp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pseudo_hankel_matrix</span><span class="p">(</span><span class="n">snp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">)</span>
+
+        <span class="c1"># Default timesteps</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="n">snp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span> <span class="o">=</span> <span class="n">DMDTimeDict</span><span class="p">(</span>
+            <span class="p">{</span><span class="s2">&quot;t0&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;tend&quot;</span><span class="p">:</span> <span class="n">n_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span> <span class="o">=</span> <span class="n">DMDTimeDict</span><span class="p">({</span><span class="s2">&quot;t0&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;tend&quot;</span><span class="p">:</span> <span class="n">n_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
+      <span class="lastupdated">Last updated on Oct 08, 2021.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

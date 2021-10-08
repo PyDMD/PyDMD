@@ -1,74 +1,34 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>pydmd.hodmd &mdash; PyDMD 0.3.3 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>pydmd.hodmd &mdash; PyDMD 0.4 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script src="../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../../index.html" class="icon icon-home"> PyDMD
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
-                0.3.3
+                0.4
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -76,18 +36,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
@@ -95,72 +44,33 @@
 <li class="toctree-l1"><a class="reference internal" href="../../LICENSE.html">License</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">PyDMD</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="../index.html">Module code</a> &raquo;</li>
-        
       <li>pydmd.hodmd</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for pydmd.hodmd</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Derived module from dmdbase.py for higher order dmd.</span>
+<span class="sd">Derived module from hankeldmd.py for higher order dmd.</span>
 
 <span class="sd">Reference:</span>
 <span class="sd">- S. L Clainche, J. M. Vega, Higher Order Dynamic Mode Decomposition.</span>
@@ -168,11 +78,13 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_tlsq</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">.hankeldmd</span> <span class="kn">import</span> <span class="n">HankelDMD</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_tlsq</span><span class="p">,</span> <span class="n">compute_svd</span>
 
 
-<div class="viewcode-block" id="HODMD"><a class="viewcode-back" href="../../hodmd.html#pydmd.hodmd.HODMD">[docs]</a><span class="k">class</span> <span class="nc">HODMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
+<div class="viewcode-block" id="HODMD"><a class="viewcode-back" href="../../hodmd.html#pydmd.hodmd.HODMD">[docs]</a><span class="k">class</span> <span class="nc">HODMD</span><span class="p">(</span><span class="n">HankelDMD</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Higher Order Dynamic Mode Decomposition</span>
 
@@ -204,22 +116,83 @@
 <span class="sd">        magnitude if `sorted_eigs=&#39;abs&#39;`, by real part (and then by imaginary</span>
 <span class="sd">        part to break ties) if `sorted_eigs=&#39;real&#39;`. Default: False.</span>
 <span class="sd">    :type sorted_eigs: {&#39;real&#39;, &#39;abs&#39;} or False</span>
+<span class="sd">    :param reconstruction_method: Due to how HODMD is defined, we have several</span>
+<span class="sd">        versions of the same snapshot. The parameter `reconstruction_method`</span>
+<span class="sd">        allows changing how these versions are combined in</span>
+<span class="sd">        `reconstructed_data`.  If `&#39;first&#39;`, only the first version is selected</span>
+<span class="sd">        (default behavior); if `&#39;mean&#39;` we take the mean of all the versions;</span>
+<span class="sd">        if the parameter is an array of floats of size `d`, the return value is</span>
+<span class="sd">        the weighted average of the versions.</span>
+<span class="sd">    :type reconstruction_method: {&#39;first&#39;, &#39;mean&#39;} or array-like</span>
+<span class="sd">    :param svd_rank_extra: the rank for the initial reduction of the input</span>
+<span class="sd">        data, performed before the rearrangement of the input data to the</span>
+<span class="sd">        (pseudo) Hankel matrix format; If 0, the method computes the optimal</span>
+<span class="sd">        rank and uses it for truncation; if positive interger, the method uses</span>
+<span class="sd">        the argument for the truncation; if float between 0 and 1, the rank is</span>
+<span class="sd">        the number of the biggest singular values that are needed to reach the</span>
+<span class="sd">        &#39;energy&#39; specified by `svd_rank`; if -1, the method does not compute</span>
+<span class="sd">        truncation.</span>
+<span class="sd">    :type svd_rank: int or float</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">HODMD</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="o">=</span><span class="n">tlsq_rank</span><span class="p">,</span>
-            <span class="n">exact</span><span class="o">=</span><span class="n">exact</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">rescale_mode</span><span class="o">=</span><span class="n">rescale_mode</span><span class="p">,</span>
-            <span class="n">sorted_eigs</span><span class="o">=</span><span class="n">sorted_eigs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_d</span> <span class="o">=</span> <span class="n">d</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">d</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">reconstruction_method</span><span class="o">=</span><span class="s2">&quot;first&quot;</span><span class="p">,</span>
+        <span class="n">svd_rank_extra</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span>
+            <span class="n">tlsq_rank</span><span class="o">=</span><span class="n">tlsq_rank</span><span class="p">,</span>
+            <span class="n">exact</span><span class="o">=</span><span class="n">exact</span><span class="p">,</span>
+            <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span>
+            <span class="n">rescale_mode</span><span class="o">=</span><span class="n">rescale_mode</span><span class="p">,</span>
+            <span class="n">forward_backward</span><span class="o">=</span><span class="n">forward_backward</span><span class="p">,</span>
+            <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
+            <span class="n">sorted_eigs</span><span class="o">=</span><span class="n">sorted_eigs</span><span class="p">,</span>
+            <span class="n">reconstruction_method</span><span class="o">=</span><span class="n">reconstruction_method</span><span class="p">,</span>
+        <span class="p">)</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank_extra</span> <span class="o">=</span> <span class="n">svd_rank_extra</span>  <span class="c1"># TODO improve names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">U_extra</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="nd">@DMDBase</span><span class="o">.</span><span class="n">modes</span><span class="o">.</span><span class="n">getter</span>
-    <span class="k">def</span> <span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">HODMD</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">modes</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:]</span>
+<div class="viewcode-block" id="HODMD.reconstructions_of_timeindex"><a class="viewcode-back" href="../../hodmd.html#pydmd.hodmd.HODMD.reconstructions_of_timeindex">[docs]</a>    <span class="k">def</span> <span class="nf">reconstructions_of_timeindex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeindex</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a collection of all the available versions of the given</span>
+<span class="sd">        `timeindex`. The indexing of time instants is the same used for</span>
+<span class="sd">        :func:`reconstructed_data`. For each time instant there are at least</span>
+<span class="sd">        one and at most `d` versions.  If `timeindex` is `None` the function</span>
+<span class="sd">        returns the whole collection, for all the time instants.</span>
+
+<span class="sd">        :param int timeindex: The index of the time snapshot.</span>
+<span class="sd">        :return: A collection of all the available versions for the requested</span>
+<span class="sd">            time instants, represented by a matrix (or tensor).</span>
+<span class="sd">            Axes:</span>
+<span class="sd">            0. Number of time instants;</span>
+<span class="sd">            1. Copies of the snapshot;</span>
+<span class="sd">            2. Space dimension of the snapshot.</span>
+<span class="sd">            The first axis is omitted if only one single time instant is</span>
+<span class="sd">            selected, in this case the output becomes a 2D matrix.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">snapshots</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">reconstructions_of_timeindex</span><span class="p">(</span><span class="n">timeindex</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">snapshots</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># single time instant</span>
+            <span class="n">snapshots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">U_extra</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">snapshots</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">elif</span> <span class="n">snapshots</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># all time instants</span>
+            <span class="n">snapshots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">U_extra</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">snapshot</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="k">for</span> <span class="n">snapshot</span> <span class="ow">in</span> <span class="n">snapshots</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span>
+
+        <span class="k">return</span> <span class="n">snapshots</span></div>
 
 <div class="viewcode-block" id="HODMD.fit"><a class="viewcode-back" href="../../hodmd.html#pydmd.hodmd.HODMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -227,75 +200,57 @@
 
 <span class="sd">        :param X: the input snapshots.</span>
 <span class="sd">        :type X: numpy.ndarray or iterable</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">snaps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[:,</span> <span class="n">i</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">)</span>
-            <span class="p">],</span>
-            <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">org_snp</span><span class="p">,</span> <span class="n">snapshots_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
-        <span class="n">n_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">snaps</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">snaps</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="n">org_snp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">U_extra</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_svd</span><span class="p">(</span><span class="n">org_snp</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;The parameter &#39;svd_rank_extra={}&#39; has been ignored because</span>
+<span class="sd">the given system is a scalar function&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank_extra</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">U_extra</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_svd</span><span class="p">(</span><span class="n">org_snp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank_extra</span><span class="p">)</span>
 
-        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">compute_tlsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tlsq_rank</span><span class="p">)</span>
-        <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">compute_operator</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">)</span>
+        <span class="n">snp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">U_extra</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">org_snp</span><span class="p">)</span>
 
-        <span class="c1"># Default timesteps</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;t0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;tend&#39;</span><span class="p">:</span> <span class="n">n_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;t0&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;tend&#39;</span><span class="p">:</span> <span class="n">n_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;dt&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_amplitudes</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">snp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="n">snapshots_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span> <span class="o">=</span> <span class="n">org_snp</span>
 
         <span class="k">return</span> <span class="bp">self</span></div></div>
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">
-        Last updated on Apr 23, 2021.
-      </span>
-
-    </p>
+    <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
+      <span class="lastupdated">Last updated on Oct 08, 2021.
+      </span></p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

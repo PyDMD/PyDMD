@@ -1,76 +1,36 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>DMDBase &mdash; PyDMD 0.3.3 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>DMDBase &mdash; PyDMD 0.4 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="pydmd.dmdbase.DMDBase._col_major_2darray" href="_summaries/pydmd.dmdbase.DMDBase._col_major_2darray.html" />
     <link rel="prev" title="Code Documentation" href="code.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> PyDMD
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
-                0.3.3
+                0.4
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -78,18 +38,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">DMDBase</a><ul>
@@ -113,9 +62,11 @@
 <li class="toctree-l2"><a class="reference internal" href="mrdmd.html">MrDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fbdmd.html">FbDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cdmd.html">CDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">HankelDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hodmd.html">HODMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
@@ -123,73 +74,31 @@
 <li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">PyDMD</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="code.html">Code Documentation</a> &raquo;</li>
-        
       <li>DMDBase</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/dmdbase.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="module-pydmd.dmdbase">
 <span id="dmdbase"></span><h1>DMDBase<a class="headerlink" href="#module-pydmd.dmdbase" title="Permalink to this headline">¶</a></h1>
 <p>Base module for the DMD: <cite>fit</cite> method must be implemented in inherited classes</p>
@@ -272,7 +181,7 @@ the system presents small eigenvalues. For this reason a manual
 selection of the number of eigenvalues considered for the analyisis may
 be needed (check <cite>svd_rank</cite>). Also setting <cite>svd_rank</cite> to a value between
 0 and 1 may give better results. Default is False.</p></li>
-<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
 10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
 eigendecomposition. None means no rescaling, ‘auto’ means automatic
 rescaling using singular values, otherwise the scaling factors.</p></li>
@@ -331,8 +240,8 @@ given the mode and its dynamic, as shown in
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mode</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – the DMD mode.</p></li>
-<li><p><strong>dynamic</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – the dynamic of the given DMD mode, as
+<li><p><strong>mode</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – the DMD mode.</p></li>
+<li><p><strong>dynamic</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – the dynamic of the given DMD mode, as
 returned by <cite>dmd.dynamics[mode_index]</cite>.</p></li>
 </ul>
 </dd>
@@ -420,14 +329,14 @@ array, the method saves it, otherwise it also saves the original
 snapshots shape and reshapes the snapshots.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – the input snapshots.</p>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – the input snapshots.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the 2D matrix that contains the flatten snapshots, the shape
 of original snapshots.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a>, tuple</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a>, tuple</p>
 </dd>
 </dl>
 </dd></dl>
@@ -447,13 +356,50 @@ snapshots), self.modes and self.eigs.</p>
 <dd class="field-odd"><p>the amplitudes array</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 <p>References for optimal amplitudes:
 Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
 <a class="reference external" href="https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document">https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document</a></p>
 </dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">_enforce_ratio</code><span class="sig-paren">(</span><em class="sig-param">goal_ratio</em>, <em class="sig-param">supx</em>, <em class="sig-param">infx</em>, <em class="sig-param">supy</em>, <em class="sig-param">infy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._enforce_ratio"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Computes the right value of <cite>supx,infx,supy,infy</cite> to obtain the desired
+ratio in <a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_eigs.html#pydmd.dmdbase.DMDBase.plot_eigs" title="pydmd.dmdbase.DMDBase.plot_eigs"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_eigs()</span></code></a>. Ratio is defined as</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dx</span> <span class="o">=</span> <span class="n">supx</span> <span class="o">-</span> <span class="n">infx</span>
+<span class="n">dy</span> <span class="o">=</span> <span class="n">supy</span> <span class="o">-</span> <span class="n">infy</span>
+<span class="nb">max</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span> <span class="o">/</span> <span class="nb">min</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>goal_ratio</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the desired ratio.</p></li>
+<li><p><strong>supx</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the old value of <cite>supx</cite>, to be adjusted.</p></li>
+<li><p><strong>infx</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the old value of <cite>infx</cite>, to be adjusted.</p></li>
+<li><p><strong>supy</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the old value of <cite>supy</cite>, to be adjusted.</p></li>
+<li><p><strong>infy</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the old value of <cite>infy</cite>, to be adjusted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return tuple</dt>
+<dd class="field-even"><p>a tuple which contains the updated values of
+<cite>supx,infx,supy,infy</cite> in this order.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">_optimal_dmd_matrixes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._optimal_dmd_matrixes"><span class="viewcode-link">[source]</span></a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">_plot_limits</code><span class="sig-paren">(</span><em class="sig-param">narrow_view</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._plot_limits"><span class="viewcode-link">[source]</span></a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt>
@@ -485,7 +431,7 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the array that contains the amplitudes coefficient.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -499,7 +445,7 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the reduced Koopman operator A.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -513,7 +459,7 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the time intervals of the original snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -532,7 +478,7 @@ system and the reconstructed one. For futher information, see
 row.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -546,7 +492,7 @@ row.</p>
 <dd class="field-odd"><p>the eigenvalues from the eigendecomposition of <cite>atilde</cite>.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -577,7 +523,7 @@ row.</p>
 <dd class="field-odd"><p>the array that contains the frequencies of the eigenvalues.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -591,7 +537,7 @@ row.</p>
 <dd class="field-odd"><p>the Floquet values</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -605,7 +551,7 @@ row.</p>
 <dd class="field-odd"><p>the matrix containing the DMD modes.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -638,7 +584,7 @@ row.</p>
 <dd class="field-odd"><p>the time intervals of the original snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -679,8 +625,8 @@ of 0.05. Not compatible with <cite>show_axes=True</cite>. Default is False.</p><
 <li><p><strong>index_mode</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>sequence</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – the index of the modes to plot. By default, all
 the modes are plotted.</p></li>
 <li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
-<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
-<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
 <li><p><strong>order</strong> (<em>{'C'</em><em>, </em><em>'F'</em><em>, </em><em>'A'}</em><em>, </em><em>default 'C'.</em>) – read the elements of snapshots using this index order,
 and place the elements into the reshaped array using this index
 order.  It has to be the same used to store the snapshot. ‘C’ means
@@ -710,8 +656,8 @@ size. Default is (8, 8).</p></li>
 <li><p><strong>index_snap</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>sequence</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – the index of the snapshots to plot. By default, all
 the snapshots are plotted.</p></li>
 <li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
-<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
-<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
 <li><p><strong>order</strong> (<em>{'C'</em><em>, </em><em>'F'</em><em>, </em><em>'A'}</em><em>, </em><em>default 'C'.</em>) – read the elements of snapshots using this index order,
 and place the elements into the reshaped array using this index
 order.  It has to be the same used to store the snapshot. ‘C’ means
@@ -740,7 +686,7 @@ size. Default is (8, 8).</p></li>
 <dd class="field-odd"><p>the matrix that contains the reconstructed snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -784,7 +730,7 @@ functions.</p>
 <dd class="field-odd"><p>the matrix that contains the original snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -805,53 +751,35 @@ functions.</p>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="_summaries/pydmd.dmdbase.DMDBase._col_major_2darray.html" class="btn btn-neutral float-right" title="pydmd.dmdbase.DMDBase._col_major_2darray" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="code.html" class="btn btn-neutral float-left" title="Code Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="_summaries/pydmd.dmdbase.DMDBase._col_major_2darray.html" class="btn btn-neutral float-right" title="pydmd.dmdbase.DMDBase._col_major_2darray" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">
-        Last updated on Apr 23, 2021.
-      </span>
-
-    </p>
+    <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
+      <span class="lastupdated">Last updated on Oct 08, 2021.
+      </span></p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

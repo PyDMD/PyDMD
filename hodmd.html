@@ -1,76 +1,36 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>HODMD &mdash; PyDMD 0.3.3 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>HODMD &mdash; PyDMD 0.4 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="pydmd.hodmd.HODMD.atilde" href="_summaries/pydmd.hodmd.HODMD.atilde.html" />
-    <link rel="prev" title="pydmd.cdmd.CDMD.snapshots" href="_summaries/pydmd.cdmd.CDMD.snapshots.html" /> 
+    <link rel="prev" title="HankelDMD" href="hankeldmd.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> PyDMD
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
-                0.3.3
+                0.4
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -78,18 +38,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
@@ -97,6 +46,7 @@
 <li class="toctree-l2"><a class="reference internal" href="mrdmd.html">MrDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fbdmd.html">FbDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cdmd.html">CDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">HankelDMD</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">HODMD</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.atilde.html">pydmd.hodmd.HODMD.atilde</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.dmd_timesteps.html">pydmd.hodmd.HODMD.dmd_timesteps</a></li>
@@ -114,6 +64,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
@@ -121,76 +72,34 @@
 <li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">PyDMD</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="code.html">Code Documentation</a> &raquo;</li>
-        
       <li>HODMD</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/hodmd.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="module-pydmd.hodmd">
 <span id="hodmd"></span><h1>HODMD<a class="headerlink" href="#module-pydmd.hodmd" title="Permalink to this headline">¶</a></h1>
-<p>Derived module from dmdbase.py for higher order dmd.</p>
+<p>Derived module from hankeldmd.py for higher order dmd.</p>
 <p>Reference:
 - S. L Clainche, J. M. Vega, Higher Order Dynamic Mode Decomposition.
 Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.</p>
@@ -230,18 +139,21 @@ Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.plot_snapshots_2D.html#pydmd.hodmd.HODMD.plot_snapshots_2D" title="pydmd.hodmd.HODMD.plot_snapshots_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.plot_snapshots_2D</span></code></a></p></td>
 <td><p>Plot the snapshots.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.reconstructed_data.html#pydmd.hodmd.HODMD.reconstructed_data" title="pydmd.hodmd.HODMD.reconstructed_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.reconstructed_data</span></code></a></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.reconstructions_of_timeindex</span></code></p></td>
+<td><p>Build a collection of all the available versions of the given <cite>timeindex</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.reconstructed_data.html#pydmd.hodmd.HODMD.reconstructed_data" title="pydmd.hodmd.HODMD.reconstructed_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.reconstructed_data</span></code></a></p></td>
 <td><p>Get the reconstructed data.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.snapshots.html#pydmd.hodmd.HODMD.snapshots" title="pydmd.hodmd.HODMD.snapshots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.snapshots</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.snapshots.html#pydmd.hodmd.HODMD.snapshots" title="pydmd.hodmd.HODMD.snapshots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HODMD.snapshots</span></code></a></p></td>
 <td><p>Get the original input data.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-name descname">HODMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">d=1</em>, <em class="sig-param">sorted_eigs=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hodmd.html#HODMD"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
+<em class="property">class </em><code class="sig-name descname">HODMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">d=1</em>, <em class="sig-param">sorted_eigs=False</em>, <em class="sig-param">reconstruction_method='first'</em>, <em class="sig-param">svd_rank_extra=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hodmd.html#HODMD"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.hankeldmd.HankelDMD</span></code></p>
 <p>Higher Order Dynamic Mode Decomposition</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -258,7 +170,7 @@ is 0, that means no truncation.</p></li>
 Default is False.</p></li>
 <li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes. See
 <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
-<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
 10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
 eigendecomposition. None means no rescaling, ‘auto’ means automatic
 rescaling using singular values, otherwise the scaling factors.</p></li>
@@ -270,35 +182,59 @@ Default is 1.</p></li>
 <li><p><strong>sorted_eigs</strong> (<em>{'real'</em><em>, </em><em>'abs'}</em><em> or </em><em>False</em>) – Sort eigenvalues (and modes/dynamics accordingly) by
 magnitude if <cite>sorted_eigs=’abs’</cite>, by real part (and then by imaginary
 part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p></li>
+<li><p><strong>reconstruction_method</strong> (<em>{'first'</em><em>, </em><em>'mean'}</em><em> or </em><em>array-like</em>) – Due to how HODMD is defined, we have several
+versions of the same snapshot. The parameter <cite>reconstruction_method</cite>
+allows changing how these versions are combined in
+<cite>reconstructed_data</cite>.  If <cite>‘first’</cite>, only the first version is selected
+(default behavior); if <cite>‘mean’</cite> we take the mean of all the versions;
+if the parameter is an array of floats of size <cite>d</cite>, the return value is
+the weighted average of the versions.</p></li>
+<li><p><strong>svd_rank_extra</strong> – the rank for the initial reduction of the input
+data, performed before the rearrangement of the input data to the
+(pseudo) Hankel matrix format; If 0, the method computes the optimal
+rank and uses it for truncation; if positive interger, the method uses
+the argument for the truncation; if float between 0 and 1, the rank is
+the number of the biggest singular values that are needed to reach the
+‘energy’ specified by <cite>svd_rank</cite>; if -1, the method does not compute
+truncation.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
-<dt>
-<em class="property">property </em><code class="sig-name descname">d</code></dt>
-<dd></dd></dl>
-
 <dl class="method">
 <dt>
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hodmd.html#HODMD.fit"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the Dynamic Modes Decomposition to the input data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt>
-<em class="property">property </em><code class="sig-name descname">modes</code></dt>
-<dd><p>Get the matrix containing the DMD modes, stored by column.</p>
+<code class="sig-name descname">reconstructions_of_timeindex</code><span class="sig-paren">(</span><em class="sig-param">timeindex=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hodmd.html#HODMD.reconstructions_of_timeindex"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Build a collection of all the available versions of the given
+<cite>timeindex</cite>. The indexing of time instants is the same used for
+<a class="reference internal" href="_summaries/pydmd.hodmd.HODMD.reconstructed_data.html#pydmd.hodmd.HODMD.reconstructed_data" title="pydmd.hodmd.HODMD.reconstructed_data"><code class="xref py py-func docutils literal notranslate"><span class="pre">reconstructed_data()</span></code></a>. For each time instant there are at least
+one and at most <cite>d</cite> versions.  If <cite>timeindex</cite> is <cite>None</cite> the function
+returns the whole collection, for all the time instants.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the matrix containing the DMD modes.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timeindex</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The index of the time snapshot.</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.20)">numpy.ndarray</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A collection of all the available versions for the requested
+time instants, represented by a matrix (or tensor).
+Axes:
+0. Number of time instants;
+1. Copies of the snapshot;
+2. Space dimension of the snapshot.
+The first axis is omitted if only one single time instant is
+selected, in this case the output becomes a 2D matrix.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -309,53 +245,35 @@ part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p><
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hankeldmd.html" class="btn btn-neutral float-left" title="HankelDMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="_summaries/pydmd.hodmd.HODMD.atilde.html" class="btn btn-neutral float-right" title="pydmd.hodmd.HODMD.atilde" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="_summaries/pydmd.cdmd.CDMD.snapshots.html" class="btn btn-neutral float-left" title="pydmd.cdmd.CDMD.snapshots" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">
-        Last updated on Apr 23, 2021.
-      </span>
-
-    </p>
+    <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
+      <span class="lastupdated">Last updated on Oct 08, 2021.
+      </span></p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

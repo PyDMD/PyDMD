@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HankelDMD &mdash; PyDMD 0.4 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="HODMD" href="hodmd.html" />
+    <link rel="prev" title="pydmd.cdmd.CDMD.snapshots" href="_summaries/pydmd.cdmd.CDMD.snapshots.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> PyDMD
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">MrDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">FbDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">CDMD</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">HankelDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hodmd.html">HODMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="code.html">Code Documentation</a> &raquo;</li>
+      <li>HankelDMD</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hankeldmd.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-pydmd.hankeldmd">
+<span id="hankeldmd"></span><h1>HankelDMD<a class="headerlink" href="#module-pydmd.hankeldmd" title="Permalink to this headline">¶</a></h1>
+<p>Derived module from dmdbase.py for hankel dmd.</p>
+<p>Reference:
+- H. Arbabi, I. Mezic, Ergodic theory, dynamic mode decomposition, and
+computation of spectral properties of the Koopman operator. SIAM Journal on
+Applied Dynamical Systems, 2017, 16.4: 2096-2126.</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.atilde</span></code></p></td>
+<td><p>Get the reduced Koopman operator A, called A tilde.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.dmd_timesteps</span></code></p></td>
+<td><p>Get the timesteps of the reconstructed states.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.dynamics</span></code></p></td>
+<td><p>Get the time evolution of each mode.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.eigs</span></code></p></td>
+<td><p>Get the eigenvalues of A tilde.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.fit</span></code></p></td>
+<td><p>Compute the Dynamic Modes Decomposition to the input data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.modes</span></code></p></td>
+<td><p>Get the matrix containing the DMD modes, stored by column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.original_timesteps</span></code></p></td>
+<td><p>Get the timesteps of the original snapshot.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.plot_eigs</span></code></p></td>
+<td><p>Plot the eigenvalues.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.plot_modes_2D</span></code></p></td>
+<td><p>Plot the DMD Modes.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.plot_snapshots_2D</span></code></p></td>
+<td><p>Plot the snapshots.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.reconstructions_of_timeindex</span></code></p></td>
+<td><p>Build a collection of all the available versions of the given <cite>timeindex</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.reconstructed_data</span></code></p></td>
+<td><p>Get the reconstructed data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">HankelDMD.snapshots</span></code></p></td>
+<td><p>Get the original input data.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-name descname">HankelDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">d=1</em>, <em class="sig-param">sorted_eigs=False</em>, <em class="sig-param">reconstruction_method='first'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hankeldmd.html#HankelDMD"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
+<p>Hankel Dynamic Mode Decomposition</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If 0, the method computes the
+optimal rank and uses it for truncation; if positive interger, the
+method uses the argument for the truncation; if float between 0 and 1,
+the rank is the number of the biggest singular values that are needed
+to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1, the method does
+not compute truncation.</p></li>
+<li><p><strong>tlsq_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation computing Total Least Square. Default
+is 0, that means no truncation.</p></li>
+<li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute either exact DMD or projected DMD.
+Default is False.</p></li>
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes. See
+<code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
+eigendecomposition. None means no rescaling, ‘auto’ means automatic
+rescaling using singular values, otherwise the scaling factors.</p></li>
+<li><p><strong>forward_backward</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If True, the low-rank operator is computed
+like in fbDMD (reference: <a class="reference external" href="https://arxiv.org/abs/1507.02264">https://arxiv.org/abs/1507.02264</a>). Default is
+False.</p></li>
+<li><p><strong>d</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the new order for spatial dimension of the input snapshots.
+Default is 1.</p></li>
+<li><p><strong>sorted_eigs</strong> (<em>{'real'</em><em>, </em><em>'abs'}</em><em> or </em><em>False</em>) – Sort eigenvalues (and modes/dynamics accordingly) by
+magnitude if <cite>sorted_eigs=’abs’</cite>, by real part (and then by imaginary
+part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p></li>
+<li><p><strong>reconstruction_method</strong> (<em>{'first'</em><em>, </em><em>'mean'}</em><em> or </em><em>array-like</em>) – Due to how HODMD is defined, we have several
+versions of the same snapshot. The parameter <cite>reconstruction_method</cite>
+allows changing how these versions are combined in <cite>reconstructed_data</cite>.
+If <cite>‘first’</cite>, only the first version is selected (default behavior);
+if <cite>‘mean’</cite> we take the mean of all the versions; if the parameter is an
+array of floats of size <cite>d</cite>, the return value is the weighted average
+of the versions.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="sig-name descname">_first_reconstructions</code><span class="sig-paren">(</span><em class="sig-param">reconstructions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hankeldmd.html#HankelDMD._first_reconstructions"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Return the first occurrence of each snapshot available in the given
+matrix (which must be the result of <cite>self._sub_dmd.reconstructed_data</cite>,
+or have the same shape).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>reconstructions</strong> (<em>np.ndarray</em>) – A matrix of (higher-order) snapshots having
+shape <cite>(space*self.d, time_instants)</cite></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The first snapshot that occurs in <cite>reconstructions</cite> for each
+available time instant.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">_hankel_first_occurrence</code><span class="sig-paren">(</span><em class="sig-param">time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hankeldmd.html#HankelDMD._hankel_first_occurrence"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>For a given <cite>t</cite> such that there is <span class="math">k \in \mathbb{N}</span> such that
+<span class="math">t = t_0 + k dt</span>, return the index of the first column in Hankel
+pseudo matrix (see also <code class="xref py py-func docutils literal notranslate"><span class="pre">_pseudo_hankel_matrix()</span></code>) which contains
+the snapshot corresponding to <cite>t</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>time</strong> – The time corresponding to the requested snapshot.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The index of the first appeareance of <cite>time</cite> in the columns of
+Hankel pseudo matrix.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">_pseudo_hankel_matrix</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hankeldmd.html#HankelDMD._pseudo_hankel_matrix"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Method for arranging the input snapshots <cite>X</cite> into the (pseudo) Hankel
+matrix. The attribute <cite>d</cite> controls the shape of the output matrix.
+:Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydmd</span> <span class="kn">import</span> <span class="n">HankelDMD</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span> <span class="o">=</span> <span class="n">HankelDMD</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">_pseudo_hankel_matrix</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">array([[1, 2, 3, 4],</span>
+<span class="go">       [2, 3, 4, 5]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span> <span class="o">=</span> <span class="n">pydmd</span><span class="o">.</span><span class="n">hankeldmd</span><span class="o">.</span><span class="n">HankelDMD</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">_pseudo_hankel_matrix</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">array([[1, 2],</span>
+<span class="go">       [2, 3],</span>
+<span class="go">       [3, 4],</span>
+<span class="go">       [4, 5]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">_update_sub_dmd_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hankeldmd.html#HankelDMD._update_sub_dmd_time"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Update the time dictionaries (<cite>dmd_time</cite> and <cite>original_time</cite>) of
+the auxiliary DMD instance <cite>HankelDMD._sub_dmd</cite> after an update of the
+time dictionaries of the time dictionaries of this instance of the
+higher level instance of <cite>HankelDMD</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">amplitudes</code></dt>
+<dd><p>Get the coefficients that minimize the error between the original
+system and the reconstructed one. For futher information, see
+<cite>dmdbase._compute_amplitudes</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the array that contains the amplitudes coefficient.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">d</code></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hankeldmd.html#HankelDMD.fit"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute the Dynamic Modes Decomposition to the input data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">modes</code></dt>
+<dd><p>Get the matrix containing the DMD modes, stored by column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the matrix containing the DMD modes.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">operator</code></dt>
+<dd><p>Get the instance of DMDOperator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the instance of DMDOperator</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>DMDOperator</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">reconstructed_data</code></dt>
+<dd><p>Get the reconstructed data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the matrix that contains the reconstructed snapshots.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">reconstructions_of_timeindex</code><span class="sig-paren">(</span><em class="sig-param">timeindex=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/hankeldmd.html#HankelDMD.reconstructions_of_timeindex"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Build a collection of all the available versions of the given
+<cite>timeindex</cite>. The indexing of time instants is the same used for
+<code class="xref py py-func docutils literal notranslate"><span class="pre">reconstructed_data()</span></code>. For each time instant there are at least
+one and at most <cite>d</cite> versions. If <cite>timeindex</cite> is <cite>None</cite> the function
+returns the whole collection, for all the time instants.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>timeindex</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The index of the time snapshot.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a collection of all the available versions for the given
+time snapshot, or for all the time snapshots if <cite>timeindex</cite> is
+<cite>None</cite> (in the second case, time varies along the first dimension
+of the array returned).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a> or list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">svd_rank</code></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="_summaries/pydmd.cdmd.CDMD.snapshots.html" class="btn btn-neutral float-left" title="pydmd.cdmd.CDMD.snapshots" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hodmd.html" class="btn btn-neutral float-right" title="HODMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
+      <span class="lastupdated">Last updated on Oct 08, 2021.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

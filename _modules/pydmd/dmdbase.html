@@ -1,74 +1,34 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>pydmd.dmdbase &mdash; PyDMD 0.3.3 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>pydmd.dmdbase &mdash; PyDMD 0.4 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script src="../../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../../index.html" class="icon icon-home"> PyDMD
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
-                0.3.3
+                0.4
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -76,18 +36,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
@@ -95,69 +44,30 @@
 <li class="toctree-l1"><a class="reference internal" href="../../LICENSE.html">License</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">PyDMD</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="../index.html">Module code</a> &raquo;</li>
-        
       <li>pydmd.dmdbase</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for pydmd.dmdbase</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Base module for the DMD: `fit` method must be implemented in inherited classes</span>
@@ -173,12 +83,13 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">past.utils</span> <span class="kn">import</span> <span class="n">old_div</span>
 
-<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.max_open_warning&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;figure.max_open_warning&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
 <span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
 
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+
 
 <div class="viewcode-block" id="DMDBase"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase">[docs]</a><span class="k">class</span> <span class="nc">DMDBase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -236,11 +147,23 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">DMDOperator</span><span class="p">(</span><span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="n">exact</span><span class="p">,</span>
-            <span class="n">rescale_mode</span><span class="o">=</span><span class="n">rescale_mode</span><span class="p">,</span> <span class="n">forward_backward</span><span class="o">=</span><span class="n">forward_backward</span><span class="p">,</span>
-            <span class="n">sorted_eigs</span><span class="o">=</span><span class="n">sorted_eigs</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">DMDOperator</span><span class="p">(</span>
+            <span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span>
+            <span class="n">exact</span><span class="o">=</span><span class="n">exact</span><span class="p">,</span>
+            <span class="n">rescale_mode</span><span class="o">=</span><span class="n">rescale_mode</span><span class="p">,</span>
+            <span class="n">forward_backward</span><span class="o">=</span><span class="n">forward_backward</span><span class="p">,</span>
+            <span class="n">sorted_eigs</span><span class="o">=</span><span class="n">sorted_eigs</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_tlsq_rank</span> <span class="o">=</span> <span class="n">tlsq_rank</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span> <span class="o">=</span> <span class="kc">None</span>
@@ -283,9 +206,11 @@
 <span class="sd">        :return: the time intervals of the original snapshots.</span>
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">],</span>
-                         <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s1">&#39;tend&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">],</span>
-                         <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;tend&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">original_timesteps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -295,9 +220,11 @@
 <span class="sd">        :return: the time intervals of the original snapshots.</span>
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">],</span>
-                         <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;tend&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">],</span>
-                         <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;tend&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -378,9 +305,13 @@
 <span class="sd">        :rtype: numpy.ndarray</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_timesteps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">tpow</span> <span class="o">=</span> <span class="n">old_div</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_timesteps</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;t0&#39;</span><span class="p">],</span>
-                       <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">])</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_timesteps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="n">tpow</span> <span class="o">=</span> <span class="n">old_div</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmd_timesteps</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
 
         <span class="c1"># The new formula is x_(k+j) = \Phi \Lambda^k \Phi^(-1) x_j.</span>
         <span class="c1"># Since j is fixed, for a given snapshot &quot;u&quot; we have the following</span>
@@ -389,7 +320,7 @@
         <span class="c1"># Therefore tpow must be scaled appropriately.</span>
         <span class="n">tpow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_translate_eigs_exponent</span><span class="p">(</span><span class="n">tpow</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">tpow</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">tpow</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">amplitudes</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -419,18 +350,17 @@
 <span class="sd">        :return: the array that contains the frequencies of the eigenvalues.</span>
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">])</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">growth_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="c1"># To check</span>
+    <span class="k">def</span> <span class="nf">growth_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># To check</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the growth rate values relative to the modes.</span>
 
 <span class="sd">        :return: the Floquet values</span>
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">]</span>
-
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -451,8 +381,10 @@
 <span class="sd">        Not implemented, it has to be implemented in subclasses.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="s1">&#39;Subclass must implement abstract method </span><span class="si">{}</span><span class="s1">.fit&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span></div>
+            <span class="s2">&quot;Subclass must implement abstract method </span><span class="si">{}</span><span class="s2">.fit&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="DMDBase._col_major_2darray"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase._col_major_2darray">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
@@ -476,7 +408,7 @@
             <span class="n">input_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">]</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">input_shapes</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Snapshots have not the same dimension.&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Snapshots have not the same dimension.&quot;</span><span class="p">)</span>
 
             <span class="n">snapshots_shape</span> <span class="o">=</span> <span class="n">input_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">snapshots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">X</span><span class="p">])</span>
@@ -486,10 +418,32 @@
         <span class="k">if</span> <span class="n">cond_number</span> <span class="o">&gt;</span> <span class="mf">10e4</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="s2">&quot;Input data matrix X has condition number </span><span class="si">{}</span><span class="s2">. &quot;</span>
-                <span class="s2">&quot;Consider preprocessing data, passing in augmented data matrix, or regularization methods.&quot;</span>
-                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cond_number</span><span class="p">))</span>
+                <span class="s2">&quot;Consider preprocessing data, passing in augmented data matrix, or regularization methods.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">cond_number</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">snapshots</span><span class="p">,</span> <span class="n">snapshots_shape</span></div>
+
+<div class="viewcode-block" id="DMDBase._optimal_dmd_matrixes"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase._optimal_dmd_matrixes">[docs]</a>    <span class="k">def</span> <span class="nf">_optimal_dmd_matrixes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># compute the vandermonde matrix</span>
+        <span class="n">vander</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vander</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_timesteps</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># perform svd on all the snapshots</span>
+        <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vander</span><span class="p">,</span> <span class="n">vander</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="n">U</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">V</span><span class="p">])</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="n">vander</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">]))</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">P</span><span class="p">,</span><span class="n">q</span></div>
+
 
 <div class="viewcode-block" id="DMDBase._compute_amplitudes"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase._compute_amplitudes">[docs]</a>    <span class="k">def</span> <span class="nf">_compute_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -510,35 +464,21 @@
 <span class="sd">        https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="p">:</span>
-            <span class="c1"># compute the vandermonde matrix</span>
-            <span class="n">omega</span> <span class="o">=</span> <span class="n">old_div</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s1">&#39;dt&#39;</span><span class="p">])</span>
-            <span class="n">vander</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_timesteps</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
-
-            <span class="c1"># perform svd on all the snapshots</span>
-            <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-            <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">),</span>
-                            <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vander</span><span class="p">,</span>
-                                           <span class="n">vander</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)))</span>
-
-            <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="n">U</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">V</span><span class="p">])</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
-            <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="n">vander</span><span class="p">,</span> <span class="n">tmp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">])))</span>
-
             <span class="c1"># b optimal</span>
-            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimal_dmd_matrixes</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opt</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
                 <span class="n">amplitudes_snapshot_index</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">amplitudes_snapshot_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt</span>
 
-            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">,</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">amplitudes_snapshot_index</span><span class="p">],</span>
-                <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">a</span></div>
-
 
 <div class="viewcode-block" id="DMDBase.select_modes"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.select_modes">[docs]</a>    <span class="k">def</span> <span class="nf">select_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -562,19 +502,25 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">selected_indeces</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">[</span><span class="n">selected_indeces</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">[</span>
+            <span class="n">selected_indeces</span>
+        <span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_Lambda</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_Lambda</span><span class="p">[</span><span class="n">selected_indeces</span><span class="p">]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvectors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvectors</span><span class="p">[:,</span> <span class="n">selected_indeces</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvectors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvectors</span><span class="p">[</span>
+            <span class="p">:,</span> <span class="n">selected_indeces</span>
+        <span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_modes</span><span class="p">[:,</span> <span class="n">selected_indeces</span><span class="p">]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvectors</span><span class="p">,</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">),</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvectors</span><span class="p">)])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvectors</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">_eigenvectors</span><span class="p">),</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_amplitudes</span><span class="p">()</span></div>
-
 
 <div class="viewcode-block" id="DMDBase.ModesSelectors"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.ModesSelectors">[docs]</a>    <span class="k">class</span> <span class="nc">ModesSelectors</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -614,8 +560,10 @@
 <span class="sd">                of `DMDBase.select_modes` to select DMD modes according to</span>
 <span class="sd">                the criteria of stability.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
-            <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">DMDBase</span><span class="o">.</span><span class="n">ModesSelectors</span><span class="o">.</span><span class="n">_stable_modes</span><span class="p">,</span>
-                <span class="n">max_distance_from_unity</span><span class="o">=</span><span class="n">max_distance_from_unity</span><span class="p">)</span></div>
+            <span class="k">return</span> <span class="n">partial</span><span class="p">(</span>
+                <span class="n">DMDBase</span><span class="o">.</span><span class="n">ModesSelectors</span><span class="o">.</span><span class="n">_stable_modes</span><span class="p">,</span>
+                <span class="n">max_distance_from_unity</span><span class="o">=</span><span class="n">max_distance_from_unity</span><span class="p">,</span>
+            <span class="p">)</span></div>
 
 <div class="viewcode-block" id="DMDBase.ModesSelectors._compute_integral_contribution"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.ModesSelectors._compute_integral_contribution">[docs]</a>        <span class="nd">@staticmethod</span>
         <span class="k">def</span> <span class="nf">_compute_integral_contribution</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">dynamic</span><span class="p">):</span>
@@ -629,7 +577,7 @@
 <span class="sd">                returned by `dmd.dynamics[mode_index]`.</span>
 <span class="sd">            :return float: the integral contribution of the given DMD mode.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
-            <span class="k">return</span> <span class="nb">pow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mode</span><span class="p">),</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dynamic</span><span class="p">))</span></div>
+            <span class="k">return</span> <span class="nb">pow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mode</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dynamic</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="DMDBase.ModesSelectors._integral_contribution"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.ModesSelectors._integral_contribution">[docs]</a>        <span class="nd">@staticmethod</span>
         <span class="k">def</span> <span class="nf">_integral_contribution</span><span class="p">(</span><span class="n">dmd</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
@@ -652,8 +600,10 @@
             <span class="n">dmd</span><span class="o">.</span><span class="n">dmd_time</span> <span class="o">=</span> <span class="n">temp</span>
 
             <span class="n">n_of_modes</span> <span class="o">=</span> <span class="n">modes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">integral_contributions</span> <span class="o">=</span> <span class="p">[</span><span class="n">DMDBase</span><span class="o">.</span><span class="n">ModesSelectors</span><span class="o">.</span><span class="n">_compute_integral_contribution</span><span class="p">(</span><span class="o">*</span><span class="n">tp</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">tp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">modes</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">dynamics</span><span class="p">)]</span>
+            <span class="n">integral_contributions</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">DMDBase</span><span class="o">.</span><span class="n">ModesSelectors</span><span class="o">.</span><span class="n">_compute_integral_contribution</span><span class="p">(</span><span class="o">*</span><span class="n">tp</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">tp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">modes</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">dynamics</span><span class="p">)</span>
+            <span class="p">]</span>
 
             <span class="n">indexes_first_n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">integral_contributions</span><span class="p">)</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[</span><span class="o">-</span><span class="n">n</span><span class="p">:]</span>
 
@@ -674,15 +624,68 @@
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">DMDBase</span><span class="o">.</span><span class="n">ModesSelectors</span><span class="o">.</span><span class="n">_integral_contribution</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">)</span></div></div>
 
+<div class="viewcode-block" id="DMDBase._enforce_ratio"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase._enforce_ratio">[docs]</a>    <span class="k">def</span> <span class="nf">_enforce_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">goal_ratio</span><span class="p">,</span> <span class="n">supx</span><span class="p">,</span> <span class="n">infx</span><span class="p">,</span> <span class="n">supy</span><span class="p">,</span> <span class="n">infy</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the right value of `supx,infx,supy,infy` to obtain the desired</span>
+<span class="sd">        ratio in :func:`plot_eigs`. Ratio is defined as</span>
+<span class="sd">        ::</span>
+<span class="sd">            dx = supx - infx</span>
+<span class="sd">            dy = supy - infy</span>
+<span class="sd">            max(dx,dy) / min(dx,dy)</span>
 
-<div class="viewcode-block" id="DMDBase.plot_eigs"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.plot_eigs">[docs]</a>    <span class="k">def</span> <span class="nf">plot_eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                  <span class="n">show_axes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                  <span class="n">show_unit_circle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                  <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
-                  <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
-                  <span class="n">narrow_view</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                  <span class="n">dpi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="sd">        :param float goal_ratio: the desired ratio.</span>
+<span class="sd">        :param float supx: the old value of `supx`, to be adjusted.</span>
+<span class="sd">        :param float infx: the old value of `infx`, to be adjusted.</span>
+<span class="sd">        :param float supy: the old value of `supy`, to be adjusted.</span>
+<span class="sd">        :param float infy: the old value of `infy`, to be adjusted.</span>
+<span class="sd">        :return tuple: a tuple which contains the updated values of</span>
+<span class="sd">            `supx,infx,supy,infy` in this order.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">supx</span> <span class="o">-</span> <span class="n">infx</span>
+        <span class="k">if</span> <span class="n">dx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="mf">1.0e-16</span>
+        <span class="n">dy</span> <span class="o">=</span> <span class="n">supy</span> <span class="o">-</span> <span class="n">infy</span>
+        <span class="k">if</span> <span class="n">dy</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dy</span> <span class="o">=</span> <span class="mf">1.0e-16</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span> <span class="o">/</span> <span class="nb">min</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ratio</span> <span class="o">&gt;=</span> <span class="n">goal_ratio</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dx</span> <span class="o">&lt;</span> <span class="n">dy</span><span class="p">:</span>
+                <span class="n">goal_size</span> <span class="o">=</span> <span class="n">dy</span> <span class="o">/</span> <span class="n">goal_ratio</span>
+
+                <span class="n">supx</span> <span class="o">+=</span> <span class="p">(</span><span class="n">goal_size</span> <span class="o">-</span> <span class="n">dx</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+                <span class="n">infx</span> <span class="o">-=</span> <span class="p">(</span><span class="n">goal_size</span> <span class="o">-</span> <span class="n">dx</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="k">elif</span> <span class="n">dy</span> <span class="o">&lt;</span> <span class="n">dx</span><span class="p">:</span>
+                <span class="n">goal_size</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">/</span> <span class="n">goal_ratio</span>
+
+                <span class="n">supy</span> <span class="o">+=</span> <span class="p">(</span><span class="n">goal_size</span> <span class="o">-</span> <span class="n">dy</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+                <span class="n">infy</span> <span class="o">-=</span> <span class="p">(</span><span class="n">goal_size</span> <span class="o">-</span> <span class="n">dy</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">supx</span><span class="p">,</span> <span class="n">infx</span><span class="p">,</span> <span class="n">supy</span><span class="p">,</span> <span class="n">infy</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DMDBase._plot_limits"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase._plot_limits">[docs]</a>    <span class="k">def</span> <span class="nf">_plot_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">narrow_view</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">narrow_view</span><span class="p">:</span>
+            <span class="n">supx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.05</span>
+            <span class="n">infx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.05</span>
+
+            <span class="n">supy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.05</span>
+            <span class="n">infy</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.05</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enforce_ratio</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">supx</span><span class="p">,</span> <span class="n">infx</span><span class="p">,</span> <span class="n">supy</span><span class="p">,</span> <span class="n">infy</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="DMDBase.plot_eigs"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.plot_eigs">[docs]</a>    <span class="k">def</span> <span class="nf">plot_eigs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">show_axes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">show_unit_circle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">narrow_view</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">dpi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot the eigenvalues.</span>
 <span class="sd">        :param bool show_axes: if True, the axes will be showed in the plot.</span>
@@ -699,8 +702,10 @@
 <span class="sd">        :param str filename: if specified, the plot is saved at `filename`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The eigenvalues have not been computed.&#39;</span>
-                             <span class="s1">&#39;You have to perform the fit method.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The eigenvalues have not been computed.&quot;</span>
+                <span class="s2">&quot;You have to perform the fit method.&quot;</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">dpi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)</span>
@@ -711,79 +716,104 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
         <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
 
-        <span class="n">points</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">,</span>
-                          <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span>
-                          <span class="s1">&#39;bo&#39;</span><span class="p">,</span>
-                          <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Eigenvalues&#39;</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">points</span><span class="p">,)</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s2">&quot;bo&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Eigenvalues&quot;</span>
+        <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">narrow_view</span><span class="p">:</span>
-            <span class="n">supx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.05</span>
-            <span class="n">infx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.05</span>
-
-            <span class="n">supy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.05</span>
-            <span class="n">infy</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.05</span>
+            <span class="n">supx</span><span class="p">,</span> <span class="n">infx</span><span class="p">,</span> <span class="n">supy</span><span class="p">,</span> <span class="n">infy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plot_limits</span><span class="p">(</span><span class="n">narrow_view</span><span class="p">)</span>
 
             <span class="c1"># set limits for axis</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">((</span><span class="n">infx</span><span class="p">,</span> <span class="n">supx</span><span class="p">))</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">((</span><span class="n">infy</span><span class="p">,</span> <span class="n">supy</span><span class="p">))</span>
+
+            <span class="c1"># x and y axes</span>
+            <span class="k">if</span> <span class="n">show_axes</span><span class="p">:</span>
+                <span class="n">endx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">supx</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+                    <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">endx</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                    <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">infx</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">]),</span> <span class="mf">0.0</span><span class="p">),</span>
+                    <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;-&gt;&quot;</span> <span class="k">if</span> <span class="n">endx</span> <span class="o">==</span> <span class="mf">1.0</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span><span class="p">)),</span>
+                <span class="p">)</span>
+
+                <span class="n">endy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">supy</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+                    <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">endy</span><span class="p">),</span>
+                    <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">infy</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">])),</span>
+                    <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;-&gt;&quot;</span> <span class="k">if</span> <span class="n">endy</span> <span class="o">==</span> <span class="mf">1.0</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span><span class="p">)),</span>
+                <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># set limits for axis</span>
-            <span class="n">limit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">)))</span>
+            <span class="n">limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plot_limits</span><span class="p">(</span><span class="n">narrow_view</span><span class="p">)</span>
+
             <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">((</span><span class="o">-</span><span class="n">limit</span><span class="p">,</span> <span class="n">limit</span><span class="p">))</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">((</span><span class="o">-</span><span class="n">limit</span><span class="p">,</span> <span class="n">limit</span><span class="p">))</span>
 
-        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Imaginary part&#39;</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Real part&#39;</span><span class="p">)</span>
+            <span class="c1"># x and y axes</span>
+            <span class="k">if</span> <span class="n">show_axes</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+                    <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">limit</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]),</span> <span class="mf">0.0</span><span class="p">),</span>
+                    <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="o">-</span><span class="n">limit</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">]),</span> <span class="mf">0.0</span><span class="p">),</span>
+                    <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+                    <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">limit</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])),</span>
+                    <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="o">-</span><span class="n">limit</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">])),</span>
+                    <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">),</span>
+                <span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Imaginary part&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Real part&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">show_unit_circle</span><span class="p">:</span>
-            <span class="n">unit_circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">),</span>
-                                     <span class="mf">1.</span><span class="p">,</span>
-                                     <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span>
-                                     <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                     <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Unit circle&#39;</span><span class="p">,</span>
-                                     <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+            <span class="n">unit_circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
+                <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="mf">1.0</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span>
+                <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Unit circle&quot;</span><span class="p">,</span>
+                <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">unit_circle</span><span class="p">)</span>
 
         <span class="c1"># Dashed grid</span>
         <span class="n">gridlines</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_xgridlines</span><span class="p">()</span> <span class="o">+</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_ygridlines</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">gridlines</span><span class="p">:</span>
-            <span class="n">line</span><span class="o">.</span><span class="n">set_linestyle</span><span class="p">(</span><span class="s1">&#39;-.&#39;</span><span class="p">)</span>
+            <span class="n">line</span><span class="o">.</span><span class="n">set_linestyle</span><span class="p">(</span><span class="s2">&quot;-.&quot;</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="c1"># x and y axes</span>
-        <span class="k">if</span> <span class="n">show_axes</span><span class="p">:</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
-                        <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">limit</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]),</span> <span class="mf">0.</span><span class="p">),</span>
-                        <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="o">-</span><span class="n">limit</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">]),</span> <span class="mf">0.</span><span class="p">),</span>
-                        <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">))</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
-                        <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">limit</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.</span><span class="p">])),</span>
-                        <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="o">-</span><span class="n">limit</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">])),</span>
-                        <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">))</span>
 
         <span class="c1"># legend</span>
         <span class="k">if</span> <span class="n">show_unit_circle</span><span class="p">:</span>
             <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span>
-                <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="n">points</span><span class="p">,</span> <span class="n">unit_circle</span><span class="p">],</span>
-                           <span class="p">[</span><span class="s1">&#39;Eigenvalues&#39;</span><span class="p">,</span> <span class="s1">&#39;Unit circle&#39;</span><span class="p">],</span>
-                           <span class="n">loc</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">points</span><span class="p">,</span> <span class="n">unit_circle</span><span class="p">],</span>
+                    <span class="p">[</span><span class="s2">&quot;Eigenvalues&quot;</span><span class="p">,</span> <span class="s2">&quot;Unit circle&quot;</span><span class="p">],</span>
+                    <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="n">points</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;Eigenvalues&#39;</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="n">points</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;Eigenvalues&quot;</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">))</span>
 
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="DMDBase.plot_modes_2D"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.plot_modes_2D">[docs]</a>    <span class="k">def</span> <span class="nf">plot_modes_2D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                      <span class="n">index_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                      <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                      <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                      <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                      <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">,</span>
-                      <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)):</span>
+<div class="viewcode-block" id="DMDBase.plot_modes_2D"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.plot_modes_2D">[docs]</a>    <span class="k">def</span> <span class="nf">plot_modes_2D</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">index_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot the DMD Modes.</span>
 
@@ -810,17 +840,21 @@
 <span class="sd">            size. Default is (8, 8).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The modes have not been computed.&#39;</span>
-                             <span class="s1">&#39;You have to perform the fit method.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The modes have not been computed.&quot;</span>
+                <span class="s2">&quot;You have to perform the fit method.&quot;</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;No information about the original shape of the snapshots.&#39;</span><span class="p">)</span>
+                    <span class="s2">&quot;No information about the original shape of the snapshots.&quot;</span>
+                <span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;The dimension of the input snapshots is not 2D.&#39;</span><span class="p">)</span>
+                    <span class="s2">&quot;The dimension of the input snapshots is not 2D.&quot;</span>
+                <span class="p">)</span>
 
         <span class="c1"># If domain dimensions have not been passed as argument,</span>
         <span class="c1"># use the snapshots dimensions</span>
@@ -840,51 +874,57 @@
 
         <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">index_mode</span><span class="p">:</span>
             <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;DMD Mode </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;DMD Mode </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
 
             <span class="n">real_ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="n">imag_ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 
             <span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xgrid</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
 
-            <span class="n">real</span> <span class="o">=</span> <span class="n">real_ax</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span><span class="n">xgrid</span><span class="p">,</span>
-                                  <span class="n">ygrid</span><span class="p">,</span>
-                                  <span class="n">mode</span><span class="o">.</span><span class="n">real</span><span class="p">,</span>
-                                  <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;jet&#39;</span><span class="p">,</span>
-                                  <span class="n">vmin</span><span class="o">=</span><span class="n">mode</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
-                                  <span class="n">vmax</span><span class="o">=</span><span class="n">mode</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
-            <span class="n">imag</span> <span class="o">=</span> <span class="n">imag_ax</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span><span class="n">xgrid</span><span class="p">,</span>
-                                  <span class="n">ygrid</span><span class="p">,</span>
-                                  <span class="n">mode</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span>
-                                  <span class="n">vmin</span><span class="o">=</span><span class="n">mode</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
-                                  <span class="n">vmax</span><span class="o">=</span><span class="n">mode</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+            <span class="n">real</span> <span class="o">=</span> <span class="n">real_ax</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span>
+                <span class="n">xgrid</span><span class="p">,</span>
+                <span class="n">ygrid</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">.</span><span class="n">real</span><span class="p">,</span>
+                <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;jet&quot;</span><span class="p">,</span>
+                <span class="n">vmin</span><span class="o">=</span><span class="n">mode</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+                <span class="n">vmax</span><span class="o">=</span><span class="n">mode</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+            <span class="p">)</span>
+            <span class="n">imag</span> <span class="o">=</span> <span class="n">imag_ax</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span>
+                <span class="n">xgrid</span><span class="p">,</span>
+                <span class="n">ygrid</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span>
+                <span class="n">vmin</span><span class="o">=</span><span class="n">mode</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+                <span class="n">vmax</span><span class="o">=</span><span class="n">mode</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+            <span class="p">)</span>
 
             <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">real</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">real_ax</span><span class="p">)</span>
             <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">imag</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">imag_ax</span><span class="p">)</span>
 
-            <span class="n">real_ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
-            <span class="n">imag_ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+            <span class="n">real_ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
+            <span class="n">imag_ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;auto&quot;</span><span class="p">)</span>
 
-            <span class="n">real_ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Real&#39;</span><span class="p">)</span>
-            <span class="n">imag_ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Imag&#39;</span><span class="p">)</span>
+            <span class="n">real_ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Real&quot;</span><span class="p">)</span>
+            <span class="n">imag_ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Imag&quot;</span><span class="p">)</span>
 
             <span class="c1"># padding between elements</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">2.</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
-                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">.</span><span class="si">{1}{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">basename</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">.</span><span class="si">{1}{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">basename</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
                 <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="DMDBase.plot_snapshots_2D"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.plot_snapshots_2D">[docs]</a>    <span class="k">def</span> <span class="nf">plot_snapshots_2D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                          <span class="n">index_snap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                          <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                          <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                          <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                          <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">,</span>
-                          <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)):</span>
+<div class="viewcode-block" id="DMDBase.plot_snapshots_2D"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.plot_snapshots_2D">[docs]</a>    <span class="k">def</span> <span class="nf">plot_snapshots_2D</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">index_snap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Plot the snapshots.</span>
 
@@ -911,16 +951,18 @@
 <span class="sd">            size. Default is (8, 8).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input snapshots not found.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input snapshots not found.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;No information about the original shape of the snapshots.&#39;</span><span class="p">)</span>
+                    <span class="s2">&quot;No information about the original shape of the snapshots.&quot;</span>
+                <span class="p">)</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s1">&#39;The dimension of the input snapshots is not 2D.&#39;</span><span class="p">)</span>
+                    <span class="s2">&quot;The dimension of the input snapshots is not 2D.&quot;</span>
+                <span class="p">)</span>
 
         <span class="c1"># If domain dimensions have not been passed as argument,</span>
         <span class="c1"># use the snapshots dimensions</span>
@@ -940,71 +982,69 @@
 
         <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">index_snap</span><span class="p">:</span>
             <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s1">&#39;Snapshot </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Snapshot </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
 
-            <span class="n">snapshot</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xgrid</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
-                                                            <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">))</span>
+            <span class="n">snapshot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="n">xgrid</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span>
+            <span class="p">)</span>
 
-            <span class="n">contour</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span><span class="n">xgrid</span><span class="p">,</span>
-                                 <span class="n">ygrid</span><span class="p">,</span>
-                                 <span class="n">snapshot</span><span class="p">,</span>
-                                 <span class="n">vmin</span><span class="o">=</span><span class="n">snapshot</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
-                                 <span class="n">vmax</span><span class="o">=</span><span class="n">snapshot</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+            <span class="n">contour</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">pcolor</span><span class="p">(</span>
+                <span class="n">xgrid</span><span class="p">,</span>
+                <span class="n">ygrid</span><span class="p">,</span>
+                <span class="n">snapshot</span><span class="p">,</span>
+                <span class="n">vmin</span><span class="o">=</span><span class="n">snapshot</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
+                <span class="n">vmax</span><span class="o">=</span><span class="n">snapshot</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span>
+            <span class="p">)</span>
 
             <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">contour</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
-                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">.</span><span class="si">{1}{2}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">basename</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">.</span><span class="si">{1}{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">basename</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
                 <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">DMDTimeDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">,</span> <span class="s2">&quot;tend&quot;</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">]:</span>
+            <span class="nb">dict</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="s1">&#39;DMDBase.dmd_time accepts only the following keys: &quot;t0&quot;, &quot;tend&quot;, &quot;dt&quot;, </span><span class="si">{}</span><span class="s1"> is not allowed.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">key</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">
-        Last updated on Apr 23, 2021.
-      </span>
-
-    </p>
+    <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
+      <span class="lastupdated">Last updated on Oct 08, 2021.
+      </span></p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
