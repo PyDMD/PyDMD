@@ -16,41 +16,44 @@ from scipy.linalg import block_diag
 
 from .dmdbase import DMDBase, DMDTimeDict
 
-class BinaryTree(object):
 
+class BinaryTree(object):
     def __init__(self, depth):
         self.depth = depth
         self.tree = [None] * len(self)
 
     def __len__(self):
-        return 2**(self.depth+1) - 1
+        return 2 ** (self.depth + 1) - 1
 
     def __getitem__(self, val):
         level_, bin_ = val
         if level_ > self.depth:
             raise ValueError(
-                'The level input parameter ({}) has to be less or equal than the '
-                'max_level ({}). Remember that the starting index is 0'.format(
-                    level_, self.depth))
+                """The level input parameter ({}) has to be less or equal than
+                the max_level ({}). Remember that the starting
+                index is 0""".format(
+                    level_, self.depth
+                )
+            )
 
-        if bin_ >= 2**level_:
+        if bin_ >= 2 ** level_:
             raise ValueError("Invalid node")
 
-        return self.tree[2**level_ + bin_ - 1]
+        return self.tree[2 ** level_ + bin_ - 1]
 
     def __setitem__(self, val, item):
         level_, bin_ = val
-        self.tree[2**level_ + bin_ - 1] = item
+        self.tree[2 ** level_ + bin_ - 1] = item
 
     def __iter__(self):
         return self.tree.__iter__()
 
     @property
     def levels(self):
-        return range(self.depth+1)
+        return range(self.depth + 1)
 
     def index_leaves(self, level):
-        return  range(0, 2**level)
+        return range(0, 2 ** level)
 
 
 class MrDMD(DMDBase):
@@ -64,15 +67,12 @@ class MrDMD(DMDBase):
     :param int max_level: the maximum number of levels. Defualt is 6.
     """
 
-    def __init__(self,
-                 dmd,
-                 max_level=2,
-                 max_cycles=1):
+    def __init__(self, dmd, max_level=2, max_cycles=1):
 
-            self.dmd = dmd
-            self.max_cycles = max_cycles
-            self.max_level = max_level
-            self._build_tree()
+        self.dmd = dmd
+        self.max_cycles = max_cycles
+        self.max_level = max_level
+        self._build_tree()
 
     def __iter__(self):
         return self.dmd_tree.__iter__()
@@ -115,7 +115,9 @@ class MrDMD(DMDBase):
         :return: the matrix containing the DMD modes.
         :rtype: numpy.ndarray
         """
-        return np.hstack([self.partial_modes(i) for i in range(self.max_level + 1)])
+        return np.hstack(
+            [self.partial_modes(i) for i in range(self.max_level + 1)]
+        )
 
     @property
     def dynamics(self):
@@ -126,7 +128,9 @@ class MrDMD(DMDBase):
                 row.
         :rtype: numpy.ndarray
         """
-        return np.vstack([self.partial_dynamics(i) for i in range(self.max_level + 1)])
+        return np.vstack(
+            [self.partial_dynamics(i) for i in range(self.max_level + 1)]
+        )
 
     @property
     def eigs(self):
@@ -146,15 +150,20 @@ class MrDMD(DMDBase):
         :return: the matrix that contains the reconstructed snapshots.
         :rtype: numpy.ndarray
         """
-        x = self.dmd_tree[0, 0].reconstructed_data
-
-        for level in self.dmd_tree.levels[1:]:
-            x += np.hstack([
-                self.dmd_tree[level, lead].reconstructed_data
-                for lead in self.dmd_tree.index_leaves(level)
-            ])
-
-        return x
+        return np.sum(
+            np.array(
+                [
+                    np.hstack(
+                        [
+                            self.dmd_tree[level, leaf].reconstructed_data
+                            for leaf in self.dmd_tree.index_leaves(level)
+                        ]
+                    )
+                    for level in self.dmd_tree.levels
+                ]
+            ),
+            axis=0,
+        )
 
     def _build_tree(self):
         """
@@ -166,8 +175,6 @@ class MrDMD(DMDBase):
         for level in self.dmd_tree.levels:
             for leaf in self.dmd_tree.index_leaves(level):
                 self.dmd_tree[level, leaf] = deepcopy(self.dmd)
-
-
 
     def time_window_bins(self, t0, tend):
         """
@@ -184,9 +191,16 @@ class MrDMD(DMDBase):
             for leaf in self.dmd_tree.index_leaves(level):
 
                 local_times = self.partial_time_interval(level, leaf)
-                if (t0 >= local_times['t0'] and t0 < local_times['tend'])\
-                   or (tend > local_times['t0'] and tend <= local_times['tend'])\
-                   or (t0 <= local_times['t0'] and tend >= local_times['tend']):
+                if (
+                    (t0 >= local_times["t0"] and t0 < local_times["tend"])
+                    or (
+                        tend > local_times["t0"]
+                        and tend <= local_times["tend"]
+                    )
+                    or (
+                        t0 <= local_times["t0"] and tend >= local_times["tend"]
+                    )
+                ):
                     indexes.append((level, leaf))
 
         indexes = np.unique(indexes, axis=0)
@@ -194,8 +208,8 @@ class MrDMD(DMDBase):
 
     def time_window_eigs(self, t0, tend):
         """
-        Get the eigenvalues relative to the modes of the bins embedded (partially
-        or totally) in a given time window.
+        Get the eigenvalues relative to the modes of the bins embedded
+        (partially or totally) in a given time window.
 
         :param float t0: start time of the window.
         :param float tend: end time of the window.
@@ -207,8 +221,8 @@ class MrDMD(DMDBase):
 
     def time_window_frequency(self, t0, tend):
         """
-        Get the frequencies relative to the modes of the bins embedded (partially
-        or totally) in a given time window.
+        Get the frequencies relative to the modes of the bins embedded
+        (partially or totally) in a given time window.
 
         :param float t0: start time of the window.
         :param float tend: end time of the window.
@@ -216,12 +230,14 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         indexes = self.time_window_bins(t0, tend)
-        return np.concatenate([self.dmd_tree[idx].frequency for idx in indexes])
+        return np.concatenate(
+            [self.dmd_tree[idx].frequency for idx in indexes]
+        )
 
     def time_window_growth_rate(self, t0, tend):
         """
-        Get the growth rate values relative to the modes of the bins embedded (partially
-        or totally) in a given time window.
+        Get the growth rate values relative to the modes of the bins embedded
+        (partially or totally) in a given time window.
 
         :param float t0: start time of the window.
         :param float tend: end time of the window.
@@ -229,12 +245,14 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         indexes = self.time_window_bins(t0, tend)
-        return np.concatenate([self.dmd_tree[idx].growth_rate for idx in indexes])
+        return np.concatenate(
+            [self.dmd_tree[idx].growth_rate for idx in indexes]
+        )
 
     def time_window_amplitudes(self, t0, tend):
         """
-        Get the amplitudes relative to the modes of the bins embedded (partially
-        or totally) in a given time window.
+        Get the amplitudes relative to the modes of the bins embedded
+        (partially or totally) in a given time window.
 
         :param float t0: start time of the window.
         :param float tend: end time of the window.
@@ -242,8 +260,9 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         indexes = self.time_window_bins(t0, tend)
-        return np.concatenate([self.dmd_tree[idx].amplitudes for idx in indexes])
-
+        return np.concatenate(
+            [self.dmd_tree[idx].amplitudes for idx in indexes]
+        )
 
     def partial_modes(self, level, node=None):
         """
@@ -261,13 +280,7 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
-
-        modes = np.hstack([
-            self.dmd_tree[level, leaf].modes
-            for leaf in leaves
-        ])
-
-        return modes
+        return np.hstack([self.dmd_tree[level, leaf].modes for leaf in leaves])
 
     def partial_dynamics(self, level, node=None):
         """
@@ -286,8 +299,12 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
-        dynamics = block_diag(*tuple(dmd.dynamics
-            for dmd in map(lambda leaf: self.dmd_tree[level, leaf], leaves)))
+        dynamics = block_diag(
+            *tuple(
+                dmd.dynamics
+                for dmd in map(lambda leaf: self.dmd_tree[level, leaf], leaves)
+            )
+        )
         return dynamics
 
     def partial_eigs(self, level, node=None):
@@ -306,7 +323,9 @@ class MrDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
-        return np.concatenate([self.dmd_tree[level, leaf].eigs for leaf in leaves])
+        return np.concatenate(
+            [self.dmd_tree[level, leaf].eigs for leaf in leaves]
+        )
 
     def partial_reconstructed_data(self, level, node=None):
         """
@@ -339,18 +358,20 @@ class MrDMD(DMDBase):
         """
         if level > self.max_level:
             raise ValueError(
-                'The level input parameter ({}) has to be less than the '
-                'max_level ({}). Remember that the starting index is 0'.format(
-                    level, self.max_level))
+                "The level input parameter ({}) has to be less than the "
+                "max_level ({}). Remember that the starting index is 0".format(
+                    level, self.max_level
+                )
+            )
 
-        if leaf >= 2**level:
+        if leaf >= 2 ** level:
             raise ValueError("Invalid node")
 
-        full_period = self.original_time['tend'] - self.original_time['t0']
-        period = full_period / 2**level
-        t0 = self.original_time['t0'] + period*leaf
+        full_period = self.original_time["tend"] - self.original_time["t0"]
+        period = full_period / 2 ** level
+        t0 = self.original_time["t0"] + period * leaf
         tend = t0 + period
-        return {'t0': t0, 'tend': tend, 'delta': period}
+        return {"t0": t0, "tend": tend, "delta": period}
 
     def enumerate(self):
         """
@@ -367,7 +388,6 @@ class MrDMD(DMDBase):
             for leaf in self.dmd_tree.index_leaves(level):
                 yield level, leaf, self.dmd_tree[level, leaf]
 
-
     def fit(self, X):
         """
         Compute the Dynamic Modes Decomposition to the input data.
@@ -378,17 +398,21 @@ class MrDMD(DMDBase):
         self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
 
         # Redefine max level if it is too big.
-        lvl_threshold = int(np.log(self._snapshots.shape[1]/4.)/np.log(2.)) + 1
+        lvl_threshold = (
+            int(np.log(self._snapshots.shape[1] / 4.0) / np.log(2.0)) + 1
+        )
         if self.max_level > lvl_threshold:
             self.max_level = lvl_threshold
             self._build_tree()
-            print('Too many levels... '
-                  'Redefining `max_level` to {}'.format(self.max_level))
+            print(
+                "Too many levels... "
+                "Redefining `max_level` to {}".format(self.max_level)
+            )
 
         X = self._snapshots.copy()
         for level in self.dmd_tree.levels:
 
-            n_leaf = 2**level
+            n_leaf = 2 ** level
             Xs = np.array_split(X, n_leaf, axis=1)
 
             for leaf, x in enumerate(Xs):
@@ -396,33 +420,41 @@ class MrDMD(DMDBase):
                 current_dmd.fit(x)
 
                 rho = old_div(float(self.max_cycles), x.shape[1])
-                slow_modes = (np.abs(
-                    old_div(np.log(current_dmd.eigs), (2. * np.pi)))) <= rho
-                current_dmd.operator._eigenvalues = current_dmd.eigs[slow_modes]
+                slow_modes = (
+                    np.abs(old_div(np.log(current_dmd.eigs), (2.0 * np.pi)))
+                ) <= rho
+                current_dmd.operator._eigenvalues = current_dmd.eigs[
+                    slow_modes
+                ]
                 current_dmd.operator._modes = current_dmd.modes[:, slow_modes]
                 current_dmd._b = current_dmd._compute_amplitudes()
 
-            newX = np.hstack([
-                self.dmd_tree[level, leaf].reconstructed_data
-                for leaf in self.dmd_tree.index_leaves(level)
-            ])
+            newX = np.hstack(
+                [
+                    self.dmd_tree[level, leaf].reconstructed_data
+                    for leaf in self.dmd_tree.index_leaves(level)
+                ]
+            )
             X -= newX
 
-
         self._dmd_time = DMDTimeDict(
-            dict(t0 = 0, tend = self._snapshots.shape[1], dt= 1))
+            dict(t0=0, tend=self._snapshots.shape[1], dt=1)
+        )
         self._original_time = DMDTimeDict(
-            dict(t0 = 0, tend = self._snapshots.shape[1], dt= 1))
+            dict(t0=0, tend=self._snapshots.shape[1], dt=1)
+        )
 
         return self
 
-    def plot_eigs(self,
-                  show_axes=True,
-                  show_unit_circle=True,
-                  figsize=(8, 8),
-                  title='',
-                  level=None,
-                  node=None):
+    def plot_eigs(
+        self,
+        show_axes=True,
+        show_unit_circle=True,
+        figsize=(8, 8),
+        title="",
+        level=None,
+        node=None,
+    ):
         """
         Plot the eigenvalues.
 
@@ -436,8 +468,10 @@ class MrDMD(DMDBase):
         :param int node: plot only the eigenvalues of specific node.
         """
         if self.eigs is None:
-            raise ValueError('The eigenvalues have not been computed.'
-                             'You have to perform the fit method.')
+            raise ValueError(
+                "The eigenvalues have not been computed."
+                "You have to perform the fit method."
+            )
 
         if level:
             peigs = self.partial_eigs(level=level, node=node)
@@ -450,66 +484,73 @@ class MrDMD(DMDBase):
         ax = plt.gca()
 
         if not level:
-            cmap = plt.get_cmap('viridis')
-            colors = [cmap(i) for i in np.linspace(0, 1, len(self.dmd_tree.levels))]
+            cmap = plt.get_cmap("viridis")
+            colors = [
+                cmap(i) for i in np.linspace(0, 1, len(self.dmd_tree.levels))
+            ]
 
             points = []
             for level in self.dmd_tree.levels:
                 eigs = self.partial_eigs(level)
 
                 points.append(
-                    ax.plot(eigs.real, eigs.imag, '.', color=colors[level])[0])
+                    ax.plot(eigs.real, eigs.imag, ".", color=colors[level])[0]
+                )
         else:
             points = []
             points.append(
-                ax.plot(peigs.real, peigs.imag, 'bo', label='Eigenvalues')[0])
+                ax.plot(peigs.real, peigs.imag, "bo", label="Eigenvalues")[0]
+            )
 
         # set limits for axis
         limit = np.max(np.ceil(np.absolute(peigs)))
         ax.set_xlim((-limit, limit))
         ax.set_ylim((-limit, limit))
 
-        plt.ylabel('Imaginary part')
-        plt.xlabel('Real part')
+        plt.ylabel("Imaginary part")
+        plt.xlabel("Real part")
 
         if show_unit_circle:
             unit_circle = plt.Circle(
-                (0., 0.), 1., color='green', fill=False, linestyle='--')
+                (0.0, 0.0), 1.0, color="green", fill=False, linestyle="--"
+            )
             ax.add_artist(unit_circle)
 
         # Dashed grid
         gridlines = ax.get_xgridlines() + ax.get_ygridlines()
         for line in gridlines:
-            line.set_linestyle('-.')
+            line.set_linestyle("-.")
         ax.grid(True)
 
-        ax.set_aspect('equal')
+        ax.set_aspect("equal")
 
         # x and y axes
         if show_axes:
             ax.annotate(
-                '',
-                xy=(np.max([limit * 0.8, 1.]), 0.),
-                xytext=(np.min([-limit * 0.8, -1.]), 0.),
-                arrowprops=dict(arrowstyle="->"))
+                "",
+                xy=(np.max([limit * 0.8, 1.0]), 0.0),
+                xytext=(np.min([-limit * 0.8, -1.0]), 0.0),
+                arrowprops=dict(arrowstyle="->"),
+            )
             ax.annotate(
-                '',
-                xy=(0., np.max([limit * 0.8, 1.])),
-                xytext=(0., np.min([-limit * 0.8, -1.])),
-                arrowprops=dict(arrowstyle="->"))
+                "",
+                xy=(0.0, np.max([limit * 0.8, 1.0])),
+                xytext=(0.0, np.min([-limit * 0.8, -1.0])),
+                arrowprops=dict(arrowstyle="->"),
+            )
 
         # legend
         if level:
-            labels = ['Eigenvalues - level {}'.format(level)]
+            labels = ["Eigenvalues - level {}".format(level)]
         else:
             labels = [
-                'Eigenvalues - level {}'.format(i)
+                "Eigenvalues - level {}".format(i)
                 for i in range(self.max_level)
             ]
 
         if show_unit_circle:
             points += [unit_circle]
-            labels += ['Unit circle']
+            labels += ["Unit circle"]
 
-        ax.add_artist(plt.legend(points, labels, loc='best'))
+        ax.add_artist(plt.legend(points, labels, loc="best"))
         plt.show()
