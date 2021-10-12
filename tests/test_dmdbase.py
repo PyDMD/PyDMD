@@ -115,7 +115,7 @@ class TestDmdBase(TestCase):
         dmd.select_modes(stable_modes)
         np.testing.assert_array_almost_equal(exp, dmd.reconstructed_data)
 
-    def test_stable_modes(self):
+    def test_stable_modes_both(self):
         class FakeDMD:
             pass
 
@@ -125,7 +125,39 @@ class TestDmdBase(TestCase):
         expected_result = np.array([False for _ in range(6)])
         expected_result[[0, 4, 5]] = True
 
-        assert all(DMDBase.ModesSelectors.stable_modes(1e-3)(fake_dmd) == expected_result)
+        assert all(DMDBase.ModesSelectors.stable_modes(max_distance_from_unity=1e-3)(fake_dmd) == expected_result)
+
+    def test_stable_modes_outside_only(self):
+        class FakeDMD:
+            pass
+
+        fake_dmd = FakeDMD()
+        setattr(fake_dmd, 'eigs', np.array([1 + 1e-4, 2, 1 - 1e-2, 5, 1, 1 - 0.5*1e-3]))
+
+        expected_result = np.array([False for _ in range(6)])
+        expected_result[[0, 2, 4, 5]] = True
+
+        assert all(DMDBase.ModesSelectors.stable_modes(max_distance_from_unity_outside=1e-3)(fake_dmd) == expected_result)
+
+    def test_stable_modes_inside_only(self):
+        class FakeDMD:
+            pass
+
+        fake_dmd = FakeDMD()
+        setattr(fake_dmd, 'eigs', np.array([1 + 1e-4, 2, 1 - 1e-2, 5, 1, 1 - 0.5*1e-3]))
+
+        expected_result = np.array([False for _ in range(6)])
+        expected_result[[0, 1, 3, 4, 5]] = True
+
+        assert all(DMDBase.ModesSelectors.stable_modes(max_distance_from_unity_inside=1e-3)(fake_dmd) == expected_result)
+
+    def test_stable_modes_errors(self):
+        with self.assertRaises(ValueError):
+            DMDBase.ModesSelectors.stable_modes()
+        with self.assertRaises(ValueError):
+            DMDBase.ModesSelectors.stable_modes(max_distance_from_unity=1.e-2, max_distance_from_unity_inside=1.e-3)
+        with self.assertRaises(ValueError):
+            DMDBase.ModesSelectors.stable_modes(max_distance_from_unity=1.e-2, max_distance_from_unity_outside=1.e-3)
 
     def test_compute_integral_contribution(self):
         np.testing.assert_almost_equal(DMDBase.ModesSelectors._compute_integral_contribution(

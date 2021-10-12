@@ -2,6 +2,9 @@
 Base module for the DMD: `fit` method must be implemented in inherited classes
 """
 from __future__ import division
+from functools import partial
+from .dmdoperator import DMDOperator
+import matplotlib.pyplot as plt
 
 import warnings
 from builtins import object
@@ -13,11 +16,6 @@ import numpy as np
 from past.utils import old_div
 
 mpl.rcParams["figure.max_open_warning"] = 0
-import matplotlib.pyplot as plt
-
-from .dmdoperator import DMDOperator
-
-from functools import partial
 
 
 class DMDBase(object):
@@ -367,12 +365,9 @@ class DMDBase(object):
         )
 
         tmp = np.linalg.multi_dot([U, np.diag(s), V]).conj().T
-        q = np.conj(
-            np.diag(np.linalg.multi_dot([vander, tmp, self.modes]))
-        )
+        q = np.conj(np.diag(np.linalg.multi_dot([vander, tmp, self.modes])))
 
-        return P,q
-
+        return P, q
 
     def _compute_amplitudes(self):
         """
@@ -465,33 +460,83 @@ class DMDBase(object):
         """
 
         @staticmethod
-        def _stable_modes(dmd, max_distance_from_unity):
+        def _stable_modes(
+            dmd,
+            max_distance_from_unity_inside,
+            max_distance_from_unity_outside,
+        ):
             """
             Complete function of the modes selector `stable_modes`.
 
-            :param float max_distance_from_unity: the maximum distance from the
-                unit circle.
-            :return np.ndarray: an array of bool, where each "True" index means
+            :param float max_distance_from_unity_inside: The maximum distance
+                from the unit circle for points inside it.
+            :param float max_distance_from_unity_outside: The maximum distance
+                from the unit circle for points outside it.
+            :return np.ndarray: An array of bool, where each "True" index means
                 that the corresponding DMD mode is selected.
             """
-            return np.abs(np.abs(dmd.eigs) - 1) < max_distance_from_unity
+            distance = np.abs(dmd.eigs) - 1
+            return np.logical_and(
+                distance < max_distance_from_unity_outside,
+                distance > -max_distance_from_unity_inside,
+            )
 
         @staticmethod
-        def stable_modes(max_distance_from_unity):
+        def stable_modes(
+            max_distance_from_unity=None,
+            max_distance_from_unity_inside=None,
+            max_distance_from_unity_outside=None,
+        ):
             """
-            Select all the modes such that the magnitude of the corresponding
-            eigenvalue is in `(1-max_distance_from_unity,1+max_distance_from_unity)`,
-            non inclusive.
+            Select all the modes corresponding to eigenvalues whose distance
+            from the unit circle is less than a specified threshold. It is
+            possible to specify the distance separately for eigenvalues inside
+            and outside the unit circle, but you cannot set clashing
+            thresholds.
 
-            :param float max_distance_from_unity: the maximum distance from the
-                unit circle.
-            :return callable: function which can be used as the parameter
+            :param float max_distance_from_unity: The maximum distance from the
+                unit circle. Defaults to `None`.
+            :param float max_distance_from_unity_inside: The maximum distance
+                from the unit circle for points inside it. Defaults to `None`.
+            :param float max_distance_from_unity_outside: The maximum distance
+                from the unit circle for points outside it. Defaults to `None`.
+            :return callable: A function which can be used as the parameter
                 of `DMDBase.select_modes` to select DMD modes according to
                 the criteria of stability.
             """
+
+            if max_distance_from_unity and max_distance_from_unity_inside:
+                raise ValueError(
+                    """Only one between `max_distance_from_unity`
+                    and `max_distance_from_unity_inside` can be not `None`"""
+                )
+            if max_distance_from_unity and max_distance_from_unity_outside:
+                raise ValueError(
+                    """Only one between `max_distance_from_unity`
+                    and `max_distance_from_unity_outside` can be not `None`"""
+                )
+
+            if max_distance_from_unity:
+                max_distance_from_unity_outside = max_distance_from_unity
+                max_distance_from_unity_inside = max_distance_from_unity
+
+            if max_distance_from_unity_outside is None:
+                max_distance_from_unity_outside = float('inf')
+            if max_distance_from_unity_inside is None:
+                max_distance_from_unity_inside = float('inf')
+
+            if (
+                max_distance_from_unity_outside == float('inf')
+                and max_distance_from_unity_inside == float('inf')
+            ):
+                raise ValueError(
+                    """The combination of parameters does not make sense"""
+                )
+
             return partial(
                 DMDBase.ModesSelectors._stable_modes,
-                max_distance_from_unity=max_distance_from_unity,
+                max_distance_from_unity_outside=max_distance_from_unity_outside,
+                max_distance_from_unity_inside=max_distance_from_unity_inside,
             )
 
         @staticmethod
@@ -501,8 +546,8 @@ class DMDBase(object):
             given the mode and its dynamic, as shown in
             http://dx.doi.org/10.1016/j.euromechflu.2016.11.015
 
-            :param numpy.ndarray mode: the DMD mode.
-            :param numpy.ndarray dynamic: the dynamic of the given DMD mode, as
+            :param numpy.ndarray mode: The DMD mode.
+            :param numpy.ndarray dynamic: The dynamic of the given DMD mode, as
                 returned by `dmd.dynamics[mode_index]`.
             :return float: the integral contribution of the given DMD mode.
             """
@@ -513,8 +558,8 @@ class DMDBase(object):
             """
             Complete function of the modes selector `integral_contribution`.
 
-            :param int n: the number of DMD modes to be selected.
-            :return np.ndarray: an array of bool, where each "True" index means
+            :param int n: The number of DMD modes to be selected.
+            :return np.ndarray: An array of bool, where each "True" index means
                 that the corresponding DMD mode is selected.
             """
 
@@ -543,11 +588,10 @@ class DMDBase(object):
         @staticmethod
         def integral_contribution(n):
             """
-            Select the
             Reference: http://dx.doi.org/10.1016/j.euromechflu.2016.11.015
 
-            :param int n: the number of DMD modes to be selected.
-            :return callable: function which can be used as the parameter
+            :param int n: The number of DMD modes to be selected.
+            :return callable: A function which can be used as the parameter
                 of `DMDBase.select_modes` to select DMD modes according to
                 the criteria of integral contribution.
             """
