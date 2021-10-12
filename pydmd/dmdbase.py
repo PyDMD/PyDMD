@@ -37,13 +37,14 @@ class DMDBase(object):
         :func:`~dmdbase.DMDBase._compute_amplitudes` for reference). If
         False, amplitudes are computed following the standard algorithm. If
         `opt` is an integer, it is used as the (temporal) index of the snapshot
-        used to compute DMD modes amplitudes (following the standard algorithm).
+        used to compute DMD modes amplitudes (following the standard
+        algorithm).
         The reconstruction will generally be better in time instants near the
-        chosen snapshot; however increasing `opt` may lead to wrong results when
-        the system presents small eigenvalues. For this reason a manual
+        chosen snapshot; however increasing `opt` may lead to wrong results
+        when the system presents small eigenvalues. For this reason a manual
         selection of the number of eigenvalues considered for the analyisis may
-        be needed (check `svd_rank`). Also setting `svd_rank` to a value between
-        0 and 1 may give better results. Default is False.
+        be needed (check `svd_rank`). Also setting `svd_rank` to a value
+        between 0 and 1 may give better results. Default is False.
     :type opt: bool or int
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
@@ -345,7 +346,8 @@ class DMDBase(object):
         if cond_number > 10e4:
             warnings.warn(
                 "Input data matrix X has condition number {}. "
-                "Consider preprocessing data, passing in augmented data matrix, or regularization methods.".format(
+                """Consider preprocessing data, passing in augmented data
+matrix, or regularization methods.""".format(
                     cond_number
                 )
             )
@@ -373,8 +375,8 @@ class DMDBase(object):
         """
         Compute the amplitude coefficients. If `self.opt` is False the
         amplitudes are computed by minimizing the error between the modes and
-        the first snapshot; if `self.opt` is True the amplitudes are computed by
-        minimizing the error between the modes and all the snapshots, at the
+        the first snapshot; if `self.opt` is True the amplitudes are computed
+        by minimizing the error between the modes and all the snapshots, at the
         expense of bigger computational cost.
 
         This method uses the class variables self._snapshots (for the
@@ -460,6 +462,42 @@ class DMDBase(object):
         """
 
         @staticmethod
+        def _threshold(dmd, low_threshold, up_threshold):
+            """
+            Complete function of the modes selector `threshold`.
+
+            :param DMDBase dmd: An instance of DMDBase.
+            :param float low_threshold: The minimum accepted module of an
+                eigenvalue.
+            :param float up_threshold: The maximum accepted module of an
+                eigenvalue.
+            :return np.ndarray: An array of bool, where each "True" index means
+                that the corresponding DMD mode is selected.
+            """
+            return np.logical_and(
+                dmd.eigs < up_threshold,
+                dmd.eigs > low_threshold,
+            )
+
+        @staticmethod
+        def threshold(low_threshold, up_threshold):
+            """
+            Complete function of the modes selector `threshold`.
+
+            :param float low_threshold: The minimum accepted module of an
+                eigenvalue.
+            :param float up_threshold: The maximum accepted module of an
+                eigenvalue.
+            :return np.ndarray: An array of bool, where each "True" index means
+                that the corresponding DMD mode is selected.
+            """
+            return partial(
+                DMDBase.ModesSelectors._threshold,
+                low_threshold=low_threshold,
+                up_threshold=up_threshold,
+            )
+
+        @staticmethod
         def _stable_modes(
             dmd,
             max_distance_from_unity_inside,
@@ -468,6 +506,7 @@ class DMDBase(object):
             """
             Complete function of the modes selector `stable_modes`.
 
+            :param DMDBase dmd: An instance of DMDBase.
             :param float max_distance_from_unity_inside: The maximum distance
                 from the unit circle for points inside it.
             :param float max_distance_from_unity_outside: The maximum distance
@@ -475,10 +514,10 @@ class DMDBase(object):
             :return np.ndarray: An array of bool, where each "True" index means
                 that the corresponding DMD mode is selected.
             """
-            distance = np.abs(dmd.eigs) - 1
-            return np.logical_and(
-                distance < max_distance_from_unity_outside,
-                distance > -max_distance_from_unity_inside,
+            return DMDBase.ModesSelectors._threshold(
+                dmd,
+                1 - max_distance_from_unity_inside,
+                1 + max_distance_from_unity_outside,
             )
 
         @staticmethod
@@ -508,12 +547,12 @@ class DMDBase(object):
             if max_distance_from_unity and max_distance_from_unity_inside:
                 raise ValueError(
                     """Only one between `max_distance_from_unity`
-                    and `max_distance_from_unity_inside` can be not `None`"""
+and `max_distance_from_unity_inside` can be not `None`"""
                 )
             if max_distance_from_unity and max_distance_from_unity_outside:
                 raise ValueError(
                     """Only one between `max_distance_from_unity`
-                    and `max_distance_from_unity_outside` can be not `None`"""
+and `max_distance_from_unity_outside` can be not `None`"""
                 )
 
             if max_distance_from_unity:
@@ -521,22 +560,21 @@ class DMDBase(object):
                 max_distance_from_unity_inside = max_distance_from_unity
 
             if max_distance_from_unity_outside is None:
-                max_distance_from_unity_outside = float('inf')
+                max_distance_from_unity_outside = float("inf")
             if max_distance_from_unity_inside is None:
-                max_distance_from_unity_inside = float('inf')
+                max_distance_from_unity_inside = float("inf")
 
-            if (
-                max_distance_from_unity_outside == float('inf')
-                and max_distance_from_unity_inside == float('inf')
-            ):
+            if max_distance_from_unity_outside == float(
+                "inf"
+            ) and max_distance_from_unity_inside == float("inf"):
                 raise ValueError(
                     """The combination of parameters does not make sense"""
                 )
 
             return partial(
                 DMDBase.ModesSelectors._stable_modes,
-                max_distance_from_unity_outside=max_distance_from_unity_outside,
                 max_distance_from_unity_inside=max_distance_from_unity_inside,
+                max_distance_from_unity_outside=max_distance_from_unity_outside,
             )
 
         @staticmethod
@@ -558,6 +596,7 @@ class DMDBase(object):
             """
             Complete function of the modes selector `integral_contribution`.
 
+            :param DMDBase dmd: An instance of DMDBase.
             :param int n: The number of DMD modes to be selected.
             :return np.ndarray: An array of bool, where each "True" index means
                 that the corresponding DMD mode is selected.
@@ -671,7 +710,8 @@ class DMDBase(object):
         :param narrow_view bool: if True, the plot will show only the smallest
             rectangular area which contains all the eigenvalues, with a padding
             of 0.05. Not compatible with `show_axes=True`. Default is False.
-        :param dpi int: If not None, the given value is passed to ``plt.figure``.
+        :param dpi int: If not None, the given value is passed to
+            ``plt.figure``.
         :param str filename: if specified, the plot is saved at `filename`.
         """
         if self.eigs is None:
@@ -985,7 +1025,8 @@ class DMDTimeDict(dict):
             dict.__setitem__(self, key, value)
         else:
             raise KeyError(
-                'DMDBase.dmd_time accepts only the following keys: "t0", "tend", "dt", {} is not allowed.'.format(
+                """DMDBase.dmd_time accepts only the following keys: "t0",
+"tend", "dt", {} is not allowed.""".format(
                     key
                 )
             )

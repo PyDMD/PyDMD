@@ -159,6 +159,18 @@ class TestDmdBase(TestCase):
         with self.assertRaises(ValueError):
             DMDBase.ModesSelectors.stable_modes(max_distance_from_unity=1.e-2, max_distance_from_unity_outside=1.e-3)
 
+    def test_threshold(self):
+        class FakeDMD:
+            pass
+
+        fake_dmd = FakeDMD()
+        setattr(fake_dmd, 'eigs', np.array([1 + 1e-4, 2, 1 - 1e-2, 5, 1, 1 + 2*1e-3]))
+
+        expected_result = np.array([False for _ in range(6)])
+        expected_result[[1, 5]] = True
+
+        assert all(DMDBase.ModesSelectors.threshold(1+1.e-3, 2+1.e-10)(fake_dmd) == expected_result)
+
     def test_compute_integral_contribution(self):
         np.testing.assert_almost_equal(DMDBase.ModesSelectors._compute_integral_contribution(
             np.array([5,0,0,1]), np.array([1,-2,3,-5,6])
