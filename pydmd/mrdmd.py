@@ -447,14 +447,13 @@ class MrDMD(DMDBase):
         return self
 
     def plot_eigs(
-        self,
-        show_axes=True,
-        show_unit_circle=True,
-        figsize=(8, 8),
-        title="",
-        level=None,
-        node=None,
-    ):
+            self,
+            show_axes=True,
+            show_unit_circle=True,
+            figsize=(8, 8),
+            title="",
+            level=None,
+            node=None):
         """
         Plot the eigenvalues.
 
