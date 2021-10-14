@@ -1,6 +1,8 @@
 name: "Testing"
 
-on: push
+on:
+  pull_request:
+    types: [ synchronize, opened ]
 
 jobs:
   build:
@@ -12,7 +14,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -27,7 +30,9 @@ jobs:
     - name: Test with pytest
       env:
         CODACY_API_TOKEN: ${{ secrets.CODACY_API_TOKEN }}
+        CODACY_ORGANIZATION_PROVIDER: gh
+        CODACY_USERNAME: mathLab
+        CODACY_PROJECT_NAME: PyDMD
       run: |
         python3 -m pytest --cov-report term --cov-report xml:cobertura.xml --cov=pydmd
-        bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r cobertura.xml  -t $CODACY_API_TOKEN
-
+        bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r cobertura.xml
