@@ -39,6 +39,7 @@ class TestSpDmd(TestCase):
                 == z
             )
 
+
     def test_spdmd_amplitudes_rho1(self):
         amps = np.load("tests/test_datasets/spdmd_amplitudes_rho1.npy")
 
