@@ -1,6 +1,9 @@
 name: "Testing"
 
-on: push
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   build:
@@ -12,7 +15,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -28,6 +30,10 @@ jobs:
       env:
         CODACY_API_TOKEN: ${{ secrets.CODACY_API_TOKEN }}
       run: |
-        python3 -m pytest --cov-report term --cov-report xml:cobertura.xml --cov=pydmd
-        bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r cobertura.xml  -t $CODACY_API_TOKEN
+        if [ -z "$CODACY_API_TOKEN" ]
+        then
+          python3 -m pytest --cov-report term --cov-report xml:cobertura.xml --cov=pydmd
+          bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r cobertura.xml  -t $CODACY_API_TOKEN
+        else
+          python3 -m pytest
 
