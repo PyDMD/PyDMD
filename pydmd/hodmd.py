@@ -5,12 +5,11 @@ Reference:
 - S. L Clainche, J. M. Vega, Higher Order Dynamic Mode Decomposition.
 Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.
 """
+import warnings
 import numpy as np
 
-import warnings
-
 from .hankeldmd import HankelDMD
-from .utils import compute_tlsq, compute_svd
+from .utils import compute_svd
 
 
 class HODMD(HankelDMD):
@@ -28,8 +27,8 @@ class HODMD(HankelDMD):
         is 0, that means no truncation.
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
-    :param opt: argument to control the computation of DMD modes amplitudes. See
-        :class:`DMDBase`. Default is False.
+    :param opt: argument to control the computation of DMD modes amplitudes.
+        See :class:`DMDBase`. Default is False.
     :type opt: bool or int
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
@@ -64,19 +63,10 @@ class HODMD(HankelDMD):
     :type svd_rank: int or float
     """
 
-    def __init__(
-        self,
-        svd_rank=0,
-        tlsq_rank=0,
-        exact=False,
-        opt=False,
-        rescale_mode=None,
-        forward_backward=False,
-        d=1,
-        sorted_eigs=False,
-        reconstruction_method="first",
-        svd_rank_extra=0,
-    ):
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
+                 rescale_mode=None, forward_backward=False, d=1,
+                 sorted_eigs=False, reconstruction_method="first",
+                 svd_rank_extra=0,):
         super().__init__(
             svd_rank=svd_rank,
             tlsq_rank=tlsq_rank,
@@ -135,12 +125,10 @@ class HODMD(HankelDMD):
 
         if org_snp.shape[0] == 1:
             self.U_extra, _, _ = compute_svd(org_snp, -1)
-            warnings.warn(
-                """The parameter 'svd_rank_extra={}' has been ignored because
-the given system is a scalar function""".format(
-                    self.svd_rank_extra
-                )
-            )
+            warnings.warn((
+                "The parameter 'svd_rank_extra={}' has been ignored because "
+                "the given system is a scalar function").format(
+                    self.svd_rank_extra))
         else:
             self.U_extra, _, _ = compute_svd(org_snp, self.svd_rank_extra)
 

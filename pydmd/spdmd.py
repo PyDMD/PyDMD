@@ -1,6 +1,5 @@
 """Derived module from dmdbase.py for sparsity-promoting DMD."""
 
-# --> Import standard python packages
 import numpy as np
 from numpy.linalg import solve
 
@@ -11,7 +10,6 @@ from scipy.sparse import (
 )
 from scipy.sparse.linalg import spsolve
 
-# --> Import PyDMD base class for DMD.
 from .dmd import DMD
 
 
@@ -44,8 +42,8 @@ class SpDMD(DMD):
     :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means TLSQ is not applied.
-    :param opt: argument to control the computation of DMD modes amplitudes. See
-        :class:`DMDBase`. Default is False.
+    :param opt: argument to control the computation of DMD modes amplitudes.
+        See :class:`DMDBase`. Default is False.
     :type opt: bool or int
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
@@ -81,23 +79,12 @@ class SpDMD(DMD):
         algorithm are deleted after the termination of a call to :func:`fit`.
     """
 
-    def __init__(
-            self,
-            svd_rank=0,
-            tlsq_rank=0,
-            opt=False,
-            rescale_mode=None,
-            forward_backward=False,
-            sorted_eigs=False,
-            abs_tolerance=1.0e-6,
-            rel_tolerance=1.0e-4,
-            max_iterations=10000,
-            rho=1,
-            gamma=10,
-            verbose=True,
-            enforce_zero=True,
-            release_memory=True,
-            zero_absolute_tolerance=1.e-12):
+    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, rescale_mode=None,
+                 forward_backward=False, sorted_eigs=False,
+                 abs_tolerance=1.0e-6, rel_tolerance=1.0e-4,
+                 max_iterations=10000, rho=1, gamma=10, verbose=True,
+                 enforce_zero=True, release_memory=True,
+                 zero_absolute_tolerance=1.e-12):
         super().__init__(
             svd_rank=svd_rank,
             tlsq_rank=tlsq_rank,
@@ -186,8 +173,8 @@ class SpDMD(DMD):
         Update the vector :math:`\\lambda` of Lagrange multipliers.
         :param np.ndarray alpha: Updated value of :math:`\\alpha_{k+1}` (vector
             of DMD amplitudes).
-        :param np.ndarray beta: Updated value of :math:`\\beta_{k+1}` (vector of
-            non-zero amplitudes).
+        :param np.ndarray beta: Updated value of :math:`\\beta_{k+1}` (vector
+            of non-zero amplitudes).
         :param np.ndarray lmbd: Current value of :math:`\\lambda_k` (vector
             of Lagrange multipliers).
         :return: The updated value :math:`\\lambda_{k+1}`.
@@ -221,8 +208,8 @@ class SpDMD(DMD):
             non-zero amplitudes).
         :param np.ndarray lmbd: Current value of :math:`\\lambda_k` (vector
             of Lagrange multipliers).
-        :param np.ndarray old_beta: Old value of :math:`\\beta_{k-1}` (vector of
-            non-zero amplitudes).
+        :param np.ndarray old_beta: Old value of :math:`\\beta_{k-1}` (vector
+            of non-zero amplitudes).
         :return bool: `True` if ADMM can stop now, `False` otherwise.
         """
         primal_residual = np.linalg.norm(alpha - beta)
@@ -263,9 +250,8 @@ class SpDMD(DMD):
 
         # at the beginning of each iteration check if ADMM can stop (because of
         # loop_condition or number of iterations)
-        while (
-            not self._loop_condition(alpha, beta, lmbd, old_beta)
-        ) and i < self._max_iterations:
+        while (not self._loop_condition(alpha, beta, lmbd, old_beta) and
+               i < self._max_iterations):
             i += 1
 
             old_beta = beta
@@ -284,14 +270,14 @@ class SpDMD(DMD):
         indexes should be set to 0.
         :param np.ndarray zero_amplitudes: Boolean vector.
         :return np.ndarray: Vector of optimal DMD amplitudes. Amplitudes at
-            indexes corresponding to `True` indexes in `zero_amplitudes` are set
-            to 0.
+            indexes corresponding to `True` indexes in `zero_amplitudes` are
+            set to 0.
         """
         n_amplitudes = len(self.amplitudes)
         n_of_zero = np.count_nonzero(zero_amplitudes)
 
-        # vectors of the canonical base of R^n_amplitudes, from which we extract
-        # only those corresponding to items set to 0 in zero_amplitudes
+        # vectors of the canonical base of R^n_amplitudes, from which we
+        # extract only those corresponding to items set to 0 in zero_amplitudes
         E = np.identity(n_amplitudes)[:, zero_amplitudes]
 
         # left hand side of the linear system whose solution is the vector of

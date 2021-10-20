@@ -1,4 +1,7 @@
+"""Utilities module."""
+
 import numpy as np
+
 
 def compute_tlsq(X, Y, tlsq_rank):
     """
@@ -27,6 +30,7 @@ def compute_tlsq(X, Y, tlsq_rank):
 
     return X.dot(VV), Y.dot(VV)
 
+
 def compute_svd(X, svd_rank=0):
     """
     Truncated Singular Value Decomposition.
@@ -51,12 +55,14 @@ def compute_svd(X, svd_rank=0):
     U, s, V = np.linalg.svd(X, full_matrices=False)
     V = V.conj().T
 
+    def omega(x):
+        return 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
+
     if svd_rank == 0:
-        omega = lambda x: 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
         beta = np.divide(*sorted(X.shape))
         tau = np.median(s) * omega(beta)
         rank = np.sum(s > tau)
-    elif svd_rank > 0 and svd_rank < 1:
+    elif 0 < svd_rank < 1:
         cumulative_energy = np.cumsum(s**2 / (s**2).sum())
         rank = np.searchsorted(cumulative_energy, svd_rank) + 1
     elif svd_rank >= 1 and isinstance(svd_rank, int):

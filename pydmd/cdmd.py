@@ -13,6 +13,7 @@ from .dmdoperator import DMDOperator
 
 from .utils import compute_tlsq
 
+
 class CDMDOperator(DMDOperator):
     """
     DMD operator for Compressed-DMD.
@@ -24,10 +25,10 @@ class CDMDOperator(DMDOperator):
         to reach the 'energy' specified by `svd_rank`; if -1, the method does
         not compute truncation.
     :type svd_rank: int or float
-    :param rescale_mode: Scale Atilde as shown in 10.1016/j.jneumeth.2015.10.010
-        (section 2.4) before computing its eigendecomposition. None means no
-        rescaling, 'auto' means automatic rescaling using singular values,
-        otherwise the scaling factors.
+    :param rescale_mode: Scale Atilde as shown in
+        10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
+        eigendecomposition. None means no rescaling, 'auto' means automatic
+        rescaling using singular values, otherwise the scaling factors.
     :type rescale_mode: {'auto'} or None or numpy.ndarray
     :param bool forward_backward: If True, the low-rank operator is computed
         like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is
@@ -40,8 +41,10 @@ class CDMDOperator(DMDOperator):
 
     def __init__(self, svd_rank, rescale_mode, forward_backward, sorted_eigs):
         super().__init__(svd_rank=svd_rank, exact=True,
-            rescale_mode=rescale_mode, forward_backward=forward_backward,
-            sorted_eigs=sorted_eigs)
+                         rescale_mode=rescale_mode,
+                         forward_backward=forward_backward,
+                         sorted_eigs=sorted_eigs)
+        self._Atilde = None
 
     def compute_operator(self, compressedX, compressedY, nonCompressedY):
         """
@@ -51,8 +54,8 @@ class CDMDOperator(DMDOperator):
             containing the snapshots x0,..x{n-1} by column.
         :param numpy.ndarray compressedY: the compressed version of the matrix
             containing the snapshots x1,..x{n} by column.
-        :param numpy.ndarray nonCompressedY: the matrix containing the snapshots
-            x1,..x{n} by column.
+        :param numpy.ndarray nonCompressedY: the matrix containing the
+            snapshots x1,..x{n} by column.
         :return: the (truncated) left-singular vectors matrix, the (truncated)
             singular values array, the (truncated) right-singular vectors
             matrix of compressedX.
@@ -65,7 +68,8 @@ class CDMDOperator(DMDOperator):
 
         if self._forward_backward:
             # b stands for "backward"
-            bU, bs, bV = self._compute_svd(compressedY, svd_rank=self._svd_rank)
+            bU, bs, bV = self._compute_svd(compressedY,
+                                           svd_rank=self._svd_rank)
             atilde_back = self._least_square_operator(bU, bs, bV, compressedX)
             atilde = sqrtm(atilde.dot(np.linalg.inv(atilde_back)))
 
@@ -112,8 +116,8 @@ class CDMD(DMDBase):
         is '`uniform`'.
     :type compression_matrix: {'linear', 'sparse', 'uniform', 'sample'} or
         numpy.ndarray
-    :param opt: argument to control the computation of DMD modes amplitudes. See
-        :class:`DMDBase`. Default is False.
+    :param opt: argument to control the computation of DMD modes amplitudes.
+        See :class:`DMDBase`. Default is False.
     :type opt: bool or int
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
@@ -134,18 +138,21 @@ class CDMD(DMDBase):
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform',
-        opt=False, rescale_mode=None, forward_backward=False, sorted_eigs=False):
+                 opt=False, rescale_mode=None, forward_backward=False,
+                 sorted_eigs=False):
 
         self._tlsq_rank = tlsq_rank
         self._opt = opt
         self._compression_matrix = compression_matrix
 
         self._Atilde = CDMDOperator(svd_rank=svd_rank,
-            rescale_mode=rescale_mode, forward_backward=forward_backward,
-            sorted_eigs=sorted_eigs)
+                                    rescale_mode=rescale_mode,
+                                    forward_backward=forward_backward,
+                                    sorted_eigs=sorted_eigs)
 
     @property
     def compression_matrix(self):
+        """The compression matrix"""
         return self._compression_matrix
 
     def _compress_snapshots(self):
@@ -192,10 +199,11 @@ class CDMD(DMDBase):
         Y = compressed_snapshots[:, 1:]
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        U, s, V = self.operator.compute_operator(X,Y, self._snapshots[:, 1:])
+        self.operator.compute_operator(X, Y, self._snapshots[:, 1:])
 
         # Default timesteps
-        self.original_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
+        self.original_time = DMDTimeDict(
+            {'t0': 0, 'tend': n_samples - 1, 'dt': 1})
         self.dmd_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
 
         self._b = self._compute_amplitudes()
