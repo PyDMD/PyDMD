@@ -12,6 +12,7 @@ from .dmdbase import DMDBase, DMDTimeDict
 from .dmdoperator import DMDOperator
 from .utils import compute_tlsq
 
+
 class DMDControlOperator(DMDOperator):
     """
     DMD with control base operator. This should be subclassed in order to
@@ -36,9 +37,12 @@ class DMDControlOperator(DMDOperator):
 
     def __init__(self, svd_rank, svd_rank_omega, tlsq_rank):
         super(DMDControlOperator, self).__init__(svd_rank=svd_rank, exact=True,
-            rescale_mode=None, forward_backward=False, sorted_eigs=False)
+                                                 rescale_mode=None,
+                                                 forward_backward=False,
+                                                 sorted_eigs=False)
         self._svd_rank_omega = svd_rank_omega
         self._tlsq_rank = tlsq_rank
+
 
 class DMDBKnownOperator(DMDControlOperator):
     """
@@ -80,6 +84,7 @@ class DMDBKnownOperator(DMDControlOperator):
         X, Y = compute_tlsq(X, Y, self._tlsq_rank)
         Y = Y - B.dot(controlin)
         return super(DMDBKnownOperator, self).compute_operator(X, Y)
+
 
 class DMDBUnknownOperator(DMDControlOperator):
     """
@@ -124,15 +129,17 @@ class DMDBUnknownOperator(DMDControlOperator):
         Up1 = Up[:snapshots_rows, :]
         Up2 = Up[snapshots_rows:, :]
 
-        Ur, sr, Vr = self._compute_svd(Y, self._svd_rank)
+        Ur, _, _ = self._compute_svd(Y, self._svd_rank)
 
         self._Atilde = np.linalg.multi_dot([Ur.T.conj(), Y, Vp,
-            np.diag(np.reciprocal(sp)), Up1.T.conj(), Ur])
+                                            np.diag(np.reciprocal(sp)),
+                                            Up1.T.conj(), Ur])
         self._compute_eigenquantities()
         self._compute_modes(Y, sp, Vp, Up1, Ur)
 
         Btilde = np.linalg.multi_dot([Ur.T.conj(), Y, Vp,
-            np.diag(np.reciprocal(sp)), Up2.T.conj()])
+                                      np.diag(np.reciprocal(sp)),
+                                      Up2.T.conj()])
 
         return Ur, Ur.dot(Btilde)
 
@@ -143,8 +150,10 @@ class DMDBUnknownOperator(DMDControlOperator):
         """
 
         self._modes = np.linalg.multi_dot([Y, Vp, np.diag(np.reciprocal(sp)),
-            Up1.T.conj(), Ur, self.eigenvectors])
+                                           Up1.T.conj(), Ur,
+                                           self.eigenvectors])
         self._Lambda = self.eigenvalues
+
 
 class DMDc(DMDBase):
     """
@@ -161,8 +170,8 @@ class DMDc(DMDBase):
     :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means no truncation.
-    :param opt: argument to control the computation of DMD modes amplitudes. See
-        :class:`DMDBase`. Default is False.
+    :param opt: argument to control the computation of DMD modes amplitudes.
+        See :class:`DMDBase`. Default is False.
     :type opt: bool or int
     :param svd_rank_omega: the rank for the truncation of the aumented matrix
         omega composed by the left snapshots matrix and the control. Used only
@@ -233,13 +242,14 @@ class DMDc(DMDBase):
 
         if controlin.shape[1] != self.dynamics.shape[1] - 1:
             raise RuntimeError(
-                'The number of control inputs and the number of snapshots to reconstruct has to be the same'
+                'The number of control inputs and the number of snapshots to '
+                'reconstruct has to be the same'
             )
 
         eigs = np.power(self.eigs,
                         old_div(self.dmd_time['dt'], self.original_time['dt']))
         A = np.linalg.multi_dot([self.modes, np.diag(eigs),
-            np.linalg.pinv(self.modes)])
+                                 np.linalg.pinv(self.modes)])
 
         data = [self._snapshots[:, 0]]
 
@@ -271,13 +281,14 @@ class DMDc(DMDBase):
         X = self._snapshots[:, :-1]
         Y = self._snapshots[:, 1:]
 
-        self.original_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
+        self.original_time = DMDTimeDict(
+            {'t0': 0, 'tend': n_samples - 1, 'dt': 1})
         self.dmd_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
 
         if B is None:
             self._Atilde = DMDBUnknownOperator(**self._dmd_operator_kwargs)
-            self._basis, self._B = self.operator.compute_operator(X, Y,
-                self._controlin)
+            self._basis, self._B = self.operator.compute_operator(
+                X, Y, self._controlin)
         else:
             self._Atilde = DMDBKnownOperator(**self._dmd_operator_kwargs)
             U, _, _ = self.operator.compute_operator(X, Y, B, self._controlin)

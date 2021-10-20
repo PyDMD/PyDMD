@@ -1,9 +1,4 @@
-"""
-Derived module from dmdbase.py for forward/backward dmd.
-"""
-import numpy as np
-
-from scipy.linalg import sqrtm
+"""Derived module from dmdbase.py for forward/backward dmd."""
 from .dmd import DMD
 
 
@@ -22,8 +17,8 @@ class FbDMD(DMD):
         is 0, that means no truncation.
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
-    :param opt: argument to control the computation of DMD modes amplitudes. See
-        :class:`DMDBase`. Default is False.
+    :param opt: argument to control the computation of DMD modes amplitudes.
+        See :class:`DMDBase`. Default is False.
     :type opt: bool or int
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
@@ -39,7 +34,7 @@ class FbDMD(DMD):
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-        rescale_mode=None, sorted_eigs=False):
+                 rescale_mode=None, sorted_eigs=False):
         super().__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank, exact=exact,
-            opt=opt, rescale_mode=rescale_mode, forward_backward=True,
-            sorted_eigs=sorted_eigs)
+                         opt=opt, rescale_mode=rescale_mode,
+                         forward_backward=True, sorted_eigs=sorted_eigs)

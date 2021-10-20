@@ -2,18 +2,17 @@
 Derived module from dmdbase.py for classic dmd.
 """
 
-# --> Import standard python packages
 import numpy as np
-
-# --> Import PyDMD base class for DMD.
-from .dmdbase import DMDBase, DMDTimeDict
-
-from .dmdoperator import DMDOperator
-from .utils import compute_tlsq
-
 from scipy.linalg import pinv2
 
-def pinv(x): return pinv2(x, rcond=10 * np.finfo(float).eps)
+from .dmdbase import DMDBase, DMDTimeDict
+from .utils import compute_tlsq
+
+
+def pinv(x):
+    """Pseudo-inverse matrix"""
+    return pinv2(x, rcond=10 * np.finfo(float).eps)
+
 
 class DMD(DMDBase):
     """
@@ -30,8 +29,8 @@ class DMD(DMDBase):
         is 0, that means TLSQ is not applied.
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
-    :param opt: argument to control the computation of DMD modes amplitudes. See
-        :class:`DMDBase`. Default is False.
+    :param opt: argument to control the computation of DMD modes amplitudes.
+        See :class:`DMDBase`. Default is False.
     :type opt: bool or int
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
@@ -61,10 +60,11 @@ class DMD(DMDBase):
         Y = self._snapshots[:, 1:]
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        self._svd_modes, _, _ = self.operator.compute_operator(X,Y)
+        self._svd_modes, _, _ = self.operator.compute_operator(X, Y)
 
         # Default timesteps
-        self.original_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
+        self.original_time = DMDTimeDict(
+            {'t0': 0, 'tend': n_samples - 1, 'dt': 1})
         self.dmd_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
 
         self._b = self._compute_amplitudes()
@@ -85,5 +85,5 @@ class DMD(DMDBase):
             Predicted output.
 
         """
-        return np.linalg.multi_dot([self.modes, np.diag(self.eigs),
-            pinv(self.modes), X])
+        return np.linalg.multi_dot(
+            [self.modes, np.diag(self.eigs), pinv(self.modes), X])

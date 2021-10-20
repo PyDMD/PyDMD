@@ -9,7 +9,6 @@ Applied Dynamical Systems, 2017, 16.4: 2096-2126.
 import numpy as np
 
 from .dmdbase import DMDBase, DMDTimeDict
-from .utils import compute_tlsq
 from .dmd import DMD
 
 
@@ -28,8 +27,8 @@ class HankelDMD(DMDBase):
         is 0, that means no truncation.
     :param bool exact: flag to compute either exact DMD or projected DMD.
         Default is False.
-    :param opt: argument to control the computation of DMD modes amplitudes. See
-        :class:`DMDBase`. Default is False.
+    :param opt: argument to control the computation of DMD modes amplitudes.
+        See :class:`DMDBase`. Default is False.
     :type opt: bool or int
     :param rescale_mode: Scale Atilde as shown in
             10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
@@ -47,26 +46,17 @@ class HankelDMD(DMDBase):
     :type sorted_eigs: {'real', 'abs'} or False
     :param reconstruction_method: Due to how HODMD is defined, we have several
         versions of the same snapshot. The parameter `reconstruction_method`
-        allows changing how these versions are combined in `reconstructed_data`.
-        If `'first'`, only the first version is selected (default behavior);
-        if `'mean'` we take the mean of all the versions; if the parameter is an
-        array of floats of size `d`, the return value is the weighted average
-        of the versions.
+        allows changing how these versions are combined in
+        `reconstructed_data`.  If `'first'`, only the first version is selected
+        (default behavior); if `'mean'` we take the mean of all the versions;
+        if the parameter is an array of floats of size `d`, the return value is
+        the weighted average of the versions.
     :type reconstruction_method: {'first', 'mean'} or array-like
     """
 
-    def __init__(
-        self,
-        svd_rank=0,
-        tlsq_rank=0,
-        exact=False,
-        opt=False,
-        rescale_mode=None,
-        forward_backward=False,
-        d=1,
-        sorted_eigs=False,
-        reconstruction_method="first",
-    ):
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
+                 rescale_mode=None, forward_backward=False, d=1,
+                 sorted_eigs=False, reconstruction_method="first",):
         super().__init__(
             svd_rank=svd_rank,
             tlsq_rank=tlsq_rank,
@@ -83,10 +73,8 @@ class HankelDMD(DMDBase):
                     "The length of the array of weights must be equal to d"
                 )
         elif isinstance(reconstruction_method, np.ndarray):
-            if (
-                reconstruction_method.ndim > 1
-                or reconstruction_method.shape[0] != d
-            ):
+            if (reconstruction_method.ndim > 1 or
+                    reconstruction_method.shape[0] != d):
                 raise ValueError(
                     "The length of the array of weights must be equal to d"
                 )
@@ -104,10 +92,11 @@ class HankelDMD(DMDBase):
 
     @property
     def d(self):
+        """The new order for spatial dimension of the input snapshots."""
         return self._d
 
     def _hankel_first_occurrence(self, time):
-        """
+        r"""
         For a given `t` such that there is :math:`k \in \mathbb{N}` such that
         :math:`t = t_0 + k dt`, return the index of the first column in Hankel
         pseudo matrix (see also :func:`_pseudo_hankel_matrix`) which contains
@@ -159,8 +148,8 @@ class HankelDMD(DMDBase):
         space_dim = rec.shape[0] // self.d
         time_instants = rec.shape[1] + self.d - 1
 
-        # for each time instance, we collect all its appearences.
-        # each snapshot appears at most d times (for instance, the first appears
+        # for each time instance, we collect all its appearences.  each
+        # snapshot appears at most d times (for instance, the first appears
         # only once).
         reconstructed_snapshots = np.full(
             (time_instants, self.d, space_dim), np.nan, dtype=rec.dtype
@@ -171,16 +160,16 @@ class HankelDMD(DMDBase):
             .repeat(2, axis=1)[None, :]
             .repeat(rec.shape[1], axis=0)
         )
-        c_idxes[:,:,0] += np.array(range(rec.shape[1]))[:, None]
+        c_idxes[:, :, 0] += np.array(range(rec.shape[1]))[:, None]
 
         reconstructed_snapshots[c_idxes[:, :, 0], c_idxes[:, :, 1]] = np.array(
-            np.swapaxes(np.split(rec.T, self.d, axis=1), 0,1)
+            np.swapaxes(np.split(rec.T, self.d, axis=1), 0, 1)
         )
 
         if timeindex is None:
             return reconstructed_snapshots
-        else:
-            return reconstructed_snapshots[timeindex]
+
+        return reconstructed_snapshots[timeindex]
 
     def _first_reconstructions(self, reconstructions):
         """Return the first occurrence of each snapshot available in the given
@@ -197,7 +186,7 @@ class HankelDMD(DMDBase):
         first_nonmasked_idx = np.repeat(
             np.array(range(reconstructions.shape[0]))[:, None], 2, axis=1
         )
-        first_nonmasked_idx[self.d - 1 :, 1] = self.d - 1
+        first_nonmasked_idx[self.d - 1:, 1] = self.d - 1
 
         return reconstructions[
             first_nonmasked_idx[:, 0], first_nonmasked_idx[:, 1]
@@ -214,9 +203,7 @@ class HankelDMD(DMDBase):
             result = self._first_reconstructions(rec)
         elif self._reconstruction_method == "mean":
             result = np.mean(rec, axis=1).T
-        elif isinstance(self._reconstruction_method, list) or isinstance(
-            self._reconstruction_method, np.ndarray
-        ):
+        elif isinstance(self._reconstruction_method, (np.ndarray, list)):
             result = np.average(
                 rec, axis=1, weights=self._reconstruction_method
             ).T
@@ -235,7 +222,7 @@ class HankelDMD(DMDBase):
                 // self.dmd_time["dt"]
             ),
         )
-        result = result[:, time_index : time_index + len(self.dmd_timesteps)]
+        result = result[:, time_index:time_index + len(self.dmd_timesteps)]
 
         return result.filled(fill_value=0)
 
@@ -260,7 +247,7 @@ class HankelDMD(DMDBase):
 
         """
         return np.concatenate(
-            [X[:, i : X.shape[1] - self.d + i + 1] for i in range(self.d)],
+            [X[:, i:X.shape[1] - self.d + i + 1] for i in range(self.d)],
             axis=0,
         )
 

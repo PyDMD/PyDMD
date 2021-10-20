@@ -9,7 +9,6 @@ from __future__ import division
 from builtins import range
 from past.utils import old_div
 import numpy as np
-import scipy.linalg
 import matplotlib.pyplot as plt
 from copy import deepcopy
 from scipy.linalg import block_diag
@@ -17,7 +16,8 @@ from scipy.linalg import block_diag
 from .dmdbase import DMDBase, DMDTimeDict
 
 
-class BinaryTree(object):
+class BinaryTree():
+    """Simple Binary tree"""
     def __init__(self, depth):
         self.depth = depth
         self.tree = [None] * len(self)
@@ -191,16 +191,12 @@ class MrDMD(DMDBase):
             for leaf in self.dmd_tree.index_leaves(level):
 
                 local_times = self.partial_time_interval(level, leaf)
-                if (
-                    (t0 >= local_times["t0"] and t0 < local_times["tend"])
-                    or (
-                        tend > local_times["t0"]
-                        and tend <= local_times["tend"]
-                    )
-                    or (
-                        t0 <= local_times["t0"] and tend >= local_times["tend"]
-                    )
-                ):
+                if (local_times["t0"] < t0 <= local_times["tend"] or
+                        local_times["t0"] < tend <= local_times["tend"] or
+                        (
+                            t0 <= local_times["t0"] and
+                            tend >= local_times["tend"]
+                        )):
                     indexes.append((level, leaf))
 
         indexes = np.unique(indexes, axis=0)

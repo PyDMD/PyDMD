@@ -75,16 +75,10 @@ class DMDBase(object):
 
     """
 
-    def __init__(
-        self,
-        svd_rank=0,
-        tlsq_rank=0,
-        exact=False,
-        opt=False,
-        rescale_mode=None,
-        forward_backward=False,
-        sorted_eigs=False,
-    ):
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
+                 rescale_mode=None, forward_backward=False,
+                 sorted_eigs=False,):
+
         self._Atilde = DMDOperator(
             svd_rank=svd_rank,
             exact=exact,
@@ -225,13 +219,13 @@ class DMDBase(object):
         .. math::
 
             \\mathbf{x}(t) \\approx
-            \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\exp \\left( \\omega_{k} t \\right) b_{k} =
-            \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\left( \\lambda_{k} \\right)^{\\left( t / \\Delta t \\right)} b_{k}
+            \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\exp \\left( \\omega_{k} t
+            \\right) b_{k} = \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\left(
+            \\lambda_{k} \\right)^{\\left( t / \\Delta t \\right)} b_{k}
 
         :return: the matrix that contains all the time evolution, stored by
             row.
         :rtype: numpy.ndarray
-
         """
         temp = np.repeat(
             self.eigs[:, None], self.dmd_timesteps.shape[0], axis=1
@@ -571,11 +565,9 @@ and `max_distance_from_unity_outside` can be not `None`"""
                     """The combination of parameters does not make sense"""
                 )
 
-            return partial(
-                DMDBase.ModesSelectors._stable_modes,
-                max_distance_from_unity_inside=max_distance_from_unity_inside,
-                max_distance_from_unity_outside=max_distance_from_unity_outside,
-            )
+            return partial(DMDBase.ModesSelectors._stable_modes,
+                           max_distance_from_unity_inside=max_distance_from_unity_inside,
+                           max_distance_from_unity_outside=max_distance_from_unity_outside,)
 
         @staticmethod
         def _compute_integral_contribution(mode, dynamic):
@@ -929,15 +921,8 @@ and `max_distance_from_unity_outside` can be not `None`"""
         if not filename:
             plt.show()
 
-    def plot_snapshots_2D(
-        self,
-        index_snap=None,
-        filename=None,
-        x=None,
-        y=None,
-        order="C",
-        figsize=(8, 8),
-    ):
+    def plot_snapshots_2D(self, index_snap=None, filename=None, x=None,
+                          y=None, order="C", figsize=(8, 8),):
         """
         Plot the snapshots.
 
