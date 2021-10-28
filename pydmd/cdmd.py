@@ -11,7 +11,7 @@ from scipy.linalg import sqrtm
 from .dmdbase import DMDBase, DMDTimeDict
 from .dmdoperator import DMDOperator
 
-from .utils import compute_tlsq
+from .utils import compute_tlsq, compute_svd
 
 
 class CDMDOperator(DMDOperator):
@@ -62,14 +62,13 @@ class CDMDOperator(DMDOperator):
         :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
         """
 
-        U, s, V = self._compute_svd(compressedX)
+        U, s, V = compute_svd(compressedX, svd_rank=self._svd_rank)
 
         atilde = self._least_square_operator(U, s, V, compressedY)
 
         if self._forward_backward:
             # b stands for "backward"
-            bU, bs, bV = self._compute_svd(compressedY,
-                                           svd_rank=self._svd_rank)
+            bU, bs, bV = compute_svd(compressedY, svd_rank=self._svd_rank)
             atilde_back = self._least_square_operator(bU, bs, bV, compressedX)
             atilde = sqrtm(atilde.dot(np.linalg.inv(atilde_back)))
 
