@@ -191,7 +191,7 @@ class MrDMD(DMDBase):
             for leaf in self.dmd_tree.index_leaves(level):
 
                 local_times = self.partial_time_interval(level, leaf)
-                if (local_times["t0"] < t0 <= local_times["tend"] or
+                if (local_times["t0"] <= t0 < local_times["tend"] or
                         local_times["t0"] < tend <= local_times["tend"] or
                         (
                             t0 <= local_times["t0"] and

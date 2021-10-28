@@ -13,7 +13,7 @@ import numpy as np
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from .utils import compute_tlsq
+from .utils import compute_tlsq, compute_svd
 
 def pinv_diag(x):
     """
@@ -75,13 +75,13 @@ class DMDOptOperator(DMDOperator):
         :rtype: numpy.ndarray, numpy.ndarray
         """
 
-        Ux, Sx, Vx = self._compute_svd(X, -1)
+        Ux, Sx, Vx = compute_svd(X, -1)
 
         Z = np.linalg.multi_dot(
             [Y, Vx, np.diag(Sx), pinv_diag(Sx), Vx.T.conj()]
         )
 
-        Uz, _, _ = self._compute_svd(Z)
+        Uz, _, _ = compute_svd(Z, self._svd_rank)
 
         Q = np.linalg.multi_dot(
             [Uz.T.conj(), Y, Vx, pinv_diag(Sx), Ux.T.conj()]
