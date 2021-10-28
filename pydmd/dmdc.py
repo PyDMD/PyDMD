@@ -10,7 +10,7 @@ import numpy as np
 
 from .dmdbase import DMDBase, DMDTimeDict
 from .dmdoperator import DMDOperator
-from .utils import compute_tlsq
+from .utils import compute_tlsq, compute_svd
 
 
 class DMDControlOperator(DMDOperator):
@@ -124,12 +124,12 @@ class DMDBUnknownOperator(DMDControlOperator):
 
         omega = np.vstack([X, controlin])
 
-        Up, sp, Vp = self._compute_svd(omega, self._svd_rank_omega)
+        Up, sp, Vp = compute_svd(omega, self._svd_rank_omega)
 
         Up1 = Up[:snapshots_rows, :]
         Up2 = Up[snapshots_rows:, :]
 
-        Ur, _, _ = self._compute_svd(Y, self._svd_rank)
+        Ur, _, _ = compute_svd(Y, self._svd_rank)
 
         self._Atilde = np.linalg.multi_dot([Ur.T.conj(), Y, Vp,
                                             np.diag(np.reciprocal(sp)),
