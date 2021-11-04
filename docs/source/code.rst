@@ -16,3 +16,4 @@ Code Documentation
    dmdc
    optdmd
    spdmd
+   paramdmd
