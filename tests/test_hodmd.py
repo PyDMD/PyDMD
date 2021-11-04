@@ -37,7 +37,6 @@ class TestHODmd(TestCase):
     def test_shape(self):
         dmd = HODMD(svd_rank=-1, d=2, svd_rank_extra=-1)
         dmd.fit(X=sample_data)
-        print(dmd.modes.shape, sample_data.shape)
         assert dmd.modes.shape[1] == sample_data.shape[1] - 2
 
     def test_truncation_shape(self):
@@ -73,13 +72,12 @@ class TestHODmd(TestCase):
     def test_eigs_1(self):
         dmd = HODMD(svd_rank=-1, svd_rank_extra=-1)
         dmd.fit(X=sample_data)
-        print('eig',len(dmd.eigs))
         assert len(dmd.eigs) == 14
 
     def test_eigs_2(self):
-        dmd = HODMD(svd_rank=5)
+        dmd = HODMD(svd_rank=5, svd_rank_extra=-1)
         dmd.fit(X=sample_data)
-        assert len(dmd.eigs) == 4
+        assert len(dmd.eigs) == 5
 
     def test_eigs_3(self):
         dmd = HODMD(svd_rank=2)
@@ -89,17 +87,30 @@ class TestHODmd(TestCase):
         ])
         np.testing.assert_almost_equal(dmd.eigs, expected_eigs, decimal=6)
 
+    def test_eigs_4(self):
+        dmd = HODMD(svd_rank=5, svd_rank_extra=4)
+        dmd.fit(X=sample_data)
+        assert len(dmd.eigs) == 4
+
     def test_dynamics_1(self):
-        dmd = HODMD(svd_rank=5)
+        dmd = HODMD(svd_rank=5, svd_rank_extra=-1)
+        dmd.fit(X=sample_data)
+        assert dmd.dynamics.shape == (5, sample_data.shape[1])
+
+    def test_dynamics_2(self):
+        dmd = HODMD(svd_rank=5, svd_rank_extra=4)
         dmd.fit(X=sample_data)
         assert dmd.dynamics.shape == (4, sample_data.shape[1])
 
     def test_dynamics_opt_1(self):
-        dmd = HODMD(svd_rank=5, opt=True)
+        dmd = HODMD(svd_rank=5, svd_rank_extra=-1, opt=True)
         dmd.fit(X=sample_data)
-        print(dmd.dynamics.shape)
-        assert dmd.dynamics.shape == (4, sample_data.shape[1])
+        assert dmd.dynamics.shape == (5, sample_data.shape[1])
 
+    def test_dynamics_opt_2(self):
+        dmd = HODMD(svd_rank=5, svd_rank_extra=4, opt=True)
+        dmd.fit(X=sample_data)
+        assert dmd.dynamics.shape == (4, sample_data.shape[1])
 
     def test_reconstructed_data(self):
         dmd = HODMD(d=2)
