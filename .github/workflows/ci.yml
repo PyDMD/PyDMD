@@ -1,6 +1,9 @@
 name: "Coverage Deploy to Codacy"
 
-on: push
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   test_deploy:
@@ -27,5 +30,6 @@ jobs:
       run: |
         python3 -m pytest --cov-report term --cov-report xml:cobertura.xml --cov=pydmd
         curl -s https://coverage.codacy.com/get.sh -o CodacyCoverageReporter.sh
+        chmod +x CodacyCoverageReporter.sh
         ./CodacyCoverageReporter.sh report -r cobertura.xml  -t $CODACY_API_TOKEN
         
