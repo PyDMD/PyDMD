@@ -18,6 +18,9 @@ ParametricDMD
     ParametricDMD.dmd_timesteps
     ParametricDMD.original_time
     ParametricDMD.original_timesteps
+    ParametricDMD._arrange_parametric_snapshots
+    ParametricDMD._training_modal_coefficients
+    ParametricDMD._fit_dmd
 
 .. autoclass:: ParametricDMD
 	:members:
