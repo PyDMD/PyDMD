@@ -48,6 +48,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.imgmath',
     'sphinx.ext.ifconfig',
+    'sphinx.ext.mathjax',
 ]
 
 intersphinx_mapping = {'python': ('http://docs.python.org/2', None),
