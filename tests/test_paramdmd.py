@@ -3,29 +3,31 @@ from pydmd import DMD, ParametricDMD
 from ezyrb import POD, RBF
 import numpy as np
 
-def f1(x,t):
-    return 1./np.cosh(x+3)*np.exp(2.3j*t)
-def f2(x,t):
-    return 2./np.cosh(x)*np.tanh(x)*np.exp(2.8j*t)
-def f(a):
-    def fnc(x,t):
-        return a*f1(x,t) + (1-a)*f2(x,t)
-    return fnc
+testdir = 'tests/test_datasets/param_dmd/'
+
+#def f1(x,t):
+#    return 1./np.cosh(x+3)*np.exp(2.3j*t)
+#def f2(x,t):
+#    return 2./np.cosh(x)*np.tanh(x)*np.exp(2.8j*t)
+#def f(a):
+#    def fnc(x,t):
+#        return a*f1(x,t) + (1-a)*f2(x,t)
+#    return fnc
 
 params = np.linspace(0,1,10)
 
-x = np.linspace(0,np.pi,1000)
-t = np.linspace(0,2*np.pi,100)
-xgrid, tgrid = np.meshgrid(x, t)
+# x = np.linspace(0,np.pi,1000)
+# t = np.linspace(0,2*np.pi,100)
+# xgrid, tgrid = np.meshgrid(x, t)
 
 # training dataset
-training_data = np.vstack([f(a)(xgrid, tgrid)[None,:] for a in params])
+# training_data = np.vstack([f(a)(xgrid, tgrid)[None,:] for a in params])
+training_data = np.load(testdir + '/training_data.npy')
 
 # test dataset
 test_parameters = [0.15, 0.75, 0.28]
-testing_data = np.vstack([f(a)(xgrid, tgrid)[None,:] for a in test_parameters])
-
-testdir = 'tests/test_datasets/param_dmd/'
+# testing_data = np.vstack([f(a)(xgrid, tgrid)[None,:] for a in test_parameters])
+testing_data = np.load(testdir + 'testing_data.npy')
 
 class TestParamDmd(TestCase):
     def test_is_partitioned_1(self):
@@ -215,7 +217,7 @@ class TestParamDmd(TestCase):
         actual = p._training_modal_coefficients(inp)
         expected = np.load(testdir+'traning_modal_coefficients.npy')
 
-        np.testing.assert_allclose(actual, expected)
+        np.testing.assert_allclose(actual, expected, atol=1.e-12, rtol=0)
 
     def test_arrange_parametric_snapshots_shape(self):
         p = ParametricDMD(None, None, None)
@@ -288,7 +290,7 @@ class TestParamDmd(TestCase):
         p.fit(training_data, params)
 
         expected = np.load(testdir+'forecasted.npy')
-        np.testing.assert_allclose(p._predict_modal_coefficients(), expected)
+        np.testing.assert_allclose(p._predict_modal_coefficients(), expected, rtol=0, atol=1.e-11)
 
     def test_interpolate_missing_modal_coefficients_shape(self):
         p = ParametricDMD(DMD(svd_rank=5), POD(rank=10), RBF())
@@ -313,7 +315,7 @@ class TestParamDmd(TestCase):
         expected = np.load(testdir+'interpolated.npy')
         np.testing.assert_allclose(
             p._interpolate_missing_modal_coefficients(np.load(testdir+'forecasted.npy')),
-            expected)
+            expected, atol=1.e-12, rtol=0)
 
     def reconstructed_data_shape(self):
         p = ParametricDMD(DMD(svd_rank=5), POD(rank=10), RBF())
