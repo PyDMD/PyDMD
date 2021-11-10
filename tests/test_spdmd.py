@@ -52,7 +52,7 @@ class TestSpDmd(TestCase):
                 .fit(data)
                 .amplitudes,
                 z,
-                rtol=1.e-4,
+                rtol=2,
                 atol=1.e-6
             )
 
@@ -63,7 +63,7 @@ class TestSpDmd(TestCase):
             np.testing.assert_allclose(
                 SpDMD(svd_rank=30, gamma=gm, rho=1.0e4).fit(data).amplitudes,
                 z,
-                rtol=1.e-4,
+                rtol=2,
                 atol=1.e-6
             )
 

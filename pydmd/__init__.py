@@ -16,3 +16,4 @@ from .hodmd import HODMD
 from .dmdc import DMDc
 from .optdmd import OptDMD
 from .spdmd import SpDMD
+from .paramdmd import ParametricDMD

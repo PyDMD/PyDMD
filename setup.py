@@ -116,7 +116,7 @@ setup(
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     test_suite='nose.collector',
-	tests_require=['nose'],
+	tests_require=['nose', 'ezyrb'],
 	include_package_data=True,
 	zip_safe=False,
 
