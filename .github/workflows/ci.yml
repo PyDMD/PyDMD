@@ -21,7 +21,7 @@ jobs:
     - name: Install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install numpy scipy matplotlib pytest pytest-cov future
+        python3 -m pip install numpy scipy matplotlib pytest pytest-cov future ezyrb
 
     - name: Test with pytest
       env:
