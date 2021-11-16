@@ -58,7 +58,7 @@ The research in the field is growing both in computational fluid dynamic and in 
 
 
 ## Dependencies and installation
-**PyDMD** requires requires `numpy`, `scipy`, `matplotlib`, `future`, `sphinx` (for the documentation) and `nose` (for local test). The code is tested for Python 3, while compatibility of Python 2 is not guaranteed anymore. It can be installed using `pip` or directly from the source code.
+**PyDMD** requires requires `numpy`, `scipy`, `matplotlib`, `future`, `sphinx` (for the documentation) and `pytest` (for local test). The code is tested for Python 3, while compatibility of Python 2 is not guaranteed anymore. It can be installed using `pip` or directly from the source code.
 
 ### Installing via PIP
 Mac and Linux users can install pre-built binary packages using pip.
@@ -79,14 +79,13 @@ The official distribution is on GitHub, and you can clone the repository using
 
 To install the package just type:
 ```bash
-> python setup.py install
+> pip install -e .
 ```
 
 To uninstall the package you have to rerun the installation and record the installed files in order to remove them:
 
 ```bash
-> python setup.py install --record installed_files.txt
-> cat installed_files.txt | xargs rm -rf
+> pip uninstall pydmd
 ```
 
 ## Documentation
@@ -104,10 +103,10 @@ The generated html can be found in `docs/build/html`. Open up the `index.html` y
 
 We are using Travis CI for continuous intergration testing. You can check out the current status [here](https://travis-ci.org/mathLab/PyDMD).
 
-To run tests locally (`nose` is required):
+To run tests locally (`pytest` is required):
 
 ```bash
-> python test.py
+> pytest
 ```
 
 ## Examples and Tutorials
