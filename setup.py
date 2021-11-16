@@ -1,6 +1,4 @@
-from setuptools import setup, Command
-import os
-import sys
+from setuptools import setup
 
 meta = {}
 with open("pydmd/meta.py") as fp:
@@ -13,7 +11,7 @@ URL = 'https://github.com/mathLab/PyDMD'
 MAIL = meta['__mail__']
 AUTHOR = meta['__author__']
 VERSION = meta['__version__']
-KEYWORDS='dynamic-mode-decomposition dmd mrdmd fbdmd cdmd'
+KEYWORDS = 'dynamic-mode-decomposition dmd mrdmd fbdmd cdmd'
 
 REQUIRED = [
     'future', 'numpy', 'scipy',	'matplotlib',
@@ -21,6 +19,7 @@ REQUIRED = [
 
 EXTRAS = {
     'docs': ['Sphinx==1.4', 'sphinx_rtd_theme'],
+    'test': ['pytest', 'pytest-cov'],
 }
 
 LDESCRIPTION = (
@@ -55,43 +54,6 @@ LDESCRIPTION = (
     "of the model.\n"
 )
 
-here = os.path.abspath(os.path.dirname(__file__))
-class UploadCommand(Command):
-    """Support setup.py upload."""
-
-    description = 'Build and publish the package.'
-    user_options = []
-
-    @staticmethod
-    def status(s):
-        """Prints things in bold."""
-        print('\033[1m{0}\033[0m'.format(s))
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        try:
-            self.status('Removing previous builds...')
-            rmtree(os.path.join(here, 'dist'))
-        except OSError:
-            pass
-
-        self.status('Building Source and Wheel (universal) distribution...')
-        os.system('{0} setup.py sdist bdist_wheel --universal'.format(sys.executable))
-
-        self.status('Uploading the package to PyPI via Twine...')
-        os.system('twine upload dist/*')
-
-        self.status('Pushing git tags...')
-        os.system('git tag v{0}'.format(VERSION))
-        os.system('git push --tags')
-
-        sys.exit()
-
 setup(
     name=NAME,
     version=VERSION,
@@ -99,7 +61,7 @@ setup(
     long_description=LDESCRIPTION,
     author=AUTHOR,
     author_email=MAIL,
-	classifiers=[
+    classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
@@ -108,19 +70,13 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Mathematics'
-	],
-	keywords=KEYWORDS,
-	url=URL,
-	license='MIT',
-	packages=[NAME],
+    ],
+    keywords=KEYWORDS,
+    url=URL,
+    license='MIT',
+    packages=[NAME],
     install_requires=REQUIRED,
     extras_require=EXTRAS,
-    test_suite='nose.collector',
-	tests_require=['nose', 'ezyrb'],
-	include_package_data=True,
-	zip_safe=False,
-
-    # $ setup.py publish support.
-    cmdclass={
-        'upload': UploadCommand,
-    },)
+    include_package_data=True,
+    zip_safe=False,
+)
