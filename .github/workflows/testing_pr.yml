@@ -12,9 +12,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-        python-version: [3.8, 3.7]
-
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python-version: [3.7, 3.8]
+        
     steps:
     - uses: actions/checkout@v2
 
@@ -27,7 +27,7 @@ jobs:
     - name: Install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install numpy scipy matplotlib pytest pytest-cov future ezyrb
+        python3 -m pip install .[test]
 
     - name: Test with pytest
       run: |
