@@ -11,10 +11,10 @@ __all__ = [
 
 __project__ = 'PyDMD'
 __title__ = "pydmd"
-__author__ = "Nicola Demo, Marco Tezzele"
+__author__ = "Nicola Demo, Marco Tezzele, Francesco Andreuzzi"
 __copyright__ = "Copyright 2017-2021, PyDMD contributors"
 __license__ = "MIT"
 __version__ = "0.4"
-__mail__ = 'demo.nicola@gmail.com, marcotez@gmail.com'
+__mail__ = 'demo.nicola@gmail.com, marcotez@gmail.com, andreuzzi.francesco@gmail.com'
 __maintainer__ = __author__
 __status__ = "Stable"
