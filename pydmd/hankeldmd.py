@@ -44,13 +44,14 @@ class HankelDMD(DMDBase):
         magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
         part to break ties) if `sorted_eigs='real'`. Default: False.
     :type sorted_eigs: {'real', 'abs'} or False
-    :param reconstruction_method: Due to how HODMD is defined, we have several
-        versions of the same snapshot. The parameter `reconstruction_method`
-        allows changing how these versions are combined in
-        `reconstructed_data`.  If `'first'`, only the first version is selected
-        (default behavior); if `'mean'` we take the mean of all the versions;
-        if the parameter is an array of floats of size `d`, the return value is
-        the weighted average of the versions.
+    :param reconstruction_method: Method used to reconstruct the snapshots of
+        the dynamical system from the multiple versions available due to how
+        HankelDMD is conceived. If `'first'` (default) the first version
+        available is selected (i.e. the nearest to the 0-th row in the
+        augmented matrix). If `'mean'` we compute the element-wise mean. If
+        `reconstruction_method` is an array of float values we compute the
+        weighted average (for each snapshots) using the given values as weights
+        (the number of weights must be equal to `d`).
     :type reconstruction_method: {'first', 'mean'} or array-like
     """
 
