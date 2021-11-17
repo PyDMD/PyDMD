@@ -183,6 +183,8 @@ Here there is a list of the scientific works involving **PyDMD** you can consult
 **PyDMD** is currently developed and mantained at [SISSA mathLab](http://mathlab.sissa.it/) by
 * [Nicola Demo](mailto:demo.nicola@gmail.com)
 * [Marco Tezzele](mailto:marcotez@gmail.com)
+* [Francesco Andreuzzi](mailto:andreuzzi.francesco@gmail.com)
+
 
 under the supervision of [Prof. Gianluigi Rozza](mailto:gianluigi.rozza@sissa.it).
 
