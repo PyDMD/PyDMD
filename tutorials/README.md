@@ -15,6 +15,7 @@ An additional PDF tutorial ([DSWeb contest winner](https://dsweb.siam.org/The-Ma
 | Tutorial7&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial7/tutorial-7-dmdc.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial7/tutorial-7-dmdc.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial7dmdc.html)] | DMD with control | `pydmd.DMDC`  |
 | Tutorial8&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial8/tutorial-8-comparisons.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial8/tutorial-8-comparisons.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial8comparison.html)] | comparison between DMD and optimal closed-form DMD | `pydmd.OptDMD`  |
 | Tutorial9&#160;[[.ipynb](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial9/tutorial-9-spdmd.ipynb),&#160;[.py](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial9/tutorial-9-spdmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial9spdmd.html)] | sparsity-promoting DMD | `pydmd.SpDMD`  |
+| Tutorial10&#160;[[.ipynb](tutorial10/tutorial-10-paramdmd.ipynb),&#160;[.py](tutorial10/tutorial-10-paramdmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial10paramdmd.html)] | parametric DMD | `pydmd.ParametricDMD`  |
 
 
 
