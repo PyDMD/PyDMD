@@ -86,6 +86,7 @@ We made some tutorial examples. Please refer to the official GitHub repository f
 - `Tutorial 7 <tutorial7dmdc.html>`_ - Here we show the dynamic mode decomposition incorporanting the effect of control, on a toy dataset.
 - `Tutorial 8 <tutorial8comparison.html>`_ - Here we show the comparison between standard DMD and the optimal closed-form DMD.
 - `Tutorial 9 <tutorial9spdmd.html>`_ - Here we show the sparsity-promoting DMD on a dataset coming from an heat transfer problem.
+- `Tutorial 10 <tutorial10paramdmd.html>`_ - Here we apply Parametric DMD (in two possible approaches) to a simple toy problem.
 - `Developers Tutorial 1 <dev-tutorial1.html>`_ - Here we show the procedure to extending PyDMD by adding a new version of DMD.
 
 
