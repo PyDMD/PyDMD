@@ -19,7 +19,7 @@
 # + The classes `POD` and `RBF` from `ezyrb`, which respectively are used to reduce the dimensionality before the interpolation and to perform the actual interpolation (see the reference for more details);
 # + `NumPy` and `Matplotlib`.
 
-# In[1]:
+# In[2]:
 
 
 import warnings
@@ -34,7 +34,7 @@ import matplotlib.colors as colors
 
 # First of all we define several functions to construct our system and gather the data needed to train the algorithm:
 
-# In[2]:
+# In[4]:
 
 
 def f1(x,t): 
@@ -51,10 +51,10 @@ def f(mu):
 
 # Then we construct a discrete space-time grid with an acceptable number of sample points in both the dimensions:
 
-# In[3]:
+# In[5]:
 
 
-N = 150
+N = 160
 m = 500
 
 x = np.linspace(-5, 5, m)
@@ -65,7 +65,7 @@ xgrid, tgrid = np.meshgrid(x, t)
 
 # We can now construct our dataset by computing the value of `f` for several known parameters (since our problem is quite simple we consider only 10 samples):
 
-# In[4]:
+# In[6]:
 
 
 training_params = np.round(np.linspace(0,1,10),1)
@@ -77,7 +77,7 @@ print(training_snapshots.shape)
 
 # After defining several utility functions which we are going to use in the following sections, we visualize our dataset for several values of $\mu$:
 
-# In[5]:
+# In[19]:
 
 
 def title(param):
@@ -92,7 +92,7 @@ def visualize(X, param, ax, log=False, labels_func=None):
     else:
         return ax.pcolormesh(X.real)
 
-def visualize_multiple(Xs, params, log=False, figsize=(20,6)):
+def visualize_multiple(Xs, params, log=False, figsize=(20,6), labels_func=None):
     if log:
         Xs[Xs == 0] = np.min(Xs[Xs != 0])
     
@@ -102,12 +102,14 @@ def visualize_multiple(Xs, params, log=False, figsize=(20,6)):
 
     axes = fig.subplots(nrows=1, ncols=5, sharey=True)
     
-    def labels_func(ax):
-        ax.set_yticks([0, N//2, N])
-        ax.set_yticklabels(['0', '$\pi$', '2$\pi$'])
+    if labels_func is None:
+        def labels_func_default(ax):
+            ax.set_yticks([0, N//2, N])
+            ax.set_yticklabels(['0', '$\pi$', '2$\pi$'])
         
-        ax.set_xticks([0, m//2, m])
-        ax.set_xticklabels(['-5', '0', '5'])
+            ax.set_xticks([0, m//2, m])
+            ax.set_xticklabels(['-5', '0', '5'])
+        labels_func = labels_func_default
     
     im = [visualize(X, param, ax, log, labels_func) for X, param, ax in zip(Xs, params, axes)][-1]
 
@@ -115,7 +117,7 @@ def visualize_multiple(Xs, params, log=False, figsize=(20,6)):
     plt.show()
 
 
-# In[6]:
+# In[20]:
 
 
 idxes = [0,2,4,6,8]
@@ -126,7 +128,7 @@ visualize_multiple(training_snapshots[idxes], training_params[idxes])
 # 
 # We now select several _unknown_ (or _testing_) parameters in order to assess the results obtained using the parametric approach. As you can see we consider testing parameters having dishomogeneous distances from our training parameters.
 
-# In[7]:
+# In[9]:
 
 
 similar_testing_params = [1,3,5,7,9]
@@ -182,7 +184,7 @@ plt.yticks([],[]);
 # 
 # We choose to retain the first 10 POD modes for each parameter, and set `svd_rank=-1` for our DMD instance, in order to protect us from divergent DMD modes which may ruin the results. We also provide an instance of an `RBF` interpolator to be used for the interpolation of POD coefficients.
 
-# In[8]:
+# In[10]:
 
 
 pdmd = ParametricDMD(DMD(svd_rank=-1), POD(rank=20), RBF())
@@ -191,7 +193,7 @@ pdmd.fit(training_snapshots, training_params)
 
 # We can now set the testing parameters by chaning the propery `parameters` of our instance of `ParametricDMD`, as well as the time-frame via the property `dmd_time` (see the other tutorials for an overview of the latter):
 
-# In[9]:
+# In[11]:
 
 
 pdmd.parameters = testing_params
@@ -200,7 +202,7 @@ pdmd.dmd_time['tend'] = pdmd.original_time['tend'] + N_nonpredict
 print(len(pdmd.dmd_timesteps), pdmd.dmd_timesteps)
 
 
-# In[10]:
+# In[12]:
 
 
 approximation = pdmd.reconstructed_data
@@ -209,20 +211,31 @@ approximation.shape
 
 # As you can see above we stored the result of the approximation (which comprises both reconstrction of known time instants and prediction of future time instants) into the variable `approximation`.
 
-# In[11]:
+# In[22]:
 
+
+# this is needed to visualize the time/space in the appropriate way
+def labels_func(ax):
+    l = len(pdmd.dmd_timesteps)
+    
+    ax.set_yticks([0, l//2, l])
+    ax.set_yticklabels(['3\pi', '4$\pi$', '5$\pi$'])
+
+    ax.set_xticks([0, m//2, m])
+    ax.set_xticklabels(['-5', '0', '5'])
 
 print('Approximation')
-visualize_multiple(approximation, testing_params, figsize=(20,2.5))
+visualize_multiple(approximation, testing_params, figsize=(20,2.5), labels_func=labels_func)
 print('Truth')
-visualize_multiple(testing_snapshots, testing_params, figsize=(20,2.5))
+visualize_multiple(testing_snapshots, testing_params, figsize=(20,2.5), labels_func=labels_func)
 print('Absolute error')
-visualize_multiple(np.abs(testing_snapshots.real - approximation.real), testing_params, figsize=(20,2.5))
+visualize_multiple(np.abs(testing_snapshots.real - approximation.real), 
+                   testing_params, figsize=(20,2.5), labels_func=labels_func)
 
 
 # Below we plot the dependency of the mean point-wise error of the reconstruction on the distance between the (untested) parameter and the nearest tested parameter in the training set:
 
-# In[22]:
+# In[14]:
 
 
 distances = np.abs(testing_params - training_params[similar_testing_params])
@@ -239,7 +252,7 @@ plt.ylabel('Mean point-wise error');
 # 
 # In order to apply this approach in `PyDMD`, you just need to pass a list of DMD instances in the constructor of `ParametricDMD`. Clearly you will need $p$ instances, where $p$ is the number of parameters in the training set.
 
-# In[12]:
+# In[15]:
 
 
 dmds = [DMD(svd_rank=-1) for _ in range(len(training_params))]
@@ -250,7 +263,7 @@ p_pdmd.fit(training_snapshots, training_params)
 
 # We set untested parameters and the time frame in which we want to reconstruct the system in the same way we did in the monolithic approach: 
 
-# In[13]:
+# In[16]:
 
 
 # setting unknown parameters and time
@@ -261,7 +274,7 @@ p_pdmd.dmd_time['tend'] = p_pdmd.original_time['tend'] + N_nonpredict
 
 # **Important**: Don't pass the same DMD instance $p$ times, since that would mean that this object is trained $p$ times on $p$ different training set, therefore only the last one is retained at the time in which the reconstruction is computed.
 
-# In[14]:
+# In[17]:
 
 
 approximation = p_pdmd.reconstructed_data
@@ -270,7 +283,7 @@ approximation.shape
 
 # Below we plot the point-wise absolute error:
 
-# In[15]:
+# In[18]:
 
 
 visualize_multiple(np.abs(testing_snapshots.real - approximation.real), testing_params, figsize=(20,2.5))
