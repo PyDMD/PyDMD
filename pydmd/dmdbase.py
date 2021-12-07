@@ -7,6 +7,7 @@ from .dmdoperator import DMDOperator
 import matplotlib.pyplot as plt
 
 import warnings
+import pickle
 from builtins import object
 from builtins import range
 from os.path import splitext
@@ -307,6 +308,41 @@ class DMDBase(object):
                 self.__class__.__name__
             )
         )
+
+    def save(self, fname):
+        """
+        Save the object to `fname` using the pickle module.
+
+        :param str fname: the name of file where the reduced order model will
+            be saved.
+
+        Example:
+
+        >>> from pydmd import DMD
+        >>> dmd = DMD(...) #  Construct here the rom
+        >>> dmd.fit(...)
+        >>> dmd.save('pydmd.dmd')
+        """
+        with open(fname, 'wb') as output:
+            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
+
+    @staticmethod
+    def load(fname):
+        """
+        Load the object from `fname` using the pickle module.
+
+        :return: The `ReducedOrderModel` loaded
+
+        Example:
+
+        >>> from pydmd import DMD
+        >>> dmd = DMD.load('pydmd.dmd')
+        >>> print(dmd.reconstructed_data)
+        """
+        with open(fname, 'rb') as output:
+            dmd = pickle.load(output)
+
+        return dmd
 
     @staticmethod
     def _col_major_2darray(X):

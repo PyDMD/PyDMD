@@ -532,3 +532,23 @@ class TestDmd(TestCase):
                     np.testing.assert_almost_equal(dmd.amplitudes[idx_new],
                         amp, decimal=6)
                     break
+
+    def test_save(self):
+        dmd = DMD(svd_rank=-1)
+        dmd.fit(X=sample_data)
+        dmd.save('pydmd.test')
+
+    def test_load(self):
+        dmd = DMD(svd_rank=-1)
+        dmd.fit(X=sample_data)
+        dmd.save('pydmd.test2')
+        loaded_dmd = DMD.load('pydmd.test2')
+        np.testing.assert_array_equal(dmd.reconstructed_data,
+                                      loaded_dmd.reconstructed_data)
+
+    def test_load(self):
+        dmd = DMD(svd_rank=-1)
+        dmd.fit(X=sample_data)
+        dmd.save('pydmd.test2')
+        loaded_dmd = DMD.load('pydmd.test2')
+        assert isinstance(loaded_dmd, DMD)
