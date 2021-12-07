@@ -1,7 +1,7 @@
 """
 Module for the parametric Dynamic Mode Decomposition.
 """
-
+import pickle
 import numpy as np
 
 
@@ -371,6 +371,42 @@ class ParametricDMD:
         return np.apply_along_axis(
             self._spatial_pod.expand, 2, interpolated_pod_modal_coefficients
         )
+
+    def save(self, fname):
+        """
+        Save the object to `fname` using the pickle module.
+
+        :param str fname: the name of file where the reduced order model will
+            be saved.
+
+        Example:
+
+        >>> from pydmd import ParametricDMD
+        >>> pdmd = ParametricDMD(...) #  Construct here the rom
+        >>> pdmd.fit(...)
+        >>> pdmd.save('pydmd.pdmd')
+        """
+        with open(fname, 'wb') as output:
+            pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
+
+    @staticmethod
+    def load(fname):
+        """
+        Load the object from `fname` using the pickle module.
+
+        :return: The `ReducedOrderModel` loaded
+
+        Example:
+
+        >>> from pydmd import ParametricDMD
+        >>> pdmd = ParametricDMD.load('pydmd.pdmd')
+        >>> print(pdmd.reconstructed_data)
+        """
+        with open(fname, 'rb') as output:
+            dmd = pickle.load(output)
+
+        return dmd
+
 
     def _predict_modal_coefficients(self):
         """

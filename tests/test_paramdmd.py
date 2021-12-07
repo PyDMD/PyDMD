@@ -334,3 +334,26 @@ class TestParamDmd(TestCase):
         assert rec.shape == (3,100,1000)
 
         np.testing.assert_allclose(rec.real, testing_data.real, atol=1.e-2)
+
+    def test_save(self):
+        p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
+        p.fit(training_data, params)
+        p.parameters = test_parameters
+        p.save('pydmd.test')
+
+    def test_load(self):
+        p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
+        p.fit(training_data, params)
+        p.parameters = test_parameters
+        p.save('pydmd.test2')
+        loaded_p = ParametricDMD.load('pydmd.test2')
+        np.testing.assert_array_equal(p.reconstructed_data,
+                                      loaded_p.reconstructed_data)
+
+    def test_load(self):
+        p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
+        p.fit(training_data, params)
+        p.parameters = test_parameters
+        p.save('pydmd.test2')
+        loaded_p = ParametricDMD.load('pydmd.test2')
+        assert isinstance(loaded_p, ParametricDMD)
