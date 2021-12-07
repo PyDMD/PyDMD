@@ -2,19 +2,20 @@
 Base module for the DMD: `fit` method must be implemented in inherited classes
 """
 from __future__ import division
-from functools import partial
-from .dmdoperator import DMDOperator
-import matplotlib.pyplot as plt
 
-import warnings
-import pickle
+from functools import partial
 from builtins import object
 from builtins import range
 from os.path import splitext
+import warnings
+import pickle
 
-import matplotlib as mpl
 import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 from past.utils import old_div
+
+from .dmdoperator import DMDOperator
 
 mpl.rcParams["figure.max_open_warning"] = 0
 
@@ -76,9 +77,16 @@ class DMDBase(object):
 
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-                 rescale_mode=None, forward_backward=False,
-                 sorted_eigs=False,):
+    def __init__(
+        self,
+        svd_rank=0,
+        tlsq_rank=0,
+        exact=False,
+        opt=False,
+        rescale_mode=None,
+        forward_backward=False,
+        sorted_eigs=False,
+    ):
 
         self._Atilde = DMDOperator(
             svd_rank=svd_rank,
@@ -323,7 +331,7 @@ class DMDBase(object):
         >>> dmd.fit(...)
         >>> dmd.save('pydmd.dmd')
         """
-        with open(fname, 'wb') as output:
+        with open(fname, "wb") as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
@@ -339,7 +347,7 @@ class DMDBase(object):
         >>> dmd = DMD.load('pydmd.dmd')
         >>> print(dmd.reconstructed_data)
         """
-        with open(fname, 'rb') as output:
+        with open(fname, "rb") as output:
             dmd = pickle.load(output)
 
         return dmd
@@ -601,9 +609,11 @@ and `max_distance_from_unity_outside` can be not `None`"""
                     """The combination of parameters does not make sense"""
                 )
 
-            return partial(DMDBase.ModesSelectors._stable_modes,
-                           max_distance_from_unity_inside=max_distance_from_unity_inside,
-                           max_distance_from_unity_outside=max_distance_from_unity_outside,)
+            return partial(
+                DMDBase.ModesSelectors._stable_modes,
+                max_distance_from_unity_inside=max_distance_from_unity_inside,
+                max_distance_from_unity_outside=max_distance_from_unity_outside,
+            )
 
         @staticmethod
         def _compute_integral_contribution(mode, dynamic):
@@ -957,8 +967,15 @@ and `max_distance_from_unity_outside` can be not `None`"""
         if not filename:
             plt.show()
 
-    def plot_snapshots_2D(self, index_snap=None, filename=None, x=None,
-                          y=None, order="C", figsize=(8, 8),):
+    def plot_snapshots_2D(
+        self,
+        index_snap=None,
+        filename=None,
+        x=None,
+        y=None,
+        order="C",
+        figsize=(8, 8),
+    ):
         """
         Plot the snapshots.
 
