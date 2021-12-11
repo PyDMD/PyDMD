@@ -512,15 +512,18 @@ matrix, or regularization methods.""".format(
             :return np.ndarray: An array of bool, where each "True" index means
                 that the corresponding DMD mode is selected.
             """
+            eigs_module = np.abs(dmd.eigs)
+
             return np.logical_and(
-                dmd.eigs < up_threshold,
-                dmd.eigs > low_threshold,
+                eigs_module < up_threshold,
+                eigs_module > low_threshold,
             )
 
         @staticmethod
         def threshold(low_threshold, up_threshold):
             """
-            Complete function of the modes selector `threshold`.
+            Retain only DMD modes associated with an eigenvalue whose module is
+            between `low_threshold` and `up_threshold`.
 
             :param float low_threshold: The minimum accepted module of an
                 eigenvalue.
