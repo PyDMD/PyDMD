@@ -58,7 +58,7 @@ class TestDmdBase(TestCase):
         dmd = DMDBase()
         # max/min throws an error if the array is empty (max used on empty
         # array)
-        dmd.operator._eigenvalues = np.array([], dtype=np.complex)
+        dmd.operator._eigenvalues = np.array([], dtype=complex)
         with self.assertRaises(ValueError):
             dmd.plot_eigs(show_axes=False, narrow_view=True, dpi=200)
 
@@ -197,6 +197,36 @@ class TestDmdBase(TestCase):
         exp = dmd.reconstructed_data
         dmd.select_modes(DMDBase.ModesSelectors.integral_contribution(2))
         np.testing.assert_array_almost_equal(exp, dmd.reconstructed_data)
+
+    def test_stabilize_modes(self):
+        class FakeDMD:
+            pass
+
+        class FakeDMDOperator:
+            pass
+
+        dmd = DMD()
+        fake_dmd_operator = FakeDMDOperator()
+
+        eigs = np.array([complex(0.3, 0.2), complex(0.8,0.5), 1, complex(1,1.e-2), 2, complex(2,1.e-2)])
+        amplitudes = np.array([1,2,3,4,5,6], dtype=complex)
+
+        setattr(fake_dmd_operator, '_eigenvalues', eigs)
+        setattr(fake_dmd_operator, 'eigenvalues', eigs)
+        setattr(dmd, '_Atilde', fake_dmd_operator)
+
+        setattr(dmd, '_b', amplitudes)
+
+        dmd.stabilize_modes(0.8, 1.2)
+
+        np.testing.assert_array_almost_equal(
+            dmd.operator._eigenvalues,
+            np.array([complex(0.3, 0.2), complex(0.8,0.5) / abs(complex(0.8,0.5)),
+                1, complex(1,1.e-2) / abs(complex(1,1.e-2)), 2, complex(2,1.e-2)]))
+
+        np.testing.assert_array_almost_equal(
+            dmd._b,
+            np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
     def test_enforce_ratio_y(self):
         dmd = DMDBase()
