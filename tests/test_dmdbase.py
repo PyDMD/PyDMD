@@ -164,7 +164,7 @@ class TestDmdBase(TestCase):
             pass
 
         fake_dmd = FakeDMD()
-        setattr(fake_dmd, 'eigs', np.array([1 + 1e-4, 2, 1 - 1e-2, 5, 1, 1 + 2*1e-3]))
+        setattr(fake_dmd, 'eigs', np.array([complex(1, 1e-4), 2, complex(1, 1e-2), 5, 1, complex(1, 5*1e-2)]))
 
         expected_result = np.array([False for _ in range(6)])
         expected_result[[1, 5]] = True
