@@ -14,10 +14,12 @@ from copy import deepcopy
 from scipy.linalg import block_diag
 
 from .dmdbase import DMDBase, DMDTimeDict
+from .dmd_modes_tuner import ModesSelectors, select_modes
 
 
-class BinaryTree():
+class BinaryTree:
     """Simple Binary tree"""
+
     def __init__(self, depth):
         self.depth = depth
         self.tree = [None] * len(self)
@@ -191,12 +193,13 @@ class MrDMD(DMDBase):
             for leaf in self.dmd_tree.index_leaves(level):
 
                 local_times = self.partial_time_interval(level, leaf)
-                if (local_times["t0"] <= t0 < local_times["tend"] or
-                        local_times["t0"] < tend <= local_times["tend"] or
-                        (
-                            t0 <= local_times["t0"] and
-                            tend >= local_times["tend"]
-                        )):
+                if (
+                    local_times["t0"] <= t0 < local_times["tend"]
+                    or local_times["t0"] < tend <= local_times["tend"]
+                    or (
+                        t0 <= local_times["t0"] and tend >= local_times["tend"]
+                    )
+                ):
                     indexes.append((level, leaf))
 
         indexes = np.unique(indexes, axis=0)
@@ -419,10 +422,11 @@ class MrDMD(DMDBase):
                 exponent = 2.0 * np.pi * rho
 
                 # retain slow modes
-                current_dmd.select_modes(
-                    DMDBase.ModesSelectors.threshold(
+                select_modes(
+                    current_dmd,
+                    ModesSelectors.threshold(
                         np.e ** (-exponent), np.e ** exponent
-                    )
+                    ),
                 )
 
             newX = np.hstack(
@@ -443,13 +447,14 @@ class MrDMD(DMDBase):
         return self
 
     def plot_eigs(
-            self,
-            show_axes=True,
-            show_unit_circle=True,
-            figsize=(8, 8),
-            title="",
-            level=None,
-            node=None):
+        self,
+        show_axes=True,
+        show_unit_circle=True,
+        figsize=(8, 8),
+        title="",
+        level=None,
+        node=None,
+    ):
         """
         Plot the eigenvalues.
 
