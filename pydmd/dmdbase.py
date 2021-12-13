@@ -464,18 +464,21 @@ matrix, or regularization methods.""".format(
         >>> dmd.fit(sample_data)
         >>> dmd.select_modes(stable_modes)
         """
-        selected_indeces = func(self)
+        selected_indexes = func(self)
+        all_indexes = set(np.arange(len(self.eigs)))
+        cut_indexes = np.array(all_indexes - set(selected_indexes))
 
         self.operator._eigenvalues = self.operator._eigenvalues[
-            selected_indeces
+            selected_indexes
         ]
-        self.operator._Lambda = self.operator._Lambda[selected_indeces]
+        self.operator._Lambda = self.operator._Lambda[selected_indexes]
 
         self.operator._eigenvectors = self.operator._eigenvectors[
-            :, selected_indeces
+            :, selected_indexes
         ]
-        self.operator._modes = self.operator._modes[:, selected_indeces]
+        self.operator._modes = self.operator._modes[:, selected_indexes]
 
+        # TODO: should improve this [code repetition]
         self.operator._Atilde = np.linalg.multi_dot(
             [
                 self.operator._eigenvectors,
@@ -485,6 +488,8 @@ matrix, or regularization methods.""".format(
         )
 
         self._b = self._compute_amplitudes()
+
+        return selected_indexes, cut_indexes
 
     class ModesSelectors:
         """
@@ -676,6 +681,58 @@ and `max_distance_from_unity_outside` can be not `None`"""
                 the criteria of integral contribution.
             """
             return partial(DMDBase.ModesSelectors._integral_contribution, n=n)
+
+    def stabilize_modes(
+        self,
+        inner_radius,
+        outer_radius=np.inf,
+    ):
+        """
+        Stabilize modes in a circular sector of radius [`inner_radius`,
+        `outer_radius`].
+
+        Stabilizing a mode means that the corresponding eigenvalue is divided
+        by its module (i.e. normalized) in order to make the associated
+        dynamic a trigonometric function with respect to the time (since the
+        eigenvalue is projected on the unit circle). At the same time, the
+        corresponding mode amplitude is multiplied by the former module of the
+        eigenvalue, in order to "recover" the correctness of the result in the
+        first time instants.
+
+        This approach may give better results in the prediction when one or
+        more eigenvalues are strongly unstable (i.e. the corresponding DMD mode
+        "explodes" several instants after the known time frame).
+
+        .. warning::
+            This method modifies in-place the instance of DMD on which it is
+            used.
+
+        In order to stabilize an unbounded (above) circular sector, the
+        parameter `outer_radius` should be set to `np.inf` (default).
+
+        :param float inner_radius: The inner radius of the circular sector to
+            be stabilized.
+        :param float outer_radius: The outer radius of the circular sector to
+            be stabilized.
+        """
+        eigs_module = np.abs(self.eigs)
+
+        # indexes associated with eigenvalues that must be stabilized
+        fixable_eigs_indexes = np.logical_and(
+            inner_radius < eigs_module,
+            eigs_module < outer_radius,
+        )
+
+        self._b[fixable_eigs_indexes] *= np.abs(
+            self.eigs[fixable_eigs_indexes]
+        )
+        self.operator._eigenvalues[fixable_eigs_indexes] /= np.abs(
+            self.eigs[fixable_eigs_indexes]
+        )
+
+        stabilized_indexes = np.where(fixable_eigs_indexes)[0]
+
+        return stabilized_indexes
 
     def _enforce_ratio(self, goal_ratio, supx, infx, supy, infy):
         """
