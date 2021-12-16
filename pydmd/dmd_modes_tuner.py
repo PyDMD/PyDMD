@@ -17,6 +17,8 @@ def select_modes(dmd, criteria, in_place=True, return_indexes=False):
     The class :class:`ModesSelectors` contains some pre-packed selector
     functions.
 
+    Example:
+
     .. code-block:: python
 
         >>> dmd = ...
@@ -148,6 +150,8 @@ class ModesSelectors:
     modes selectors functions to be used in `select_modes`.
 
     For instance, to select the first `x` modes by integral contributions:
+
+    Example:
 
     .. code-block:: python
 
@@ -340,3 +344,130 @@ and `max_distance_from_unity_outside` can be not `None`"""
             the criteria of integral contribution.
         """
         return partial(ModesSelectors._integral_contribution, n=n)
+
+
+selectors = {
+    "module_threshold": ModesSelectors.threshold,
+    "stable_modes": ModesSelectors.stable_modes,
+    "integral_contribution": ModesSelectors.integral_contribution,
+}
+
+
+class ModesTuner:
+    """Class for semi-automatic tuning of DMD modes.
+
+    This class generates a new instance from the instance passed to the
+    constructor, and modifies that one whenever one of the tuning methods
+    is called. Therefore there is no need to worry about subsequent
+    unwanted changes in the given instance.
+
+    `ModesTuner` provides a simplified interface to the tuning functions
+    :func:`select_modes` and :func:`stabilize_modes`, but in order to
+    have more control on what is happening (i.e. when to use in-place
+    tuning, or to check which modes have been changed) you may prefer to
+    use them instead.
+
+    :param dmd: An instance of DMD (will be copied via `deepcopy`,
+        therefore the given reference won't be modified afterwards).
+    :type dmd: pydmd.DMDBase
+    """
+
+    def __init__(self, dmd):
+        self._dmd = deepcopy(dmd)
+
+    @property
+    def dmd(self):
+        """Returns the private DMD instance that `ModesTuner` is working on.
+        Be aware that this instance is the internal instance owned by
+        `ModesTuner`, therefore it is going to be modified by calls to tuning
+        methods.
+
+        :return: The private DMD instance owned by `ModesTuner`.
+        :rtype: pydmd.DMDBase
+        """
+        return self._dmd
+
+    @property
+    def secure_copy(self):
+        """Returns a deep copy of the private DMD instance that `ModesTuner` is
+        working on. This is not going to be modified by calls to tuning
+        methods.
+
+        :return: A copy of the private DMD instance owned by `ModesTuner`.
+        :rtype: pydmd.DMDBase
+        """
+        return deepcopy(self.dmd)
+
+    def select(self, criteria, **kwargs):
+        r"""
+        Select the DMD modes by using the given `criteria`, which can be either
+        a string or a function. You can choose pre-packed criteria by passing
+        one of the allowed string values for criteria. In this case you need to
+        pass (as keyword arguments) the arguments needed to construct the
+        criteria (see example below).
+
+        Allowed string values for `criteria`:
+
+        * `'module_threshold'`: Retain modes such that the module of the corresponding eigenvalue is included in the interval [`low_threshold`, `up_threshold`] (cfr. :func:`ModesSelectors.threshold`);
+        * `'stable_modes'`: Retain modes such that the corresponding eigenvalue is not far from the unit circle (cfr. :func:`ModesSelectors.stable_modes`);
+        * `'integral_contribution'`: Retain the first `n` modes in terms of integral contribution (cfr. :func:`ModesSelectors.integral_contribution`).
+
+        You might want to read the documentation of
+        :class:`ModesSelectors` in order to get detailed info regarding the
+        behavior of each argument.
+
+        Example:
+
+        .. code-block:: python
+
+            >>> from pydmd.dmd_modes_tuner import ModesTuner
+            >>> mtuner = ModesTuner(dmd)
+            >>> mtuner.select('stable_modes', max_distance_from_unity_inside=1.e-1,
+                    max_distance_from_unity_outside=1.e-3)
+
+        :param criteria: Criteria used to select DMD modes. The allowed strings
+            are `module_threshold`, `stable_modes` and `integral_contribution`.
+            If `criteria` is a function it must take an instance of DMD as the
+            only parameter.
+        :type criteria: str or callable
+        :param \**kwargs: Parameters passed to the chosen criteria (if
+            `criteria` is a string).
+        """
+
+        if isinstance(criteria, str):
+            if criteria not in selectors:
+                raise ValueError("Could't find the specified criteria")
+            criteria = selectors[criteria](**kwargs)
+        if not callable(criteria):
+            raise ValueError("""You should provide a criteria to select DMD
+modes (either a string or a function)""")
+
+        select_modes(self.dmd, criteria)
+
+    def stabilize(self, inner_radius, outer_radius=np.inf):
+        """
+        Stabilize modes in a circular sector of radius [`inner_radius`,
+        `outer_radius`].
+
+        Stabilizing a mode means that the corresponding eigenvalue is divided
+        by its module (i.e. normalized) in order to make the associated
+        dynamic a trigonometric function with respect to the time (since the
+        eigenvalue is projected on the unit circle). At the same time, the
+        corresponding mode amplitude is multiplied by the former module of the
+        eigenvalue, in order to "recover" the correctness of the result in the
+        first time instants.
+
+        This approach may give better results in the prediction when one or
+        more eigenvalues are strongly unstable (i.e. the corresponding DMD mode
+        "explodes" several instants after the known time frame).
+
+        In order to stabilize an unbounded (above) circular sector, the
+        parameter `outer_radius` should be set to `np.inf` (default).
+
+        :param float inner_radius: The inner radius of the circular sector to
+            be stabilized.
+        :param float outer_radius: The outer radius of the circular sector to
+            be stabilized.
+        """
+
+        stabilize_modes(self.dmd, inner_radius, outer_radius)
