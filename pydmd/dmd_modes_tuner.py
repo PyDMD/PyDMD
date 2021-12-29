@@ -191,7 +191,7 @@ class ModesSelectors:
     def threshold(low_threshold, up_threshold):
         """
         Retain only DMD modes associated with an eigenvalue whose module is
-        between `low_threshold` and `up_threshold`.
+        between `low_threshold` and `up_threshold` (inclusive on both sides).
 
         :param float low_threshold: The minimum accepted module of an
             eigenvalue.
@@ -237,10 +237,36 @@ class ModesSelectors:
     ):
         """
         Select all the modes corresponding to eigenvalues whose distance
-        from the unit circle is less than a specified threshold. It is
-        possible to specify the distance separately for eigenvalues inside
+        from the unit circle is less than or equal to a specified threshold. It
+        is possible to specify the distance separately for eigenvalues inside
         and outside the unit circle, but you cannot set clashing
         thresholds.
+
+        The following are allowed combinations of parameters:
+
+        .. code-block:: python
+
+            >>> # the maximum allowed distance from the unit circle (both
+            ... # inside and outside) is 1.e-3.
+            >>> stable_modes(max_distance_from_unity=1.e-3)
+            >>> # the maximum allowed distance from the unit circle is 1.e-3
+            ... # inside and 1.e-4 outside.
+            >>> stable_modes(max_distance_from_unity_inside=1.e-3,
+            ...   max_distance_from_unity_outside=1.e-4)
+            >>> # the maximum allowed distance from the unit circle is 1.e-4
+            ... # outside and unspecified (i.e. infinity) inside.
+            >>> stable_modes(max_distance_from_unity_outside=1.e-4)
+
+        Since `max_distance_from_unity` controls both inside and outside
+        distance, you cannot set also `max_distance_from_unity_inside` or
+        `max_distance_from_unity_outside` simultaneously:
+
+        >>> # this is not allowed
+        >>> stable_modes(max_distance_from_unity=1.e-3,
+        ...     max_distance_from_unity_inside=1.e-4)
+
+        For code clarity reasons, the snippet above would have failed even if
+        `max_distance_from_unity_inside=1.e-3`.
 
         :param float max_distance_from_unity: The maximum distance from the
             unit circle. Defaults to `None`.
