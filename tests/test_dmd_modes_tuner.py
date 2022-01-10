@@ -340,6 +340,23 @@ def test_modes_tuner_inplace():
     setattr(fake_dmd, 'eigs', np.array([complex(1, 1e-4), 2, complex(1, 1e-2), 5, 1, complex(1, 5*1e-2)]))
 
     mtuner = ModesTuner(fake_dmd, in_place=True)
+    assert mtuner.get() == fake_dmd
+
+    mtuner._dmds[0].eigs[1] = 0
+    assert fake_dmd.eigs[1] == 0
+
+def test_modes_tuner_inplace_list():
+    class FakeDMD:
+        pass
+
+    fake_dmd = FakeDMD()
+    setattr(fake_dmd, 'eigs', np.array([complex(1, 1e-4), 2, complex(1, 1e-2), 5, 1, complex(1, 5*1e-2)]))
+    fake_dmd2 = FakeDMD()
+    setattr(fake_dmd, 'eigs', np.array([complex(1, 1e-4), 3, complex(1, 1e-2), 5, 1, complex(1, 5*1e-2)]))
+
+    mtuner = ModesTuner([fake_dmd, fake_dmd2], in_place=True)
+    assert mtuner.get()[0] == fake_dmd
+    assert mtuner.get()[1] == fake_dmd2
 
     mtuner._dmds[0].eigs[1] = 0
     assert fake_dmd.eigs[1] == 0
@@ -454,6 +471,86 @@ def test_modes_tuner_stabilize_multiple():
         np.testing.assert_array_almost_equal(
             dmd._b,
             np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
+
+def test_modes_tuner_subset():
+    class FakeDMDOperator:
+        pass
+
+    def cook_fake_dmd():
+        dmd = DMD()
+        fake_dmd_operator = FakeDMDOperator()
+
+        eigs = np.array([complex(0.3, 0.2), complex(0.8,0.5), 1, complex(1,1.e-2), 2, complex(2,1.e-2)])
+        amplitudes = np.array([1,2,3,4,5,6], dtype=complex)
+
+        setattr(fake_dmd_operator, '_eigenvalues', eigs)
+        setattr(fake_dmd_operator, 'eigenvalues', eigs)
+        setattr(dmd, '_Atilde', fake_dmd_operator)
+
+        setattr(dmd, '_b', amplitudes)
+
+        return dmd
+
+    dmd1 = cook_fake_dmd()
+    dmd2 = cook_fake_dmd()
+    dmd3 = cook_fake_dmd()
+
+    mtuner = ModesTuner([dmd1, dmd2, dmd3], in_place=True)
+    assert len(mtuner.subset([0,2]).get()) == 2
+    assert mtuner.subset([0,2]).get()[0] == dmd1
+    assert mtuner.subset([0,2]).get()[1] == dmd3
+
+    mtuner = ModesTuner([dmd1, dmd2, dmd3], in_place=False)
+    assert len(mtuner.subset([0,2]).get()) == 2
+    assert mtuner.subset([0,2]).get()[0] == mtuner._dmds[0]
+    assert mtuner.subset([0,2]).get()[1] == mtuner._dmds[2]
+
+def test_modes_tuner_stabilize_multiple_subset():
+    class FakeDMDOperator:
+        pass
+
+    def cook_fake_dmd():
+        dmd = DMD()
+        fake_dmd_operator = FakeDMDOperator()
+
+        eigs = np.array([complex(0.3, 0.2), complex(0.8,0.5), 1, complex(1,1.e-2), 2, complex(2,1.e-2)])
+        amplitudes = np.array([1,2,3,4,5,6], dtype=complex)
+
+        setattr(fake_dmd_operator, '_eigenvalues', eigs)
+        setattr(fake_dmd_operator, 'eigenvalues', eigs)
+        setattr(dmd, '_Atilde', fake_dmd_operator)
+
+        setattr(dmd, '_b', amplitudes)
+
+        return dmd
+
+    dmd1 = cook_fake_dmd()
+    dmd2 = cook_fake_dmd()
+    dmd3 = cook_fake_dmd()
+
+    mtuner = ModesTuner([dmd1, dmd2, dmd3])
+    mtuner.subset([0,2]).stabilize(inner_radius=0.8, outer_radius=1.2)
+    dmds = mtuner.get()
+
+    assert len(dmds) == 3
+
+    for i in range(3):
+        if i == 1:
+            continue
+        np.testing.assert_array_almost_equal(
+            dmds[i].operator._eigenvalues,
+            np.array([complex(0.3, 0.2), complex(0.8,0.5) / abs(complex(0.8,0.5)),
+                1, complex(1,1.e-2) / abs(complex(1,1.e-2)), 2, complex(2,1.e-2)]))
+        np.testing.assert_array_almost_equal(
+            dmds[i]._b,
+            np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
+
+    np.testing.assert_array_almost_equal(
+            dmds[1].operator._eigenvalues,
+            np.array([complex(0.3, 0.2), complex(0.8,0.5), 1, complex(1,1.e-2), 2, complex(2,1.e-2)]))
+    np.testing.assert_array_almost_equal(
+        dmds[1]._b,
+        np.array([1,2,3,4,5,6], dtype=complex))
 
 def test_modes_tuner_selectors():
     assert selectors['module_threshold'] == ModesSelectors.threshold
