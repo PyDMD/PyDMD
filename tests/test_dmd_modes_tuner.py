@@ -299,6 +299,18 @@ def test_modes_tuner_secure_copy():
     mtuner._dmd.eigs[1] = 0
     assert eigs[1] == 2
 
+def test_modes_tuner_inplace():
+    class FakeDMD:
+        pass
+
+    fake_dmd = FakeDMD()
+    setattr(fake_dmd, 'eigs', np.array([complex(1, 1e-4), 2, complex(1, 1e-2), 5, 1, complex(1, 5*1e-2)]))
+
+    mtuner = ModesTuner(fake_dmd, in_place=True)
+
+    mtuner._dmd.eigs[1] = 0
+    assert fake_dmd.eigs[1] == 0
+
 def test_modes_tuner_select_raises():
     class FakeDMD:
         pass
