@@ -396,10 +396,12 @@ class ModesTuner:
     :param dmd: An instance of DMD (will be copied via `deepcopy`,
         therefore the given reference won't be modified afterwards).
     :type dmd: pydmd.DMDBase
+    :param bool in_place: If `True`, this tuner works directly on the given
+        DMD instance.
     """
 
-    def __init__(self, dmd):
-        self._dmd = deepcopy(dmd)
+    def __init__(self, dmd, in_place=False):
+        self._dmd = dmd if in_place else deepcopy(dmd)
 
     @property
     def dmd(self):
@@ -417,7 +419,7 @@ class ModesTuner:
     def secure_copy(self):
         """Returns a deep copy of the private DMD instance that `ModesTuner` is
         working on. This is not going to be modified by calls to tuning
-        methods.
+        methods, and therefore provides a secure "snapshot" of the DMD.
 
         :return: A copy of the private DMD instance owned by `ModesTuner`.
         :rtype: pydmd.DMDBase
@@ -465,8 +467,10 @@ class ModesTuner:
                 raise ValueError("Could't find the specified criteria")
             criteria = selectors[criteria](**kwargs)
         if not callable(criteria):
-            raise ValueError("""You should provide a criteria to select DMD
-modes (either a string or a function)""")
+            raise ValueError(
+                """You should provide a criteria to select DMD
+modes (either a string or a function)"""
+            )
 
         select_modes(self.dmd, criteria)
 
