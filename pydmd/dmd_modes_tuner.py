@@ -406,6 +406,21 @@ class ModesTuner:
         dmds = dmds if self._init_received_list else [dmds]
         self._dmds = dmds if in_place else list(map(deepcopy, dmds))
 
+    def subset(self, indexes):
+        """
+        Generate a temporary instance of `ModesTuner` which operates on a
+        subset of the DMD instances held by this `ModesTuner`.
+
+        :param list indexes: List of indexes of the DMD instances to be put
+            into the subset.
+        :return ModesTuner: A `ModesTuner` which operates "in place" on the
+            DMD instances held by the caller `ModesTuner`.
+        """
+        if not self._init_received_list:
+            raise ValueError("Cannot index a single DMD instance.")
+
+        return ModesTuner([self._dmds[i] for i in indexes], in_place=True)
+
     def get(self):
         """Returns the private DMD instance(s) that `ModesTuner` is working on.
         Be aware that those instances are the internal instances owned by
