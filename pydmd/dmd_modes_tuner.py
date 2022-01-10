@@ -393,36 +393,64 @@ class ModesTuner:
     tuning, or to check which modes have been changed) you may prefer to
     use them instead.
 
-    :param dmd: An instance of DMD (will be copied via `deepcopy`,
-        therefore the given reference won't be modified afterwards).
-    :type dmd: pydmd.DMDBase
+    :param dmds: One or more instances of DMD.
+    :type dmd: list or pydmd.DMDBase
+    :param bool in_place: If `True`, this tuner works directly on the given
+        DMD instance.
     """
 
-    def __init__(self, dmd):
-        self._dmd = deepcopy(dmd)
+    def __init__(self, dmds, in_place=False):
+        # if True, we return a list since we received a list in the constructor
+        self._init_received_list = isinstance(dmds, list)
 
-    @property
-    def dmd(self):
-        """Returns the private DMD instance that `ModesTuner` is working on.
-        Be aware that this instance is the internal instance owned by
-        `ModesTuner`, therefore it is going to be modified by calls to tuning
-        methods.
+        dmds = dmds if self._init_received_list else [dmds]
+        self._dmds = dmds if in_place else list(map(deepcopy, dmds))
 
-        :return: The private DMD instance owned by `ModesTuner`.
-        :rtype: pydmd.DMDBase
+    def subset(self, indexes):
         """
-        return self._dmd
+        Generate a temporary instance of `ModesTuner` which operates on a
+        subset of the DMD instances held by this `ModesTuner`.
 
-    @property
-    def secure_copy(self):
-        """Returns a deep copy of the private DMD instance that `ModesTuner` is
-        working on. This is not going to be modified by calls to tuning
-        methods.
-
-        :return: A copy of the private DMD instance owned by `ModesTuner`.
-        :rtype: pydmd.DMDBase
+        :param list indexes: List of indexes of the DMD instances to be put
+            into the subset.
+        :return ModesTuner: A `ModesTuner` which operates "in place" on the
+            DMD instances held by the caller `ModesTuner`.
         """
-        return deepcopy(self.dmd)
+        if not self._init_received_list:
+            raise ValueError("Cannot index a single DMD instance.")
+
+        return ModesTuner([self._dmds[i] for i in indexes], in_place=True)
+
+    def get(self):
+        """Returns the private DMD instance(s) that `ModesTuner` is working on.
+        Be aware that those instances are the internal instances owned by
+        `ModesTuner`, therefore they are going going to be modified by
+        subsequent calls to tuning methods.
+
+        :return: The private DMD instance owned by `ModesTuner`, or a list of
+            DMD instances depending on the parameter received by the
+            constructor of this instance.
+        :rtype: list or pydmd.DMDBase
+        """
+
+        if self._init_received_list:
+            return self._dmds
+        return self._dmds[0]
+
+    def copy(self):
+        """Returns a deep copy of the private DMD instance(s) that `ModesTuner`
+        is working on. They are not going to be modified by subsequent calls to
+        tuning methods, and therefore provide a secure "snapshot" to the DMD(s).
+
+        :return: A copy of the private DMD instance owned by `ModesTuner`, or a
+            list of copies depending on the parameter received by the
+            constructor of this instance.
+        :rtype: list or pydmd.DMDBase
+        """
+
+        if self._init_received_list:
+            return list(map(deepcopy, self._dmds))
+        return deepcopy(self._dmds[0])
 
     def select(self, criteria, **kwargs):
         r"""
@@ -465,10 +493,13 @@ class ModesTuner:
                 raise ValueError("Could't find the specified criteria")
             criteria = selectors[criteria](**kwargs)
         if not callable(criteria):
-            raise ValueError("""You should provide a criteria to select DMD
-modes (either a string or a function)""")
+            raise ValueError(
+                """You should provide a criteria to select DMD
+modes (either a string or a function)"""
+            )
 
-        select_modes(self.dmd, criteria)
+        for dmd in self._dmds:
+            select_modes(dmd, criteria)
 
     def stabilize(self, inner_radius, outer_radius=np.inf):
         """
@@ -496,4 +527,5 @@ modes (either a string or a function)""")
             be stabilized.
         """
 
-        stabilize_modes(self.dmd, inner_radius, outer_radius)
+        for dmd in self._dmds:
+            stabilize_modes(dmd, inner_radius, outer_radius)
