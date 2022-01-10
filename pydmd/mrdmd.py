@@ -434,7 +434,7 @@ class MrDMD(DMDBase):
                     self.dmd_tree[level, leaf].reconstructed_data
                     for leaf in self.dmd_tree.index_leaves(level)
                 ]
-            )
+            ).astype(X.dtype)
             X -= newX
 
         self._dmd_time = DMDTimeDict(
