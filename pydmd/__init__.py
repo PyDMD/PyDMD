@@ -17,3 +17,4 @@ from .dmdc import DMDc
 from .optdmd import OptDMD
 from .spdmd import SpDMD
 from .paramdmd import ParametricDMD
+from .dmd_modes_tuner import ModesTuner
