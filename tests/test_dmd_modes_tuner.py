@@ -1,5 +1,6 @@
 from pytest import raises
 import numpy as np
+from copy import deepcopy
 
 from pydmd import DMD
 from pydmd.dmd_modes_tuner import select_modes, stabilize_modes, ModesSelectors, ModesTuner, selectors
@@ -20,6 +21,46 @@ def test_select_modes():
     select_modes(dmd, stable_modes)
     np.testing.assert_array_almost_equal(exp, dmd.reconstructed_data)
 
+def test_select_modes_nullify():
+    def stable_modes(dmd_object):
+        toll = 1e-3
+        return np.abs(np.abs(dmd_object.eigs) - 1) < toll
+    dmd = DMD(svd_rank=10)
+    dmd.fit(sample_data)
+    dmdc = deepcopy(dmd)
+
+    select_modes(dmd, stable_modes, nullify_amplitudes=True)
+
+    assert len(dmd.eigs) == len(dmdc.eigs)
+    assert dmd.modes.shape == dmdc.modes.shape
+    assert len(dmd.amplitudes) == len(dmdc.amplitudes)
+
+def test_select_modes_nullified_indexes():
+    def stable_modes(dmd_object):
+        toll = 1e-3
+        return np.abs(np.abs(dmd_object.eigs) - 1) < toll
+    dmd = DMD(svd_rank=10)
+    dmd.fit(sample_data)
+    dmdc = deepcopy(dmd)
+
+    _, cut_indexes = select_modes(dmd, stable_modes, nullify_amplitudes=False, return_indexes=True)
+    select_modes(dmdc, stable_modes, nullify_amplitudes=True)
+
+    assert all(dmdc._b[cut_indexes] == 0)
+
+def test_select_modes_nullify_result():
+    def stable_modes(dmd_object):
+        toll = 1e-3
+        return np.abs(np.abs(dmd_object.eigs) - 1) < toll
+    dmd = DMD(svd_rank=10)
+    dmd.fit(sample_data)
+    dmdc = deepcopy(dmd)
+
+    select_modes(dmd, stable_modes, nullify_amplitudes=False)
+    select_modes(dmdc, stable_modes, nullify_amplitudes=True)
+
+    np.testing.assert_array_almost_equal(dmd.reconstructed_data, dmdc.reconstructed_data)
+
 def test_select_modes_index():
     class FakeDMDOperator:
         pass
@@ -38,10 +79,7 @@ def test_select_modes_index():
     setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
 
     setattr(fake_dmd, '_Atilde', fake_dmd_operator)
-
-    def fake_cmp_amplitudes():
-        pass
-    setattr(fake_dmd, '_compute_amplitudes', fake_cmp_amplitudes)
+    setattr(fake_dmd, '_b', np.zeros(len(eigs)))
 
     _, idx = select_modes(fake_dmd, ModesSelectors.stable_modes(max_distance_from_unity=1e-3), return_indexes=True)
     np.testing.assert_array_equal(idx, [1,2,3])
@@ -67,12 +105,9 @@ def test_select_modes_index_and_deepcopy():
     setattr(fake_dmd_operator, '_eigenvectors', np.zeros((1, len(eigs))))
     setattr(fake_dmd_operator, '_modes', np.zeros((1, len(eigs))))
     setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
+    setattr(fake_dmd, '_b', np.zeros(len(eigs)))
 
     setattr(fake_dmd, '_Atilde', fake_dmd_operator)
-
-    def fake_cmp_amplitudes():
-        pass
-    setattr(fake_dmd, '_compute_amplitudes', fake_cmp_amplitudes)
 
     dmd2, idx = select_modes(fake_dmd, ModesSelectors.stable_modes(max_distance_from_unity=1e-3), in_place=False, return_indexes=True)
     np.testing.assert_array_equal(idx, [1,2,3])
@@ -394,12 +429,9 @@ def test_modes_tuner_select():
     setattr(fake_dmd_operator, '_eigenvectors', np.zeros((1, len(eigs))))
     setattr(fake_dmd_operator, '_modes', np.zeros((1, len(eigs))))
     setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
+    setattr(fake_dmd, '_b', np.zeros(len(eigs)))
 
     setattr(fake_dmd, '_Atilde', fake_dmd_operator)
-
-    def fake_cmp_amplitudes():
-        pass
-    setattr(fake_dmd, '_compute_amplitudes', fake_cmp_amplitudes)
 
     mtuner = ModesTuner(fake_dmd)
     mtuner.select('stable_modes', max_distance_from_unity=1e-3)
@@ -561,6 +593,43 @@ def test_modes_tuner_stabilize_multiple_subset():
     np.testing.assert_array_almost_equal(
         dmds[1]._b,
         np.array([1,2,3,4,5,6], dtype=complex))
+
+def test_modes_tuner_select_nullify():
+    def stable_modes(dmd_object):
+        toll = 1e-3
+        return np.abs(np.abs(dmd_object.eigs) - 1) < toll
+    dmd = DMD(svd_rank=10)
+    dmd.fit(sample_data)
+    dmdc = deepcopy(dmd)
+
+    ModesTuner(dmd, in_place=True).select(stable_modes, nullify_amplitudes=True)
+
+    assert len(dmd.eigs) == len(dmdc.eigs)
+    assert dmd.modes.shape == dmdc.modes.shape
+    assert len(dmd.amplitudes) == len(dmdc.amplitudes)
+
+def test_modes_tuner_select_nullify_result():
+    def stable_modes(dmd_object):
+        toll = 1e-3
+        return np.abs(np.abs(dmd_object.eigs) - 1) < toll
+    dmd = DMD(svd_rank=10)
+    dmd.fit(sample_data)
+    dmdc = deepcopy(dmd)
+
+    ModesTuner(dmd, in_place=True).select(stable_modes, nullify_amplitudes=False)
+    ModesTuner(dmdc, in_place=True).select(stable_modes, nullify_amplitudes=True)
+
+    np.testing.assert_array_almost_equal(dmd.reconstructed_data, dmdc.reconstructed_data)
+
+def test_modes_tuner_index_scalar_dmd_raises():
+    def stable_modes(dmd_object):
+        toll = 1e-3
+        return np.abs(np.abs(dmd_object.eigs) - 1) < toll
+    dmd = DMD(svd_rank=10)
+    dmd.fit(sample_data)
+
+    with raises(ValueError):
+        ModesTuner(dmd).subset([0])
 
 def test_modes_tuner_selectors():
     assert selectors['module_threshold'] == ModesSelectors.threshold
