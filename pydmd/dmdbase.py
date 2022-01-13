@@ -59,6 +59,10 @@ class DMDBase(object):
         magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
         part to break ties) if `sorted_eigs='real'`. Default: False.
     :type sorted_eigs: {'real', 'abs'} or False
+    :param tikhonov: tikhonov parameter for regularization
+        If 0, no regularization is applied, if float, it is used as the lambda tikhonov 
+        parameter
+    :type tikhonov: int or float
 
     :cvar dict original_time: dictionary that contains information about the
         time window where the system is sampled:
@@ -85,6 +89,7 @@ class DMDBase(object):
         rescale_mode=None,
         forward_backward=False,
         sorted_eigs=False,
+        tikhonov=0,
     ):
 
         self._Atilde = DMDOperator(
@@ -93,6 +98,7 @@ class DMDBase(object):
             rescale_mode=rescale_mode,
             forward_backward=forward_backward,
             sorted_eigs=sorted_eigs,
+            tikhonov=tikhonov,
         )
 
         self._tlsq_rank = tlsq_rank

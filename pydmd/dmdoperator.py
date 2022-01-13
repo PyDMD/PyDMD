@@ -32,15 +32,20 @@ class DMDOperator():
         magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
         part to break ties) if `sorted_eigs='real'`. Default: False.
     :type sorted_eigs: {'real', 'abs'} or False
+    :param tikhonov: tikhonov parameter for regularization
+        If 0, no regularization is applied, if float, it is used as the lambda tikhonov 
+        parameter
+    :type tikhonov: int or float
     """
 
     def __init__(self, svd_rank, exact, forward_backward, rescale_mode,
-                 sorted_eigs):
+                 sorted_eigs, tikhonov):
         self._exact = exact
         self._rescale_mode = rescale_mode
         self._svd_rank = svd_rank
         self._forward_backward = forward_backward
         self._sorted_eigs = sorted_eigs
+        self._tikhonov = tikhonov
 
     def compute_operator(self, X, Y):
         """
@@ -58,6 +63,8 @@ class DMDOperator():
 
         U, s, V = compute_svd(X, self._svd_rank)
 
+        if self._tikhonov:
+            self._norm_X = np.linalg.norm(X)
         atilde = self._least_square_operator(U, s, V, Y)
 
         if self._forward_backward:
@@ -145,6 +152,8 @@ class DMDOperator():
         :return: the lowrank operator
         :rtype: numpy.ndarray
         """
+        if self._tikhonov:
+            s = (s**2 + self._tikhonov * self._norm_X) * np.reciprocal(s)
         return np.linalg.multi_dot([U.T.conj(), Y, V]) * np.reciprocal(s)
 
     def _compute_eigenquantities(self):
@@ -223,6 +232,8 @@ class DMDOperator():
 
         # compute the eigenvectors of the high-dimensional operator
         if self._exact:
+            if self._tikhonov:
+                Sigma = (Sigma**2 + self._tikhonov * self._norm_X) * np.reciprocal(Sigma)     
             high_dimensional_eigenvectors = ((Y.dot(V) *
                                               np.reciprocal(Sigma)).dot(W))
         else:

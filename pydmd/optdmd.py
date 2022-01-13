@@ -53,7 +53,7 @@ class DMDOptOperator(DMDOperator):
 
     def __init__(self, svd_rank, factorization):
         super().__init__(svd_rank=svd_rank, exact=True,
-            forward_backward=False, rescale_mode=None, sorted_eigs=False)
+            forward_backward=False, rescale_mode=None, sorted_eigs=False, tikhonov=0)
         self._factorization = factorization
 
     @property
