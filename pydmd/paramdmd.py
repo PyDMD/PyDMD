@@ -67,14 +67,23 @@ class ParametricDMD:
     @property
     def dmd_time(self):
         """
-        The time dictionary used by this instance, which coincides with the
-        dictionary used by the reference of this instance (see
+        The time dictionary used by the reference DMD instance (see also
         :func:`_reference_dmd`).
 
-        :return: The time dictionary used by this instance.
-        :rtype: dict
+        :getter: Return the time dictionary used by the reference DMD instance.
+        :setter: Set the given time dictionary in the field `dmd_time` for all
+            DMD instances.
+        :type: pydmd.dmdbase.DMDTimeDict
         """
         return self._reference_dmd.dmd_time
+
+    @dmd_time.setter
+    def dmd_time(self, value):
+        if isinstance(self._dmd, list):
+            for dmd in self._dmd:
+                dmd.dmd_time = value
+        else:
+            self._reference_dmd.dmd_time = value
 
     @property
     def dmd_timesteps(self):
@@ -383,7 +392,7 @@ class ParametricDMD:
         >>> pdmd.fit(...)
         >>> pdmd.save('pydmd.pdmd')
         """
-        with open(fname, 'wb') as output:
+        with open(fname, "wb") as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
@@ -399,11 +408,10 @@ class ParametricDMD:
         >>> pdmd = ParametricDMD.load('pydmd.pdmd')
         >>> print(pdmd.reconstructed_data)
         """
-        with open(fname, 'rb') as output:
+        with open(fname, "rb") as output:
             dmd = pickle.load(output)
 
         return dmd
-
 
     def _predict_modal_coefficients(self):
         """
