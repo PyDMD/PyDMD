@@ -112,7 +112,7 @@ To run tests locally (`pytest` is required):
 ## Examples and Tutorials
 You can find useful tutorials on how to use the package in the [tutorials](tutorials/README.md) folder.
 
-Here we show a simple application (taken from [tutorial 2](tutorials/tutorial-2-adv-dmd.ipynb)): we collect few snapshots from a toy system with some noise and reconstruct the entire system evolution.
+Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/tutorial-2-adv-dmd.ipynb)): we collect few snapshots from a toy system with some noise and reconstruct the entire system evolution.
 <p align="center">
 <img src="readme/dmd-example.png" alt>
 <em>The original snapshots used as input for the dynamic mode decomposition</em>
