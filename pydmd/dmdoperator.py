@@ -46,6 +46,7 @@ class DMDOperator():
         self._forward_backward = forward_backward
         self._sorted_eigs = sorted_eigs
         self._tikhonov = tikhonov
+        self._norm_X = None
 
     def compute_operator(self, X, Y):
         """
