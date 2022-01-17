@@ -60,8 +60,8 @@ class DMDBase(object):
         part to break ties) if `sorted_eigs='real'`. Default: False.
     :type sorted_eigs: {'real', 'abs'} or False
     :param tikhonov: tikhonov parameter for regularization
-        If 0, no regularization is applied, if float, it is used as the lambda tikhonov 
-        parameter
+        If None, no regularization is applied, if float, it is used as the
+        lambda tikhonov parameter
     :type tikhonov: int or float
 
     :cvar dict original_time: dictionary that contains information about the

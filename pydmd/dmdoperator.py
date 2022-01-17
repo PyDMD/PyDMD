@@ -33,8 +33,8 @@ class DMDOperator():
         part to break ties) if `sorted_eigs='real'`. Default: False.
     :type sorted_eigs: {'real', 'abs'} or False
     :param tikhonov: tikhonov parameter for regularization
-        If 0, no regularization is applied, if float, it is used as the lambda tikhonov 
-        parameter
+        If None, no regularization is applied, if float, it is used as the
+        lambda tikhonov parameter
     :type tikhonov: int or float
     """
 
@@ -233,7 +233,8 @@ class DMDOperator():
         # compute the eigenvectors of the high-dimensional operator
         if self._exact:
             if self._tikhonov:
-                Sigma = (Sigma**2 + self._tikhonov * self._norm_X) * np.reciprocal(Sigma)     
+                Sigma = (Sigma**2 + self._tikhonov * self._norm_X) * \
+                    np.reciprocal(Sigma)
             high_dimensional_eigenvectors = ((Y.dot(V) *
                                               np.reciprocal(Sigma)).dot(W))
         else:

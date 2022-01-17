@@ -8,3 +8,6 @@ pydmd\.egg-info/
 .idea/*
 
 tutorials/\.ipynb_checkpoints/
+
+# Vscode
+.vscode/*
