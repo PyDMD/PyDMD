@@ -40,7 +40,7 @@ class DMDControlOperator(DMDOperator):
                                                  rescale_mode=None,
                                                  forward_backward=False,
                                                  sorted_eigs=False,
-                                                 tikhonov=0)
+                                                 tikhonov_regularization=None)
         self._svd_rank_omega = svd_rank_omega
         self._tlsq_rank = tlsq_rank
 

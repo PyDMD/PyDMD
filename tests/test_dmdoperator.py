@@ -17,7 +17,7 @@ sample_data = np.load('tests/test_datasets/input_sample.npy')
 class TestDmdOperator(TestCase):
     def test_constructor(self):
         operator = DMDOperator(svd_rank=2, exact=True, forward_backward=False,
-            rescale_mode='auto', sorted_eigs=False, tikhonov=0)
+            rescale_mode='auto', sorted_eigs=False, tikhonov_regularization=None)
 
         assert operator._svd_rank == 2
         assert operator._exact == True
@@ -26,7 +26,7 @@ class TestDmdOperator(TestCase):
 
     def test_noncompute_error(self):
         operator = DMDOperator(svd_rank=2, exact=True, forward_backward=False,
-            rescale_mode='auto', sorted_eigs=False, tikhonov=0)
+            rescale_mode='auto', sorted_eigs=False, tikhonov_regularization=None)
 
         with self.assertRaises(ValueError):
             operator.shape
@@ -48,7 +48,7 @@ class TestDmdOperator(TestCase):
 
     def test_compute_operator(self):
         operator = DMDOperator(svd_rank=0, exact=True, forward_backward=False,
-            rescale_mode='auto', sorted_eigs=False, tikhonov=0)
+            rescale_mode='auto', sorted_eigs=False, tikhonov_regularization=None)
         operator.compute_operator(np.ones((3, 3)), np.ones((3, 3)))
 
         assert operator.as_numpy_array is not None
@@ -61,14 +61,14 @@ class TestDmdOperator(TestCase):
     # values of X
     def test_rescalemode_auto_singular_values(self):
         operator = DMDOperator(svd_rank=0, exact=True, forward_backward=False,
-            rescale_mode='auto', sorted_eigs=False, tikhonov=0)
+            rescale_mode='auto', sorted_eigs=False, tikhonov_regularization=None)
         operator.compute_operator(np.ones((3, 3)), np.ones((3, 3)))
         np.testing.assert_almost_equal(operator._rescale_mode, np.array([3.]),
             decimal=1)
 
     def test_call(self):
         operator = DMDOperator(svd_rank=2, exact=True, forward_backward=False,
-            rescale_mode=None, sorted_eigs=False, tikhonov=0)
+            rescale_mode=None, sorted_eigs=False, tikhonov_regularization=None)
 
         X = sample_data[:, :-1]
         Y = sample_data[:, 1:]
@@ -82,18 +82,18 @@ class TestDmdOperator(TestCase):
 
     def test_compute_eigenquantities_wrong_rescalemode(self):
         operator = DMDOperator(svd_rank=0, exact=True, forward_backward=False,
-            rescale_mode=4, sorted_eigs=False, tikhonov=0)
+            rescale_mode=4, sorted_eigs=False, tikhonov_regularization=None)
         with self.assertRaises(ValueError):
             operator.compute_operator(np.ones((3, 3)), np.ones((3, 3)))
 
         operator = DMDOperator(svd_rank=0, exact=True, forward_backward=False,
-            rescale_mode=np.ones((4,)), sorted_eigs=False, tikhonov=0)
+            rescale_mode=np.ones((4,)), sorted_eigs=False, tikhonov_regularization=None)
         with self.assertRaises(ValueError):
             operator.compute_operator(np.ones((3, 3)), np.ones((3, 3)))
 
     def test_plot_operator(self):
         operator = DMDOperator(svd_rank=2, exact=True, forward_backward=False,
-            rescale_mode=None, sorted_eigs=False, tikhonov=0)
+            rescale_mode=None, sorted_eigs=False, tikhonov_regularization=None)
 
         X = sample_data[:, :-1]
         Y = sample_data[:, 1:]

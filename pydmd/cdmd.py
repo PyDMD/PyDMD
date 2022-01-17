@@ -44,12 +44,12 @@ class CDMDOperator(DMDOperator):
     """
 
     def __init__(self, svd_rank, rescale_mode, forward_backward, sorted_eigs,
-                tikhonov):
+                tikhonov_regularization):
         super().__init__(svd_rank=svd_rank, exact=True,
                          rescale_mode=rescale_mode,
                          forward_backward=forward_backward,
                          sorted_eigs=sorted_eigs,
-                         tikhonov=tikhonov)
+                         tikhonov_regularization=tikhonov_regularization)
         self._Atilde = None
 
     def compute_operator(self, compressedX, compressedY, nonCompressedY):
@@ -144,7 +144,7 @@ class CDMD(DMDBase):
 
     def __init__(self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform',
                  opt=False, rescale_mode=None, forward_backward=False,
-                 sorted_eigs=False, tikhonov=0):
+                 sorted_eigs=False, tikhonov_regularization=None):
 
         self._tlsq_rank = tlsq_rank
         self._opt = opt
@@ -154,7 +154,8 @@ class CDMD(DMDBase):
                                     rescale_mode=rescale_mode,
                                     forward_backward=forward_backward,
                                     sorted_eigs=sorted_eigs,
-                                    tikhonov=tikhonov)
+                                    tikhonov_regularization=
+                                    tikhonov_regularization)
 
     @property
     def compression_matrix(self):
