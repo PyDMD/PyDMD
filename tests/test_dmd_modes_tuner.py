@@ -2,8 +2,10 @@ from pytest import raises
 import numpy as np
 from copy import deepcopy
 
-from pydmd import DMD
+from pydmd import DMD, CDMD, DMD, DMDBase, DMDc, FbDMD, HankelDMD, HODMD, MrDMD, OptDMD, ParametricDMD, SpDMD
 from pydmd.dmd_modes_tuner import select_modes, stabilize_modes, ModesSelectors, ModesTuner, selectors
+from ezyrb import POD, RBF
+import pytest
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -625,3 +627,17 @@ def test_modes_tuner_selectors():
     assert selectors['module_threshold'] == ModesSelectors.threshold
     assert selectors['stable_modes'] == ModesSelectors.stable_modes
     assert selectors['integral_contribution'] == ModesSelectors.integral_contribution
+
+@pytest.mark.parametrize("dmd", [CDMD(svd_rank=-1), DMD(svd_rank=-1), DMDc(svd_rank=-1), FbDMD(svd_rank=-1),
+    HankelDMD(svd_rank=-1, d=3), HODMD(svd_rank=-1, d=3), MrDMD(DMD(svd_rank=-1)), OptDMD(svd_rank=-1),
+    ParametricDMD(DMD(svd_rank=-1), POD(), None)])
+def test_modes_selector_all_dmd_types(dmd):
+    print('--------------------------- {} ---------------------------'.format(type(dmd)))
+    if isinstance(dmd, ParametricDMD):
+        repeated = np.repeat(sample_data[None], 10, axis=0)
+        dmd.fit(repeated + np.random.rand(*repeated.shape), np.ones(10))
+    else:
+        dmd.fit(sample_data)
+
+    ModesTuner(dmd, in_place=True).select('integral_contribution', n=3).stabilize(1-1.e-3)
+    assert True
