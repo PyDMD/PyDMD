@@ -139,10 +139,11 @@ class CDMD(DMDBase):
     def __init__(self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform',
                  opt=False, rescale_mode=None, forward_backward=False,
                  sorted_eigs=False):
-
         self._tlsq_rank = tlsq_rank
         self._opt = opt
         self._compression_matrix = compression_matrix
+
+        self._modes_activation_bitmask = None
 
         self._Atilde = CDMDOperator(svd_rank=svd_rank,
                                     rescale_mode=rescale_mode,

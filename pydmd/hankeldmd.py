@@ -268,6 +268,14 @@ class HankelDMD(DMDBase):
     def svd_rank(self):
         return self._sub_dmd.svd_rank
 
+    @property
+    def modes_activation_bitmask(self):
+        return self._sub_dmd.modes_activation_bitmask
+
+    @modes_activation_bitmask.setter
+    def modes_activation_bitmask(self, value):
+        self._sub_dmd.modes_activation_bitmask = value
+
     def fit(self, X):
         """
         Compute the Dynamic Modes Decomposition to the input data.
