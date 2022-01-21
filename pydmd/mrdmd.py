@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from copy import deepcopy
 from scipy.linalg import block_diag
 
-from .dmdbase import DMDBase, DMDTimeDict
+from .dmdbase import DMDBase
 from .dmd_modes_tuner import ModesSelectors, select_modes
 
 
@@ -78,36 +78,6 @@ class MrDMD(DMDBase):
 
     def __iter__(self):
         return self.dmd_tree.__iter__()
-
-    @property
-    def original_time(self):
-        """
-        Returns the dictionary that contains information about the
-        time window where the system is sampled:
-
-           - `t0` is the time of the first input snapshot;
-           - `tend` is the time of the last input snapshot;
-           - `dt` is the delta time between the snapshots.
-
-        :return: the original time window information.
-        :rtype: dict
-        """
-        return self._original_time
-
-    @property
-    def dmd_time(self):
-        """
-        Returns the dictionary that contains information about the
-        time window where the system is reconstructed:
-
-           - `t0` is the time of the first input snapshot;
-           - `tend` is the time of the last input snapshot;
-           - `dt` is the delta time between the snapshots.
-
-        :return: the reconstruction time window information.
-        :rtype: dict
-        """
-        return self._dmd_time
 
     @property
     def modes(self):
@@ -437,10 +407,7 @@ class MrDMD(DMDBase):
             ).astype(X.dtype)
             X -= newX
 
-        self._dmd_time = DMDTimeDict(
-            dict(t0=0, tend=self._snapshots.shape[1], dt=1)
-        )
-        self._original_time = DMDTimeDict(
+        self._set_initial_time_dictionary(
             dict(t0=0, tend=self._snapshots.shape[1], dt=1)
         )
 

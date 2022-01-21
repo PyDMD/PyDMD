@@ -8,7 +8,7 @@ with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.
 from past.utils import old_div
 import numpy as np
 
-from .dmdbase import DMDBase, DMDTimeDict
+from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .utils import compute_tlsq, compute_svd
 
@@ -281,9 +281,9 @@ class DMDc(DMDBase):
         X = self._snapshots[:, :-1]
         Y = self._snapshots[:, 1:]
 
-        self.original_time = DMDTimeDict(
-            {'t0': 0, 'tend': n_samples - 1, 'dt': 1})
-        self.dmd_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
+        self._set_initial_time_dictionary(
+            {"t0": 0, "tend": n_samples - 1, "dt": 1}
+        )
 
         if B is None:
             self._Atilde = DMDBUnknownOperator(**self._dmd_operator_kwargs)

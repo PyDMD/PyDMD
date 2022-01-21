@@ -8,7 +8,7 @@ Applied Dynamical Systems, 2017, 16.4: 2096-2126.
 """
 import numpy as np
 
-from .dmdbase import DMDBase, DMDTimeDict
+from .dmdbase import DMDBase
 from .dmd import DMD
 
 
@@ -281,9 +281,8 @@ class HankelDMD(DMDBase):
 
         # Default timesteps
         n_samples = snp.shape[1]
-        self.original_time = DMDTimeDict(
+        self._set_initial_time_dictionary(
             {"t0": 0, "tend": n_samples - 1, "dt": 1}
         )
-        self.dmd_time = DMDTimeDict({"t0": 0, "tend": n_samples - 1, "dt": 1})
 
         return self
