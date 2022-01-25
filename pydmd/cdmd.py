@@ -37,7 +37,7 @@ class CDMDOperator(DMDOperator):
         magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
         part to break ties) if `sorted_eigs='real'`. Default: False.
     :type sorted_eigs: {'real', 'abs'} or False
-        :param tikhonov_regularization: Tikhonov parameter for the regularization.
+    :param tikhonov_regularization: Tikhonov parameter for the regularization.
         If `None`, no regularization is applied, if `float`, it is used as the
         :math:`\lambda` tikhonov parameter.
     :type tikhonov_regularization: int or float
@@ -140,7 +140,7 @@ class CDMD(DMDBase):
         magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
         part to break ties) if `sorted_eigs='real'`. Default: False.
     :type sorted_eigs: {'real', 'abs'} or False
-        :param tikhonov_regularization: Tikhonov parameter for the regularization.
+    :param tikhonov_regularization: Tikhonov parameter for the regularization.
         If `None`, no regularization is applied, if `float`, it is used as the
         :math:`\lambda` tikhonov parameter.
     :type tikhonov_regularization: int or float
