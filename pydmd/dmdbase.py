@@ -102,8 +102,8 @@ class DMDBase(object):
         )
 
         self._tlsq_rank = tlsq_rank
-        self.original_time = None
-        self.dmd_time = None
+        self._original_time = None
+        self._dmd_time = None
         self._opt = opt
 
         self._b = None  # amplitudes
@@ -309,6 +309,81 @@ class DMDBase(object):
         :rtype: numpy.ndarray
         """
         return self._b
+
+    @property
+    def original_time(self):
+        """
+        A dictionary which contains information about the time window used to
+        fit this DMD instance.
+
+        Inside the dictionary:
+
+        ======  ====================================================================================
+        Key     Value
+        ======  ====================================================================================
+        `t0`    Time of the first input snapshot (0 by default).
+        `tend`  Time of the last input snapshot (usually corresponds to the number of snapshots).
+        `dt`    Timestep between two snapshots (1 by default).
+        ======  ====================================================================================
+
+        :return: A dict which contains info about the input time frame.
+        :rtype: dict
+        """
+        if self._original_time is None:
+            raise RuntimeError(
+                """
+_set_initial_time_dictionary() has not been called, did you call fit()?"""
+            )
+        return self._original_time
+
+    @property
+    def dmd_time(self):
+        """
+        A dictionary which contains information about the time window used to
+        reconstruct/predict using this DMD instance. By default this is equal
+        to :func:`original_time`.
+
+        Inside the dictionary:
+
+        ======  ====================================================================================
+        Key     Value
+        ======  ====================================================================================
+        `t0`    Time of the first output snapshot.
+        `tend`  Time of the last output snapshot.
+        `dt`    Timestep between two snapshots.
+        ======  ====================================================================================
+
+        :return: A dict which contains info about the input time frame.
+        :rtype: dict
+        """
+        if self._dmd_time is None:
+            raise RuntimeError(
+                """
+_set_initial_time_dictionary() has not been called, did you call fit()?"""
+            )
+        return self._dmd_time
+
+    def _set_initial_time_dictionary(self, time_dict):
+        """
+        Set the initial values for the class fields `time_dict` and
+        `original_time`. This is usually called in `fit()` and never again.
+
+        :param time_dict: Initial time dictionary for this DMD instance.
+        :type time_dict: dict
+        """
+        if not (
+            "t0" in time_dict and "tend" in time_dict and "dt" in time_dict
+        ):
+            raise ValueError(
+                'time_dict must contain the keys "t0", "tend" and "dt".'
+            )
+        if len(time_dict) > 3:
+            raise ValueError(
+                'time_dict must contain only the keys "t0", "tend" and "dt".'
+            )
+
+        self._original_time = DMDTimeDict(dict(time_dict))
+        self._dmd_time = DMDTimeDict(dict(time_dict))
 
     def fit(self, X):
         """

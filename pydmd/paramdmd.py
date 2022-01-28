@@ -72,7 +72,7 @@ class ParametricDMD:
         :func:`_reference_dmd`).
 
         :return: The time dictionary used by this instance.
-        :rtype: pydmd.dmdbase.DMDTimeDict
+        :rtype: dict
         """
         return self._reference_dmd.dmd_time
 
@@ -96,7 +96,7 @@ class ParametricDMD:
         (see :func:`_reference_dmd`).
 
         :return: The original time dictionary used by this instance.
-        :rtype: pydmd.dmdbase.DMDTimeDict
+        :rtype: dict
         """
         return self._reference_dmd.original_time
 
@@ -270,13 +270,10 @@ class ParametricDMD:
             # partitioned parametric DMD
             for dmd, data in zip(self._dmd, training_modal_coefficients):
                 dmd.fit(data)
-
-                if self._reference_dmd.dmd_time is None:
-                    raise ValueError(
-                        "For some reason the reference DMD has "
-                        "not been fit before the others."
-                    )
-                dmd.dmd_time = self._reference_dmd.dmd_time
+                # we want to "bound" this DMD objects "dmd_time"
+                # and "original_time" to those of the reference_dmd.
+                dmd._dmd_time = self._reference_dmd.dmd_time
+                dmd._original_time = self._reference_dmd.dmd_time
         else:
             spacemu_time = np.vstack(training_modal_coefficients)
             self._dmd.fit(spacemu_time)
