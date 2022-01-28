@@ -37,13 +37,19 @@ class CDMDOperator(DMDOperator):
         magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
         part to break ties) if `sorted_eigs='real'`. Default: False.
     :type sorted_eigs: {'real', 'abs'} or False
+    :param tikhonov_regularization: Tikhonov parameter for the regularization.
+        If `None`, no regularization is applied, if `float`, it is used as the
+        :math:`\lambda` tikhonov parameter.
+    :type tikhonov_regularization: int or float
     """
 
-    def __init__(self, svd_rank, rescale_mode, forward_backward, sorted_eigs):
+    def __init__(self, svd_rank, rescale_mode, forward_backward, sorted_eigs,
+                tikhonov_regularization):
         super().__init__(svd_rank=svd_rank, exact=True,
                          rescale_mode=rescale_mode,
                          forward_backward=forward_backward,
-                         sorted_eigs=sorted_eigs)
+                         sorted_eigs=sorted_eigs,
+                         tikhonov_regularization=tikhonov_regularization)
         self._Atilde = None
 
     def compute_operator(self, compressedX, compressedY, nonCompressedY):
@@ -134,11 +140,15 @@ class CDMD(DMDBase):
         magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
         part to break ties) if `sorted_eigs='real'`. Default: False.
     :type sorted_eigs: {'real', 'abs'} or False
+    :param tikhonov_regularization: Tikhonov parameter for the regularization.
+        If `None`, no regularization is applied, if `float`, it is used as the
+        :math:`\lambda` tikhonov parameter.
+    :type tikhonov_regularization: int or float
     """
 
     def __init__(self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform',
                  opt=False, rescale_mode=None, forward_backward=False,
-                 sorted_eigs=False):
+                 sorted_eigs=False, tikhonov_regularization=None):
 
         self._tlsq_rank = tlsq_rank
         self._opt = opt
@@ -147,7 +157,9 @@ class CDMD(DMDBase):
         self._Atilde = CDMDOperator(svd_rank=svd_rank,
                                     rescale_mode=rescale_mode,
                                     forward_backward=forward_backward,
-                                    sorted_eigs=sorted_eigs)
+                                    sorted_eigs=sorted_eigs,
+                                    tikhonov_regularization=
+                                    tikhonov_regularization)
 
     @property
     def compression_matrix(self):
