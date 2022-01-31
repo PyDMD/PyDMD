@@ -5,7 +5,7 @@ Derived module from dmdbase.py for classic dmd.
 import numpy as np
 from scipy.linalg import pinv2
 
-from .dmdbase import DMDBase, DMDTimeDict
+from .dmdbase import DMDBase
 from .utils import compute_tlsq
 
 
@@ -44,6 +44,10 @@ class DMD(DMDBase):
         magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
         part to break ties) if `sorted_eigs='real'`. Default: False.
     :type sorted_eigs: {'real', 'abs'} or False
+    :param tikhonov_regularization: Tikhonov parameter for the regularization.
+        If `None`, no regularization is applied, if `float`, it is used as the
+        :math:`\lambda` tikhonov parameter.
+    :type tikhonov_regularization: int or float
     """
 
     def fit(self, X):
@@ -63,9 +67,9 @@ class DMD(DMDBase):
         self._svd_modes, _, _ = self.operator.compute_operator(X, Y)
 
         # Default timesteps
-        self.original_time = DMDTimeDict(
-            {'t0': 0, 'tend': n_samples - 1, 'dt': 1})
-        self.dmd_time = DMDTimeDict({'t0': 0, 'tend': n_samples - 1, 'dt': 1})
+        self._set_initial_time_dictionary(
+            {"t0": 0, "tend": n_samples - 1, "dt": 1}
+        )
 
         self._b = self._compute_amplitudes()
 
@@ -86,4 +90,5 @@ class DMD(DMDBase):
 
         """
         return np.linalg.multi_dot(
-            [self.modes, np.diag(self.eigs), pinv(self.modes), X])
+            [self.modes, np.diag(self.eigs), pinv(self.modes), X]
+        )

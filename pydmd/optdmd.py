@@ -59,6 +59,7 @@ class DMDOptOperator(DMDOperator):
             forward_backward=False,
             rescale_mode=None,
             sorted_eigs=False,
+            tikhonov_regularization=None
         )
         self._factorization = factorization
 

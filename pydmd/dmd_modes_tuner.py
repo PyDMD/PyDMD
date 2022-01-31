@@ -339,13 +339,13 @@ and `max_distance_from_unity_outside` can be not `None`"""
 
         # temporary reset dmd_time to original_time
         temp = dmd.dmd_time
-        dmd.dmd_time = dmd.original_time
+        dmd._dmd_time = dmd.original_time
 
         dynamics = dmd.dynamics
         modes = dmd.modes
 
         # reset dmd_time
-        dmd.dmd_time = temp
+        dmd._dmd_time = temp
 
         n_of_modes = modes.shape[1]
         integral_contributions = [
