@@ -35,6 +35,7 @@ def test_select_modes_index():
     # these are DMD eigenvectors, but we do not care in this test
     setattr(fake_dmd_operator, '_eigenvectors', np.zeros((1, len(eigs))))
     setattr(fake_dmd_operator, '_modes', np.zeros((1, len(eigs))))
+    setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
 
     setattr(fake_dmd, '_Atilde', fake_dmd_operator)
 
@@ -65,6 +66,7 @@ def test_select_modes_index_and_deepcopy():
     # these are DMD eigenvectors, but we do not care in this test
     setattr(fake_dmd_operator, '_eigenvectors', np.zeros((1, len(eigs))))
     setattr(fake_dmd_operator, '_modes', np.zeros((1, len(eigs))))
+    setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
 
     setattr(fake_dmd, '_Atilde', fake_dmd_operator)
 
@@ -181,6 +183,7 @@ def test_stabilize_modes():
     setattr(fake_dmd_operator, '_eigenvalues', eigs)
     setattr(fake_dmd_operator, 'eigenvalues', eigs)
     setattr(dmd, '_Atilde', fake_dmd_operator)
+    setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
 
     setattr(dmd, '_b', amplitudes)
 
@@ -207,6 +210,7 @@ def test_stabilize_modes_index():
 
     setattr(fake_dmd_operator, '_eigenvalues', eigs)
     setattr(fake_dmd_operator, 'eigenvalues', eigs)
+    setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
     setattr(dmd, '_Atilde', fake_dmd_operator)
 
     setattr(dmd, '_b', amplitudes)
@@ -236,6 +240,7 @@ def test_stabilize_modes_index_deepcopy():
 
     setattr(fake_dmd_operator, '_eigenvalues', eigs)
     setattr(fake_dmd_operator, 'eigenvalues', eigs)
+    setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
     setattr(dmd, '_Atilde', fake_dmd_operator)
 
     setattr(dmd, '_b', amplitudes)
@@ -388,6 +393,7 @@ def test_modes_tuner_select():
     # these are DMD eigenvectors, but we do not care in this test
     setattr(fake_dmd_operator, '_eigenvectors', np.zeros((1, len(eigs))))
     setattr(fake_dmd_operator, '_modes', np.zeros((1, len(eigs))))
+    setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
 
     setattr(fake_dmd, '_Atilde', fake_dmd_operator)
 
@@ -416,6 +422,7 @@ def test_modes_tuner_stabilize():
 
     setattr(fake_dmd_operator, '_eigenvalues', eigs)
     setattr(fake_dmd_operator, 'eigenvalues', eigs)
+    setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
     setattr(dmd, '_Atilde', fake_dmd_operator)
 
     setattr(dmd, '_b', amplitudes)
@@ -446,6 +453,7 @@ def test_modes_tuner_stabilize_multiple():
 
         setattr(fake_dmd_operator, '_eigenvalues', eigs)
         setattr(fake_dmd_operator, 'eigenvalues', eigs)
+        setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
         setattr(dmd, '_Atilde', fake_dmd_operator)
 
         setattr(dmd, '_b', amplitudes)
@@ -485,6 +493,7 @@ def test_modes_tuner_subset():
 
         setattr(fake_dmd_operator, '_eigenvalues', eigs)
         setattr(fake_dmd_operator, 'eigenvalues', eigs)
+        setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
         setattr(dmd, '_Atilde', fake_dmd_operator)
 
         setattr(dmd, '_b', amplitudes)
@@ -518,6 +527,7 @@ def test_modes_tuner_stabilize_multiple_subset():
 
         setattr(fake_dmd_operator, '_eigenvalues', eigs)
         setattr(fake_dmd_operator, 'eigenvalues', eigs)
+        setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
         setattr(dmd, '_Atilde', fake_dmd_operator)
 
         setattr(dmd, '_b', amplitudes)

@@ -110,6 +110,8 @@ class DMDBase(object):
         self._snapshots = None
         self._snapshots_shape = None
 
+        self._modes_activation_bitmask = None
+
     @property
     def opt(self):
         return self._opt
@@ -170,7 +172,7 @@ class DMDBase(object):
         :return: the matrix containing the DMD modes.
         :rtype: numpy.ndarray
         """
-        return self.operator.modes
+        return self.operator.modes[:, self.modes_activation_bitmask]
 
     @property
     def atilde(self):
@@ -200,7 +202,7 @@ class DMDBase(object):
         :return: the eigenvalues from the eigendecomposition of `atilde`.
         :rtype: numpy.ndarray
         """
-        return self.operator.eigenvalues
+        return self.operator.eigenvalues[self.modes_activation_bitmask]
 
     def _translate_eigs_exponent(self, tpow):
         """
@@ -308,7 +310,62 @@ class DMDBase(object):
         :return: the array that contains the amplitudes coefficient.
         :rtype: numpy.ndarray
         """
-        return self._b
+        return self._b[self.modes_activation_bitmask]
+
+    @property
+    def fitted(self):
+        """Check whether this DMD instance has been fitted.
+
+        :return: `True` is the instance has been fitted, `False` otherwise.
+        :rtype: bool
+        """
+        try:
+            return self.operator.modes is not None
+        except (ValueError, AttributeError):
+            return False
+
+    @property
+    def modes_activation_bitmask(self):
+        """
+        Get the bitmask which controls which DMD modes are enabled at the
+        moment in this DMD instance.
+
+        The DMD instance must be fitted before this property becomes valid.
+        After :func:`fit` is called, the defalt value of
+        `modes_activation_bitmask` is an array of `True` values of the same
+        shape of :func:`amplitudes`.
+
+        :return: The DMD modes activation bitmask.
+        :rtype: numpy.ndarray
+        """
+        # check that the DMD was fitted
+        if not self.fitted:
+            raise RuntimeError("This DMD instance has not been fitted yet.")
+        if self._modes_activation_bitmask is None:
+            return np.full(self.operator.modes.shape[1], True, dtype=bool)
+        return self._modes_activation_bitmask
+
+    @modes_activation_bitmask.setter
+    def modes_activation_bitmask(self, value):
+        # check that the DMD was fitted
+        if not self.fitted:
+            raise RuntimeError("This DMD instance has not been fitted yet.")
+
+        value = np.array(value)
+        if value.dtype != bool:
+            raise RuntimeError(
+                "Unxpected dtype, expected bool, got {}.".format(value.dtype)
+            )
+
+        # check that the shape is correct
+        if value.shape != self.modes_activation_bitmask.shape:
+            raise ValueError(
+                "Expected shape {}, got {}".format(
+                    self.modes_activation_bitmask.shape, value.shape
+                )
+            )
+
+        self._modes_activation_bitmask = value
 
     @property
     def original_time(self):

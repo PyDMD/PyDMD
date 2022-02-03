@@ -200,6 +200,8 @@ class DMDc(DMDBase):
         self._controlin_shape = None
         self._basis = None
 
+        self._modes_activation_bitmask = None
+
     @property
     def svd_rank_omega(self):
         return self.operator._svd_rank_omega

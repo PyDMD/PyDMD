@@ -15,6 +15,7 @@ from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .utils import compute_tlsq, compute_svd
 
+
 def pinv_diag(x):
     """
     Utility function to compute the pseudo-inverse of a diagonal matrix.
@@ -24,7 +25,7 @@ def pinv_diag(x):
     :rtype: numpy.ndarray
     """
     t = x.dtype.char.lower()
-    factor = {'f': 1E2, 'd': 1E4}
+    factor = {"f": 1e2, "d": 1e4}
     rcond = factor[t] * np.finfo(t).eps
 
     y = np.zeros(*x.shape)
@@ -52,17 +53,21 @@ class DMDOptOperator(DMDOperator):
     """
 
     def __init__(self, svd_rank, factorization):
-        super().__init__(svd_rank=svd_rank, exact=True,
-            forward_backward=False, rescale_mode=None, sorted_eigs=False,
-            tikhonov_regularization=None)
+        super().__init__(
+            svd_rank=svd_rank,
+            exact=True,
+            forward_backward=False,
+            rescale_mode=None,
+            sorted_eigs=False,
+            tikhonov_regularization=None
+        )
         self._factorization = factorization
 
     @property
     def right_eigenvectors(self):
-        if self._factorization == 'evd':
+        if self._factorization == "evd":
             return self._right_eigenvectors
-        else:
-            raise ValueError("Eigenquantities haven't been computed yet.")
+        raise ValueError("Eigenquantities haven't been computed yet.")
 
     def compute_operator(self, X, Y):
         """
@@ -89,7 +94,7 @@ class DMDOptOperator(DMDOperator):
         ).T.conj()
 
         self._Atilde = Q.T.conj().dot(Uz)
-        if self._factorization == 'evd':
+        if self._factorization == "evd":
             self._compute_eigenquantities(Uz, Q)
 
         return Uz, Q
@@ -101,11 +106,11 @@ class DMDOptOperator(DMDOperator):
         :param numpy.ndarray P: Left singular vectors of Z.
         :param numpy.ndarray Q: The matrix Q.
     """
+
     def _compute_eigenquantities(self, P, Q):
         Atilde = self.as_numpy_array
 
-        vals, vecs_left, vecs_right = eig(Atilde, left=True,
-            right=True)
+        vals, vecs_left, vecs_right = eig(Atilde, left=True, right=True)
 
         # --> Build the matrix of right eigenvectors.
         right_vecs = np.linalg.multi_dot([P, Atilde, vecs_right])
@@ -124,7 +129,9 @@ class DMDOptOperator(DMDOperator):
         self._right_eigenvectors = right_vecs
 
     def _compute_modes(self, Y, U, Sigma, V):
-        raise NotImplementedError("This function has not been implemented yet.")
+        raise NotImplementedError(
+            "This function has not been implemented yet."
+        )
 
 
 class OptDMD(DMDBase):
@@ -155,12 +162,15 @@ class OptDMD(DMDBase):
     :type opt: bool or int
     """
 
-    def __init__(self, factorization="evd", svd_rank=0, tlsq_rank=0, opt=False):
+    def __init__(
+        self, factorization="evd", svd_rank=0, tlsq_rank=0, opt=False
+    ):
         self._factorization = factorization
         self._tlsq_rank = tlsq_rank
 
-        self._Atilde = DMDOptOperator(svd_rank=svd_rank,
-            factorization=factorization)
+        self._Atilde = DMDOptOperator(
+            svd_rank=svd_rank, factorization=factorization
+        )
 
         self._svds = None
         self._input_space = None
@@ -172,9 +182,17 @@ class OptDMD(DMDBase):
     def factorization(self):
         return self._factorization
 
-    @DMDBase.modes.getter
+    @property
     def modes(self):
         return self._output_space
+
+    @property
+    def eigs(self):
+        return self.operator.eigenvalues
+
+    @property
+    def amplitudes(self):
+        return self._b
 
     def fit(self, X, Y=None):
         """
@@ -190,18 +208,20 @@ class OptDMD(DMDBase):
         if Y is None:
             self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
 
-            Y = X[:, 1:]    # y = x[k+1]
-            X = X[:, :-1]   # x = x[k]
+            Y = X[:, 1:]  # y = x[k+1]
+            X = X[:, :-1]  # x = x[k]
         else:
-            self._input_snapshots, self._input_snapshots_shape = (
-                self._col_major_2darray(X)
-            )
-            self._output_snapshots, self._output_snapshots_shape = (
-                self._col_major_2darray(Y)
-            )
+            (
+                self._input_snapshots,
+                self._input_snapshots_shape,
+            ) = self._col_major_2darray(X)
+            (
+                self._output_snapshots,
+                self._output_snapshots_shape,
+            ) = self._col_major_2darray(Y)
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        Uz, Q = self.operator.compute_operator(X,Y)
+        Uz, Q = self.operator.compute_operator(X, Y)
 
         if self.factorization == "svd":
             # --> DMD basis for the input space.
@@ -231,16 +251,41 @@ class OptDMD(DMDBase):
             )
         elif self.factorization == "evd":
             Y = np.linalg.multi_dot(
-                [self._output_space, np.diag(self._eigs),
-                 self._input_space.T.conj(), X]
+                [
+                    self._output_space,
+                    np.diag(self._eigs),
+                    self._input_space.T.conj(),
+                    X,
+                ]
             )
 
         return Y
 
     def _compute_amplitudes(self, modes, snapshots, eigs, opt):
-        raise NotImplementedError("This function has not been implemented yet.")
-
+        raise NotImplementedError(
+            "This function has not been implemented yet."
+        )
 
     @property
     def dynamics(self):
-        raise NotImplementedError("This function has not been implemented yet.")
+        raise NotImplementedError(
+            "This function has not been implemented yet."
+        )
+
+    @property
+    def fitted(self):
+        raise NotImplementedError(
+            "This function has not been implemented yet."
+        )
+
+    @property
+    def modes_activation_bitmask(self):
+        raise NotImplementedError(
+            "This function has not been implemented yet."
+        )
+
+    @modes_activation_bitmask.setter
+    def modes_activation_bitmask(self):
+        raise NotImplementedError(
+            "This function has not been implemented yet."
+        )

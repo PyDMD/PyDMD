@@ -345,3 +345,94 @@ class TestHODmd(TestCase):
         arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
         # we check that this does not fail
         dmd = HODMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
+
+    def test_get_bitmask_default(self):
+        dmd = HODMD(svd_rank=-1, d=5)
+        dmd.fit(X=sample_data)
+        assert np.all(dmd.modes_activation_bitmask == True)
+
+    def test_set_bitmask(self):
+        dmd = HODMD(svd_rank=-1, d=5)
+        dmd.fit(X=sample_data)
+
+        new_bitmask = np.full(len(dmd.amplitudes), True, dtype=bool)
+        new_bitmask[[0]] = False
+        dmd.modes_activation_bitmask = new_bitmask
+
+        assert dmd.modes_activation_bitmask[0] == False
+        assert np.all(dmd.modes_activation_bitmask[1:] == True)
+
+    def test_not_fitted_get_bitmask_raises(self):
+        dmd = HODMD(svd_rank=-1, d=5)
+        with self.assertRaises(RuntimeError):
+            print(dmd.modes_activation_bitmask)
+
+    def test_not_fitted_set_bitmask_raises(self):
+        dmd = HODMD(svd_rank=-1, d=5)
+        with self.assertRaises(RuntimeError):
+            dmd.modes_activation_bitmask = np.full(3, True, dtype=bool)
+
+    def test_raise_wrong_dtype_bitmask(self):
+        dmd = HODMD(svd_rank=-1, d=5)
+        dmd.fit(X=sample_data)
+        with self.assertRaises(RuntimeError):
+            dmd.modes_activation_bitmask = np.full(3, 0.1)
+
+    def test_fitted(self):
+        dmd = HODMD(svd_rank=-1, d=5)
+        assert not dmd.fitted
+        dmd.fit(X=sample_data)
+        assert dmd.fitted
+
+    def test_bitmask_amplitudes(self):
+        dmd = HODMD(svd_rank=-1, d=5)
+        dmd.fit(X=sample_data)
+
+        old_n_amplitudes = dmd.amplitudes.shape[0]
+        retained_amplitudes = np.delete(dmd.amplitudes, [0,-1])
+
+        new_bitmask = np.full(dmd.amplitudes.shape[0], True, dtype=bool)
+        new_bitmask[[0,-1]] = False
+        dmd.modes_activation_bitmask = new_bitmask
+
+        assert dmd.amplitudes.shape[0] == old_n_amplitudes - 2
+        np.testing.assert_almost_equal(dmd.amplitudes, retained_amplitudes)
+
+    def test_bitmask_eigs(self):
+        dmd = HODMD(svd_rank=-1, d=5)
+        dmd.fit(X=sample_data)
+
+        old_n_eigs = dmd.eigs.shape[0]
+        retained_eigs = np.delete(dmd.eigs, [0,-1])
+
+        new_bitmask = np.full(dmd.amplitudes.shape[0], True, dtype=bool)
+        new_bitmask[[0,-1]] = False
+        dmd.modes_activation_bitmask = new_bitmask
+
+        assert dmd.eigs.shape[0] == old_n_eigs - 2
+        np.testing.assert_almost_equal(dmd.eigs, retained_eigs)
+
+    def test_bitmask_modes(self):
+        dmd = HODMD(svd_rank=-1, d=5)
+        dmd.fit(X=sample_data)
+
+        old_n_modes = dmd.modes.shape[1]
+        retained_modes = np.delete(dmd.modes, [0,-1], axis=1)
+
+        new_bitmask = np.full(dmd.amplitudes.shape[0], True, dtype=bool)
+        new_bitmask[[0,-1]] = False
+        dmd.modes_activation_bitmask = new_bitmask
+
+        assert dmd.modes.shape[1] == old_n_modes - 2
+        np.testing.assert_almost_equal(dmd.modes, retained_modes)
+
+    def test_reconstructed_data(self):
+        dmd = HODMD(svd_rank=-1, d=5)
+        dmd.fit(X=sample_data)
+
+        new_bitmask = np.full(dmd.amplitudes.shape[0], True, dtype=bool)
+        new_bitmask[[0,-1]] = False
+        dmd.modes_activation_bitmask = new_bitmask
+
+        dmd.reconstructed_data
+        assert True

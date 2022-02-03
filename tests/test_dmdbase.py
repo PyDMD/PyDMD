@@ -59,7 +59,7 @@ class TestDmdBase(TestCase):
         # max/min throws an error if the array is empty (max used on empty
         # array)
         dmd.operator._eigenvalues = np.array([], dtype=complex)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(RuntimeError):
             dmd.plot_eigs(show_axes=False, narrow_view=True, dpi=200)
 
     def test_plot_modes_2D(self):
@@ -125,6 +125,7 @@ class TestDmdBase(TestCase):
     def test_plot_limits_narrow(self):
         dmd = DMDBase()
         dmd.operator._eigenvalues = np.array([complex(1,2), complex(-1,-2)])
+        dmd.operator._modes = np.array(np.ones((10,2)))
 
         tp = dmd._plot_limits(True)
 
@@ -139,6 +140,7 @@ class TestDmdBase(TestCase):
     def test_plot_limits(self):
         dmd = DMDBase()
         dmd.operator._eigenvalues = np.array([complex(-2,2), complex(3,-3)])
+        dmd.operator._modes = np.array(np.ones((10,2)))
 
         limit = dmd._plot_limits(False)
         assert limit == 5

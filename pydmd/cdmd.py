@@ -154,6 +154,8 @@ class CDMD(DMDBase):
         self._opt = opt
         self._compression_matrix = compression_matrix
 
+        self._modes_activation_bitmask = None
+
         self._Atilde = CDMDOperator(svd_rank=svd_rank,
                                     rescale_mode=rescale_mode,
                                     forward_backward=forward_backward,
