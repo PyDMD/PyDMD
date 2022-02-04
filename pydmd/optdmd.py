@@ -59,7 +59,7 @@ class DMDOptOperator(DMDOperator):
             forward_backward=False,
             rescale_mode=None,
             sorted_eigs=False,
-            tikhonov_regularization=None
+            tikhonov_regularization=None,
         )
         self._factorization = factorization
 
@@ -261,6 +261,14 @@ class OptDMD(DMDBase):
 
         return Y
 
+    @property
+    def modes_activation_bitmask(self):
+        raise RuntimeError("This feature has not been implemented yet.")
+
+    @modes_activation_bitmask.setter
+    def modes_activation_bitmask(self, value):
+        raise RuntimeError("This feature has not been implemented yet.")
+
     def _compute_amplitudes(self, modes, snapshots, eigs, opt):
         raise NotImplementedError(
             "This function has not been implemented yet."
@@ -285,7 +293,7 @@ class OptDMD(DMDBase):
         )
 
     @modes_activation_bitmask.setter
-    def modes_activation_bitmask(self):
+    def modes_activation_bitmask(self, value):
         raise NotImplementedError(
             "This function has not been implemented yet."
         )

@@ -1,5 +1,5 @@
 from builtins import range
-from unittest import TestCase
+from pytest import raises
 from pydmd.optdmd import OptDMD
 import matplotlib.pyplot as plt
 import numpy as np
@@ -32,64 +32,63 @@ def create_noisy_data():
 noisy_data = create_noisy_data()
 
 
-class TestOptDmd(TestCase):
-    def test_shape_1(self):
-        optdmd = OptDMD(svd_rank=-1)
-        optdmd.fit(X=sample_data)
-        assert optdmd.modes.shape[1] == sample_data.shape[1] - 1
+def test_shape_1():
+    optdmd = OptDMD(svd_rank=-1)
+    optdmd.fit(X=sample_data)
+    assert optdmd.modes.shape[1] == sample_data.shape[1] - 1
 
-    def test_shape_2(self):
-        optdmd = OptDMD(svd_rank=-1)
-        optdmd.fit(X=sample_data[:, :-1], Y=sample_data[:, 1:])
-        assert optdmd.modes.shape[1] == sample_data.shape[1]-1
+def test_shape_2():
+    optdmd = OptDMD(svd_rank=-1)
+    optdmd.fit(X=sample_data[:, :-1], Y=sample_data[:, 1:])
+    assert optdmd.modes.shape[1] == sample_data.shape[1]-1
 
-    def test_truncation_shape(self):
-        optdmd = OptDMD(svd_rank=3)
-        optdmd.fit(X=sample_data)
-        assert optdmd.modes.shape[1] == 3
+def test_truncation_shape():
+    optdmd = OptDMD(svd_rank=3)
+    optdmd.fit(X=sample_data)
+    assert optdmd.modes.shape[1] == 3
 
-    def test_rank(self):
-        optdmd = OptDMD(svd_rank=0.9)
-        optdmd.fit(X=sample_data)
-        assert len(optdmd.eigs) == 2
+def test_rank():
+    optdmd = OptDMD(svd_rank=0.9)
+    optdmd.fit(X=sample_data)
+    assert len(optdmd.eigs) == 2
 
-    def test_Atilde_shape(self):
-        optdmd = OptDMD(svd_rank=3)
-        optdmd.fit(X=sample_data)
-        assert optdmd.atilde.shape == (optdmd.svd_rank, optdmd.svd_rank)
+def test_Atilde_shape():
+    optdmd = OptDMD(svd_rank=3)
+    optdmd.fit(X=sample_data)
+    assert optdmd.atilde.shape == (optdmd.svd_rank, optdmd.svd_rank)
 
-    def test_Atilde_values(self):
-        optdmd = OptDMD(svd_rank=2)
-        optdmd.fit(X=sample_data)
-        exact_atilde = np.array(
-            [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
-             [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]])
-        np.testing.assert_allclose(np.linalg.eigvals(exact_atilde), np.linalg.eigvals(optdmd.atilde))
+def test_Atilde_values():
+    optdmd = OptDMD(svd_rank=2)
+    optdmd.fit(X=sample_data)
+    exact_atilde = np.array(
+        [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
+            [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]])
+    np.testing.assert_allclose(np.linalg.eigvals(exact_atilde), np.linalg.eigvals(optdmd.atilde))
 
-    def test_eigs_1(self):
-        optdmd = OptDMD(svd_rank=-1)
-        optdmd.fit(X=sample_data)
-        assert len(optdmd.eigs) == 14
+def test_eigs_1():
+    optdmd = OptDMD(svd_rank=-1)
+    optdmd.fit(X=sample_data)
+    assert len(optdmd.eigs) == 14
 
-    def test_eigs_2(self):
-        optdmd = OptDMD(svd_rank=5)
-        optdmd.fit(X=sample_data)
-        assert len(optdmd.eigs) == 5
+def test_eigs_2():
+    optdmd = OptDMD(svd_rank=5)
+    optdmd.fit(X=sample_data)
+    assert len(optdmd.eigs) == 5
 
-    def test_eigs_3(self):
-        optdmd = OptDMD(svd_rank=2)
-        optdmd.fit(X=sample_data)
-        expected_eigs = np.array([
-            -8.09016994e-01 + 5.87785252e-01j, -4.73868662e-01 + 8.80595532e-01j
-        ])
-        np.testing.assert_almost_equal(optdmd.eigs, expected_eigs, decimal=6)
+def test_eigs_3():
+    optdmd = OptDMD(svd_rank=2)
+    optdmd.fit(X=sample_data)
+    expected_eigs = np.array([
+        -8.09016994e-01 + 5.87785252e-01j, -4.73868662e-01 + 8.80595532e-01j
+    ])
+    np.testing.assert_almost_equal(optdmd.eigs, expected_eigs, decimal=6)
 
-    # def test_dynamics_1(self):
+    # def test_dynamics_1():
     #     dmd = DMD(svd_rank=5)
     #     dmd.fit(X=sample_data)
     #     assert dmd.dynamics.shape == (5, sample_data.shape[1])
     #
-    # def test_dynamics_2(self):
+    # def test_dynamics_2():
     #     dmd = DMD(svd_rank=1)
     #     dmd.fit(X=sample_data)
     #     expected_dynamics = np.array([[
@@ -104,12 +103,12 @@ class TestOptDmd(TestCase):
     #     ]])
     #     np.testing.assert_allclose(dmd.dynamics, expected_dynamics)
     #
-    # def test_dynamics_opt_1(self):
+    # def test_dynamics_opt_1():
     #     dmd = DMD(svd_rank=5, opt=True)
     #     dmd.fit(X=sample_data)
     #     assert dmd.dynamics.shape == (5, sample_data.shape[1])
     #
-    # def test_dynamics_opt_2(self):
+    # def test_dynamics_opt_2():
     #     dmd = DMD(svd_rank=1, opt=True)
     #     dmd.fit(X=sample_data)
     #     expected_dynamics = np.array([[
@@ -124,31 +123,31 @@ class TestOptDmd(TestCase):
     #     ]])
     #     np.testing.assert_allclose(dmd.dynamics, expected_dynamics)
 
-    # def test_reconstructed_data(self):
+    # def test_reconstructed_data():
     #     dmd = DMD()
     #     dmd.fit(X=sample_data)
     #     dmd_data = dmd.reconstructed_data
     #     np.testing.assert_allclose(dmd_data, sample_data)
 
-    # def test_original_time(self):
+    # def test_original_time():
     #     dmd = DMD(svd_rank=2)
     #     dmd.fit(X=sample_data)
     #     expected_dict = {'dt': 1, 't0': 0, 'tend': 14}
     #     np.testing.assert_equal(dmd.original_time, expected_dict)
     #
-    # def test_original_timesteps(self):
+    # def test_original_timesteps():
     #     dmd = DMD()
     #     dmd.fit(X=sample_data)
     #     np.testing.assert_allclose(dmd.original_timesteps,
     #                                np.arange(sample_data.shape[1]))
     #
-    # def test_dmd_time_1(self):
+    # def test_dmd_time_1():
     #     dmd = DMD(svd_rank=2)
     #     dmd.fit(X=sample_data)
     #     expected_dict = {'dt': 1, 't0': 0, 'tend': 14}
     #     np.testing.assert_equal(dmd.dmd_time, expected_dict)
     #
-    # def test_dmd_time_2(self):
+    # def test_dmd_time_2():
     #     dmd = DMD()
     #     dmd.fit(X=sample_data)
     #     dmd.dmd_time['t0'] = 10
@@ -156,7 +155,7 @@ class TestOptDmd(TestCase):
     #     expected_data = sample_data[:, -5:]
     #     np.testing.assert_allclose(dmd.reconstructed_data, expected_data)
     #
-    # def test_dmd_time_3(self):
+    # def test_dmd_time_3():
     #     dmd = DMD()
     #     dmd.fit(X=sample_data)
     #     dmd.dmd_time['t0'] = 8
@@ -164,7 +163,7 @@ class TestOptDmd(TestCase):
     #     expected_data = sample_data[:, 8:12]
     #     np.testing.assert_allclose(dmd.reconstructed_data, expected_data)
     #
-    # def test_dmd_time_4(self):
+    # def test_dmd_time_4():
     #     dmd = DMD(svd_rank=3)
     #     dmd.fit(X=sample_data)
     #     dmd.dmd_time['t0'] = 20
@@ -174,86 +173,96 @@ class TestOptDmd(TestCase):
     #                               [3.38410649e-83 + 3.75677740e-83j]])
     #     np.testing.assert_almost_equal(dmd.dynamics, expected_data, decimal=6)
     #
-    # def test_plot_eigs_1(self):
+    # def test_plot_eigs_1():
     #     dmd = DMD()
     #     dmd.fit(X=sample_data)
     #     dmd.plot_eigs(show_axes=True, show_unit_circle=True)
     #     plt.close()
     #
-    # def test_plot_eigs_2(self):
+    # def test_plot_eigs_2():
     #     dmd = DMD()
     #     dmd.fit(X=sample_data)
     #     dmd.plot_eigs(show_axes=False, show_unit_circle=False)
     #     plt.close()
     #
-    # def test_plot_modes_1(self):
+    # def test_plot_modes_1():
     #     dmd = DMD()
     #     dmd.fit(X=sample_data)
-    #     with self.assertRaises(ValueError):
+    #     with raises(ValueError):
     #         dmd.plot_modes_2D()
     #
-    # def test_plot_modes_2(self):
+    # def test_plot_modes_2():
     #     dmd = DMD(svd_rank=-1)
     #     dmd.fit(X=sample_data)
     #     dmd.plot_modes_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
     #     plt.close()
     #
-    # def test_plot_modes_3(self):
+    # def test_plot_modes_3():
     #     dmd = DMD()
     #     snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
     #     dmd.fit(X=snapshots)
     #     dmd.plot_modes_2D()
     #     plt.close()
     #
-    # def test_plot_modes_4(self):
+    # def test_plot_modes_4():
     #     dmd = DMD()
     #     snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
     #     dmd.fit(X=snapshots)
     #     dmd.plot_modes_2D(index_mode=1)
     #     plt.close()
     #
-    # def test_plot_modes_5(self):
+    # def test_plot_modes_5():
     #     dmd = DMD()
     #     snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
     #     dmd.fit(X=snapshots)
     #     dmd.plot_modes_2D(index_mode=1, filename='tmp.png')
-    #     self.addCleanup(os.remove, 'tmp.1.png')
+    #     .addCleanup(os.remove, 'tmp.1.png')
     #
-    # def test_plot_snapshots_1(self):
+    # def test_plot_snapshots_1():
     #     dmd = DMD()
     #     dmd.fit(X=sample_data)
-    #     with self.assertRaises(ValueError):
+    #     with raises(ValueError):
     #         dmd.plot_snapshots_2D()
     #
-    # def test_plot_snapshots_2(self):
+    # def test_plot_snapshots_2():
     #     dmd = DMD(svd_rank=-1)
     #     dmd.fit(X=sample_data)
     #     dmd.plot_snapshots_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
     #     plt.close()
     #
-    # def test_plot_snapshots_3(self):
+    # def test_plot_snapshots_3():
     #     dmd = DMD()
     #     snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
     #     dmd.fit(X=snapshots)
     #     dmd.plot_snapshots_2D()
     #     plt.close()
     #
-    # def test_plot_snapshots_4(self):
+    # def test_plot_snapshots_4():
     #     dmd = DMD()
     #     snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
     #     dmd.fit(X=snapshots)
     #     dmd.plot_snapshots_2D(index_snap=2)
     #     plt.close()
     #
-    # def test_plot_snapshots_5(self):
+    # def test_plot_snapshots_5():
     #     dmd = DMD()
     #     snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
     #     dmd.fit(X=snapshots)
     #     dmd.plot_snapshots_2D(index_snap=2, filename='tmp.png')
-    #     self.addCleanup(os.remove, 'tmp.2.png')
+    #     .addCleanup(os.remove, 'tmp.2.png')
     #
-    # def test_tdmd_plot(self):
+    # def test_tdmd_plot():
     #     dmd = DMD(tlsq_rank=3)
     #     dmd.fit(X=sample_data)
     #     dmd.plot_eigs(show_axes=False, show_unit_circle=False)
     #     plt.close()
+
+def test_bitmask_not_implemented():
+    with raises(RuntimeError):
+        optdmd = OptDMD(svd_rank=2)
+        optdmd.fit(X=sample_data)
+        optdmd.modes_activation_bitmask
+    with raises(RuntimeError):
+        optdmd = OptDMD(svd_rank=2)
+        optdmd.fit(X=sample_data)
+        optdmd.modes_activation_bitmask = None
