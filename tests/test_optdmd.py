@@ -266,3 +266,9 @@ def test_bitmask_not_implemented():
         optdmd = OptDMD(svd_rank=2)
         optdmd.fit(X=sample_data)
         optdmd.modes_activation_bitmask = None
+
+def test_getitem_not_implemented():
+    with raises(RuntimeError):
+        optdmd = OptDMD(svd_rank=2)
+        optdmd.fit(X=sample_data)
+        optdmd[1:3]

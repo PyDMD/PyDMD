@@ -319,3 +319,9 @@ def test_bitmask_not_implemented():
         mrdmd = MrDMD(DMD(), max_level=5, max_cycles=1)
         mrdmd.fit(X=sample_data)
         mrdmd.modes_activation_bitmask = None
+
+def test_getitem_not_implemented():
+    with raises(RuntimeError):
+        mrdmd = MrDMD(DMD(), max_level=5, max_cycles=1)
+        mrdmd.fit(X=sample_data)
+        mrdmd[1:3]

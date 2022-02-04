@@ -8,6 +8,7 @@ from builtins import range
 from os.path import splitext
 import warnings
 import pickle
+from copy import copy
 
 import numpy as np
 import matplotlib as mpl
@@ -366,6 +367,52 @@ class DMDBase(object):
             )
 
         self._modes_activation_bitmask = value
+
+    def __getitem__(self, key):
+        """
+        Restrict the DMD modes used by this instance to a subset of indexes
+        specified by keys. The value returned is a shallow copy of this DMD
+        instance, with a different value in :func:`modes_activation_bitmask`.
+        Therefore assignments to attributes are not reflected into the original
+        instance.
+
+        However the DMD instance returned should not be used for low-level
+        manipulations on DMD modes, since the underlying DMD operator is shared
+        with the original instance. For this reasons modifications to NumPy
+        arrays may result in unwanted and unspecified situations which should
+        be avoided in principle.
+
+        :param key: An index (integer), slice or list of indexes.
+        :type key: int or slice or list or np.ndarray
+        :return: A shallow copy of this DMD instance having only a subset of
+            DMD modes which are those indexed by `key`.
+        :rtype: DMDBase
+        """
+
+        if isinstance(key, (slice, int, list, np.ndarray)):
+            filter_function = lambda x: isinstance(x, int)
+
+            if isinstance(key, (list, np.ndarray)):
+                if not all(map(filter_function, key)):
+                    raise ValueError(
+                        "Invalid argument type, expected a slice, an int, or a "
+                        "list of indexes."
+                    )
+                # no repeated elements
+                if len(key) != len(set(key)):
+                    raise ValueError("Repeated indexes are not supported.")
+        else:
+            raise ValueError(
+                "Invalid argument type, expected a slice, an int, or a list of "
+                "indexes, got {}".format(type(key))
+            )
+
+        mask = np.full(self.modes_activation_bitmask.shape, False)
+        mask[key] = True
+
+        shallow_copy = copy(self)
+        shallow_copy.modes_activation_bitmask = mask
+        return shallow_copy
 
     @property
     def original_time(self):

@@ -180,3 +180,39 @@ class TestFbDmd(TestCase):
 
         dmd.reconstructed_data
         assert True
+
+    def test_getitem_modes(self):
+        dmd = FbDMD(svd_rank=-1)
+        dmd.fit(X=np.load('tests/test_datasets/input_sample.npy'))
+        old_n_modes = dmd.modes.shape[1]
+
+        assert dmd[[0,-1]].modes.shape[1] == 2
+        np.testing.assert_almost_equal(dmd[[0,-1]].modes, dmd.modes[:,[0,-1]])
+
+        assert dmd.modes.shape[1] == old_n_modes
+
+        assert dmd[1::2].modes.shape[1] == old_n_modes // 2
+        np.testing.assert_almost_equal(dmd[1::2].modes, dmd.modes[:,1::2])
+
+        assert dmd.modes.shape[1] == old_n_modes
+
+        assert dmd[[1,3]].modes.shape[1] == 2
+        np.testing.assert_almost_equal(dmd[[1,3]].modes, dmd.modes[:,[1,3]])
+
+        assert dmd.modes.shape[1] == old_n_modes
+
+        assert dmd[2].modes.shape[1] == 1
+        np.testing.assert_almost_equal(np.squeeze(dmd[2].modes), dmd.modes[:,2])
+
+        assert dmd.modes.shape[1] == old_n_modes
+
+    def test_getitem_raises(self):
+        dmd = FbDMD(svd_rank=-1)
+        dmd.fit(X=np.load('tests/test_datasets/input_sample.npy'))
+
+        with self.assertRaises(ValueError):
+            dmd[[0,1,1,0,1]]
+        with self.assertRaises(ValueError):
+            dmd[[True, True, False, True]]
+        with self.assertRaises(ValueError):
+            dmd[1.0]
