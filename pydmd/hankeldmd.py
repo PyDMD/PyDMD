@@ -6,6 +6,8 @@ Reference:
 computation of spectral properties of the Koopman operator. SIAM Journal on
 Applied Dynamical Systems, 2017, 16.4: 2096-2126.
 """
+from copy import copy
+
 import numpy as np
 
 from .dmdbase import DMDBase
@@ -55,9 +57,18 @@ class HankelDMD(DMDBase):
     :type reconstruction_method: {'first', 'mean'} or array-like
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-                 rescale_mode=None, forward_backward=False, d=1,
-                 sorted_eigs=False, reconstruction_method="first",):
+    def __init__(
+        self,
+        svd_rank=0,
+        tlsq_rank=0,
+        exact=False,
+        opt=False,
+        rescale_mode=None,
+        forward_backward=False,
+        d=1,
+        sorted_eigs=False,
+        reconstruction_method="first",
+    ):
         super().__init__(
             svd_rank=svd_rank,
             tlsq_rank=tlsq_rank,
@@ -74,8 +85,10 @@ class HankelDMD(DMDBase):
                     "The length of the array of weights must be equal to d"
                 )
         elif isinstance(reconstruction_method, np.ndarray):
-            if (reconstruction_method.ndim > 1 or
-                    reconstruction_method.shape[0] != d):
+            if (
+                reconstruction_method.ndim > 1
+                or reconstruction_method.shape[0] != d
+            ):
                 raise ValueError(
                     "The length of the array of weights must be equal to d"
                 )
@@ -187,7 +200,7 @@ class HankelDMD(DMDBase):
         first_nonmasked_idx = np.repeat(
             np.array(range(reconstructions.shape[0]))[:, None], 2, axis=1
         )
-        first_nonmasked_idx[self.d - 1:, 1] = self.d - 1
+        first_nonmasked_idx[self.d - 1 :, 1] = self.d - 1
 
         return reconstructions[
             first_nonmasked_idx[:, 0], first_nonmasked_idx[:, 1]
@@ -223,7 +236,7 @@ class HankelDMD(DMDBase):
                 // self.dmd_time["dt"]
             ),
         )
-        result = result[:, time_index:time_index + len(self.dmd_timesteps)]
+        result = result[:, time_index : time_index + len(self.dmd_timesteps)]
 
         return result.filled(fill_value=0)
 
@@ -248,7 +261,7 @@ class HankelDMD(DMDBase):
 
         """
         return np.concatenate(
-            [X[:, i:X.shape[1] - self.d + i + 1] for i in range(self.d)],
+            [X[:, i : X.shape[1] - self.d + i + 1] for i in range(self.d)],
             axis=0,
         )
 
@@ -275,6 +288,34 @@ class HankelDMD(DMDBase):
     @modes_activation_bitmask.setter
     def modes_activation_bitmask(self, value):
         self._sub_dmd.modes_activation_bitmask = value
+
+    # due to how we implemented HankelDMD we need an alternative implementation
+    # of __getitem__
+    def __getitem__(self, key):
+        """
+        Restrict the DMD modes used by this instance to a subset of indexes
+        specified by keys. The value returned is a shallow copy of this DMD
+        instance, with a different value in :func:`modes_activation_bitmask`.
+        Therefore assignments to attributes are not reflected into the original
+        instance.
+
+        However the DMD instance returned should not be used for low-level
+        manipulations on DMD modes, since the underlying DMD operator is shared
+        with the original instance. For this reasons modifications to NumPy
+        arrays may result in unwanted and unspecified situations which should
+        be avoided in principle.
+
+        :param key: An index (integer), slice or list of indexes.
+        :type key: int or slice or list or np.ndarray
+        :return: A shallow copy of this DMD instance having only a subset of
+            DMD modes which are those indexed by `key`.
+        :rtype: HankelDMD
+        """
+
+        sub_dmd_copy = copy(self._sub_dmd)
+        shallow_copy = copy(self)
+        shallow_copy._sub_dmd = sub_dmd_copy
+        return DMDBase.__getitem__(shallow_copy, key)
 
     def fit(self, X):
         """

@@ -115,6 +115,14 @@ class MrDMD(DMDBase):
         return np.concatenate([dmd.eigs for dmd in self])
 
     @property
+    def modes_activation_bitmask(self):
+        raise RuntimeError("This feature has not been implemented yet.")
+
+    @modes_activation_bitmask.setter
+    def modes_activation_bitmask(self, value):
+        raise RuntimeError("This feature has not been implemented yet.")
+
+    @property
     def reconstructed_data(self):
         """
         Get the reconstructed data.
