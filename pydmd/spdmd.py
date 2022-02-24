@@ -109,6 +109,8 @@ class SpDMD(DMD):
         self._q = None
         self._Plow = None
 
+        self._modes_activation_bitmask_proxy = None
+
     def fit(self, X):
         """
         Compute the Dynamic Modes Decomposition of the input data.
@@ -130,6 +132,9 @@ class SpDMD(DMD):
 
         # compute the (sparse) vector of optimal DMD amplitudes
         self._b = self._optimal_amplitudes(zero_amplitudes)
+        # re-allocate the Proxy to avoid problems due to the fact that we
+        # re-computed the amplitudes
+        self.allocate_proxy()
 
         # release memory
         if self._release_memory:

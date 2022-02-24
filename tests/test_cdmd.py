@@ -363,3 +363,12 @@ class TestCDmd(TestCase):
 
         dmd.reconstructed_data
         assert True
+
+    # this is a test for the correctness of the amplitudes saved in the Proxy
+    # between DMDBase and the modes activation bitmask. if this test fails
+    # you probably need to call allocate_proxy once again after you compute
+    # the final value of the amplitudes
+    def test_correct_amplitudes(self):
+        dmd = CDMD(compression_matrix='normal')
+        dmd.fit(X=sample_data)
+        np.testing.assert_array_almost_equal(dmd.amplitudes, dmd._b)

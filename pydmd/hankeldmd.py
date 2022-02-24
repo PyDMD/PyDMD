@@ -270,6 +270,10 @@ class HankelDMD(DMDBase):
         return self._sub_dmd.modes
 
     @property
+    def eigs(self):
+        return self._sub_dmd.eigs
+
+    @property
     def amplitudes(self):
         return self._sub_dmd.amplitudes
 
@@ -313,6 +317,8 @@ class HankelDMD(DMDBase):
         """
 
         sub_dmd_copy = copy(self._sub_dmd)
+        sub_dmd_copy.allocate_proxy()
+
         shallow_copy = copy(self)
         shallow_copy._sub_dmd = sub_dmd_copy
         return DMDBase.__getitem__(shallow_copy, key)

@@ -66,27 +66,10 @@ def select_modes(
     all_indexes = set(np.arange(len(dmd.eigs)))
     cut_indexes = np.array(list(all_indexes - set(selected_indexes)))
 
-    if nullify_amplitudes:
-        dmd._b[cut_indexes] = 0
-    else:
-        dmd.operator._eigenvalues = dmd.operator._eigenvalues[selected_indexes]
-        dmd.operator._Lambda = dmd.operator._Lambda[selected_indexes]
-
-        dmd.operator._eigenvectors = dmd.operator._eigenvectors[
-            :, selected_indexes
-        ]
-        dmd.operator._modes = dmd.operator._modes[:, selected_indexes]
-
-        # TODO: should improve this [code repetition]
-        dmd.operator._Atilde = np.linalg.multi_dot(
-            [
-                dmd.operator._eigenvectors,
-                np.diag(dmd.operator._eigenvalues),
-                np.linalg.pinv(dmd.operator._eigenvectors),
-            ]
-        )
-
-        dmd._b = dmd._b[selected_indexes]
+    if len(cut_indexes) > 0:
+        tmp = np.array(dmd.modes_activation_bitmask)
+        tmp[cut_indexes] = False
+        dmd.modes_activation_bitmask = tmp
 
     if return_indexes:
         return dmd, cut_indexes
@@ -145,14 +128,13 @@ def stabilize_modes(
         eigs_module < outer_radius,
     )
 
-    dmd._b[fixable_eigs_indexes] *= np.abs(dmd.eigs[fixable_eigs_indexes])
-    dmd.operator._eigenvalues[fixable_eigs_indexes] /= np.abs(
+    dmd.amplitudes[fixable_eigs_indexes] *= np.abs(
         dmd.eigs[fixable_eigs_indexes]
     )
-
-    stabilized_indexes = np.where(fixable_eigs_indexes)[0]
+    dmd.eigs[fixable_eigs_indexes] /= np.abs(dmd.eigs[fixable_eigs_indexes])
 
     if return_indexes:
+        stabilized_indexes = np.where(fixable_eigs_indexes)[0]
         return dmd, stabilized_indexes
     return dmd
 

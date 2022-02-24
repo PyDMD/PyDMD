@@ -216,3 +216,12 @@ class TestFbDmd(TestCase):
             dmd[[True, True, False, True]]
         with self.assertRaises(ValueError):
             dmd[1.0]
+
+    # this is a test for the correctness of the amplitudes saved in the Proxy
+    # between DMDBase and the modes activation bitmask. if this test fails
+    # you probably need to call allocate_proxy once again after you compute
+    # the final value of the amplitudes
+    def test_correct_amplitudes(self):
+        dmd = FbDMD(svd_rank=-1)
+        dmd.fit(X=np.load('tests/test_datasets/input_sample.npy'))
+        np.testing.assert_array_almost_equal(dmd.amplitudes, dmd._b)

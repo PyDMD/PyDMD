@@ -472,3 +472,12 @@ class TestHODmd(TestCase):
             dmd[[True, True, False, True]]
         with self.assertRaises(ValueError):
             dmd[1.0]
+
+    # this is a test for the correctness of the amplitudes saved in the Proxy
+    # between DMDBase and the modes activation bitmask. if this test fails
+    # you probably need to call allocate_proxy once again after you compute
+    # the final value of the amplitudes
+    def test_correct_amplitudes(self):
+        dmd = HODMD(svd_rank=-1, d=5)
+        dmd.fit(X=sample_data)
+        np.testing.assert_array_almost_equal(dmd.amplitudes, dmd._sub_dmd._b)
