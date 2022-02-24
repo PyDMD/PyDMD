@@ -68,7 +68,10 @@ class ParametricDMD:
     def dmd_time(self):
         """
         The time dictionary used by the reference DMD instance (see also
-        :func:`_reference_dmd`).
+        :func:`_reference_dmd`). Note that when you set this attribute the
+        value is set only for the reference DMD (see :func:`_reference_dmd`),
+        however when :func:`_predict_modal_coefficients` is called the values
+        of all DMDs become consistent.
 
         :getter: Return the time dictionary used by the reference DMD instance.
         :setter: Set the given time dictionary in the field `dmd_time` for all
@@ -79,11 +82,7 @@ class ParametricDMD:
 
     @dmd_time.setter
     def dmd_time(self, value):
-        if isinstance(self._dmd, list):
-            for dmd in self._dmd:
-                dmd.dmd_time = value
-        else:
-            self._reference_dmd.dmd_time = value
+        self._reference_dmd.dmd_time = value
 
     @property
     def dmd_timesteps(self):
@@ -279,10 +278,6 @@ class ParametricDMD:
             # partitioned parametric DMD
             for dmd, data in zip(self._dmd, training_modal_coefficients):
                 dmd.fit(data)
-                # we want to "bound" this DMD objects "dmd_time"
-                # and "original_time" to those of the reference_dmd.
-                dmd._dmd_time = self._reference_dmd.dmd_time
-                dmd._original_time = self._reference_dmd.dmd_time
         else:
             spacemu_time = np.vstack(training_modal_coefficients)
             self._dmd.fit(spacemu_time)
@@ -421,6 +416,10 @@ class ParametricDMD:
         :return: Predicted spatial modal coefficients.
         :rtype: numpy.ndarray
         """
+        if self.is_partitioned:
+            for dmd in self._dmd:
+                # we want to "bound" this DMD objects "dmd_time"
+                dmd.dmd_time = self._reference_dmd.dmd_time
         if self.is_partitioned:
             return np.vstack(
                 list(map(lambda dmd: dmd.reconstructed_data, self._dmd))

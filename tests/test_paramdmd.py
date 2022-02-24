@@ -389,9 +389,25 @@ def test_set_time_partitioned():
     dc['tend'] = 20
     dc['dt'] = 1
     p.dmd_time = dc
+    p._predict_modal_coefficients()
 
     for dmd in dmds:
         assert dmd.dmd_time == dc
         assert dmd.dmd_time['t0'] == 10
         assert dmd.dmd_time['dt'] == 1
         assert dmd.dmd_time['tend'] == 20
+
+def test_forecast():
+    dmds = [DMD(svd_rank=-1) for _ in range(len(params))]
+    p = ParametricDMD(dmds, POD(rank=5), RBF())
+    p.fit(training_data, params)
+    p.parameters = test_parameters
+
+    dc = DMDTimeDict()
+    dc['t0'] = 101
+    dc['tend'] = 200
+    dc['dt'] = 1
+    p.dmd_time = dc
+
+    for r in p.reconstructed_data:
+        assert r.shape == (100, training_data.shape[2])
