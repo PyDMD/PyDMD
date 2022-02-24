@@ -8,7 +8,7 @@ from builtins import range
 from os.path import splitext
 import warnings
 import pickle
-from copy import copy
+from copy import copy, deepcopy
 
 import numpy as np
 import matplotlib as mpl
@@ -466,6 +466,10 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
 _set_initial_time_dictionary() has not been called, did you call fit()?"""
             )
         return self._dmd_time
+
+    @dmd_time.setter
+    def dmd_time(self, value):
+        self._dmd_time = deepcopy(value)
 
     def _set_initial_time_dictionary(self, time_dict):
         """
@@ -1022,3 +1026,8 @@ class DMDTimeDict(dict):
                     key
                 )
             )
+
+    def __eq__(self, o):
+        if isinstance(o, dict):
+            return all(map(lambda s: o[s] == self[s], ['t0', 'tend', 'dt']))
+        return False
