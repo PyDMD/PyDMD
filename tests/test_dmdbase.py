@@ -59,7 +59,7 @@ class TestDmdBase(TestCase):
         # max/min throws an error if the array is empty (max used on empty
         # array)
         dmd.operator._eigenvalues = np.array([], dtype=complex)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(ValueError):
             dmd.plot_eigs(show_axes=False, narrow_view=True, dpi=200)
 
     def test_plot_modes_2D(self):

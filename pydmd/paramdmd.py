@@ -67,14 +67,22 @@ class ParametricDMD:
     @property
     def dmd_time(self):
         """
-        The time dictionary used by this instance, which coincides with the
-        dictionary used by the reference of this instance (see
-        :func:`_reference_dmd`).
+        The time dictionary used by the reference DMD instance (see also
+        :func:`_reference_dmd`). Note that when you set this attribute the
+        value is set only for the reference DMD (see :func:`_reference_dmd`),
+        however when :func:`_predict_modal_coefficients` is called the values
+        of all DMDs become consistent.
 
-        :return: The time dictionary used by this instance.
-        :rtype: dict
+        :getter: Return the time dictionary used by the reference DMD instance.
+        :setter: Set the given time dictionary in the field `dmd_time` for all
+            DMD instances.
+        :type: pydmd.dmdbase.DMDTimeDict
         """
         return self._reference_dmd.dmd_time
+
+    @dmd_time.setter
+    def dmd_time(self, value):
+        self._reference_dmd.dmd_time = value
 
     @property
     def dmd_timesteps(self):
@@ -270,10 +278,6 @@ class ParametricDMD:
             # partitioned parametric DMD
             for dmd, data in zip(self._dmd, training_modal_coefficients):
                 dmd.fit(data)
-                # we want to "bound" this DMD objects "dmd_time"
-                # and "original_time" to those of the reference_dmd.
-                dmd._dmd_time = self._reference_dmd.dmd_time
-                dmd._original_time = self._reference_dmd.dmd_time
         else:
             spacemu_time = np.vstack(training_modal_coefficients)
             self._dmd.fit(spacemu_time)
@@ -383,7 +387,7 @@ class ParametricDMD:
         >>> pdmd.fit(...)
         >>> pdmd.save('pydmd.pdmd')
         """
-        with open(fname, 'wb') as output:
+        with open(fname, "wb") as output:
             pickle.dump(self, output, pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
@@ -399,11 +403,10 @@ class ParametricDMD:
         >>> pdmd = ParametricDMD.load('pydmd.pdmd')
         >>> print(pdmd.reconstructed_data)
         """
-        with open(fname, 'rb') as output:
+        with open(fname, "rb") as output:
             dmd = pickle.load(output)
 
         return dmd
-
 
     def _predict_modal_coefficients(self):
         """
@@ -413,6 +416,10 @@ class ParametricDMD:
         :return: Predicted spatial modal coefficients.
         :rtype: numpy.ndarray
         """
+        if self.is_partitioned:
+            for dmd in self._dmd:
+                # we want to "bound" this DMD objects "dmd_time"
+                dmd.dmd_time = self._reference_dmd.dmd_time
         if self.is_partitioned:
             return np.vstack(
                 list(map(lambda dmd: dmd.reconstructed_data, self._dmd))

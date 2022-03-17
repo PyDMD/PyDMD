@@ -1,8 +1,11 @@
 from pytest import raises
 import numpy as np
+from copy import deepcopy
 
-from pydmd import DMD
+from pydmd import DMD, CDMD, DMD, DMDBase, DMDc, FbDMD, HankelDMD, HODMD, MrDMD, OptDMD, ParametricDMD, SpDMD
 from pydmd.dmd_modes_tuner import select_modes, stabilize_modes, ModesSelectors, ModesTuner, selectors
+from ezyrb import POD, RBF
+import pytest
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -16,9 +19,28 @@ def test_select_modes():
         return np.abs(np.abs(dmd_object.eigs) - 1) < toll
     dmd = DMD(svd_rank=10)
     dmd.fit(sample_data)
+    dmdc = deepcopy(dmd)
+
     exp = dmd.reconstructed_data
     select_modes(dmd, stable_modes)
     np.testing.assert_array_almost_equal(exp, dmd.reconstructed_data)
+
+    assert len(dmd.eigs) < len(dmdc.eigs)
+    assert dmd.modes.shape[1] < dmdc.modes.shape[1]
+    assert len(dmd.amplitudes) < len(dmdc.amplitudes)
+
+def test_select_modes_nullified_indexes():
+    def stable_modes(dmd_object):
+        toll = 1e-3
+        return np.abs(np.abs(dmd_object.eigs) - 1) < toll
+    dmd = DMD(svd_rank=10)
+    dmd.fit(sample_data)
+    dmdc = deepcopy(dmd)
+
+    _, cut_indexes = select_modes(dmd, stable_modes, nullify_amplitudes=False, return_indexes=True)
+    noncut_indexes = list(set(range(len(dmdc.eigs))) - set(cut_indexes))
+
+    assert dmd.amplitudes.shape == dmdc[noncut_indexes].amplitudes.shape
 
 def test_select_modes_index():
     class FakeDMDOperator:
@@ -38,18 +60,14 @@ def test_select_modes_index():
     setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
 
     setattr(fake_dmd, '_Atilde', fake_dmd_operator)
-
-    def fake_cmp_amplitudes():
-        pass
-    setattr(fake_dmd, '_compute_amplitudes', fake_cmp_amplitudes)
+    setattr(fake_dmd, '_b', np.zeros(len(eigs)))
 
     _, idx = select_modes(fake_dmd, ModesSelectors.stable_modes(max_distance_from_unity=1e-3), return_indexes=True)
     np.testing.assert_array_equal(idx, [1,2,3])
 
-    assert len(fake_dmd.operator._eigenvalues) == 3
-    assert len(fake_dmd.operator._Lambda) == 3
-    assert fake_dmd.operator._eigenvectors.shape[1] == 3
-    assert fake_dmd.operator._modes.shape[1] == 3
+    assert fake_dmd.modes.shape[1] == 3
+    assert len(fake_dmd.eigs) == 3
+    assert len(fake_dmd.amplitudes) == 3
 
 def test_select_modes_index_and_deepcopy():
     class FakeDMDOperator:
@@ -67,25 +85,20 @@ def test_select_modes_index_and_deepcopy():
     setattr(fake_dmd_operator, '_eigenvectors', np.zeros((1, len(eigs))))
     setattr(fake_dmd_operator, '_modes', np.zeros((1, len(eigs))))
     setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
+    setattr(fake_dmd, '_b', np.zeros(len(eigs)))
 
     setattr(fake_dmd, '_Atilde', fake_dmd_operator)
-
-    def fake_cmp_amplitudes():
-        pass
-    setattr(fake_dmd, '_compute_amplitudes', fake_cmp_amplitudes)
 
     dmd2, idx = select_modes(fake_dmd, ModesSelectors.stable_modes(max_distance_from_unity=1e-3), in_place=False, return_indexes=True)
     np.testing.assert_array_equal(idx, [1,2,3])
 
-    assert len(fake_dmd.operator._eigenvalues) == 6
-    assert len(fake_dmd.operator._Lambda) == 6
-    assert fake_dmd.operator._eigenvectors.shape[1] == 6
-    assert fake_dmd.operator._modes.shape[1] == 6
+    assert len(fake_dmd.eigs) == 6
+    assert fake_dmd.modes.shape[1] == 6
+    assert len(fake_dmd.amplitudes) == 6
 
-    assert len(dmd2.operator._eigenvalues) == 3
-    assert len(dmd2.operator._Lambda) == 3
-    assert dmd2.operator._eigenvectors.shape[1] == 3
-    assert dmd2.operator._modes.shape[1] == 3
+    assert len(dmd2.eigs) == 3
+    assert dmd2.modes.shape[1] == 3
+    assert len(dmd2.amplitudes) == 3
 
 def test_stable_modes_both():
     class FakeDMD:
@@ -188,14 +201,13 @@ def test_stabilize_modes():
     setattr(dmd, '_b', amplitudes)
 
     stabilize_modes(dmd, 0.8, 1.2)
-
     np.testing.assert_array_almost_equal(
-        dmd.operator._eigenvalues,
+        dmd.eigs,
         np.array([complex(0.3, 0.2), complex(0.8,0.5) / abs(complex(0.8,0.5)),
             1, complex(1,1.e-2) / abs(complex(1,1.e-2)), 2, complex(2,1.e-2)]))
 
     np.testing.assert_array_almost_equal(
-        dmd._b,
+        dmd.amplitudes,
         np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
 def test_stabilize_modes_index():
@@ -218,12 +230,12 @@ def test_stabilize_modes_index():
     _, indexes = stabilize_modes(dmd, 0.8, 1.2, return_indexes=True)
 
     np.testing.assert_array_almost_equal(
-        dmd.operator._eigenvalues,
+        dmd.eigs,
         np.array([complex(0.3, 0.2), complex(0.8,0.5) / abs(complex(0.8,0.5)),
             1, complex(1,1.e-2) / abs(complex(1,1.e-2)), 2, complex(2,1.e-2)]))
 
     np.testing.assert_array_almost_equal(
-        dmd._b,
+        dmd.amplitudes,
         np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
     np.testing.assert_almost_equal(indexes, [1,2,3])
@@ -248,21 +260,21 @@ def test_stabilize_modes_index_deepcopy():
     dmd2, indexes = stabilize_modes(dmd, 0.8, 1.2, in_place=False, return_indexes=True)
 
     np.testing.assert_array_almost_equal(
-        dmd2.operator._eigenvalues,
+        dmd2.eigs,
         np.array([complex(0.3, 0.2), complex(0.8,0.5) / abs(complex(0.8,0.5)),
             1, complex(1,1.e-2) / abs(complex(1,1.e-2)), 2, complex(2,1.e-2)]))
 
     np.testing.assert_array_almost_equal(
-        dmd2._b,
+        dmd2.amplitudes,
         np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
     np.testing.assert_array_almost_equal(
-        dmd.operator._eigenvalues,
+        dmd.eigs,
         np.array([complex(0.3, 0.2), complex(0.8,0.5),
             1, complex(1,1.e-2), 2, complex(2,1.e-2)]))
 
     np.testing.assert_array_almost_equal(
-        dmd._b,
+        dmd.amplitudes,
         np.array([1, 2, 3, 4, 5, 6]))
 
     np.testing.assert_almost_equal(indexes, [1,2,3])
@@ -394,21 +406,17 @@ def test_modes_tuner_select():
     setattr(fake_dmd_operator, '_eigenvectors', np.zeros((1, len(eigs))))
     setattr(fake_dmd_operator, '_modes', np.zeros((1, len(eigs))))
     setattr(fake_dmd_operator, 'modes', np.zeros((1, len(eigs))))
+    setattr(fake_dmd, '_b', np.zeros(len(eigs)))
 
     setattr(fake_dmd, '_Atilde', fake_dmd_operator)
-
-    def fake_cmp_amplitudes():
-        pass
-    setattr(fake_dmd, '_compute_amplitudes', fake_cmp_amplitudes)
 
     mtuner = ModesTuner(fake_dmd)
     mtuner.select('stable_modes', max_distance_from_unity=1e-3)
     dmd = mtuner.get()
 
-    assert len(dmd.operator._eigenvalues) == 3
-    assert len(dmd.operator._Lambda) == 3
-    assert dmd.operator._eigenvectors.shape[1] == 3
-    assert dmd.operator._modes.shape[1] == 3
+    assert len(dmd.eigs) == 3
+    assert len(dmd.amplitudes) == 3
+    assert dmd.modes.shape[1] == 3
 
 def test_modes_tuner_stabilize():
     class FakeDMDOperator:
@@ -432,12 +440,12 @@ def test_modes_tuner_stabilize():
     dmd = mtuner.get()
 
     np.testing.assert_array_almost_equal(
-        dmd.operator._eigenvalues,
+        dmd.eigs,
         np.array([complex(0.3, 0.2), complex(0.8,0.5) / abs(complex(0.8,0.5)),
             1, complex(1,1.e-2) / abs(complex(1,1.e-2)), 2, complex(2,1.e-2)]))
 
     np.testing.assert_array_almost_equal(
-        dmd._b,
+        dmd.amplitudes,
         np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
 def test_modes_tuner_stabilize_multiple():
@@ -472,12 +480,12 @@ def test_modes_tuner_stabilize_multiple():
 
     for dmd in dmds:
         np.testing.assert_array_almost_equal(
-            dmd.operator._eigenvalues,
+            dmd.eigs,
             np.array([complex(0.3, 0.2), complex(0.8,0.5) / abs(complex(0.8,0.5)),
                 1, complex(1,1.e-2) / abs(complex(1,1.e-2)), 2, complex(2,1.e-2)]))
 
         np.testing.assert_array_almost_equal(
-            dmd._b,
+            dmd.amplitudes,
             np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
 def test_modes_tuner_subset():
@@ -548,21 +556,49 @@ def test_modes_tuner_stabilize_multiple_subset():
         if i == 1:
             continue
         np.testing.assert_array_almost_equal(
-            dmds[i].operator._eigenvalues,
+            dmds[i].eigs,
             np.array([complex(0.3, 0.2), complex(0.8,0.5) / abs(complex(0.8,0.5)),
                 1, complex(1,1.e-2) / abs(complex(1,1.e-2)), 2, complex(2,1.e-2)]))
         np.testing.assert_array_almost_equal(
-            dmds[i]._b,
+            dmds[i].amplitudes,
             np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
     np.testing.assert_array_almost_equal(
-            dmds[1].operator._eigenvalues,
+            dmds[1].eigs,
             np.array([complex(0.3, 0.2), complex(0.8,0.5), 1, complex(1,1.e-2), 2, complex(2,1.e-2)]))
     np.testing.assert_array_almost_equal(
-        dmds[1]._b,
+        dmds[1].amplitudes,
         np.array([1,2,3,4,5,6], dtype=complex))
+
+def test_modes_tuner_index_scalar_dmd_raises():
+    def stable_modes(dmd_object):
+        toll = 1e-3
+        return np.abs(np.abs(dmd_object.eigs) - 1) < toll
+    dmd = DMD(svd_rank=10)
+    dmd.fit(sample_data)
+
+    with raises(ValueError):
+        ModesTuner(dmd).subset([0])
 
 def test_modes_tuner_selectors():
     assert selectors['module_threshold'] == ModesSelectors.threshold
     assert selectors['stable_modes'] == ModesSelectors.stable_modes
     assert selectors['integral_contribution'] == ModesSelectors.integral_contribution
+
+@pytest.mark.parametrize("dmd", [CDMD(svd_rank=-1), DMD(svd_rank=-1), DMDc(svd_rank=-1), FbDMD(svd_rank=-1),
+    HankelDMD(svd_rank=-1, d=3), HODMD(svd_rank=-1, d=3)])
+def test_modes_selector_all_dmd_types(dmd):
+    print('--------------------------- {} ---------------------------'.format(type(dmd)))
+    if isinstance(dmd, ParametricDMD):
+        repeated = np.repeat(sample_data[None], 10, axis=0)
+        dmd.fit(repeated + np.random.rand(*repeated.shape), np.ones(10))
+    elif isinstance(dmd, DMDc):
+        snapshots = np.array([[4, 2, 1, .5, .25], [7, .7, .07, .007, .0007]])
+        u = np.array([-4, -2, -1, -.5])
+        B = np.array([[1, 0]]).T
+        dmd.fit(snapshots, u, B)
+    else:
+        dmd.fit(sample_data)
+
+    ModesTuner(dmd, in_place=True).select('integral_contribution', n=3).stabilize(1-1.e-3)
+    assert True

@@ -154,14 +154,14 @@ class CDMD(DMDBase):
         self._opt = opt
         self._compression_matrix = compression_matrix
 
-        self._modes_activation_bitmask = None
-
         self._Atilde = CDMDOperator(svd_rank=svd_rank,
                                     rescale_mode=rescale_mode,
                                     forward_backward=forward_backward,
                                     sorted_eigs=sorted_eigs,
                                     tikhonov_regularization=
                                     tikhonov_regularization)
+
+        self._modes_activation_bitmask_proxy = None
 
     @property
     def compression_matrix(self):

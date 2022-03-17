@@ -8,7 +8,7 @@ from builtins import range
 from os.path import splitext
 import warnings
 import pickle
-from copy import copy
+from copy import copy, deepcopy
 
 import numpy as np
 import matplotlib as mpl
@@ -18,6 +18,100 @@ from past.utils import old_div
 from .dmdoperator import DMDOperator
 
 mpl.rcParams["figure.max_open_warning"] = 0
+
+
+class ActivationBitmaskProxy:
+    """
+    A proxy which stands in the middle between a bitmask and an instance of
+    :class:`DMDBase`. The proxy holds the original values of modes,
+    eigenvalues and amplitudes, and exposes (via
+    :func:`ActivationBitmaskProxy.modes`, :func:`ActivationBitmaskProxy.eigs`
+    and :func:`ActivationBitmaskProxy.amplitudes`) the proxied (i.e. filtered)
+    those quantities, depending on the current value of the
+    bitmask (see also :func:`ActivationBitmaskProxy.change_bitmask`).
+
+    This machinery is needed in order to allow for the modification of the
+    matrices containing modes, amplitudes and eigenvalues after the indexing
+    provided by the bitmask. Since double indexing in NumPy does not deliver a
+    modifiable view of the original array, we need to propagate any change
+    on the selection to the original matrices at some point: we decided to
+    propagate the changes just before a change in the bitmask, namely in the
+    last available moment before losing the information provided by the ``old''
+    bitmask.
+
+    :param modes: A matrix containing the original DMD modes.
+    :type modes: np.ndarray
+    :param eigs: An array containing the original DMD eigenvalues.
+    :type eigs: np.ndarray
+    :param amplitudes: An array containing the original DMD amplitudes.
+    :type amplitudes: np.ndarray
+    """
+
+    def __init__(self, modes, eigs, amplitudes):
+        self._original_modes = modes
+        self._original_eigs = eigs
+        self._original_amplitudes = amplitudes
+
+        self.old_bitmask = None
+        self.change_bitmask(np.full(len(eigs), True))
+
+    def change_bitmask(self, value):
+        """
+        Change the bitmask which regulates this proxy.
+
+        Before changing the bitmask this method reflects any change performed
+        on the proxied quantities provided by this proxy to the original values
+        of the quantities.
+
+        :param value: New value of the bitmask, represented by an array of
+            `bool` whose size is the same of the number of DMD modes.
+        :type value: np.ndarray
+        """
+
+        # apply changes made on the proxied values to the original values
+        if self.old_bitmask is not None:
+            self._original_modes[:, self.old_bitmask] = self.modes
+            self._original_eigs[self.old_bitmask] = self.eigs
+            self._original_amplitudes[self.old_bitmask] = self.amplitudes
+
+        self._modes = np.array(self._original_modes)[:, value]
+        self._eigs = np.array(self._original_eigs)[value]
+        self._amplitudes = np.array(self._original_amplitudes)[value]
+
+        self.old_bitmask = value
+
+    @property
+    def modes(self):
+        """
+        Proxied (i.e. filtered according to the bitmask) view on the matrix
+        of DMD modes.
+
+        :return: A matrix containing the selected DMD modes.
+        :rtype: np.ndarray
+        """
+        return self._modes
+
+    @property
+    def eigs(self):
+        """
+        Proxied (i.e. filtered according to the bitmask) view on the array
+        of DMD eigenvalues.
+
+        :return: An array containing the selected DMD eigenvalues.
+        :rtype: np.ndarray
+        """
+        return self._eigs
+
+    @property
+    def amplitudes(self):
+        """
+        Proxied (i.e. filtered according to the bitmask) view on the array
+        of DMD amplitudes.
+
+        :return: An array containing the selected DMD amplitudes.
+        :rtype: np.ndarray
+        """
+        return self._amplitudes
 
 
 class DMDBase(object):
@@ -62,7 +156,7 @@ class DMDBase(object):
     :type sorted_eigs: {'real', 'abs'} or False
     :param tikhonov_regularization: Tikhonov parameter for the regularization.
         If `None`, no regularization is applied, if `float`, it is used as the
-        :math:`\lambda` tikhonov parameter.
+        :math:`\\lambda` tikhonov parameter.
     :type tikhonov_regularization: int or float
 
     :cvar dict original_time: dictionary that contains information about the
@@ -111,7 +205,7 @@ class DMDBase(object):
         self._snapshots = None
         self._snapshots_shape = None
 
-        self._modes_activation_bitmask = None
+        self._modes_activation_bitmask_proxy = None
 
     @property
     def opt(self):
@@ -165,6 +259,14 @@ class DMDBase(object):
             self.original_time["dt"],
         )
 
+    def allocate_proxy(self):
+        # if this is not true, this call is probably a sub-call of some
+        # get-access to self.modes (most likely in compute_amplitudes())
+        if hasattr(self, "_b") and self._b is not None:
+            self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(
+                self.operator.modes, self.operator.eigenvalues, self._b
+            )
+
     @property
     def modes(self):
         """
@@ -173,7 +275,14 @@ class DMDBase(object):
         :return: the matrix containing the DMD modes.
         :rtype: numpy.ndarray
         """
-        return self.operator.modes[:, self.modes_activation_bitmask]
+        if self.fitted:
+            if not self._modes_activation_bitmask_proxy:
+                self.allocate_proxy()
+                # if the value is still None, it means that we cannot create
+                # the proxy at the moment
+                if not self._modes_activation_bitmask_proxy:
+                    return self.operator.modes
+            return self._modes_activation_bitmask_proxy.modes
 
     @property
     def atilde(self):
@@ -203,7 +312,14 @@ class DMDBase(object):
         :return: the eigenvalues from the eigendecomposition of `atilde`.
         :rtype: numpy.ndarray
         """
-        return self.operator.eigenvalues[self.modes_activation_bitmask]
+        if self.fitted:
+            if not self._modes_activation_bitmask_proxy:
+                self.allocate_proxy()
+                # if the value is still None, it means that we cannot create
+                # the proxy at the moment
+                if not self._modes_activation_bitmask_proxy:
+                    return self.operator.eigenvalues
+            return self._modes_activation_bitmask_proxy.eigs
 
     def _translate_eigs_exponent(self, tpow):
         """
@@ -311,7 +427,10 @@ class DMDBase(object):
         :return: the array that contains the amplitudes coefficient.
         :rtype: numpy.ndarray
         """
-        return self._b[self.modes_activation_bitmask]
+        if self.fitted:
+            if not self._modes_activation_bitmask_proxy:
+                self.allocate_proxy()
+            return self._modes_activation_bitmask_proxy.amplitudes
 
     @property
     def fitted(self):
@@ -336,15 +455,35 @@ class DMDBase(object):
         `modes_activation_bitmask` is an array of `True` values of the same
         shape of :func:`amplitudes`.
 
+        The array returned is read-only (this allow us to react appropriately
+        to changes in the bitmask). In order to modify the bitmask you need to
+        set the field to a brand-new value (see example below).
+
+        Example:
+
+        .. code-block:: python
+
+            >>> # this is an error
+            >>> dmd.modes_activation_bitmask[[1,2]] = False
+            ValueError: assignment destination is read-only
+            >>> tmp = np.array(dmd.modes_activation_bitmask)
+            >>> tmp[[1,2]] = False
+            >>> dmd.modes_activation_bitmask = tmp
+
         :return: The DMD modes activation bitmask.
         :rtype: numpy.ndarray
         """
         # check that the DMD was fitted
         if not self.fitted:
             raise RuntimeError("This DMD instance has not been fitted yet.")
-        if self._modes_activation_bitmask is None:
-            return np.full(self.operator.modes.shape[1], True, dtype=bool)
-        return self._modes_activation_bitmask
+
+        if not self._modes_activation_bitmask_proxy:
+            self.allocate_proxy()
+
+        bitmask = self._modes_activation_bitmask_proxy.old_bitmask
+        # make sure that the array is immutable
+        bitmask.flags.writeable = False
+        return bitmask
 
     @modes_activation_bitmask.setter
     def modes_activation_bitmask(self, value):
@@ -366,7 +505,7 @@ class DMDBase(object):
                 )
             )
 
-        self._modes_activation_bitmask = value
+        self._modes_activation_bitmask_proxy.change_bitmask(value)
 
     def __getitem__(self, key):
         """
@@ -395,23 +534,25 @@ class DMDBase(object):
             if isinstance(key, (list, np.ndarray)):
                 if not all(map(filter_function, key)):
                     raise ValueError(
-                        "Invalid argument type, expected a slice, an int, or a "
-                        "list of indexes."
+                        "Invalid argument type, expected a slice, an int, or "
+                        "a list of indexes."
                     )
                 # no repeated elements
                 if len(key) != len(set(key)):
                     raise ValueError("Repeated indexes are not supported.")
         else:
             raise ValueError(
-                "Invalid argument type, expected a slice, an int, or a list of "
-                "indexes, got {}".format(type(key))
+                "Invalid argument type, expected a slice, an int, or a list "
+                "of indexes, got {}".format(type(key))
             )
 
         mask = np.full(self.modes_activation_bitmask.shape, False)
         mask[key] = True
 
         shallow_copy = copy(self)
+        shallow_copy.allocate_proxy()
         shallow_copy.modes_activation_bitmask = mask
+
         return shallow_copy
 
     @property
@@ -466,6 +607,10 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
 _set_initial_time_dictionary() has not been called, did you call fit()?"""
             )
         return self._dmd_time
+
+    @dmd_time.setter
+    def dmd_time(self, value):
+        self._dmd_time = deepcopy(value)
 
     def _set_initial_time_dictionary(self, time_dict):
         """
@@ -709,7 +854,7 @@ matrix, or regularization methods.""".format(
         if self.eigs is None:
             raise ValueError(
                 "The eigenvalues have not been computed."
-                "You have to perform the fit method."
+                "You have to call the fit() method."
             )
 
         if dpi is not None:
@@ -1022,3 +1167,8 @@ class DMDTimeDict(dict):
                     key
                 )
             )
+
+    def __eq__(self, o):
+        if isinstance(o, dict):
+            return all(map(lambda s: o[s] == self[s], ["t0", "tend", "dt"]))
+        return False

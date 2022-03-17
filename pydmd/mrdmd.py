@@ -388,7 +388,6 @@ class MrDMD(DMDBase):
 
         X = self._snapshots.copy()
         for level in self.dmd_tree.levels:
-
             n_leaf = 2 ** level
             Xs = np.array_split(X, n_leaf, axis=1)
 

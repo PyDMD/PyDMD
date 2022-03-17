@@ -200,7 +200,7 @@ class DMDc(DMDBase):
         self._controlin_shape = None
         self._basis = None
 
-        self._modes_activation_bitmask = None
+        self._modes_activation_bitmask_proxy = None
 
     @property
     def svd_rank_omega(self):

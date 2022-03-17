@@ -8,7 +8,13 @@ from functools import partial
 import numpy as np
 
 
-def select_modes(dmd, criteria, in_place=True, return_indexes=False):
+def select_modes(
+    dmd,
+    criteria,
+    in_place=True,
+    return_indexes=False,
+    nullify_amplitudes=False,
+):
     """
     Select the DMD modes by using the given `criteria`.
     `criteria` is a function which takes as input the DMD
@@ -39,6 +45,10 @@ def select_modes(dmd, criteria, in_place=True, return_indexes=False):
     :param bool return_indexes: If `True`, this function returns the indexes
         corresponding to DMD modes cut using the given `criteria` (default
         `False`).
+    :param bool nullify_amplitudes: If `True`, the amplitudes associated with
+        DMD modes to be removed are set to 0, therefore the number of DMD
+        modes remains constant. If `False` (default) DMD modes are actually
+        removed, therefore the number of DMD modes in the instance decreases.
     :returns: If `return_indexes` is `True`, the returned value is a tuple
         whose items are:
 
@@ -56,24 +66,10 @@ def select_modes(dmd, criteria, in_place=True, return_indexes=False):
     all_indexes = set(np.arange(len(dmd.eigs)))
     cut_indexes = np.array(list(all_indexes - set(selected_indexes)))
 
-    dmd.operator._eigenvalues = dmd.operator._eigenvalues[selected_indexes]
-    dmd.operator._Lambda = dmd.operator._Lambda[selected_indexes]
-
-    dmd.operator._eigenvectors = dmd.operator._eigenvectors[
-        :, selected_indexes
-    ]
-    dmd.operator._modes = dmd.operator._modes[:, selected_indexes]
-
-    # TODO: should improve this [code repetition]
-    dmd.operator._Atilde = np.linalg.multi_dot(
-        [
-            dmd.operator._eigenvectors,
-            np.diag(dmd.operator._eigenvalues),
-            np.linalg.pinv(dmd.operator._eigenvectors),
-        ]
-    )
-
-    dmd._b = dmd._compute_amplitudes()
+    if len(cut_indexes) > 0:
+        tmp = np.array(dmd.modes_activation_bitmask)
+        tmp[cut_indexes] = False
+        dmd.modes_activation_bitmask = tmp
 
     if return_indexes:
         return dmd, cut_indexes
@@ -132,14 +128,13 @@ def stabilize_modes(
         eigs_module < outer_radius,
     )
 
-    dmd._b[fixable_eigs_indexes] *= np.abs(dmd.eigs[fixable_eigs_indexes])
-    dmd.operator._eigenvalues[fixable_eigs_indexes] /= np.abs(
+    dmd.amplitudes[fixable_eigs_indexes] *= np.abs(
         dmd.eigs[fixable_eigs_indexes]
     )
-
-    stabilized_indexes = np.where(fixable_eigs_indexes)[0]
+    dmd.eigs[fixable_eigs_indexes] /= np.abs(dmd.eigs[fixable_eigs_indexes])
 
     if return_indexes:
+        stabilized_indexes = np.where(fixable_eigs_indexes)[0]
         return dmd, stabilized_indexes
     return dmd
 
@@ -452,7 +447,7 @@ class ModesTuner:
             return list(map(deepcopy, self._dmds))
         return deepcopy(self._dmds[0])
 
-    def select(self, criteria, **kwargs):
+    def select(self, criteria, nullify_amplitudes=False, **kwargs):
         r"""
         Select the DMD modes by using the given `criteria`, which can be either
         a string or a function. You can choose pre-packed criteria by passing
@@ -484,8 +479,15 @@ class ModesTuner:
             If `criteria` is a function it must take an instance of DMD as the
             only parameter.
         :type criteria: str or callable
+        :param bool nullify_amplitudes: If `True`, the amplitudes associated
+            with DMD modes to be removed are set to 0, therefore the number of
+            DMD modes remains constant. If `False` (default) DMD modes are
+            actually removed, therefore the number of DMD modes in the instance
+            decreases.
         :param \**kwargs: Parameters passed to the chosen criteria (if
             `criteria` is a string).
+        :return ModesTuner: This instance of `ModesTuner` in order to allow
+            chaining multiple operations.
         """
 
         if isinstance(criteria, str):
@@ -499,7 +501,8 @@ modes (either a string or a function)"""
             )
 
         for dmd in self._dmds:
-            select_modes(dmd, criteria)
+            select_modes(dmd, criteria, nullify_amplitudes=nullify_amplitudes)
+        return self
 
     def stabilize(self, inner_radius, outer_radius=np.inf):
         """
@@ -525,7 +528,10 @@ modes (either a string or a function)"""
             be stabilized.
         :param float outer_radius: The outer radius of the circular sector to
             be stabilized.
+        :return ModesTuner: This instance of `ModesTuner` in order to allow
+            chaining multiple operations.
         """
 
         for dmd in self._dmds:
             stabilize_modes(dmd, inner_radius, outer_radius)
+        return self
