@@ -6,6 +6,7 @@ Reference:
 Decomposition. SIAM Journal on Applied Dynamical Systems 15.2 (2016): 713-735.
 """
 from __future__ import division
+from functools import partial
 from builtins import range
 from past.utils import old_div
 import numpy as np
@@ -386,6 +387,9 @@ class MrDMD(DMDBase):
                 "Redefining `max_level` to {}".format(self.max_level)
             )
 
+        def slow_modes(dmd, rho):
+            return np.abs(np.log(dmd.eigs)) < rho * 2 * np.pi
+
         X = self._snapshots.copy()
         for level in self.dmd_tree.levels:
             n_leaf = 2 ** level
@@ -396,15 +400,9 @@ class MrDMD(DMDBase):
                 current_dmd.fit(x)
 
                 rho = old_div(float(self.max_cycles), x.shape[1])
-                exponent = 2.0 * np.pi * rho
+                slow_modes_selector = partial(slow_modes, rho=rho)
 
-                # retain slow modes
-                select_modes(
-                    current_dmd,
-                    ModesSelectors.threshold(
-                        np.e ** (-exponent), np.e ** exponent
-                    ),
-                )
+                select_modes(current_dmd, slow_modes_selector)
 
             newX = np.hstack(
                 [
