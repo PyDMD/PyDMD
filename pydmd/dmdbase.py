@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from past.utils import old_div
 
 from .dmdoperator import DMDOperator
+from .utils import compute_svd
 
 mpl.rcParams["figure.max_open_warning"] = 0
 
@@ -721,20 +722,27 @@ matrix, or regularization methods.""".format(
 
         return snapshots, snapshots_shape
 
-    def _optimal_dmd_matrixes(self):
+    def _optimal_dmd_matrices(self):
         # compute the vandermonde matrix
         vander = np.vander(self.eigs, len(self.dmd_timesteps), True)
-
-        # perform svd on all the snapshots
-        U, s, V = np.linalg.svd(self._snapshots, full_matrices=False)
 
         P = np.multiply(
             np.dot(self.modes.conj().T, self.modes),
             np.conj(np.dot(vander, vander.conj().T)),
         )
 
-        tmp = np.linalg.multi_dot([U, np.diag(s), V]).conj().T
-        q = np.conj(np.diag(np.linalg.multi_dot([vander, tmp, self.modes])))
+        if self.exact:
+            q = np.conj(np.diag(np.linalg.multi_dot([vander,
+                                                     self._snapshots.conj().T,
+                                                     self.modes])))
+        else:
+            U, s, V = compute_svd(self._snapshots, self.operator._svd_rank)
+            q = np.conj(np.diag(
+                np.linalg.multi_dot([vander,
+                                     V,
+                                     np.diag(s).conj(),
+                                     self.operator.eigenvectors])))
+
 
         return P, q
 

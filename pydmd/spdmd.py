@@ -42,6 +42,8 @@ class SpDMD(DMD):
     :type svd_rank: int or float
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means TLSQ is not applied.
+    :param bool exact: flag to compute either exact DMD or projected DMD.
+        Default is True.
     :param opt: argument to control the computation of DMD modes amplitudes.
         See :class:`DMDBase`. Default is False.
     :type opt: bool or int
@@ -79,8 +81,8 @@ class SpDMD(DMD):
         algorithm are deleted after the termination of a call to :func:`fit`.
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, rescale_mode=None,
-                 forward_backward=False, sorted_eigs=False,
+    def __init__(self, svd_rank=0, tlsq_rank=0, exact=True, opt=False,
+                 rescale_mode=None, forward_backward=False, sorted_eigs=False,
                  abs_tolerance=1.0e-6, rel_tolerance=1.0e-4,
                  max_iterations=10000, rho=1, gamma=10, verbose=True,
                  enforce_zero=True, release_memory=True,
@@ -88,7 +90,7 @@ class SpDMD(DMD):
         super().__init__(
             svd_rank=svd_rank,
             tlsq_rank=tlsq_rank,
-            exact=True,
+            exact=exact,
             opt=opt,
             rescale_mode=rescale_mode,
             forward_backward=forward_backward,
@@ -119,7 +121,7 @@ class SpDMD(DMD):
         """
         # we call method fit() of the superclass to set all the needed fields
         super().fit(X)
-        P, q = self._optimal_dmd_matrixes()
+        P, q = self._optimal_dmd_matrices()
 
         self._P = sparse(P)
         self._q = q
