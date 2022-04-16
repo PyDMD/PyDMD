@@ -63,8 +63,9 @@ class MrDMD(DMDBase):
     """
     Multi-resolution Dynamic Mode Decomposition
 
-    :param DMDBase dmd: an instance of a subclass of `DMDBase`, used to
-        recursively analyze the dataset.
+    :param dmd: DMD instance(s) used to analyze the snapshots provided. See also
+        the documentation for :meth:`_dmd_builder`.
+    :type dmd: DMDBase or list or tuple or function
     :param int max_cycles: the maximum number of mode oscillations in any given
         time scale. Default is 1.
     :param int max_level: the maximum level (inclusive). For instance,
@@ -147,16 +148,101 @@ class MrDMD(DMDBase):
             axis=0,
         )
 
+    def _dmd_builder(self):
+        """
+        Builds a function which takes in input a level and a leaf count
+        (i.e. coordinates inside the binary tree) and produces an appropriate
+        DMD instance according to the criteria specified in `self.dmd`.
+
+        Criteria supported:
+
+        - A function which takes two parameters `level` and `leaf`;
+        - List/tuple of DMD instances (length must be equal to `max_level+1`);
+        - A DMD instance (which is used for all the levels and leaves).
+
+        Example 0 (one DMD):
+
+        .. code-block:: python
+
+            >>> # this SpDMD is used for all the levels, for all the leaves
+            >>> MrDMD(dmd=SpDMD(), max_level=5).fit(X)
+
+        Example 1 (simple function which adapts the parameter d of HankelDMD
+        to the current level of the tree):
+
+        .. code-block:: python
+
+            >>> def build_dmds(level, leaf):
+            ...     d = 30 - 2*level
+            ...     return HankelDMD(d=d)
+            >>> MrDMD(dmd=build_dmds, max_level=5).fit(X)
+
+        Example 2 (we use a different kind of DMD if we are near the middle part
+        of the time window):
+
+        .. code-block:: python
+
+            >>> # you can name the function however you prefer
+            >>> def my_dmds(level, leaf):
+            ...     level_size = pow(2,level)
+            ...     distance_from_middle = abs(leaf - level_size // 2)
+            ...     # we choose 2 as a random threshold
+            ...     if distance_from_middle < 2:
+            ...         return HankelDMD(d=5)
+            ...     else:
+            ...         return DMD(svd_rank=3)
+            >>> MrDMD(dmd=my_dmds, max_level=5).fit(X)
+
+        Example 3 (tuple of DMDs):
+
+        .. code-block:: python
+
+            >>> dmds_list = [DMD(svd_rank=10) for i in range(6) if i < 3
+                                else DMD(svd_rank=2)]
+            >>> MrDMD(dmd=dmds_list, max_level=5).fit(X)
+
+        :return: A function which can be used to spawn DMD instances according
+            to the level and leaf.
+        :rtype: func
+        """
+        if callable(self.dmd):
+            builder_func = self.dmd
+        elif isinstance(self.dmd, (list, tuple)):
+            if len(self.dmd) != self.max_level + 1:
+                raise ValueError(
+                    """
+Expected one item per level, got {} out of {} levels.""".format(
+                        len(self.dmd), self.max_level
+                    )
+                )
+
+            def builder_func(level, *args):
+                return deepcopy(self.dmd[level])
+
+        elif isinstance(self.dmd, DMDBase):
+
+            def builder_func(*args):
+                return deepcopy(self.dmd)
+
+        return builder_func
+
     def _build_tree(self):
         """
         Build the internal binary tree that contain the DMD subclasses.
         """
         self.dmd_tree = BinaryTree(self.max_level)
 
+        # we build a function which takes the level and leaf and returns a DMD
+        builder_func = self._dmd_builder()
+
         # Empty init
         for level in self.dmd_tree.levels:
             for leaf in self.dmd_tree.index_leaves(level):
-                self.dmd_tree[level, leaf] = deepcopy(self.dmd)
+                # we construct the dmd before in order to trigger a better
+                # exception in case the function fails (otherwise it would
+                # be an IndexError)
+                dmd = builder_func(level, leaf)
+                self.dmd_tree[level, leaf] = dmd
 
     def time_window_bins(self, t0, tend):
         """
