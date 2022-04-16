@@ -766,7 +766,7 @@ matrix, or regularization methods.""".format(
         """
         if isinstance(self.opt, bool) and self.opt:
             # b optimal
-            a = np.linalg.solve(*self._optimal_dmd_matrixes())
+            a = np.linalg.solve(*self._optimal_dmd_matrices())
         else:
             if isinstance(self.opt, bool):
                 amplitudes_snapshot_index = 0
