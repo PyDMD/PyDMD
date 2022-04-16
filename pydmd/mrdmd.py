@@ -67,11 +67,12 @@ class MrDMD(DMDBase):
         recursively analyze the dataset.
     :param int max_cycles: the maximum number of mode oscillations in any given
         time scale. Default is 1.
-    :param int max_level: the maximum number of levels. Defualt is 6.
+    :param int max_level: the maximum level (inclusive). For instance,
+        `max_level=4` means that we are going to have levels `0`, `1`, `2`, `3`
+        and `4`. Default is 2.
     """
 
     def __init__(self, dmd, max_level=2, max_cycles=1):
-
         self.dmd = dmd
         self.max_cycles = max_cycles
         self.max_level = max_level
