@@ -17,5 +17,5 @@ jobs:
           git config --global user.name 'Monthly Tag bot'
           git config --global user.email 'mtbot@noreply.github.com'
           git tag -a "v$TAG" -m "Monthly version $TAG"
-          git push origin $TAG
+          git push origin "v$TAG"
           
