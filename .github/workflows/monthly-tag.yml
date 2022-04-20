@@ -13,6 +13,9 @@ jobs:
           SUFFIX=$(date +%b%y)
           VERSION=$(python -c "meta={}; fp = open('pydmd/meta.py'); exec(fp.read(), meta); fp.close(); print(meta['__version__'])")
           TAG="$VERSION-$SUFFIX"
+          echo $TAG
+          git config --global user.name 'Monthly Tag bot'
+          git config --global user.email 'mtbot@noreply.github.com'
           git tag -a "v$TAG" -m "Monthly version $TAG"
           git tag
-          echo $TAG
+          
