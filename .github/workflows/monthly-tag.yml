@@ -10,7 +10,9 @@ jobs:
 
       - name: Create and push the tag
         run: |
-          TAG="$(python -c 'import pydmd; print(pydmd.__version__)')-$(date +%b%y)"
+          SUFFIX="$(date +%b%y)"
+          VERSION="$(python -c "meta={}; fp = open('pydmd/meta.py'); exec(fp.read(), meta); fp.close(); print(meta['__version__']))"
+          TAG="$VERSION-$SUFFIX"
           git tag -a "v$TAG" -m "Monthly version $TAG"
           git tag
           echo $TAG
