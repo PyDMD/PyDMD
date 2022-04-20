@@ -1,0 +1,16 @@
+name: Monthly Automated Tag
+
+on: push
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Create and push the tag
+        run: |
+          TAG="$(python -c 'import pydmd; print(pydmd.__version__)')-$(date +%b%y)"
+          git tag -a "v$TAG" -m "Monthly version $TAG"
+          git tag
+          echo $TAG
