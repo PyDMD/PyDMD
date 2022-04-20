@@ -736,13 +736,14 @@ matrix, or regularization methods.""".format(
                                                      self._snapshots.conj().T,
                                                      self.modes])))
         else:
-            U, s, V = compute_svd(self._snapshots, self.operator._svd_rank)
+            U, s, V = compute_svd(self._snapshots[:, :-1],
+                                  self.operator._svd_rank)
+
             q = np.conj(np.diag(
-                np.linalg.multi_dot([vander,
+                np.linalg.multi_dot([vander[:, :-1],
                                      V,
                                      np.diag(s).conj(),
                                      self.operator.eigenvectors])))
-
 
         return P, q
 
