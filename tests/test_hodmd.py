@@ -56,7 +56,7 @@ class TestHODmd(TestCase):
 
     def test_d(self):
         single_data = np.sin(np.linspace(0, 10, 100))
-        dmd = HODMD(svd_rank=-1, d=50, opt=True, svd_rank_extra=-1)
+        dmd = HODMD(svd_rank=-1, d=50, opt=True, exact=True, svd_rank_extra=-1)
         dmd.fit(single_data)
         assert np.allclose(dmd.reconstructed_data.flatten(), single_data)
         assert dmd.d == 50

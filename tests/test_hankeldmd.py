@@ -57,6 +57,12 @@ class TestHankelDmd(TestCase):
         single_data = np.sin(np.linspace(0, 10, 100))
         dmd = HankelDMD(svd_rank=-1, d=50, opt=True)
         dmd.fit(single_data)
+        np.testing.assert_array_almost_equal(
+            dmd.reconstructed_data.flatten().real,
+            single_data,
+            decimal=1) # TODO poor accuracy using projected modes
+        dmd = HankelDMD(svd_rank=-1, d=50, opt=True, exact=True)
+        dmd.fit(single_data)
         assert np.allclose(dmd.reconstructed_data.flatten().real, single_data)
 
     def test_Atilde_values(self):
@@ -128,29 +134,25 @@ class TestHankelDmd(TestCase):
         assert dmd.dynamics.shape == (5, sample_data.shape[1])
 
     def test_dynamics_opt_2(self):
-        dmd = HankelDMD(svd_rank=1, opt=True)
+        dmd = HankelDMD(svd_rank=1, opt=True, exact=False)
         dmd.fit(X=sample_data)
-        expected_dynamics = np.array(
-            [
-                [
-                    -4.56004133 - 6.48054238j,
-                    7.61228319 + 1.4801793j,
-                    -6.37489962 + 4.11788355j,
-                    1.70548899 - 7.22866146j,
-                    3.69875496 + 6.25701574j,
-                    -6.85298745 - 1.90654427j,
-                    6.12829151 - 3.30212967j,
-                    -2.08469012 + 6.48584004j,
-                    -2.92745126 - 5.99004747j,
-                    6.12772217 + 2.24123565j,
-                    -5.84352626 + 2.57413711j,
-                    2.37745273 - 5.77906544j,
-                    2.24158249 + 5.68989493j,
-                    -5.44023459 - 2.49457492j,
-                    5.53024740 - 1.92916437j,
-                ]
-            ]
-        )
+        expected_dynamics = np.array([[
+            -4.609718826226513-6.344781724790875j,
+            7.5552686987577165+1.3506997434096375j,
+            -6.246864367654589+4.170577993207872j,
+            1.5794144248628537-7.179014663490048j,
+            3.754043295828462+6.13648812118528j,
+            -6.810262177959786-1.7840079278093528j,
+            6.015047060133346-3.35961532862783j,
+            -1.9658025630719695+6.449604262000736j,
+            -2.9867632454837936-5.8838563367460734j,
+            6.097558230017521+2.126086276430128j,
+            -5.7441543819530265+2.6349291080417103j,
+            2.266111252852836-5.7545702519088895j,
+            2.303531963541068+5.597105176945707j,
+            -5.421019770795679-2.3870927539102658j,
+            5.443800581850978-1.9919716610066682j,
+        ]])
         np.testing.assert_allclose(dmd.dynamics, expected_dynamics)
 
     def test_reconstructed_data(self):
