@@ -18,7 +18,7 @@ class Version:
     def __str__(self):
 
         if self.date_patch:
-            version_string = '{}.{}.{}-{}'.format(
+            version_string = '{}.{}.{}.{}'.format(
                 self.major,
                 self.minor,
                 self.patch,
@@ -37,7 +37,6 @@ def get_version():
     with open(meta_file, 'r') as fp:
         content = fp.read()
 
-    print(content)
     try:
         found = re.search(r'__version__.*=.*"(.+?)"', content).group(1)
     except AttributeError:
