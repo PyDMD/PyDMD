@@ -1,6 +1,8 @@
 name: Monthly Automated Tag
 
-on: push
+on:
+  schedule:
+    - cron: '0 11 21 * *'
 
 jobs:
 
