@@ -65,6 +65,8 @@
 <li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
@@ -168,9 +170,9 @@ not compute truncation.</p></li>
 is 0, that means no truncation.</p></li>
 <li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute either exact DMD or projected DMD.
 Default is False.</p></li>
-<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes. See
-<code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
-<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes.
+See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
 10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
 eigendecomposition. None means no rescaling, ‘auto’ means automatic
 rescaling using singular values, otherwise the scaling factors.</p></li>
@@ -182,13 +184,14 @@ Default is 1.</p></li>
 <li><p><strong>sorted_eigs</strong> (<em>{'real'</em><em>, </em><em>'abs'}</em><em> or </em><em>False</em>) – Sort eigenvalues (and modes/dynamics accordingly) by
 magnitude if <cite>sorted_eigs=’abs’</cite>, by real part (and then by imaginary
 part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p></li>
-<li><p><strong>reconstruction_method</strong> (<em>{'first'</em><em>, </em><em>'mean'}</em><em> or </em><em>array-like</em>) – Due to how HODMD is defined, we have several
-versions of the same snapshot. The parameter <cite>reconstruction_method</cite>
-allows changing how these versions are combined in
-<cite>reconstructed_data</cite>.  If <cite>‘first’</cite>, only the first version is selected
-(default behavior); if <cite>‘mean’</cite> we take the mean of all the versions;
-if the parameter is an array of floats of size <cite>d</cite>, the return value is
-the weighted average of the versions.</p></li>
+<li><p><strong>reconstruction_method</strong> – Method used to reconstruct the snapshots of
+the dynamical system from the multiple versions available due to how
+HODMD is conceived. If <cite>‘first’</cite> (default) the first version
+available is selected (i.e. the nearest to the 0-th row in the
+augmented matrix). If <cite>‘mean’</cite> we compute the element-wise mean. If
+<cite>reconstruction_method</cite> is an array of float values we compute the
+weighted average (for each snapshots) using the given values as weights
+(the number of weights must be equal to <cite>d</cite>).</p></li>
 <li><p><strong>svd_rank_extra</strong> – the rank for the initial reduction of the input
 data, performed before the rearrangement of the input data to the
 (pseudo) Hankel matrix format; If 0, the method computes the optimal
@@ -206,7 +209,7 @@ truncation.</p></li>
 <dd><p>Compute the Dynamic Modes Decomposition to the input data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -234,7 +237,7 @@ The first axis is omitted if only one single time instant is
 selected, in this case the output becomes a 2D matrix.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -255,7 +258,7 @@ selected, in this case the output becomes a 2D matrix.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 08, 2021.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
       </span></p>
   </div>
 

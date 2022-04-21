@@ -17,7 +17,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Contact" href="contact.html" />
+    <link rel="next" title="ParametricDMD" href="paramdmd.html" />
     <link rel="prev" title="pydmd.optdmd.OptDMD.snapshots" href="_summaries/pydmd.optdmd.OptDMD.snapshots.html" /> 
 </head>
 
@@ -51,6 +51,8 @@
 <li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">SpDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
@@ -132,7 +134,7 @@
 </table>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-name descname">SpDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">sorted_eigs=False</em>, <em class="sig-param">abs_tolerance=1e-06</em>, <em class="sig-param">rel_tolerance=0.0001</em>, <em class="sig-param">max_iterations=10000</em>, <em class="sig-param">rho=1</em>, <em class="sig-param">gamma=10</em>, <em class="sig-param">verbose=True</em>, <em class="sig-param">enforce_zero=True</em>, <em class="sig-param">release_memory=True</em>, <em class="sig-param">zero_absolute_tolerance=1e-12</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="sig-name descname">SpDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=True</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">sorted_eigs=False</em>, <em class="sig-param">abs_tolerance=1e-06</em>, <em class="sig-param">rel_tolerance=0.0001</em>, <em class="sig-param">max_iterations=10000</em>, <em class="sig-param">rho=1</em>, <em class="sig-param">gamma=10</em>, <em class="sig-param">verbose=True</em>, <em class="sig-param">enforce_zero=True</em>, <em class="sig-param">release_memory=True</em>, <em class="sig-param">zero_absolute_tolerance=1e-12</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmd.DMD</span></code></p>
 <p>Sparsity-Promoting Dynamic Mode Decomposition. Promotes solutions having an
 high number of amplitudes set to zero (i.e. <em>sparse solutions</em>).
@@ -148,9 +150,11 @@ to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1, the method 
 not compute truncation.</p></li>
 <li><p><strong>tlsq_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation computing Total Least Square. Default
 is 0, that means TLSQ is not applied.</p></li>
-<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes. See
-<code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
-<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+<li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute either exact DMD or projected DMD.
+Default is True.</p></li>
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes.
+See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
 10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
 eigendecomposition. None means no rescaling, ‘auto’ means automatic
 rescaling using singular values, otherwise the scaling factors.</p></li>
@@ -213,8 +217,8 @@ computed separately afterwards
 non-zero amplitudes).</p></li>
 <li><p><strong>lmbd</strong> (<em>np.ndarray</em>) – Current value of <span class="math">\lambda_k</span> (vector
 of Lagrange multipliers).</p></li>
-<li><p><strong>old_beta</strong> (<em>np.ndarray</em>) – Old value of <span class="math">\beta_{k-1}</span> (vector of
-non-zero amplitudes).</p></li>
+<li><p><strong>old_beta</strong> (<em>np.ndarray</em>) – Old value of <span class="math">\beta_{k-1}</span> (vector
+of non-zero amplitudes).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return bool</dt>
@@ -231,8 +235,8 @@ indexes should be set to 0.
 :param np.ndarray zero_amplitudes: Boolean vector.
 :return np.ndarray: Vector of optimal DMD amplitudes. Amplitudes at</p>
 <blockquote>
-<div><p>indexes corresponding to <cite>True</cite> indexes in <cite>zero_amplitudes</cite> are set
-to 0.</p>
+<div><p>indexes corresponding to <cite>True</cite> indexes in <cite>zero_amplitudes</cite> are
+set to 0.</p>
 </div></blockquote>
 </dd></dl>
 
@@ -314,8 +318,8 @@ of Lagrange multipliers).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>beta</strong> (<em>np.ndarray</em>) – Updated value of <span class="math">\beta_{k+1}</span> (vector of
-non-zero amplitudes).</p></li>
+<li><p><strong>beta</strong> (<em>np.ndarray</em>) – Updated value of <span class="math">\beta_{k+1}</span> (vector
+of non-zero amplitudes).</p></li>
 <li><p><strong>lmbd</strong> (<em>np.ndarray</em>) – Current value of <span class="math">\lambda_k</span> (vector
 of Lagrange multipliers).</p></li>
 </ul>
@@ -346,14 +350,14 @@ of Lagrange multipliers).</p></li>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="_summaries/pydmd.optdmd.OptDMD.snapshots.html" class="btn btn-neutral float-left" title="pydmd.optdmd.OptDMD.snapshots" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="contact.html" class="btn btn-neutral float-right" title="Contact" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="paramdmd.html" class="btn btn-neutral float-right" title="ParametricDMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 08, 2021.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
       </span></p>
   </div>
 

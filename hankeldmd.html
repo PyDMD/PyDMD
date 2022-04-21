@@ -51,6 +51,8 @@
 <li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
@@ -155,9 +157,9 @@ not compute truncation.</p></li>
 is 0, that means no truncation.</p></li>
 <li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute either exact DMD or projected DMD.
 Default is False.</p></li>
-<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes. See
-<code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
-<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes.
+See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
 10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
 eigendecomposition. None means no rescaling, ‘auto’ means automatic
 rescaling using singular values, otherwise the scaling factors.</p></li>
@@ -169,13 +171,14 @@ Default is 1.</p></li>
 <li><p><strong>sorted_eigs</strong> (<em>{'real'</em><em>, </em><em>'abs'}</em><em> or </em><em>False</em>) – Sort eigenvalues (and modes/dynamics accordingly) by
 magnitude if <cite>sorted_eigs=’abs’</cite>, by real part (and then by imaginary
 part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p></li>
-<li><p><strong>reconstruction_method</strong> (<em>{'first'</em><em>, </em><em>'mean'}</em><em> or </em><em>array-like</em>) – Due to how HODMD is defined, we have several
-versions of the same snapshot. The parameter <cite>reconstruction_method</cite>
-allows changing how these versions are combined in <cite>reconstructed_data</cite>.
-If <cite>‘first’</cite>, only the first version is selected (default behavior);
-if <cite>‘mean’</cite> we take the mean of all the versions; if the parameter is an
-array of floats of size <cite>d</cite>, the return value is the weighted average
-of the versions.</p></li>
+<li><p><strong>reconstruction_method</strong> (<em>{'first'</em><em>, </em><em>'mean'}</em><em> or </em><em>array-like</em>) – Method used to reconstruct the snapshots of
+the dynamical system from the multiple versions available due to how
+HankelDMD is conceived. If <cite>‘first’</cite> (default) the first version
+available is selected (i.e. the nearest to the 0-th row in the
+augmented matrix). If <cite>‘mean’</cite> we compute the element-wise mean. If
+<cite>reconstruction_method</cite> is an array of float values we compute the
+weighted average (for each snapshots) using the given values as weights
+(the number of weights must be equal to <cite>d</cite>).</p></li>
 </ul>
 </dd>
 </dl>
@@ -263,7 +266,7 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the array that contains the amplitudes coefficient.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -271,7 +274,22 @@ system and the reconstructed one. For futher information, see
 <dl class="method">
 <dt>
 <em class="property">property </em><code class="sig-name descname">d</code></dt>
-<dd></dd></dl>
+<dd><p>The new order for spatial dimension of the input snapshots.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">eigs</code></dt>
+<dd><p>Get the eigenvalues of A tilde.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the eigenvalues from the eigendecomposition of <cite>atilde</cite>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt>
@@ -279,7 +297,7 @@ system and the reconstructed one. For futher information, see
 <dd><p>Compute the Dynamic Modes Decomposition to the input data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -293,7 +311,38 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the matrix containing the DMD modes.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">modes_activation_bitmask</code></dt>
+<dd><p>Get the bitmask which controls which DMD modes are enabled at the
+moment in this DMD instance.</p>
+<p>The DMD instance must be fitted before this property becomes valid.
+After <code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code> is called, the defalt value of
+<cite>modes_activation_bitmask</cite> is an array of <cite>True</cite> values of the same
+shape of <code class="xref py py-func docutils literal notranslate"><span class="pre">amplitudes()</span></code>.</p>
+<p>The array returned is read-only (this allow us to react appropriately
+to changes in the bitmask). In order to modify the bitmask you need to
+set the field to a brand-new value (see example below).</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># this is an error</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="go">ValueError: assignment destination is read-only</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span> <span class="o">=</span> <span class="n">tmp</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The DMD modes activation bitmask.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -321,7 +370,7 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the matrix that contains the reconstructed snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -345,7 +394,7 @@ time snapshot, or for all the time snapshots if <cite>timeindex</cite> is
 of the array returned).</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a> or list</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a> or list</p>
 </dd>
 </dl>
 </dd></dl>
@@ -371,7 +420,7 @@ of the array returned).</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 08, 2021.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
       </span></p>
   </div>
 

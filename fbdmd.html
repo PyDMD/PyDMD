@@ -65,6 +65,8 @@
 <li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
@@ -162,9 +164,9 @@ not compute truncation.</p></li>
 is 0, that means no truncation.</p></li>
 <li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute either exact DMD or projected DMD.
 Default is False.</p></li>
-<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes. See
-<code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
-<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes.
+See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
 10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
 eigendecomposition. None means no rescaling, ‘auto’ means automatic
 rescaling using singular values, otherwise the scaling factors.</p></li>
@@ -191,7 +193,7 @@ part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p><
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 08, 2021.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
       </span></p>
   </div>
 

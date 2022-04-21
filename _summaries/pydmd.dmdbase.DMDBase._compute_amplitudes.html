@@ -67,6 +67,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../dmdc.html">DMDc</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../optdmd.html">OptDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../spdmd.html">SpDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../contact.html">Contact</a></li>
@@ -107,8 +109,8 @@
 <code class="sig-prename descclassname">DMDBase.</code><code class="sig-name descname">_compute_amplitudes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pydmd/dmdbase.html#DMDBase._compute_amplitudes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.dmdbase.DMDBase._compute_amplitudes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the amplitude coefficients. If <cite>self.opt</cite> is False the
 amplitudes are computed by minimizing the error between the modes and
-the first snapshot; if <cite>self.opt</cite> is True the amplitudes are computed by
-minimizing the error between the modes and all the snapshots, at the
+the first snapshot; if <cite>self.opt</cite> is True the amplitudes are computed
+by minimizing the error between the modes and all the snapshots, at the
 expense of bigger computational cost.</p>
 <p>This method uses the class variables self._snapshots (for the
 snapshots), self.modes and self.eigs.</p>
@@ -117,7 +119,7 @@ snapshots), self.modes and self.eigs.</p>
 <dd class="field-odd"><p>the amplitudes array</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 <p>References for optimal amplitudes:
@@ -139,7 +141,7 @@ Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 08, 2021.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
       </span></p>
   </div>
 

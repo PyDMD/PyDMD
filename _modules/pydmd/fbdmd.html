@@ -69,12 +69,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for pydmd.fbdmd</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Derived module from dmdbase.py for forward/backward dmd.</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">sqrtm</span>
+<span></span><span class="sd">&quot;&quot;&quot;Derived module from dmdbase.py for forward/backward dmd.&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">.dmd</span> <span class="kn">import</span> <span class="n">DMD</span>
 
 
@@ -93,8 +88,8 @@
 <span class="sd">        is 0, that means no truncation.</span>
 <span class="sd">    :param bool exact: flag to compute either exact DMD or projected DMD.</span>
 <span class="sd">        Default is False.</span>
-<span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes. See</span>
-<span class="sd">        :class:`DMDBase`. Default is False.</span>
+<span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes.</span>
+<span class="sd">        See :class:`DMDBase`. Default is False.</span>
 <span class="sd">    :type opt: bool or int</span>
 <span class="sd">    :param rescale_mode: Scale Atilde as shown in</span>
 <span class="sd">            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its</span>
@@ -110,10 +105,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                 <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="o">=</span><span class="n">tlsq_rank</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="n">exact</span><span class="p">,</span>
-            <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">rescale_mode</span><span class="o">=</span><span class="n">rescale_mode</span><span class="p">,</span> <span class="n">forward_backward</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">sorted_eigs</span><span class="o">=</span><span class="n">sorted_eigs</span><span class="p">)</span></div>
+                         <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">rescale_mode</span><span class="o">=</span><span class="n">rescale_mode</span><span class="p">,</span>
+                         <span class="n">forward_backward</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sorted_eigs</span><span class="o">=</span><span class="n">sorted_eigs</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
@@ -124,7 +119,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 08, 2021.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
       </span></p>
   </div>
 

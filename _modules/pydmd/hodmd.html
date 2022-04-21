@@ -76,12 +76,11 @@
 <span class="sd">- S. L Clainche, J. M. Vega, Higher Order Dynamic Mode Decomposition.</span>
 <span class="sd">Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">warnings</span>
-
 <span class="kn">from</span> <span class="nn">.hankeldmd</span> <span class="kn">import</span> <span class="n">HankelDMD</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_tlsq</span><span class="p">,</span> <span class="n">compute_svd</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span>
 
 
 <div class="viewcode-block" id="HODMD"><a class="viewcode-back" href="../../hodmd.html#pydmd.hodmd.HODMD">[docs]</a><span class="k">class</span> <span class="nc">HODMD</span><span class="p">(</span><span class="n">HankelDMD</span><span class="p">):</span>
@@ -99,8 +98,8 @@
 <span class="sd">        is 0, that means no truncation.</span>
 <span class="sd">    :param bool exact: flag to compute either exact DMD or projected DMD.</span>
 <span class="sd">        Default is False.</span>
-<span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes. See</span>
-<span class="sd">        :class:`DMDBase`. Default is False.</span>
+<span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes.</span>
+<span class="sd">        See :class:`DMDBase`. Default is False.</span>
 <span class="sd">    :type opt: bool or int</span>
 <span class="sd">    :param rescale_mode: Scale Atilde as shown in</span>
 <span class="sd">            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its</span>
@@ -116,14 +115,14 @@
 <span class="sd">        magnitude if `sorted_eigs=&#39;abs&#39;`, by real part (and then by imaginary</span>
 <span class="sd">        part to break ties) if `sorted_eigs=&#39;real&#39;`. Default: False.</span>
 <span class="sd">    :type sorted_eigs: {&#39;real&#39;, &#39;abs&#39;} or False</span>
-<span class="sd">    :param reconstruction_method: Due to how HODMD is defined, we have several</span>
-<span class="sd">        versions of the same snapshot. The parameter `reconstruction_method`</span>
-<span class="sd">        allows changing how these versions are combined in</span>
-<span class="sd">        `reconstructed_data`.  If `&#39;first&#39;`, only the first version is selected</span>
-<span class="sd">        (default behavior); if `&#39;mean&#39;` we take the mean of all the versions;</span>
-<span class="sd">        if the parameter is an array of floats of size `d`, the return value is</span>
-<span class="sd">        the weighted average of the versions.</span>
-<span class="sd">    :type reconstruction_method: {&#39;first&#39;, &#39;mean&#39;} or array-like</span>
+<span class="sd">    :param reconstruction_method: Method used to reconstruct the snapshots of</span>
+<span class="sd">        the dynamical system from the multiple versions available due to how</span>
+<span class="sd">        HODMD is conceived. If `&#39;first&#39;` (default) the first version</span>
+<span class="sd">        available is selected (i.e. the nearest to the 0-th row in the</span>
+<span class="sd">        augmented matrix). If `&#39;mean&#39;` we compute the element-wise mean. If</span>
+<span class="sd">        `reconstruction_method` is an array of float values we compute the</span>
+<span class="sd">        weighted average (for each snapshots) using the given values as weights</span>
+<span class="sd">        (the number of weights must be equal to `d`).</span>
 <span class="sd">    :param svd_rank_extra: the rank for the initial reduction of the input</span>
 <span class="sd">        data, performed before the rearrangement of the input data to the</span>
 <span class="sd">        (pseudo) Hankel matrix format; If 0, the method computes the optimal</span>
@@ -135,19 +134,10 @@
 <span class="sd">    :type svd_rank: int or float</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">d</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">reconstruction_method</span><span class="o">=</span><span class="s2">&quot;first&quot;</span><span class="p">,</span>
-        <span class="n">svd_rank_extra</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reconstruction_method</span><span class="o">=</span><span class="s2">&quot;first&quot;</span><span class="p">,</span>
+                 <span class="n">svd_rank_extra</span><span class="o">=</span><span class="mi">0</span><span class="p">,):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span>
             <span class="n">tlsq_rank</span><span class="o">=</span><span class="n">tlsq_rank</span><span class="p">,</span>
@@ -206,12 +196,10 @@
 
         <span class="k">if</span> <span class="n">org_snp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">U_extra</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_svd</span><span class="p">(</span><span class="n">org_snp</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                <span class="sd">&quot;&quot;&quot;The parameter &#39;svd_rank_extra={}&#39; has been ignored because</span>
-<span class="sd">the given system is a scalar function&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank_extra</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">((</span>
+                <span class="s2">&quot;The parameter &#39;svd_rank_extra=</span><span class="si">{}</span><span class="s2">&#39; has been ignored because &quot;</span>
+                <span class="s2">&quot;the given system is a scalar function&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank_extra</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">U_extra</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_svd</span><span class="p">(</span><span class="n">org_snp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank_extra</span><span class="p">)</span>
 
@@ -232,7 +220,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 08, 2021.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
       </span></p>
   </div>
 

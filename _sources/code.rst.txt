@@ -16,3 +16,5 @@ Code Documentation
    dmdc
    optdmd
    spdmd
+   paramdmd
+   dmd_modes_tuner

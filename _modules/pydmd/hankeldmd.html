@@ -77,10 +77,11 @@
 <span class="sd">computation of spectral properties of the Koopman operator. SIAM Journal on</span>
 <span class="sd">Applied Dynamical Systems, 2017, 16.4: 2096-2126.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span><span class="p">,</span> <span class="n">DMDTimeDict</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_tlsq</span>
+<span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
 <span class="kn">from</span> <span class="nn">.dmd</span> <span class="kn">import</span> <span class="n">DMD</span>
 
 
@@ -99,8 +100,8 @@
 <span class="sd">        is 0, that means no truncation.</span>
 <span class="sd">    :param bool exact: flag to compute either exact DMD or projected DMD.</span>
 <span class="sd">        Default is False.</span>
-<span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes. See</span>
-<span class="sd">        :class:`DMDBase`. Default is False.</span>
+<span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes.</span>
+<span class="sd">        See :class:`DMDBase`. Default is False.</span>
 <span class="sd">    :type opt: bool or int</span>
 <span class="sd">    :param rescale_mode: Scale Atilde as shown in</span>
 <span class="sd">            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its</span>
@@ -116,13 +117,14 @@
 <span class="sd">        magnitude if `sorted_eigs=&#39;abs&#39;`, by real part (and then by imaginary</span>
 <span class="sd">        part to break ties) if `sorted_eigs=&#39;real&#39;`. Default: False.</span>
 <span class="sd">    :type sorted_eigs: {&#39;real&#39;, &#39;abs&#39;} or False</span>
-<span class="sd">    :param reconstruction_method: Due to how HODMD is defined, we have several</span>
-<span class="sd">        versions of the same snapshot. The parameter `reconstruction_method`</span>
-<span class="sd">        allows changing how these versions are combined in `reconstructed_data`.</span>
-<span class="sd">        If `&#39;first&#39;`, only the first version is selected (default behavior);</span>
-<span class="sd">        if `&#39;mean&#39;` we take the mean of all the versions; if the parameter is an</span>
-<span class="sd">        array of floats of size `d`, the return value is the weighted average</span>
-<span class="sd">        of the versions.</span>
+<span class="sd">    :param reconstruction_method: Method used to reconstruct the snapshots of</span>
+<span class="sd">        the dynamical system from the multiple versions available due to how</span>
+<span class="sd">        HankelDMD is conceived. If `&#39;first&#39;` (default) the first version</span>
+<span class="sd">        available is selected (i.e. the nearest to the 0-th row in the</span>
+<span class="sd">        augmented matrix). If `&#39;mean&#39;` we compute the element-wise mean. If</span>
+<span class="sd">        `reconstruction_method` is an array of float values we compute the</span>
+<span class="sd">        weighted average (for each snapshots) using the given values as weights</span>
+<span class="sd">        (the number of weights must be equal to `d`).</span>
 <span class="sd">    :type reconstruction_method: {&#39;first&#39;, &#39;mean&#39;} or array-like</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -175,10 +177,11 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The new order for spatial dimension of the input snapshots.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span>
 
 <div class="viewcode-block" id="HankelDMD._hankel_first_occurrence"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._hankel_first_occurrence">[docs]</a>    <span class="k">def</span> <span class="nf">_hankel_first_occurrence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For a given `t` such that there is :math:`k \in \mathbb{N}` such that</span>
 <span class="sd">        :math:`t = t_0 + k dt`, return the index of the first column in Hankel</span>
 <span class="sd">        pseudo matrix (see also :func:`_pseudo_hankel_matrix`) which contains</span>
@@ -230,8 +233,8 @@
         <span class="n">space_dim</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span>
         <span class="n">time_instants</span> <span class="o">=</span> <span class="n">rec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span>
 
-        <span class="c1"># for each time instance, we collect all its appearences.</span>
-        <span class="c1"># each snapshot appears at most d times (for instance, the first appears</span>
+        <span class="c1"># for each time instance, we collect all its appearences.  each</span>
+        <span class="c1"># snapshot appears at most d times (for instance, the first appears</span>
         <span class="c1"># only once).</span>
         <span class="n">reconstructed_snapshots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
             <span class="p">(</span><span class="n">time_instants</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="n">space_dim</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">rec</span><span class="o">.</span><span class="n">dtype</span>
@@ -242,16 +245,16 @@
             <span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
             <span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">c_idxes</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">c_idxes</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))[:,</span> <span class="kc">None</span><span class="p">]</span>
 
         <span class="n">reconstructed_snapshots</span><span class="p">[</span><span class="n">c_idxes</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">c_idxes</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">rec</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">timeindex</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">reconstructed_snapshots</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">reconstructed_snapshots</span><span class="p">[</span><span class="n">timeindex</span><span class="p">]</span></div>
+
+        <span class="k">return</span> <span class="n">reconstructed_snapshots</span><span class="p">[</span><span class="n">timeindex</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="HankelDMD._first_reconstructions"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._first_reconstructions">[docs]</a>    <span class="k">def</span> <span class="nf">_first_reconstructions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reconstructions</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the first occurrence of each snapshot available in the given</span>
@@ -285,9 +288,7 @@
             <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_first_reconstructions</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruction_method</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">rec</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reconstruction_method</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_reconstruction_method</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-        <span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reconstruction_method</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span>
                 <span class="n">rec</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reconstruction_method</span>
             <span class="p">)</span><span class="o">.</span><span class="n">T</span>
@@ -340,6 +341,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">modes</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">eigs</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">amplitudes</span>
 
@@ -350,6 +355,44 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">svd_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">svd_rank</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span>
+
+    <span class="nd">@modes_activation_bitmask</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="c1"># due to how we implemented HankelDMD we need an alternative implementation</span>
+    <span class="c1"># of __getitem__</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Restrict the DMD modes used by this instance to a subset of indexes</span>
+<span class="sd">        specified by keys. The value returned is a shallow copy of this DMD</span>
+<span class="sd">        instance, with a different value in :func:`modes_activation_bitmask`.</span>
+<span class="sd">        Therefore assignments to attributes are not reflected into the original</span>
+<span class="sd">        instance.</span>
+
+<span class="sd">        However the DMD instance returned should not be used for low-level</span>
+<span class="sd">        manipulations on DMD modes, since the underlying DMD operator is shared</span>
+<span class="sd">        with the original instance. For this reasons modifications to NumPy</span>
+<span class="sd">        arrays may result in unwanted and unspecified situations which should</span>
+<span class="sd">        be avoided in principle.</span>
+
+<span class="sd">        :param key: An index (integer), slice or list of indexes.</span>
+<span class="sd">        :type key: int or slice or list or np.ndarray</span>
+<span class="sd">        :return: A shallow copy of this DMD instance having only a subset of</span>
+<span class="sd">            DMD modes which are those indexed by `key`.</span>
+<span class="sd">        :rtype: HankelDMD</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">sub_dmd_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="p">)</span>
+        <span class="n">sub_dmd_copy</span><span class="o">.</span><span class="n">allocate_proxy</span><span class="p">()</span>
+
+        <span class="n">shallow_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">shallow_copy</span><span class="o">.</span><span class="n">_sub_dmd</span> <span class="o">=</span> <span class="n">sub_dmd_copy</span>
+        <span class="k">return</span> <span class="n">DMDBase</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">shallow_copy</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
 
 <div class="viewcode-block" id="HankelDMD.fit"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -364,10 +407,9 @@
 
         <span class="c1"># Default timesteps</span>
         <span class="n">n_samples</span> <span class="o">=</span> <span class="n">snp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span> <span class="o">=</span> <span class="n">DMDTimeDict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_initial_time_dictionary</span><span class="p">(</span>
             <span class="p">{</span><span class="s2">&quot;t0&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;tend&quot;</span><span class="p">:</span> <span class="n">n_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span> <span class="o">=</span> <span class="n">DMDTimeDict</span><span class="p">({</span><span class="s2">&quot;t0&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;tend&quot;</span><span class="p">:</span> <span class="n">n_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
 
         <span class="k">return</span> <span class="bp">self</span></div></div>
 </pre></div>
@@ -380,7 +422,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 08, 2021.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
       </span></p>
   </div>
 

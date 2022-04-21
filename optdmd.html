@@ -65,6 +65,8 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
@@ -188,8 +190,8 @@ is 0, that means TLSQ is not applied.</p></li>
 <code class="sig-name descname">_compute_amplitudes</code><span class="sig-paren">(</span><em class="sig-param">modes</em>, <em class="sig-param">snapshots</em>, <em class="sig-param">eigs</em>, <em class="sig-param">opt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/optdmd.html#OptDMD._compute_amplitudes"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the amplitude coefficients. If <cite>self.opt</cite> is False the
 amplitudes are computed by minimizing the error between the modes and
-the first snapshot; if <cite>self.opt</cite> is True the amplitudes are computed by
-minimizing the error between the modes and all the snapshots, at the
+the first snapshot; if <cite>self.opt</cite> is True the amplitudes are computed
+by minimizing the error between the modes and all the snapshots, at the
 expense of bigger computational cost.</p>
 <p>This method uses the class variables self._snapshots (for the
 snapshots), self.modes and self.eigs.</p>
@@ -198,7 +200,7 @@ snapshots), self.modes and self.eigs.</p>
 <dd class="field-odd"><p>the amplitudes array</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 <p>References for optimal amplitudes:
@@ -208,19 +210,50 @@ Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
 
 <dl class="method">
 <dt>
+<em class="property">property </em><code class="sig-name descname">amplitudes</code></dt>
+<dd><p>Get the coefficients that minimize the error between the original
+system and the reconstructed one. For futher information, see
+<cite>dmdbase._compute_amplitudes</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the array that contains the amplitudes coefficient.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <em class="property">property </em><code class="sig-name descname">dynamics</code></dt>
 <dd><p>Get the time evolution of each mode.</p>
 <div class="math">
 <p><span class="math">\mathbf{x}(t) \approx
-\sum_{k=1}^{r} \boldsymbol{\phi}_{k} \exp \left( \omega_{k} t \right) b_{k} =
-\sum_{k=1}^{r} \boldsymbol{\phi}_{k} \left( \lambda_{k} \right)^{\left( t / \Delta t \right)} b_{k}</span></p>
+\sum_{k=1}^{r} \boldsymbol{\phi}_{k} \exp \left( \omega_{k} t
+\right) b_{k} = \sum_{k=1}^{r} \boldsymbol{\phi}_{k} \left(
+\lambda_{k} \right)^{\left( t / \Delta t \right)} b_{k}</span></p>
 </div><dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the matrix that contains all the time evolution, stored by
 row.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">eigs</code></dt>
+<dd><p>Get the eigenvalues of A tilde.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the eigenvalues from the eigendecomposition of <cite>atilde</cite>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -237,10 +270,24 @@ row.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
-<li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots at sequential timestep, if passed. Default
+<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
+<li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots at sequential timestep, if passed. Default
 is None.</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">fitted</code></dt>
+<dd><p>Check whether this DMD instance has been fitted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><cite>True</cite> is the instance has been fitted, <cite>False</cite> otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -254,7 +301,38 @@ is None.</p></li>
 <dd class="field-odd"><p>the matrix containing the DMD modes.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">modes_activation_bitmask</code></dt>
+<dd><p>Get the bitmask which controls which DMD modes are enabled at the
+moment in this DMD instance.</p>
+<p>The DMD instance must be fitted before this property becomes valid.
+After <a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.fit.html#pydmd.optdmd.OptDMD.fit" title="pydmd.optdmd.OptDMD.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> is called, the defalt value of
+<cite>modes_activation_bitmask</cite> is an array of <cite>True</cite> values of the same
+shape of <code class="xref py py-func docutils literal notranslate"><span class="pre">amplitudes()</span></code>.</p>
+<p>The array returned is read-only (this allow us to react appropriately
+to changes in the bitmask). In order to modify the bitmask you need to
+set the field to a brand-new value (see example below).</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># this is an error</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="go">ValueError: assignment destination is read-only</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span> <span class="o">=</span> <span class="n">tmp</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The DMD modes activation bitmask.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -265,13 +343,13 @@ is None.</p></li>
 <dd><p>Predict the output Y given the input X using the fitted DMD model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – the input vector.</p>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – the input vector.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>one time-step ahead predicted output.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -292,7 +370,7 @@ is None.</p></li>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 08, 2021.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
       </span></p>
   </div>
 

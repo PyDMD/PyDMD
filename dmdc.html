@@ -51,6 +51,8 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">DMDc</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
@@ -157,8 +159,8 @@ to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1, the method 
 not compute truncation.</p></li>
 <li><p><strong>tlsq_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation computing Total Least Square. Default
 is 0, that means no truncation.</p></li>
-<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes. See
-<code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes.
+See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
 <li><p><strong>svd_rank_omega</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation of the aumented matrix
 omega composed by the left snapshots matrix and the control. Used only
 for the <cite>_fit_B_unknown</cite> method of this class. It should be greater or
@@ -176,7 +178,7 @@ equal than <cite>svd_rank</cite>. For the possible values please refer to the
 <dd class="field-odd"><p>the operator B.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -191,7 +193,7 @@ space.</p>
 <dd class="field-odd"><p>the matrix which columns are the basis vectors.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -206,9 +208,9 @@ the user; otherwise, it is computed by the algorithm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
-<li><p><strong>I</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the control input.</p></li>
-<li><p><strong>B</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – matrix that controls the control input
+<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
+<li><p><strong>I</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the control input.</p></li>
+<li><p><strong>B</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – matrix that controls the control input
 influences the system evolution.</p></li>
 </ul>
 </dd>
@@ -224,13 +226,13 @@ the <cite>fit</cite> method) is used. The input dimension has to be consistent
 with the dynamics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>control_input</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – the input control matrix.</p>
+<dd class="field-odd"><p><strong>control_input</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – the input control matrix.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the matrix that contains the reconstructed snapshots.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -256,7 +258,7 @@ with the dynamics.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 08, 2021.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
       </span></p>
   </div>
 

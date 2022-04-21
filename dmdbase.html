@@ -67,6 +67,8 @@
 <li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
@@ -154,7 +156,7 @@
 </table>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-name descname">DMDBase</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">sorted_eigs=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="sig-name descname">DMDBase</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">sorted_eigs=False</em>, <em class="sig-param">tikhonov_regularization=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Dynamic Mode Decomposition base class.</p>
 <dl class="field-list simple">
@@ -174,14 +176,15 @@ Default is False.</p></li>
 <code class="xref py py-func docutils literal notranslate"><span class="pre">_compute_amplitudes()</span></code> for reference). If
 False, amplitudes are computed following the standard algorithm. If
 <cite>opt</cite> is an integer, it is used as the (temporal) index of the snapshot
-used to compute DMD modes amplitudes (following the standard algorithm).
+used to compute DMD modes amplitudes (following the standard
+algorithm).
 The reconstruction will generally be better in time instants near the
-chosen snapshot; however increasing <cite>opt</cite> may lead to wrong results when
-the system presents small eigenvalues. For this reason a manual
+chosen snapshot; however increasing <cite>opt</cite> may lead to wrong results
+when the system presents small eigenvalues. For this reason a manual
 selection of the number of eigenvalues considered for the analyisis may
-be needed (check <cite>svd_rank</cite>). Also setting <cite>svd_rank</cite> to a value between
-0 and 1 may give better results. Default is False.</p></li>
-<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+be needed (check <cite>svd_rank</cite>). Also setting <cite>svd_rank</cite> to a value
+between 0 and 1 may give better results. Default is False.</p></li>
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
 10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
 eigendecomposition. None means no rescaling, ‘auto’ means automatic
 rescaling using singular values, otherwise the scaling factors.</p></li>
@@ -191,6 +194,9 @@ False.</p></li>
 <li><p><strong>sorted_eigs</strong> (<em>{'real'</em><em>, </em><em>'abs'}</em><em> or </em><em>False</em>) – Sort eigenvalues (and modes/dynamics accordingly) by
 magnitude if <cite>sorted_eigs=’abs’</cite>, by real part (and then by imaginary
 part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p></li>
+<li><p><strong>tikhonov_regularization</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Tikhonov parameter for the regularization.
+If <cite>None</cite>, no regularization is applied, if <cite>float</cite>, it is used as the
+<span class="math">\lambda</span> tikhonov parameter.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Variables</dt>
@@ -218,108 +224,6 @@ window where the system is reconstructed:</p>
 </ul>
 </dd>
 </dl>
-<dl class="class">
-<dt>
-<em class="property">class </em><code class="sig-name descname">ModesSelectors</code><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.ModesSelectors"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>A container class which defines some static methods for pre-packed
-modes selectors functions to be used in <cite>select_modes</cite>.</p>
-<p><cite>functools.partial</cite> is used to provide both parametrization of the
-functions and immediate usability. For instance, to select the first
-x modes by integral contributions one would call:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydmd</span> <span class="kn">import</span> <span class="n">DMDBase</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">select_modes</span><span class="p">(</span><span class="n">DMDBase</span><span class="o">.</span><span class="n">ModesSelectors</span><span class="o">.</span><span class="n">integral_contribution</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-</pre></div>
-</div>
-<dl class="method">
-<dt>
-<em class="property">static </em><code class="sig-name descname">_compute_integral_contribution</code><span class="sig-paren">(</span><em class="sig-param">mode</em>, <em class="sig-param">dynamic</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.ModesSelectors._compute_integral_contribution"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Compute the integral contribution across time of the given DMD mode,
-given the mode and its dynamic, as shown in
-<a class="reference external" href="http://dx.doi.org/10.1016/j.euromechflu.2016.11.015">http://dx.doi.org/10.1016/j.euromechflu.2016.11.015</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>mode</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – the DMD mode.</p></li>
-<li><p><strong>dynamic</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – the dynamic of the given DMD mode, as
-returned by <cite>dmd.dynamics[mode_index]</cite>.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return float</dt>
-<dd class="field-even"><p>the integral contribution of the given DMD mode.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<em class="property">static </em><code class="sig-name descname">_integral_contribution</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.ModesSelectors._integral_contribution"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Complete function of the modes selector <cite>integral_contribution</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the number of DMD modes to be selected.</p>
-</dd>
-<dt class="field-even">Return np.ndarray</dt>
-<dd class="field-even"><p>an array of bool, where each “True” index means
-that the corresponding DMD mode is selected.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<em class="property">static </em><code class="sig-name descname">_stable_modes</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">max_distance_from_unity</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.ModesSelectors._stable_modes"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Complete function of the modes selector <cite>stable_modes</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>max_distance_from_unity</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the maximum distance from the
-unit circle.</p>
-</dd>
-<dt class="field-even">Return np.ndarray</dt>
-<dd class="field-even"><p>an array of bool, where each “True” index means
-that the corresponding DMD mode is selected.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<em class="property">static </em><code class="sig-name descname">integral_contribution</code><span class="sig-paren">(</span><em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.ModesSelectors.integral_contribution"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Select the
-Reference: <a class="reference external" href="http://dx.doi.org/10.1016/j.euromechflu.2016.11.015">http://dx.doi.org/10.1016/j.euromechflu.2016.11.015</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the number of DMD modes to be selected.</p>
-</dd>
-<dt class="field-even">Return callable</dt>
-<dd class="field-even"><p>function which can be used as the parameter
-of <cite>DMDBase.select_modes</cite> to select DMD modes according to
-the criteria of integral contribution.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<em class="property">static </em><code class="sig-name descname">stable_modes</code><span class="sig-paren">(</span><em class="sig-param">max_distance_from_unity</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.ModesSelectors.stable_modes"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Select all the modes such that the magnitude of the corresponding
-eigenvalue is in <cite>(1-max_distance_from_unity,1+max_distance_from_unity)</cite>,
-non inclusive.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>max_distance_from_unity</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the maximum distance from the
-unit circle.</p>
-</dd>
-<dt class="field-even">Return callable</dt>
-<dd class="field-even"><p>function which can be used as the parameter
-of <cite>DMDBase.select_modes</cite> to select DMD modes according to
-the criteria of stability.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="method">
 <dt>
 <em class="property">static </em><code class="sig-name descname">_col_major_2darray</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._col_major_2darray"><span class="viewcode-link">[source]</span></a></dt>
@@ -329,14 +233,14 @@ array, the method saves it, otherwise it also saves the original
 snapshots shape and reshapes the snapshots.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – the input snapshots.</p>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – the input snapshots.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the 2D matrix that contains the flatten snapshots, the shape
 of original snapshots.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a>, tuple</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a>, tuple</p>
 </dd>
 </dl>
 </dd></dl>
@@ -346,8 +250,8 @@ of original snapshots.</p>
 <code class="sig-name descname">_compute_amplitudes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._compute_amplitudes"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the amplitude coefficients. If <cite>self.opt</cite> is False the
 amplitudes are computed by minimizing the error between the modes and
-the first snapshot; if <cite>self.opt</cite> is True the amplitudes are computed by
-minimizing the error between the modes and all the snapshots, at the
+the first snapshot; if <cite>self.opt</cite> is True the amplitudes are computed
+by minimizing the error between the modes and all the snapshots, at the
 expense of bigger computational cost.</p>
 <p>This method uses the class variables self._snapshots (for the
 snapshots), self.modes and self.eigs.</p>
@@ -356,7 +260,7 @@ snapshots), self.modes and self.eigs.</p>
 <dd class="field-odd"><p>the amplitudes array</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 <p>References for optimal amplitudes:
@@ -393,13 +297,25 @@ ratio in <a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.pl
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">_optimal_dmd_matrixes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._optimal_dmd_matrixes"><span class="viewcode-link">[source]</span></a></dt>
+<code class="sig-name descname">_optimal_dmd_matrices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._optimal_dmd_matrices"><span class="viewcode-link">[source]</span></a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt>
 <code class="sig-name descname">_plot_limits</code><span class="sig-paren">(</span><em class="sig-param">narrow_view</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._plot_limits"><span class="viewcode-link">[source]</span></a></dt>
 <dd></dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">_set_initial_time_dictionary</code><span class="sig-paren">(</span><em class="sig-param">time_dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._set_initial_time_dictionary"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Set the initial values for the class fields <cite>time_dict</cite> and
+<cite>original_time</cite>. This is usually called in <cite>fit()</cite> and never again.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>time_dict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Initial time dictionary for this DMD instance.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="method">
 <dt>
@@ -422,6 +338,11 @@ for <cite>opt</cite> in <code class="xref py py-func docutils literal notranslat
 
 <dl class="method">
 <dt>
+<code class="sig-name descname">allocate_proxy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.allocate_proxy"><span class="viewcode-link">[source]</span></a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt>
 <em class="property">property </em><code class="sig-name descname">amplitudes</code></dt>
 <dd><p>Get the coefficients that minimize the error between the original
 system and the reconstructed one. For futher information, see
@@ -431,7 +352,7 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the array that contains the amplitudes coefficient.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -445,7 +366,46 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the reduced Koopman operator A.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">dmd_time</code></dt>
+<dd><p>A dictionary which contains information about the time window used to
+reconstruct/predict using this DMD instance. By default this is equal
+to <code class="xref py py-func docutils literal notranslate"><span class="pre">original_time()</span></code>.</p>
+<p>Inside the dictionary:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 93%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><cite>t0</cite></p></td>
+<td><p>Time of the first output snapshot.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>tend</cite></p></td>
+<td><p>Time of the last output snapshot.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>dt</cite></p></td>
+<td><p>Timestep between two snapshots.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A dict which contains info about the input time frame.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)">dict</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -459,7 +419,7 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the time intervals of the original snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -470,15 +430,16 @@ system and the reconstructed one. For futher information, see
 <dd><p>Get the time evolution of each mode.</p>
 <div class="math">
 <p><span class="math">\mathbf{x}(t) \approx
-\sum_{k=1}^{r} \boldsymbol{\phi}_{k} \exp \left( \omega_{k} t \right) b_{k} =
-\sum_{k=1}^{r} \boldsymbol{\phi}_{k} \left( \lambda_{k} \right)^{\left( t / \Delta t \right)} b_{k}</span></p>
+\sum_{k=1}^{r} \boldsymbol{\phi}_{k} \exp \left( \omega_{k} t
+\right) b_{k} = \sum_{k=1}^{r} \boldsymbol{\phi}_{k} \left(
+\lambda_{k} \right)^{\left( t / \Delta t \right)} b_{k}</span></p>
 </div><dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the matrix that contains all the time evolution, stored by
 row.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -492,7 +453,7 @@ row.</p>
 <dd class="field-odd"><p>the eigenvalues from the eigendecomposition of <cite>atilde</cite>.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -511,6 +472,20 @@ row.</p>
 
 <dl class="method">
 <dt>
+<em class="property">property </em><code class="sig-name descname">fitted</code></dt>
+<dd><p>Check whether this DMD instance has been fitted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><cite>True</cite> is the instance has been fitted, <cite>False</cite> otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <em class="property">property </em><code class="sig-name descname">forward_backward</code></dt>
 <dd></dd></dl>
 
@@ -523,7 +498,7 @@ row.</p>
 <dd class="field-odd"><p>the array that contains the frequencies of the eigenvalues.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -537,9 +512,26 @@ row.</p>
 <dd class="field-odd"><p>the Floquet values</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.load"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Load the object from <cite>fname</cite> using the pickle module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The <cite>ReducedOrderModel</cite> loaded</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydmd</span> <span class="kn">import</span> <span class="n">DMD</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span> <span class="o">=</span> <span class="n">DMD</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;pydmd.dmd&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">reconstructed_data</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -551,7 +543,38 @@ row.</p>
 <dd class="field-odd"><p>the matrix containing the DMD modes.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">modes_activation_bitmask</code></dt>
+<dd><p>Get the bitmask which controls which DMD modes are enabled at the
+moment in this DMD instance.</p>
+<p>The DMD instance must be fitted before this property becomes valid.
+After <a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.fit.html#pydmd.dmdbase.DMDBase.fit" title="pydmd.dmdbase.DMDBase.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> is called, the defalt value of
+<cite>modes_activation_bitmask</cite> is an array of <cite>True</cite> values of the same
+shape of <code class="xref py py-func docutils literal notranslate"><span class="pre">amplitudes()</span></code>.</p>
+<p>The array returned is read-only (this allow us to react appropriately
+to changes in the bitmask). In order to modify the bitmask you need to
+set the field to a brand-new value (see example below).</p>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># this is an error</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="go">ValueError: assignment destination is read-only</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tmp</span><span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span> <span class="o">=</span> <span class="n">tmp</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The DMD modes activation bitmask.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -577,6 +600,44 @@ row.</p>
 
 <dl class="method">
 <dt>
+<em class="property">property </em><code class="sig-name descname">original_time</code></dt>
+<dd><p>A dictionary which contains information about the time window used to
+fit this DMD instance.</p>
+<p>Inside the dictionary:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 93%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><cite>t0</cite></p></td>
+<td><p>Time of the first input snapshot (0 by default).</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>tend</cite></p></td>
+<td><p>Time of the last input snapshot (usually corresponds to the number of snapshots).</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>dt</cite></p></td>
+<td><p>Timestep between two snapshots (1 by default).</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A dict which contains info about the input time frame.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
 <em class="property">property </em><code class="sig-name descname">original_timesteps</code></dt>
 <dd><p>Get the timesteps of the original snapshot.</p>
 <dl class="field-list simple">
@@ -584,7 +645,7 @@ row.</p>
 <dd class="field-odd"><p>the time intervals of the original snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -608,7 +669,8 @@ size. Default is (8, 8).</p></li>
 <li><p><strong>bool</strong> (<em>narrow_view</em>) – if True, the plot will show only the smallest
 rectangular area which contains all the eigenvalues, with a padding
 of 0.05. Not compatible with <cite>show_axes=True</cite>. Default is False.</p></li>
-<li><p><strong>int</strong> (<em>dpi</em>) – If not None, the given value is passed to <code class="docutils literal notranslate"><span class="pre">plt.figure</span></code>.</p></li>
+<li><p><strong>int</strong> (<em>dpi</em>) – If not None, the given value is passed to
+<code class="docutils literal notranslate"><span class="pre">plt.figure</span></code>.</p></li>
 <li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
 </ul>
 </dd>
@@ -625,8 +687,8 @@ of 0.05. Not compatible with <cite>show_axes=True</cite>. Default is False.</p><
 <li><p><strong>index_mode</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>sequence</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – the index of the modes to plot. By default, all
 the modes are plotted.</p></li>
 <li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
-<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
-<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
 <li><p><strong>order</strong> (<em>{'C'</em><em>, </em><em>'F'</em><em>, </em><em>'A'}</em><em>, </em><em>default 'C'.</em>) – read the elements of snapshots using this index order,
 and place the elements into the reshaped array using this index
 order.  It has to be the same used to store the snapshot. ‘C’ means
@@ -656,8 +718,8 @@ size. Default is (8, 8).</p></li>
 <li><p><strong>index_snap</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>sequence</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – the index of the snapshots to plot. By default, all
 the snapshots are plotted.</p></li>
 <li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
-<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
-<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
 <li><p><strong>order</strong> (<em>{'C'</em><em>, </em><em>'F'</em><em>, </em><em>'A'}</em><em>, </em><em>default 'C'.</em>) – read the elements of snapshots using this index order,
 and place the elements into the reshaped array using this index
 order.  It has to be the same used to store the snapshot. ‘C’ means
@@ -686,7 +748,7 @@ size. Default is (8, 8).</p></li>
 <dd class="field-odd"><p>the matrix that contains the reconstructed snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -698,25 +760,19 @@ size. Default is (8, 8).</p></li>
 
 <dl class="method">
 <dt>
-<code class="sig-name descname">select_modes</code><span class="sig-paren">(</span><em class="sig-param">func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.select_modes"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Select the DMD modes by using the given <cite>func</cite>.
-<cite>func</cite> has to be a callable function which takes as input the DMD
-object itself and return a numpy.ndarray of boolean where <cite>False</cite>
-indicates that the corresponding mode will be discarded.
-The class <code class="xref py py-class docutils literal notranslate"><span class="pre">ModesSelectors</span></code> contains some pre-packed selector
-functions.</p>
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase.save"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Save the object to <cite>fname</cite> using the pickle module.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>func</strong> (<em>callable</em>) – the function to select the modes</p>
+<dd class="field-odd"><p><strong>fname</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – the name of file where the reduced order model will
+be saved.</p>
 </dd>
 </dl>
 <p>Example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">stable_modes</span><span class="p">(</span><span class="n">dmd</span><span class="p">):</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="n">toll</span> <span class="o">=</span> <span class="mf">1e-3</span>
-<span class="gp">&gt;&gt;&gt; </span>   <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">toll</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span> <span class="o">=</span> <span class="n">DMD</span><span class="p">(</span><span class="n">svd_rank</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">sample_data</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">select_modes</span><span class="p">(</span><span class="n">stable_modes</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydmd</span> <span class="kn">import</span> <span class="n">DMD</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span> <span class="o">=</span> <span class="n">DMD</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="c1">#  Construct here the rom</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;pydmd.dmd&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -730,7 +786,7 @@ functions.</p>
 <dd class="field-odd"><p>the matrix that contains the original snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.21)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -761,7 +817,7 @@ functions.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 08, 2021.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
       </span></p>
   </div>
 

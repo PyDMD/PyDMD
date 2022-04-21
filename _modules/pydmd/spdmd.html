@@ -71,7 +71,6 @@
   <h1>Source code for pydmd.spdmd</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Derived module from dmdbase.py for sparsity-promoting DMD.&quot;&quot;&quot;</span>
 
-<span class="c1"># --&gt; Import standard python packages</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">solve</span>
 
@@ -82,7 +81,6 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">scipy.sparse.linalg</span> <span class="kn">import</span> <span class="n">spsolve</span>
 
-<span class="c1"># --&gt; Import PyDMD base class for DMD.</span>
 <span class="kn">from</span> <span class="nn">.dmd</span> <span class="kn">import</span> <span class="n">DMD</span>
 
 
@@ -115,8 +113,10 @@
 <span class="sd">    :type svd_rank: int or float</span>
 <span class="sd">    :param int tlsq_rank: rank truncation computing Total Least Square. Default</span>
 <span class="sd">        is 0, that means TLSQ is not applied.</span>
-<span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes. See</span>
-<span class="sd">        :class:`DMDBase`. Default is False.</span>
+<span class="sd">    :param bool exact: flag to compute either exact DMD or projected DMD.</span>
+<span class="sd">        Default is True.</span>
+<span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes.</span>
+<span class="sd">        See :class:`DMDBase`. Default is False.</span>
 <span class="sd">    :type opt: bool or int</span>
 <span class="sd">    :param rescale_mode: Scale Atilde as shown in</span>
 <span class="sd">            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its</span>
@@ -152,27 +152,16 @@
 <span class="sd">        algorithm are deleted after the termination of a call to :func:`fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-            <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-            <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">abs_tolerance</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span>
-            <span class="n">rel_tolerance</span><span class="o">=</span><span class="mf">1.0e-4</span><span class="p">,</span>
-            <span class="n">max_iterations</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
-            <span class="n">rho</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">gamma</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-            <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">enforce_zero</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">release_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">zero_absolute_tolerance</span><span class="o">=</span><span class="mf">1.e-12</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">abs_tolerance</span><span class="o">=</span><span class="mf">1.0e-6</span><span class="p">,</span> <span class="n">rel_tolerance</span><span class="o">=</span><span class="mf">1.0e-4</span><span class="p">,</span>
+                 <span class="n">max_iterations</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">enforce_zero</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">release_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">zero_absolute_tolerance</span><span class="o">=</span><span class="mf">1.e-12</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span>
             <span class="n">tlsq_rank</span><span class="o">=</span><span class="n">tlsq_rank</span><span class="p">,</span>
-            <span class="n">exact</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">exact</span><span class="o">=</span><span class="n">exact</span><span class="p">,</span>
             <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span>
             <span class="n">rescale_mode</span><span class="o">=</span><span class="n">rescale_mode</span><span class="p">,</span>
             <span class="n">forward_backward</span><span class="o">=</span><span class="n">forward_backward</span><span class="p">,</span>
@@ -193,6 +182,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_Plow</span> <span class="o">=</span> <span class="kc">None</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span> <span class="o">=</span> <span class="kc">None</span>
+
 <div class="viewcode-block" id="SpDMD.fit"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the Dynamic Modes Decomposition of the input data.</span>
@@ -201,7 +192,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># we call method fit() of the superclass to set all the needed fields</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="n">P</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimal_dmd_matrixes</span><span class="p">()</span>
+        <span class="n">P</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimal_dmd_matrices</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_P</span> <span class="o">=</span> <span class="n">sparse</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="o">=</span> <span class="n">q</span>
@@ -214,6 +205,9 @@
 
         <span class="c1"># compute the (sparse) vector of optimal DMD amplitudes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimal_amplitudes</span><span class="p">(</span><span class="n">zero_amplitudes</span><span class="p">)</span>
+        <span class="c1"># re-allocate the Proxy to avoid problems due to the fact that we</span>
+        <span class="c1"># re-computed the amplitudes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allocate_proxy</span><span class="p">()</span>
 
         <span class="c1"># release memory</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_release_memory</span><span class="p">:</span>
@@ -257,8 +251,8 @@
 <span class="sd">        Update the vector :math:`\\lambda` of Lagrange multipliers.</span>
 <span class="sd">        :param np.ndarray alpha: Updated value of :math:`\\alpha_{k+1}` (vector</span>
 <span class="sd">            of DMD amplitudes).</span>
-<span class="sd">        :param np.ndarray beta: Updated value of :math:`\\beta_{k+1}` (vector of</span>
-<span class="sd">            non-zero amplitudes).</span>
+<span class="sd">        :param np.ndarray beta: Updated value of :math:`\\beta_{k+1}` (vector</span>
+<span class="sd">            of non-zero amplitudes).</span>
 <span class="sd">        :param np.ndarray lmbd: Current value of :math:`\\lambda_k` (vector</span>
 <span class="sd">            of Lagrange multipliers).</span>
 <span class="sd">        :return: The updated value :math:`\\lambda_{k+1}`.</span>
@@ -292,8 +286,8 @@
 <span class="sd">            non-zero amplitudes).</span>
 <span class="sd">        :param np.ndarray lmbd: Current value of :math:`\\lambda_k` (vector</span>
 <span class="sd">            of Lagrange multipliers).</span>
-<span class="sd">        :param np.ndarray old_beta: Old value of :math:`\\beta_{k-1}` (vector of</span>
-<span class="sd">            non-zero amplitudes).</span>
+<span class="sd">        :param np.ndarray old_beta: Old value of :math:`\\beta_{k-1}` (vector</span>
+<span class="sd">            of non-zero amplitudes).</span>
 <span class="sd">        :return bool: `True` if ADMM can stop now, `False` otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">primal_residual</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">alpha</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span>
@@ -334,9 +328,8 @@
 
         <span class="c1"># at the beginning of each iteration check if ADMM can stop (because of</span>
         <span class="c1"># loop_condition or number of iterations)</span>
-        <span class="k">while</span> <span class="p">(</span>
-            <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loop_condition</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">,</span> <span class="n">old_beta</span><span class="p">)</span>
-        <span class="p">)</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_iterations</span><span class="p">:</span>
+        <span class="k">while</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loop_condition</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">,</span> <span class="n">old_beta</span><span class="p">)</span> <span class="ow">and</span>
+               <span class="n">i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_iterations</span><span class="p">):</span>
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
 
             <span class="n">old_beta</span> <span class="o">=</span> <span class="n">beta</span>
@@ -355,14 +348,14 @@
 <span class="sd">        indexes should be set to 0.</span>
 <span class="sd">        :param np.ndarray zero_amplitudes: Boolean vector.</span>
 <span class="sd">        :return np.ndarray: Vector of optimal DMD amplitudes. Amplitudes at</span>
-<span class="sd">            indexes corresponding to `True` indexes in `zero_amplitudes` are set</span>
-<span class="sd">            to 0.</span>
+<span class="sd">            indexes corresponding to `True` indexes in `zero_amplitudes` are</span>
+<span class="sd">            set to 0.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">n_amplitudes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">amplitudes</span><span class="p">)</span>
         <span class="n">n_of_zero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">zero_amplitudes</span><span class="p">)</span>
 
-        <span class="c1"># vectors of the canonical base of R^n_amplitudes, from which we extract</span>
-        <span class="c1"># only those corresponding to items set to 0 in zero_amplitudes</span>
+        <span class="c1"># vectors of the canonical base of R^n_amplitudes, from which we</span>
+        <span class="c1"># extract only those corresponding to items set to 0 in zero_amplitudes</span>
         <span class="n">E</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">n_amplitudes</span><span class="p">)[:,</span> <span class="n">zero_amplitudes</span><span class="p">]</span>
 
         <span class="c1"># left hand side of the linear system whose solution is the vector of</span>
@@ -403,7 +396,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 08, 2021.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
       </span></p>
   </div>
 

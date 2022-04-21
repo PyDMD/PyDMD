@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pydmd.dmd_modes_tuner &mdash; PyDMD 0.4 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> PyDMD
+          </a>
+              <div class="version">
+                0.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>pydmd.dmd_modes_tuner</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pydmd.dmd_modes_tuner</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A module which contains several functions to tune (i.e. improve) DMD instances</span>
+<span class="sd">through the &quot;manual&quot; modification of DMD modes.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="select_modes"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.select_modes">[docs]</a><span class="k">def</span> <span class="nf">select_modes</span><span class="p">(</span>
+    <span class="n">dmd</span><span class="p">,</span>
+    <span class="n">criteria</span><span class="p">,</span>
+    <span class="n">in_place</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">return_indexes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">nullify_amplitudes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Select the DMD modes by using the given `criteria`.</span>
+<span class="sd">    `criteria` is a function which takes as input the DMD</span>
+<span class="sd">    object itself and return a numpy.ndarray of boolean where `False`</span>
+<span class="sd">    indicates that the corresponding mode will be discarded.</span>
+<span class="sd">    The class :class:`ModesSelectors` contains some pre-packed selector</span>
+<span class="sd">    functions.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; dmd = ...</span>
+<span class="sd">        &gt;&gt;&gt; def stable_modes(dmd):</span>
+<span class="sd">        &gt;&gt;&gt;    toll = 1e-3</span>
+<span class="sd">        &gt;&gt;&gt;    return np.abs(np.abs(dmd.eigs) - 1) &lt; toll</span>
+<span class="sd">        &gt;&gt;&gt; select_modes(dmd, stable_modes)</span>
+
+<span class="sd">    :param pydmd.DMDBase dmd: An instance of DMD from which we want to delete</span>
+<span class="sd">        modes according to some criteria.</span>
+<span class="sd">    :param callable criteria: The function used to select the modes. Must</span>
+<span class="sd">        return a boolean array (whose length is the number of DMD modes in</span>
+<span class="sd">        `dmd`) such that `True` items correspond to retained DMD modes, while</span>
+<span class="sd">        `False` items correspond to deleted modes.</span>
+<span class="sd">    :param bool in_place: If `True`, the given DMD instance will be modified</span>
+<span class="sd">        according to the given `criteria`. Otherwise, a new instance will be</span>
+<span class="sd">        created (via `copy.deepcopy`).</span>
+<span class="sd">    :param bool return_indexes: If `True`, this function returns the indexes</span>
+<span class="sd">        corresponding to DMD modes cut using the given `criteria` (default</span>
+<span class="sd">        `False`).</span>
+<span class="sd">    :param bool nullify_amplitudes: If `True`, the amplitudes associated with</span>
+<span class="sd">        DMD modes to be removed are set to 0, therefore the number of DMD</span>
+<span class="sd">        modes remains constant. If `False` (default) DMD modes are actually</span>
+<span class="sd">        removed, therefore the number of DMD modes in the instance decreases.</span>
+<span class="sd">    :returns: If `return_indexes` is `True`, the returned value is a tuple</span>
+<span class="sd">        whose items are:</span>
+
+<span class="sd">        0. The modified DMD instance;</span>
+<span class="sd">        1. The indexes (on the old DMD instance) corresponding to DMD modes</span>
+<span class="sd">            cut.</span>
+
+<span class="sd">        Otherwise, the returned value is the modified DMD instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">in_place</span><span class="p">:</span>
+        <span class="n">dmd</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">dmd</span><span class="p">)</span>
+
+    <span class="n">selected_indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">criteria</span><span class="p">(</span><span class="n">dmd</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">all_indexes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">)))</span>
+    <span class="n">cut_indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">all_indexes</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">selected_indexes</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cut_indexes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span><span class="p">)</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="n">cut_indexes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span> <span class="o">=</span> <span class="n">tmp</span>
+
+    <span class="k">if</span> <span class="n">return_indexes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmd</span><span class="p">,</span> <span class="n">cut_indexes</span>
+    <span class="k">return</span> <span class="n">dmd</span></div>
+
+
+<div class="viewcode-block" id="stabilize_modes"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.stabilize_modes">[docs]</a><span class="k">def</span> <span class="nf">stabilize_modes</span><span class="p">(</span>
+    <span class="n">dmd</span><span class="p">,</span> <span class="n">inner_radius</span><span class="p">,</span> <span class="n">outer_radius</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">in_place</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_indexes</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stabilize modes in a circular sector of radius [`inner_radius`,</span>
+<span class="sd">    `outer_radius`].</span>
+
+<span class="sd">    Stabilizing a mode means that the corresponding eigenvalue is divided</span>
+<span class="sd">    by its module (i.e. normalized) in order to make the associated</span>
+<span class="sd">    dynamic a trigonometric function with respect to the time (since the</span>
+<span class="sd">    eigenvalue is projected on the unit circle). At the same time, the</span>
+<span class="sd">    corresponding mode amplitude is multiplied by the former module of the</span>
+<span class="sd">    eigenvalue, in order to &quot;recover&quot; the correctness of the result in the</span>
+<span class="sd">    first time instants.</span>
+
+<span class="sd">    This approach may give better results in the prediction when one or</span>
+<span class="sd">    more eigenvalues are strongly unstable (i.e. the corresponding DMD mode</span>
+<span class="sd">    &quot;explodes&quot; several instants after the known time frame).</span>
+
+<span class="sd">    In order to stabilize an unbounded (above) circular sector, the</span>
+<span class="sd">    parameter `outer_radius` should be set to `np.inf` (default).</span>
+
+<span class="sd">    :param pydmd.DMDBase dmd: An instance of DMD which we want to stabilize.</span>
+<span class="sd">    :param float inner_radius: The inner radius of the circular sector to</span>
+<span class="sd">        be stabilized.</span>
+<span class="sd">    :param float outer_radius: The outer radius of the circular sector to</span>
+<span class="sd">        be stabilized.</span>
+<span class="sd">    :param bool in_place: If `True`, the given DMD instance will be modified</span>
+<span class="sd">        according to the given `criteria`. Otherwise, a new instance will be</span>
+<span class="sd">        created (via `copy.deepcopy`).</span>
+<span class="sd">    :param bool return_indexes: If `True`, this function returns the indexes</span>
+<span class="sd">        corresponding to DMD modes stabilized (default `False`).</span>
+<span class="sd">    :returns: If `return_indexes` is `True`, the returned value is a tuple</span>
+<span class="sd">        whose items are:</span>
+
+<span class="sd">        0. The modified DMD instance;</span>
+<span class="sd">        1. The indexes (on the old DMD instance) corresponding to DMD modes</span>
+<span class="sd">            stabilized.</span>
+
+<span class="sd">        Otherwise, the returned value is the modified DMD instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">in_place</span><span class="p">:</span>
+        <span class="n">dmd</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">dmd</span><span class="p">)</span>
+
+    <span class="n">eigs_module</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">)</span>
+
+    <span class="c1"># indexes associated with eigenvalues that must be stabilized</span>
+    <span class="n">fixable_eigs_indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span>
+        <span class="n">inner_radius</span> <span class="o">&lt;</span> <span class="n">eigs_module</span><span class="p">,</span>
+        <span class="n">eigs_module</span> <span class="o">&lt;</span> <span class="n">outer_radius</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">dmd</span><span class="o">.</span><span class="n">amplitudes</span><span class="p">[</span><span class="n">fixable_eigs_indexes</span><span class="p">]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
+        <span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">[</span><span class="n">fixable_eigs_indexes</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">[</span><span class="n">fixable_eigs_indexes</span><span class="p">]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">[</span><span class="n">fixable_eigs_indexes</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">return_indexes</span><span class="p">:</span>
+        <span class="n">stabilized_indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">fixable_eigs_indexes</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">dmd</span><span class="p">,</span> <span class="n">stabilized_indexes</span>
+    <span class="k">return</span> <span class="n">dmd</span></div>
+
+
+<div class="viewcode-block" id="ModesSelectors"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesSelectors">[docs]</a><span class="k">class</span> <span class="nc">ModesSelectors</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A container class which defines some static methods for pre-packed</span>
+<span class="sd">    modes selectors functions to be used in `select_modes`.</span>
+
+<span class="sd">    For instance, to select the first `x` modes by integral contributions:</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; from pydmd.dmd_modes_tuner import ModesSelectors, select_modes</span>
+<span class="sd">        &gt;&gt;&gt; select_modes(dmd, ModesSelectors.integral_contribution(x))</span>
+
+<span class="sd">    Most private static methods in this class are &quot;non-partialized&quot;, which</span>
+<span class="sd">    means that they also take the parameters that characterize the selector.</span>
+<span class="sd">    By contrast, public static method are ready mode selector, whose only</span>
+<span class="sd">    parameter is the DMD instance on which that selector should be applied, and</span>
+<span class="sd">    are the output of a call to `functools.partial` applied to a</span>
+<span class="sd">    non-partialized selector. This mechanism is employed to reduce the</span>
+<span class="sd">    boilerplate code needed while applying a selector.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_threshold</span><span class="p">(</span><span class="n">dmd</span><span class="p">,</span> <span class="n">low_threshold</span><span class="p">,</span> <span class="n">up_threshold</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Non-partialized function of the modes selector `threshold`.</span>
+
+<span class="sd">        :param DMDBase dmd: An instance of DMDBase.</span>
+<span class="sd">        :param float low_threshold: The minimum accepted module of an</span>
+<span class="sd">            eigenvalue.</span>
+<span class="sd">        :param float up_threshold: The maximum accepted module of an</span>
+<span class="sd">            eigenvalue.</span>
+<span class="sd">        :return np.ndarray: An array of bool, where each &quot;True&quot; index means</span>
+<span class="sd">            that the corresponding DMD mode is selected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">eigs_module</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span>
+            <span class="n">eigs_module</span> <span class="o">&lt;</span> <span class="n">up_threshold</span><span class="p">,</span>
+            <span class="n">eigs_module</span> <span class="o">&gt;</span> <span class="n">low_threshold</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ModesSelectors.threshold"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesSelectors.threshold">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">threshold</span><span class="p">(</span><span class="n">low_threshold</span><span class="p">,</span> <span class="n">up_threshold</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retain only DMD modes associated with an eigenvalue whose module is</span>
+<span class="sd">        between `low_threshold` and `up_threshold` (inclusive on both sides).</span>
+
+<span class="sd">        :param float low_threshold: The minimum accepted module of an</span>
+<span class="sd">            eigenvalue.</span>
+<span class="sd">        :param float up_threshold: The maximum accepted module of an</span>
+<span class="sd">            eigenvalue.</span>
+<span class="sd">        :return np.ndarray: An array of bool, where each &quot;True&quot; index means</span>
+<span class="sd">            that the corresponding DMD mode is selected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">ModesSelectors</span><span class="o">.</span><span class="n">_threshold</span><span class="p">,</span>
+            <span class="n">low_threshold</span><span class="o">=</span><span class="n">low_threshold</span><span class="p">,</span>
+            <span class="n">up_threshold</span><span class="o">=</span><span class="n">up_threshold</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_stable_modes</span><span class="p">(</span>
+        <span class="n">dmd</span><span class="p">,</span>
+        <span class="n">max_distance_from_unity_inside</span><span class="p">,</span>
+        <span class="n">max_distance_from_unity_outside</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Non-partialized function of the modes selector `stable_modes`.</span>
+
+<span class="sd">        :param DMDBase dmd: An instance of DMDBase.</span>
+<span class="sd">        :param float max_distance_from_unity_inside: The maximum distance</span>
+<span class="sd">            from the unit circle for points inside it.</span>
+<span class="sd">        :param float max_distance_from_unity_outside: The maximum distance</span>
+<span class="sd">            from the unit circle for points outside it.</span>
+<span class="sd">        :return np.ndarray: An array of bool, where each &quot;True&quot; index means</span>
+<span class="sd">            that the corresponding DMD mode is selected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ModesSelectors</span><span class="o">.</span><span class="n">_threshold</span><span class="p">(</span>
+            <span class="n">dmd</span><span class="p">,</span>
+            <span class="mi">1</span> <span class="o">-</span> <span class="n">max_distance_from_unity_inside</span><span class="p">,</span>
+            <span class="mi">1</span> <span class="o">+</span> <span class="n">max_distance_from_unity_outside</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="ModesSelectors.stable_modes"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesSelectors.stable_modes">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">stable_modes</span><span class="p">(</span>
+        <span class="n">max_distance_from_unity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_distance_from_unity_inside</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_distance_from_unity_outside</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Select all the modes corresponding to eigenvalues whose distance</span>
+<span class="sd">        from the unit circle is less than or equal to a specified threshold. It</span>
+<span class="sd">        is possible to specify the distance separately for eigenvalues inside</span>
+<span class="sd">        and outside the unit circle, but you cannot set clashing</span>
+<span class="sd">        thresholds.</span>
+
+<span class="sd">        The following are allowed combinations of parameters:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &gt;&gt;&gt; # the maximum allowed distance from the unit circle (both</span>
+<span class="sd">            ... # inside and outside) is 1.e-3.</span>
+<span class="sd">            &gt;&gt;&gt; stable_modes(max_distance_from_unity=1.e-3)</span>
+<span class="sd">            &gt;&gt;&gt; # the maximum allowed distance from the unit circle is 1.e-3</span>
+<span class="sd">            ... # inside and 1.e-4 outside.</span>
+<span class="sd">            &gt;&gt;&gt; stable_modes(max_distance_from_unity_inside=1.e-3,</span>
+<span class="sd">            ...   max_distance_from_unity_outside=1.e-4)</span>
+<span class="sd">            &gt;&gt;&gt; # the maximum allowed distance from the unit circle is 1.e-4</span>
+<span class="sd">            ... # outside and unspecified (i.e. infinity) inside.</span>
+<span class="sd">            &gt;&gt;&gt; stable_modes(max_distance_from_unity_outside=1.e-4)</span>
+
+<span class="sd">        Since `max_distance_from_unity` controls both inside and outside</span>
+<span class="sd">        distance, you cannot set also `max_distance_from_unity_inside` or</span>
+<span class="sd">        `max_distance_from_unity_outside` simultaneously:</span>
+
+<span class="sd">        &gt;&gt;&gt; # this is not allowed</span>
+<span class="sd">        &gt;&gt;&gt; stable_modes(max_distance_from_unity=1.e-3,</span>
+<span class="sd">        ...     max_distance_from_unity_inside=1.e-4)</span>
+
+<span class="sd">        For code clarity reasons, the snippet above would have failed even if</span>
+<span class="sd">        `max_distance_from_unity_inside=1.e-3`.</span>
+
+<span class="sd">        :param float max_distance_from_unity: The maximum distance from the</span>
+<span class="sd">            unit circle. Defaults to `None`.</span>
+<span class="sd">        :param float max_distance_from_unity_inside: The maximum distance</span>
+<span class="sd">            from the unit circle for points inside it. Defaults to `None`.</span>
+<span class="sd">        :param float max_distance_from_unity_outside: The maximum distance</span>
+<span class="sd">            from the unit circle for points outside it. Defaults to `None`.</span>
+<span class="sd">        :return callable: A function which can be used as the parameter</span>
+<span class="sd">            of `select_modes` to select DMD modes according to</span>
+<span class="sd">            the criteria of stability.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">max_distance_from_unity</span> <span class="ow">and</span> <span class="n">max_distance_from_unity_inside</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;Only one between `max_distance_from_unity`</span>
+<span class="sd">and `max_distance_from_unity_inside` can be not `None`&quot;&quot;&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_distance_from_unity</span> <span class="ow">and</span> <span class="n">max_distance_from_unity_outside</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;Only one between `max_distance_from_unity`</span>
+<span class="sd">and `max_distance_from_unity_outside` can be not `None`&quot;&quot;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">max_distance_from_unity</span><span class="p">:</span>
+            <span class="n">max_distance_from_unity_outside</span> <span class="o">=</span> <span class="n">max_distance_from_unity</span>
+            <span class="n">max_distance_from_unity_inside</span> <span class="o">=</span> <span class="n">max_distance_from_unity</span>
+
+        <span class="k">if</span> <span class="n">max_distance_from_unity_outside</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_distance_from_unity_outside</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_distance_from_unity_inside</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_distance_from_unity_inside</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">max_distance_from_unity_outside</span> <span class="o">==</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="s2">&quot;inf&quot;</span>
+        <span class="p">)</span> <span class="ow">and</span> <span class="n">max_distance_from_unity_inside</span> <span class="o">==</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;The combination of parameters does not make sense&quot;&quot;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">partial</span><span class="p">(</span>
+            <span class="n">ModesSelectors</span><span class="o">.</span><span class="n">_stable_modes</span><span class="p">,</span>
+            <span class="n">max_distance_from_unity_inside</span><span class="o">=</span><span class="n">max_distance_from_unity_inside</span><span class="p">,</span>
+            <span class="n">max_distance_from_unity_outside</span><span class="o">=</span><span class="n">max_distance_from_unity_outside</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_compute_integral_contribution</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">dynamic</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the integral contribution across time of the given DMD mode,</span>
+<span class="sd">        given the mode and its dynamic, as shown in</span>
+<span class="sd">        http://dx.doi.org/10.1016/j.euromechflu.2016.11.015</span>
+
+<span class="sd">        :param numpy.ndarray mode: The DMD mode.</span>
+<span class="sd">        :param numpy.ndarray dynamic: The dynamic of the given DMD mode, as</span>
+<span class="sd">            returned by `dmd.dynamics[mode_index]`.</span>
+<span class="sd">        :return float: the integral contribution of the given DMD mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">pow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mode</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dynamic</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_integral_contribution</span><span class="p">(</span><span class="n">dmd</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Non-partialized function of the modes selector `integral_contribution`.</span>
+
+<span class="sd">        :param DMDBase dmd: An instance of DMDBase.</span>
+<span class="sd">        :param int n: The number of DMD modes to be selected.</span>
+<span class="sd">        :return np.ndarray: An array of bool, where each &quot;True&quot; index means</span>
+<span class="sd">            that the corresponding DMD mode is selected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># temporary reset dmd_time to original_time</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">dmd</span><span class="o">.</span><span class="n">dmd_time</span>
+        <span class="n">dmd</span><span class="o">.</span><span class="n">_dmd_time</span> <span class="o">=</span> <span class="n">dmd</span><span class="o">.</span><span class="n">original_time</span>
+
+        <span class="n">dynamics</span> <span class="o">=</span> <span class="n">dmd</span><span class="o">.</span><span class="n">dynamics</span>
+        <span class="n">modes</span> <span class="o">=</span> <span class="n">dmd</span><span class="o">.</span><span class="n">modes</span>
+
+        <span class="c1"># reset dmd_time</span>
+        <span class="n">dmd</span><span class="o">.</span><span class="n">_dmd_time</span> <span class="o">=</span> <span class="n">temp</span>
+
+        <span class="n">n_of_modes</span> <span class="o">=</span> <span class="n">modes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">integral_contributions</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">ModesSelectors</span><span class="o">.</span><span class="n">_compute_integral_contribution</span><span class="p">(</span><span class="o">*</span><span class="n">tp</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">tp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">modes</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">dynamics</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="n">indexes_first_n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">integral_contributions</span><span class="p">)</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[</span><span class="o">-</span><span class="n">n</span><span class="p">:]</span>
+
+        <span class="n">truefalse_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="kc">False</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_of_modes</span><span class="p">)])</span>
+        <span class="n">truefalse_array</span><span class="p">[</span><span class="n">indexes_first_n</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">truefalse_array</span>
+
+<div class="viewcode-block" id="ModesSelectors.integral_contribution"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesSelectors.integral_contribution">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">integral_contribution</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reference: http://dx.doi.org/10.1016/j.euromechflu.2016.11.015</span>
+
+<span class="sd">        :param int n: The number of DMD modes to be selected.</span>
+<span class="sd">        :return callable: A function which can be used as the parameter</span>
+<span class="sd">            of `select_modes` to select DMD modes according to</span>
+<span class="sd">            the criteria of integral contribution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">ModesSelectors</span><span class="o">.</span><span class="n">_integral_contribution</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">)</span></div></div>
+
+
+<span class="n">selectors</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;module_threshold&quot;</span><span class="p">:</span> <span class="n">ModesSelectors</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+    <span class="s2">&quot;stable_modes&quot;</span><span class="p">:</span> <span class="n">ModesSelectors</span><span class="o">.</span><span class="n">stable_modes</span><span class="p">,</span>
+    <span class="s2">&quot;integral_contribution&quot;</span><span class="p">:</span> <span class="n">ModesSelectors</span><span class="o">.</span><span class="n">integral_contribution</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="ModesTuner"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesTuner">[docs]</a><span class="k">class</span> <span class="nc">ModesTuner</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Class for semi-automatic tuning of DMD modes.</span>
+
+<span class="sd">    This class generates a new instance from the instance passed to the</span>
+<span class="sd">    constructor, and modifies that one whenever one of the tuning methods</span>
+<span class="sd">    is called. Therefore there is no need to worry about subsequent</span>
+<span class="sd">    unwanted changes in the given instance.</span>
+
+<span class="sd">    `ModesTuner` provides a simplified interface to the tuning functions</span>
+<span class="sd">    :func:`select_modes` and :func:`stabilize_modes`, but in order to</span>
+<span class="sd">    have more control on what is happening (i.e. when to use in-place</span>
+<span class="sd">    tuning, or to check which modes have been changed) you may prefer to</span>
+<span class="sd">    use them instead.</span>
+
+<span class="sd">    :param dmds: One or more instances of DMD.</span>
+<span class="sd">    :type dmd: list or pydmd.DMDBase</span>
+<span class="sd">    :param bool in_place: If `True`, this tuner works directly on the given</span>
+<span class="sd">        DMD instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dmds</span><span class="p">,</span> <span class="n">in_place</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="c1"># if True, we return a list since we received a list in the constructor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_received_list</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dmds</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+
+        <span class="n">dmds</span> <span class="o">=</span> <span class="n">dmds</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_received_list</span> <span class="k">else</span> <span class="p">[</span><span class="n">dmds</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dmds</span> <span class="o">=</span> <span class="n">dmds</span> <span class="k">if</span> <span class="n">in_place</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">,</span> <span class="n">dmds</span><span class="p">))</span>
+
+<div class="viewcode-block" id="ModesTuner.subset"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesTuner.subset">[docs]</a>    <span class="k">def</span> <span class="nf">subset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indexes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a temporary instance of `ModesTuner` which operates on a</span>
+<span class="sd">        subset of the DMD instances held by this `ModesTuner`.</span>
+
+<span class="sd">        :param list indexes: List of indexes of the DMD instances to be put</span>
+<span class="sd">            into the subset.</span>
+<span class="sd">        :return ModesTuner: A `ModesTuner` which operates &quot;in place&quot; on the</span>
+<span class="sd">            DMD instances held by the caller `ModesTuner`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_received_list</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot index a single DMD instance.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ModesTuner</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_dmds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">],</span> <span class="n">in_place</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ModesTuner.get"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesTuner.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the private DMD instance(s) that `ModesTuner` is working on.</span>
+<span class="sd">        Be aware that those instances are the internal instances owned by</span>
+<span class="sd">        `ModesTuner`, therefore they are going going to be modified by</span>
+<span class="sd">        subsequent calls to tuning methods.</span>
+
+<span class="sd">        :return: The private DMD instance owned by `ModesTuner`, or a list of</span>
+<span class="sd">            DMD instances depending on the parameter received by the</span>
+<span class="sd">            constructor of this instance.</span>
+<span class="sd">        :rtype: list or pydmd.DMDBase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_received_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dmds</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dmds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ModesTuner.copy"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesTuner.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a deep copy of the private DMD instance(s) that `ModesTuner`</span>
+<span class="sd">        is working on. They are not going to be modified by subsequent calls to</span>
+<span class="sd">        tuning methods, and therefore provide a secure &quot;snapshot&quot; to the DMD(s).</span>
+
+<span class="sd">        :return: A copy of the private DMD instance owned by `ModesTuner`, or a</span>
+<span class="sd">            list of copies depending on the parameter received by the</span>
+<span class="sd">            constructor of this instance.</span>
+<span class="sd">        :rtype: list or pydmd.DMDBase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_received_list</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dmds</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dmds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="ModesTuner.select"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesTuner.select">[docs]</a>    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">criteria</span><span class="p">,</span> <span class="n">nullify_amplitudes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Select the DMD modes by using the given `criteria`, which can be either</span>
+<span class="sd">        a string or a function. You can choose pre-packed criteria by passing</span>
+<span class="sd">        one of the allowed string values for criteria. In this case you need to</span>
+<span class="sd">        pass (as keyword arguments) the arguments needed to construct the</span>
+<span class="sd">        criteria (see example below).</span>
+
+<span class="sd">        Allowed string values for `criteria`:</span>
+
+<span class="sd">        * `&#39;module_threshold&#39;`: Retain modes such that the module of the corresponding eigenvalue is included in the interval [`low_threshold`, `up_threshold`] (cfr. :func:`ModesSelectors.threshold`);</span>
+<span class="sd">        * `&#39;stable_modes&#39;`: Retain modes such that the corresponding eigenvalue is not far from the unit circle (cfr. :func:`ModesSelectors.stable_modes`);</span>
+<span class="sd">        * `&#39;integral_contribution&#39;`: Retain the first `n` modes in terms of integral contribution (cfr. :func:`ModesSelectors.integral_contribution`).</span>
+
+<span class="sd">        You might want to read the documentation of</span>
+<span class="sd">        :class:`ModesSelectors` in order to get detailed info regarding the</span>
+<span class="sd">        behavior of each argument.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &gt;&gt;&gt; from pydmd.dmd_modes_tuner import ModesTuner</span>
+<span class="sd">            &gt;&gt;&gt; mtuner = ModesTuner(dmd)</span>
+<span class="sd">            &gt;&gt;&gt; mtuner.select(&#39;stable_modes&#39;, max_distance_from_unity_inside=1.e-1,</span>
+<span class="sd">                    max_distance_from_unity_outside=1.e-3)</span>
+
+<span class="sd">        :param criteria: Criteria used to select DMD modes. The allowed strings</span>
+<span class="sd">            are `module_threshold`, `stable_modes` and `integral_contribution`.</span>
+<span class="sd">            If `criteria` is a function it must take an instance of DMD as the</span>
+<span class="sd">            only parameter.</span>
+<span class="sd">        :type criteria: str or callable</span>
+<span class="sd">        :param bool nullify_amplitudes: If `True`, the amplitudes associated</span>
+<span class="sd">            with DMD modes to be removed are set to 0, therefore the number of</span>
+<span class="sd">            DMD modes remains constant. If `False` (default) DMD modes are</span>
+<span class="sd">            actually removed, therefore the number of DMD modes in the instance</span>
+<span class="sd">            decreases.</span>
+<span class="sd">        :param \**kwargs: Parameters passed to the chosen criteria (if</span>
+<span class="sd">            `criteria` is a string).</span>
+<span class="sd">        :return ModesTuner: This instance of `ModesTuner` in order to allow</span>
+<span class="sd">            chaining multiple operations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">criteria</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">criteria</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">selectors</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could&#39;t find the specified criteria&quot;</span><span class="p">)</span>
+            <span class="n">criteria</span> <span class="o">=</span> <span class="n">selectors</span><span class="p">[</span><span class="n">criteria</span><span class="p">](</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">criteria</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;You should provide a criteria to select DMD</span>
+<span class="sd">modes (either a string or a function)&quot;&quot;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">dmd</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dmds</span><span class="p">:</span>
+            <span class="n">select_modes</span><span class="p">(</span><span class="n">dmd</span><span class="p">,</span> <span class="n">criteria</span><span class="p">,</span> <span class="n">nullify_amplitudes</span><span class="o">=</span><span class="n">nullify_amplitudes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="ModesTuner.stabilize"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesTuner.stabilize">[docs]</a>    <span class="k">def</span> <span class="nf">stabilize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inner_radius</span><span class="p">,</span> <span class="n">outer_radius</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stabilize modes in a circular sector of radius [`inner_radius`,</span>
+<span class="sd">        `outer_radius`].</span>
+
+<span class="sd">        Stabilizing a mode means that the corresponding eigenvalue is divided</span>
+<span class="sd">        by its module (i.e. normalized) in order to make the associated</span>
+<span class="sd">        dynamic a trigonometric function with respect to the time (since the</span>
+<span class="sd">        eigenvalue is projected on the unit circle). At the same time, the</span>
+<span class="sd">        corresponding mode amplitude is multiplied by the former module of the</span>
+<span class="sd">        eigenvalue, in order to &quot;recover&quot; the correctness of the result in the</span>
+<span class="sd">        first time instants.</span>
+
+<span class="sd">        This approach may give better results in the prediction when one or</span>
+<span class="sd">        more eigenvalues are strongly unstable (i.e. the corresponding DMD mode</span>
+<span class="sd">        &quot;explodes&quot; several instants after the known time frame).</span>
+
+<span class="sd">        In order to stabilize an unbounded (above) circular sector, the</span>
+<span class="sd">        parameter `outer_radius` should be set to `np.inf` (default).</span>
+
+<span class="sd">        :param float inner_radius: The inner radius of the circular sector to</span>
+<span class="sd">            be stabilized.</span>
+<span class="sd">        :param float outer_radius: The outer radius of the circular sector to</span>
+<span class="sd">            be stabilized.</span>
+<span class="sd">        :return ModesTuner: This instance of `ModesTuner` in order to allow</span>
+<span class="sd">            chaining multiple operations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">dmd</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dmds</span><span class="p">:</span>
+            <span class="n">stabilize_modes</span><span class="p">(</span><span class="n">dmd</span><span class="p">,</span> <span class="n">inner_radius</span><span class="p">,</span> <span class="n">outer_radius</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
+      <span class="lastupdated">Last updated on Apr 21, 2022.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
