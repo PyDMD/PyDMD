@@ -737,7 +737,7 @@ matrix, or regularization methods.""".format(
                                                      self.modes])))
         else:
             U, s, V = compute_svd(self._snapshots[:, :-1],
-                                  self.operator._svd_rank)
+                                  self.svd_rank)
 
             q = np.conj(np.diag(
                 np.linalg.multi_dot([vander[:, :-1],
