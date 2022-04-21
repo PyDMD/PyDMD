@@ -55,7 +55,7 @@ class TestHankelDmd(TestCase):
 
     def test_d(self):
         single_data = np.sin(np.linspace(0, 10, 100))
-        dmd = HankelDMD(svd_rank=-1, d=50, opt=True)
+        dmd = HankelDMD(svd_rank=0, d=50, opt=True)
         dmd.fit(single_data)
         np.testing.assert_array_almost_equal(
             dmd.reconstructed_data.flatten().real,
