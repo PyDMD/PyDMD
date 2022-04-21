@@ -2,8 +2,8 @@ name: Monthly Automated Tag
 
 on:
   push:
-    branches:
-      - master
+#    branches:
+#      - master
 #  schedule:
 #    - cron: '25 12 21 * *'
 
