@@ -18,7 +18,7 @@ class Version:
     def __str__(self):
 
         if self.date_patch:
-            version_string = '{}.{}.{}-{}'.format(
+            version_string = '{}.{}.{}.{}'.format(
                 self.major,
                 self.minor,
                 self.patch,
