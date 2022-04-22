@@ -37,7 +37,6 @@ def get_version():
     with open(meta_file, 'r') as fp:
         content = fp.read()
 
-    print(content)
     try:
         found = re.search(r'__version__.*=.*"(.+?)"', content).group(1)
     except AttributeError:

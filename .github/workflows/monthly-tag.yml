@@ -38,11 +38,12 @@ jobs:
 
       - name: Create and push the tag
         run: |
-          SUFFIX=$(date +%b%y)
-          VERSION=$(python -c "meta={}; fp = open('pydmd/meta.py'); exec(fp.read(), meta); fp.close(); print(meta['__version__'])")
-          TAG="$VERSION-$SUFFIX"
-          echo $TAG
-          git config --global user.name 'Monthly Tag bot'
-          git config --global user.email 'mtbot@noreply.github.com'
-          git tag -a "v$TAG" -m "Monthly version $TAG"
-          git push origin "v$TAG"
+          python utils/mathlab_versioning.py set --only-date $(date +%b+y)
+          cat pydmd/meta.py
+          VERS=$(python utils/mathlab_versioning.py get)
+          #git config --global user.name 'Monthly Tag bot'
+          #git config --global user.email 'mtbot@noreply.github.com'
+          git add pydmd/meta.py
+          git commit -m "monthly version $VERS"
+          git tag -a "v$VERS" -m "Monthly version $VERS"
+          git push origin "v$VERS"
