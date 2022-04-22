@@ -38,7 +38,7 @@ jobs:
 
       - name: Create and push the tag
         run: |
-          python utils/mathlab_versioning.py set --only-date $(date +%b+y)
+          python utils/mathlab_versioning.py set --only-date $(date +%b%y)
           cat pydmd/meta.py
           VERS=$(python utils/mathlab_versioning.py get)
           git config --global user.name 'Monthly Tag bot'
