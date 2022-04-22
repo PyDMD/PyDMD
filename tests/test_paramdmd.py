@@ -274,11 +274,11 @@ def test_fit_dmd_monolithic():
     assert p._dmd.modes is not None
     assert p._dmd.modes.shape[0] == 100
 
-# def test_predict_modal_coefficients_shape():
-#     p = ParametricDMD(DMD(svd_rank=5), POD(rank=10), RBF())
-#     p.fit(np.ones((10,20,40)), np.arange(10))
-#     p.dmd_time['tend'] = 29
-#     assert p._predict_modal_coefficients().shape == (10*10, 30)
+def test_predict_modal_coefficients_shape():
+    p = ParametricDMD(DMD(svd_rank=5), POD(rank=10), RBF())
+    p.fit(np.ones((10,20,40)), np.arange(10))
+    p.dmd_time['tend'] = 29
+    assert p._predict_modal_coefficients().shape == (10*10, 30)
 
 def test_predict_modal_coefficients_partitioned_shape():
     p = ParametricDMD([DMD(svd_rank=5) for _ in range(10)], POD(rank=10), RBF())
@@ -293,20 +293,20 @@ def test_predict_modal_coefficients():
     expected = np.load(testdir+'forecasted.npy')
     np.testing.assert_allclose(p._predict_modal_coefficients(), expected, rtol=0, atol=1.e-11)
 
-# def test_interpolate_missing_modal_coefficients_shape():
-#     p = ParametricDMD(DMD(svd_rank=5), POD(rank=10), RBF())
-#     p.fit(np.ones((10,20,40)), np.arange(10))
-#     p.dmd_time['tend'] = 29
-#     p.parameters = [1.5, 5.5, 7.5]
-#     assert p._interpolate_missing_modal_coefficients(np.random.rand(10*10, 30)).shape == (30,3,10)
+def test_interpolate_missing_modal_coefficients_shape():
+    p = ParametricDMD(DMD(svd_rank=5), POD(rank=10), RBF())
+    p.fit(np.ones((10,20,40)), np.arange(10))
+    p.dmd_time['tend'] = 29
+    p.parameters = [1.5, 5.5, 7.5]
+    assert p._interpolate_missing_modal_coefficients(np.random.rand(10*10, 30)).shape == (30,3,10)
 
-# def test_interpolate_missing_modal_coefficients_wrong_time():
-#     p = ParametricDMD(DMD(svd_rank=5), POD(rank=10), RBF())
-#     p.fit(np.ones((10,20,40)), np.arange(10))
-#     p.dmd_time['tend'] = 29
-#     p.parameters = [1.5, 5.5, 7.5]
-#     with raises(ValueError):
-#         p._interpolate_missing_modal_coefficients(np.random.rand(10*10, 20))
+def test_interpolate_missing_modal_coefficients_wrong_time():
+    p = ParametricDMD(DMD(svd_rank=5), POD(rank=10), RBF())
+    p.fit(np.ones((10,20,40)), np.arange(10))
+    p.dmd_time['tend'] = 29
+    p.parameters = [1.5, 5.5, 7.5]
+    with raises(ValueError):
+        p._interpolate_missing_modal_coefficients(np.random.rand(10*10, 20))
 
 def test_interpolate_missing_modal_coefficients():
     p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
