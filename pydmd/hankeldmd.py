@@ -330,12 +330,22 @@ class HankelDMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
+
+        if isinstance(X, np.ndarray) and X.ndim == 2:
+            n_samples = X.shape[1]
+        else:
+            n_samples = len(X)
+
+        if n_samples < self._d:
+            msg = """The number of snapshots provided is not enough for d={}.
+Expected at least d."""
+            raise ValueError(msg.format(self._d))
+
         snp, self._snapshots_shape = self._col_major_2darray(X)
         self._snapshots = self._pseudo_hankel_matrix(snp)
         self._sub_dmd.fit(self._snapshots)
 
         # Default timesteps
-        n_samples = snp.shape[1]
         self._set_initial_time_dictionary(
             {"t0": 0, "tend": n_samples - 1, "dt": 1}
         )
