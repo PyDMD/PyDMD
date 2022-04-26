@@ -25,6 +25,7 @@ MrDMD
 	MrDMD.plot_snapshots_2D
 	MrDMD.reconstructed_data
 	MrDMD.snapshots
+	MrDMD._dmd_builder
 
 
 .. autoclass:: MrDMD
