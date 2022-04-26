@@ -2,7 +2,7 @@ from __future__ import division
 from past.utils import old_div
 from pytest import raises
 from pydmd.mrdmd import MrDMD
-from pydmd import DMD
+from pydmd import DMD, FbDMD
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -325,3 +325,75 @@ def test_getitem_not_implemented():
         mrdmd = MrDMD(DMD(), max_level=5, max_cycles=1)
         mrdmd.fit(X=sample_data)
         mrdmd[1:3]
+
+def test_one_dmd():
+    m = MrDMD(dmd=DMD(svd_rank=4), max_level=5)
+
+    for level in range(6):
+        leaves = 2 ** level
+        for leaf in range(leaves):
+            dmd = m.dmd_tree[level, leaf]
+            assert isinstance(dmd, DMD)
+            assert dmd.svd_rank == 4
+
+def test_list_dmd():
+    l = [DMD(svd_rank=5-i) for i in range(4)]
+    m = MrDMD(dmd=l, max_level=3)
+
+    for level in range(4):
+        leaves = 2 ** level
+        for leaf in range(leaves):
+            dmd = m.dmd_tree[level, leaf]
+            assert isinstance(dmd, DMD)
+            assert dmd.svd_rank == 5 - level
+
+def test_tuple_dmd():
+    l = tuple(DMD(svd_rank=5-i) for i in range(4))
+    m = MrDMD(dmd=l, max_level=3)
+
+    for level in range(4):
+        leaves = 2 ** level
+        for leaf in range(leaves):
+            dmd = m.dmd_tree[level, leaf]
+            assert isinstance(dmd, DMD)
+            assert dmd.svd_rank == 5 - level
+
+def test_list_wrong_size_dmd():
+    l = [DMD(svd_rank=5-i) for i in range(4)]
+    with raises(ValueError):
+        MrDMD(dmd=l, max_level=4)
+
+def test_tuple_dmd():
+    l = tuple(DMD(svd_rank=5-i) for i in range(5))
+    with raises(ValueError):
+        MrDMD(dmd=l, max_level=3)
+
+def test_func_dmd():
+    def f(level, leaf):
+        return FbDMD(svd_rank=level*leaf)
+    m = MrDMD(dmd=f, max_level=5)
+
+    for level in range(6):
+        leaves = 2 ** level
+        for leaf in range(leaves):
+            dmd = m.dmd_tree[level, leaf]
+            assert isinstance(dmd, FbDMD)
+            assert dmd.svd_rank == level * leaf
+
+def test_quantitative_list_dmd():
+    l = [DMD(svd_rank=4) for i in range(4)]
+    m1 = MrDMD(dmd=l, max_level=3).fit(X=sample_data).reconstructed_data
+    m2 = MrDMD(DMD(svd_rank=4), max_level=3).fit(X=sample_data).reconstructed_data
+    np.testing.assert_almost_equal(m1, m2)
+
+def test_quantitative_tuple_dmd():
+    l = tuple(DMD(svd_rank=4) for i in range(4))
+    m1 = MrDMD(dmd=l, max_level=3).fit(X=sample_data).reconstructed_data
+    m2 = MrDMD(DMD(svd_rank=4), max_level=3).fit(X=sample_data).reconstructed_data
+    np.testing.assert_almost_equal(m1, m2)
+
+def test_quantitative_func_dmd():
+    def f(level, leaf):
+        return FbDMD(svd_rank=4)
+    m1 = MrDMD(dmd=f, max_level=4).fit(sample_data).reconstructed_data
+    m2 = MrDMD(dmd=FbDMD(svd_rank=4), max_level=4).fit(sample_data).reconstructed_data
