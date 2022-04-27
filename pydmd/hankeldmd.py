@@ -9,6 +9,7 @@ Applied Dynamical Systems, 2017, 16.4: 2096-2126.
 from copy import copy
 
 import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view as swv
 
 from .dmdbase import DMDBase
 from .dmd import DMD
@@ -260,9 +261,10 @@ class HankelDMD(DMDBase):
                    [4, 5]])
 
         """
-        return np.concatenate(
-            [X[:, i : X.shape[1] - self.d + i + 1] for i in range(self.d)],
-            axis=0,
+        return (
+            swv(X.T, (self.d, X.shape[0]))[:, 0]
+            .reshape(X.shape[1] - self.d + 1, -1)
+            .T
         )
 
     @property
