@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MrDMD &mdash; PyDMD 0.4.0.post2204 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>MrDMD &mdash; PyDMD 0.4.0.post2205 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2204
+                0.4.0.post2205
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -163,6 +163,9 @@ Decomposition. SIAM Journal on Applied Dynamical Systems 15.2 (2016): 713-735.</
 <tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.mrdmd.MrDMD.snapshots.html#pydmd.mrdmd.MrDMD.snapshots" title="pydmd.mrdmd.MrDMD.snapshots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MrDMD.snapshots</span></code></a></p></td>
 <td><p>Get the original input data.</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MrDMD._dmd_builder</span></code></p></td>
+<td><p>Builds a function which takes in input a level and a leaf count (i.e.</p></td>
+</tr>
 </tbody>
 </table>
 <dl class="class">
@@ -173,11 +176,13 @@ Decomposition. SIAM Journal on Applied Dynamical Systems 15.2 (2016): 713-735.</
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dmd</strong> (<em>DMDBase</em>) – an instance of a subclass of <cite>DMDBase</cite>, used to
-recursively analyze the dataset.</p></li>
+<li><p><strong>dmd</strong> (<em>DMDBase</em><em> or </em><em>list</em><em> or </em><em>tuple</em><em> or </em><em>function</em>) – DMD instance(s) used to analyze the snapshots provided. See also
+the documentation for <code class="xref py py-meth docutils literal notranslate"><span class="pre">_dmd_builder()</span></code>.</p></li>
 <li><p><strong>max_cycles</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the maximum number of mode oscillations in any given
 time scale. Default is 1.</p></li>
-<li><p><strong>max_level</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the maximum number of levels. Defualt is 6.</p></li>
+<li><p><strong>max_level</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the maximum level (inclusive). For instance,
+<cite>max_level=4</cite> means that we are going to have levels <cite>0</cite>, <cite>1</cite>, <cite>2</cite>, <cite>3</cite>
+and <cite>4</cite>. Default is 2.</p></li>
 </ul>
 </dd>
 </dl>
@@ -185,6 +190,62 @@ time scale. Default is 1.</p></li>
 <dt>
 <code class="sig-name descname">_build_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD._build_tree"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Build the internal binary tree that contain the DMD subclasses.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">_dmd_builder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD._dmd_builder"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Builds a function which takes in input a level and a leaf count
+(i.e. coordinates inside the binary tree) and produces an appropriate
+DMD instance according to the criteria specified in <cite>self.dmd</cite>.</p>
+<p>Criteria supported:</p>
+<ul class="simple">
+<li><p>A function which takes two parameters <cite>level</cite> and <cite>leaf</cite>;</p></li>
+<li><p>List/tuple of DMD instances (length must be equal to <cite>max_level+1</cite>);</p></li>
+<li><p>A DMD instance (which is used for all the levels and leaves).</p></li>
+</ul>
+<p>Example 0 (one DMD):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># this SpDMD is used for all the levels, for all the leaves</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MrDMD</span><span class="p">(</span><span class="n">dmd</span><span class="o">=</span><span class="n">SpDMD</span><span class="p">(),</span> <span class="n">max_level</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example 1 (simple function which adapts the parameter d of HankelDMD
+to the current level of the tree):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">build_dmds</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">d</span> <span class="o">=</span> <span class="mi">30</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">level</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">HankelDMD</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MrDMD</span><span class="p">(</span><span class="n">dmd</span><span class="o">=</span><span class="n">build_dmds</span><span class="p">,</span> <span class="n">max_level</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example 2 (we use a different kind of DMD if we are near the middle part
+of the time window):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># you can name the function however you prefer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_dmds</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">level_size</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">level</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">distance_from_middle</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">leaf</span> <span class="o">-</span> <span class="n">level_size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="c1"># we choose 2 as a random threshold</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">distance_from_middle</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="n">HankelDMD</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">else</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="n">DMD</span><span class="p">(</span><span class="n">svd_rank</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MrDMD</span><span class="p">(</span><span class="n">dmd</span><span class="o">=</span><span class="n">my_dmds</span><span class="p">,</span> <span class="n">max_level</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example 3 (tuple of DMDs):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dmds_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">DMD</span><span class="p">(</span><span class="n">svd_rank</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">3</span>
+<span class="go">                    else DMD(svd_rank=2)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MrDMD</span><span class="p">(</span><span class="n">dmd</span><span class="o">=</span><span class="n">dmds_list</span><span class="p">,</span> <span class="n">max_level</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A function which can be used to spawn DMD instances according
+to the level and leaf.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>func</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -560,7 +621,7 @@ time window.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Apr 22, 2022.
+      <span class="lastupdated">Last updated on May 01, 2022.
       </span></p>
   </div>
 
