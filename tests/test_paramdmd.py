@@ -196,26 +196,26 @@ def test_fit_stores_2d_training_parameters():
     # test that the order is fine
     assert np.all(np.sum(p.training_parameters, axis=1) == np.repeat(9, 10))
 
-def test_training_modal_coefficients_shape():
+def test_compute_training_modal_coefficients_shape():
     p = ParametricDMD(None, POD(rank=5), None)
     p._ntrain = 10
 
-    res = p._training_modal_coefficients(np.ones((50,60)))
+    res = p._compute_training_modal_coefficients(np.ones((50,60)))
     assert len(res) == 10
     assert res[0].shape == (5,6)
 
-def test_training_modal_coefficients():
+def test_compute_training_modal_coefficients():
     m = np.vander(np.arange(50)/50, 60)
     p = ParametricDMD(None, POD(rank=5), None)
     p._ntrain = 10
-    np.testing.assert_allclose(np.hstack(p._training_modal_coefficients(m)), POD(rank=5).fit(m).reduce(m))
+    np.testing.assert_allclose(np.hstack(p._compute_training_modal_coefficients(m)), POD(rank=5).fit(m).reduce(m))
 
-def test_training_modal_coefficients2():
+def test_compute_training_modal_coefficients2():
     p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
     p.fit(training_data, params)
 
     inp = np.load(testdir+'space_timemu.npy')
-    actual = p._training_modal_coefficients(inp)
+    actual = p._compute_training_modal_coefficients(inp)
     expected = np.load(testdir+'traning_modal_coefficients.npy')
 
     np.testing.assert_allclose(actual, expected, atol=1.e-12, rtol=0)
@@ -411,3 +411,115 @@ def test_forecast():
 
     for r in p.reconstructed_data:
         assert r.shape == (100, training_data.shape[2])
+
+
+def test_training_modal_coefficients_property_partitioned():
+    dmds = [DMD(svd_rank=-1) for _ in range(len(params))]
+    p = ParametricDMD(dmds, POD(rank=5), RBF())
+    p.fit(training_data, params)
+    assert p.training_modal_coefficients.shape == (10, 5, 100)
+
+def test_training_modal_coefficients_property_monolithic():
+    dmd = DMD(svd_rank=-1)
+    p = ParametricDMD(dmd, POD(rank=5), RBF())
+    p.fit(training_data, params)
+    assert p.training_modal_coefficients.shape == (10, 5, 100)
+
+def test_no_training_modal_coefficients_light():
+    dmds = [DMD(svd_rank=-1) for _ in range(len(params))]
+    p = ParametricDMD(dmds, POD(rank=5), RBF(), light=True)
+    p.fit(training_data, params)
+    with raises(RuntimeError):
+        p.training_modal_coefficients
+
+def test_no_training_modal_coefficients_before_fit():
+    dmds = [DMD(svd_rank=-1) for _ in range(len(params))]
+    p = ParametricDMD(dmds, POD(rank=5), RBF(), light=True)
+    with raises(RuntimeError):
+        p.training_modal_coefficients
+
+def test_forecasted_modal_coefficients_shape():
+    dmds = [DMD(svd_rank=-1) for _ in range(len(params))]
+    p = ParametricDMD(dmds, POD(rank=5), RBF(), light=True)
+    p.fit(training_data, params)
+    assert p.forecasted_modal_coefficients.shape == (10, 5, 100)
+    p.dmd_time['tend'] += 10
+    assert p.forecasted_modal_coefficients.shape == (10, 5, 110)
+
+def test_interpolated_modal_coefficients_shape():
+    dmds = [DMD(svd_rank=-1) for _ in range(len(params))]
+    p = ParametricDMD(dmds, POD(rank=4), RBF(), light=True)
+    p.fit(training_data, params)
+    p.parameters = [0.25, 0.98, 0.99]
+    assert p.interpolated_modal_coefficients.shape == (3, 4, 100)
+    p.dmd_time['tend'] += 100
+    assert p.interpolated_modal_coefficients.shape == (3, 4, 200)
+
+def test_forecasted_modal_coefficients_reshape():
+    dmds = [DMD(svd_rank=-1) for _ in range(len(params))]
+    p = ParametricDMD(dmds, POD(rank=4), RBF(), light=True)
+    p.fit(training_data, params)
+    p.dmd_time['tend'] += 100
+
+    forecasted_modal_coefficients = p._predict_modal_coefficients()
+    np.testing.assert_allclose(p.forecasted_modal_coefficients[0,3], forecasted_modal_coefficients[3])
+    np.testing.assert_allclose(p.forecasted_modal_coefficients[5,0], forecasted_modal_coefficients[20])
+
+def test_interpolated_modal_coefficients_reshape():
+    dmds = [DMD(svd_rank=-1) for _ in range(len(params))]
+    p = ParametricDMD(dmds, POD(rank=5), RBF(), light=True)
+    p.fit(training_data, params)
+    p.dmd_time['tend'] += 100
+    p.parameters = [0.25, 0.98, 0.99]
+
+    forecasted_modal_coefficients = p._predict_modal_coefficients()
+    interpolated_modal_coefficients = (
+        p._interpolate_missing_modal_coefficients(
+            forecasted_modal_coefficients
+        )
+    )
+    np.testing.assert_allclose(p.interpolated_modal_coefficients[1,3], interpolated_modal_coefficients[:,1,3])
+    np.testing.assert_allclose(p.interpolated_modal_coefficients[2,0], interpolated_modal_coefficients[:,2,0])
+
+def test_forecasted_modal_coefficients_shape_monolithic():
+    dmds = DMD(svd_rank=-1)
+    p = ParametricDMD(dmds, POD(rank=5), RBF(), light=True)
+    p.fit(training_data, params)
+    assert p.forecasted_modal_coefficients.shape == (10, 5, 100)
+    p.dmd_time['tend'] += 10
+    assert p.forecasted_modal_coefficients.shape == (10, 5, 110)
+
+def test_interpolated_modal_coefficients_shape_monolithic():
+    dmds = DMD(svd_rank=-1)
+    p = ParametricDMD(dmds, POD(rank=4), RBF(), light=True)
+    p.fit(training_data, params)
+    p.parameters = [0.25, 0.98, 0.99]
+    assert p.interpolated_modal_coefficients.shape == (3, 4, 100)
+    p.dmd_time['tend'] += 100
+    assert p.interpolated_modal_coefficients.shape == (3, 4, 200)
+
+def test_forecasted_modal_coefficients_reshape_monolithic():
+    dmds = DMD(svd_rank=-1)
+    p = ParametricDMD(dmds, POD(rank=4), RBF(), light=True)
+    p.fit(training_data, params)
+    p.dmd_time['tend'] += 100
+
+    forecasted_modal_coefficients = p._predict_modal_coefficients()
+    np.testing.assert_allclose(p.forecasted_modal_coefficients[0,3], forecasted_modal_coefficients[3])
+    np.testing.assert_allclose(p.forecasted_modal_coefficients[5,0], forecasted_modal_coefficients[20])
+
+def test_interpolated_modal_coefficients_reshape_monolithic():
+    dmds = DMD(svd_rank=-1)
+    p = ParametricDMD(dmds, POD(rank=5), RBF(), light=True)
+    p.fit(training_data, params)
+    p.dmd_time['tend'] += 100
+    p.parameters = [0.25, 0.98, 0.99]
+
+    forecasted_modal_coefficients = p._predict_modal_coefficients()
+    interpolated_modal_coefficients = (
+        p._interpolate_missing_modal_coefficients(
+            forecasted_modal_coefficients
+        )
+    )
+    np.testing.assert_allclose(p.interpolated_modal_coefficients[1,3], interpolated_modal_coefficients[:,1,3])
+    np.testing.assert_allclose(p.interpolated_modal_coefficients[2,0], interpolated_modal_coefficients[:,2,0])
