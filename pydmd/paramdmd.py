@@ -26,9 +26,13 @@ class ParametricDMD:
         learning-prediction pattern (`fit()` -> `predict()`). For some
         convenient wrappers see those implemented in
         `EZyRB <https://github.com/mathLab/EZyRB>`_).
+    :param bool light: Whether this instance should be light or not. A light
+        instance uses less memory since it caches a smaller number of resources.
+        Setting `light=True` might invalidate several properties (see also
+        :meth:`training_modal_coefficients`).
     """
 
-    def __init__(self, dmd, spatial_pod, approximation):
+    def __init__(self, dmd, spatial_pod, approximation, light=False):
         self._dmd = dmd
         self._spatial_pod = spatial_pod
         self._approximation = approximation
@@ -38,6 +42,9 @@ class ParametricDMD:
         self._ntrain = None
         self._time_instants = None
         self._space_dim = None
+        self._light = light
+
+        self._training_modal_coefficients = None
 
     @property
     def is_partitioned(self):
@@ -210,7 +217,7 @@ class ParametricDMD:
             "F",
         )
 
-    def _training_modal_coefficients(self, space_timemu):
+    def _compute_training_modal_coefficients(self, space_timemu):
         """
         Compute the POD modal coefficient from the given matrix, and put
         the resulting coefficients (along with their time evolution in matrix
@@ -335,12 +342,78 @@ class ParametricDMD:
         space_timemu = self._arrange_parametric_snapshots(X)
 
         # obtain POD modal coefficients from the training set
-        training_modal_coefficients = self._training_modal_coefficients(
-            space_timemu
+        training_modal_coefficients = (
+            self._compute_training_modal_coefficients(space_timemu)
         )
+
+        if not self._light:
+            self._training_modal_coefficients = np.array(
+                training_modal_coefficients
+            )
 
         # fit DMD(s) with POD modal coefficients
         self._fit_dmd(training_modal_coefficients)
+
+    @property
+    def training_modal_coefficients(self):
+        """
+        Modal coefficients of the input dataset. Since this is cached after
+        calls to :func:`fit` this property needs to be called after :func:`fit`,
+        and `light` should be set to `False` in the constructor of the class.
+
+        The tensor returned has the following shape:
+
+        - 0: Parameters;
+        - 1: POD sub-Space;
+        - 2: Time.
+        """
+        if self._light:
+            raise RuntimeError(
+                """Light instances do not cache the property
+`training_modal_coefficients`."""
+            )
+
+        if self._training_modal_coefficients is None:
+            raise RuntimeError(
+                """
+Property not available now, did you call `fit()`?"""
+            )
+
+        return self._training_modal_coefficients
+
+    @property
+    def forecasted_modal_coefficients(self):
+        """
+        Modal coefficients forecasted for the input parameters.
+
+        The tensor returned has the following shape:
+
+        - 0: Parameters;
+        - 1: POD sub-Space;
+        - 2: Time.
+        """
+        forecasted = self._predict_modal_coefficients()
+        return forecasted.reshape(
+            (len(self.training_parameters), -1, forecasted.shape[1])
+        )
+
+    @property
+    def interpolated_modal_coefficients(self):
+        """
+        Modal coefficients forecasted and then interpolated for the untested
+        parameters.
+
+        The tensor returned has the following shape:
+
+        - 0: Parameters;
+        - 1: POD sub-Space;
+        - 2: Time.
+        """
+        forecasted = self._predict_modal_coefficients()
+        interpolated = self._interpolate_missing_modal_coefficients(forecasted)
+        return np.swapaxes(np.swapaxes(interpolated, 0, 1), 1, 2).reshape(
+            len(self.parameters), -1, forecasted.shape[1]
+        )
 
     @property
     def reconstructed_data(self):
@@ -359,18 +432,18 @@ class ParametricDMD:
         :rtype: numpy.ndarray
         """
         forecasted_modal_coefficients = self._predict_modal_coefficients()
-        interpolated_pod_modal_coefficients = (
+        interpolated_modal_coefficients = (
             self._interpolate_missing_modal_coefficients(
                 forecasted_modal_coefficients
             )
         )
 
-        interpolated_pod_modal_coefficients = np.swapaxes(
-            interpolated_pod_modal_coefficients, 0, 1
+        interpolated_modal_coefficients = np.swapaxes(
+            interpolated_modal_coefficients, 0, 1
         )
 
         return np.apply_along_axis(
-            self._spatial_pod.expand, 2, interpolated_pod_modal_coefficients
+            self._spatial_pod.expand, 2, interpolated_modal_coefficients
         )
 
     def save(self, fname):
