@@ -523,3 +523,12 @@ def test_interpolated_modal_coefficients_reshape_monolithic():
     )
     np.testing.assert_allclose(p.interpolated_modal_coefficients[1,3], interpolated_modal_coefficients[:,1,3])
     np.testing.assert_allclose(p.interpolated_modal_coefficients[2,0], interpolated_modal_coefficients[:,2,0])
+
+def test_no_parameters_error():
+    dmds = DMD(svd_rank=-1)
+    p = ParametricDMD(dmds, POD(rank=5), RBF(), light=True)
+    p.fit(training_data, params)
+    p.dmd_time['tend'] += 100
+
+    with raises(ValueError, match='Unknown parameters not found. Did you set `ParametricDMD.parameters`?'):
+        p.reconstructed_data
