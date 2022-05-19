@@ -101,7 +101,7 @@ The generated html can be found in `docs/build/html`. Open up the `index.html` y
 
 ## Testing
 
-We are using Travis CI for continuous intergration testing. You can check out the current status [here](https://travis-ci.org/mathLab/PyDMD).
+We are using GitHub actions for Continuous Integration. You can check the current status [here](https://github.com/mathLab/PyDMD/actions).
 
 To run tests locally (`pytest` is required):
 
