@@ -519,6 +519,12 @@ Property not available now, did you call `fit()`?"""
             untested parameters.
         :rtype: numpy.ndarray
         """
+        if self.parameters is None or len(self.parameters) == 0:
+            raise ValueError(
+                """
+Unknown parameters not found. Did you set `ParametricDMD.parameters`?"""
+            )
+
         if forecasted_modal_coefficients.shape[1] != len(self.dmd_timesteps):
             raise ValueError(
                 "Invalid number of time instants provided: "
