@@ -65,19 +65,19 @@ xgrid, tgrid = np.meshgrid(x, t)
 
 # We can now construct our dataset by computing the value of `f` for several known parameters (since our problem is quite simple we consider only 10 samples):
 
-# In[4]:
+# In[12]:
 
 
 training_params = np.round(np.linspace(0,1,10),1)
 print(training_params)
 
-training_snapshots = np.array([f(p)(xgrid, tgrid) for p in training_params])
+training_snapshots = np.array([f(p)(xgrid, tgrid).T for p in training_params])
 print(training_snapshots.shape)
 
 
 # After defining several utility functions which we are going to use in the following sections, we visualize our dataset for several values of $\mu$:
 
-# In[5]:
+# In[16]:
 
 
 def title(param):
@@ -88,9 +88,9 @@ def visualize(X, param, ax, log=False, labels_func=None):
     if labels_func != None:
         labels_func(ax)
     if log:
-        return ax.pcolormesh(X.real, norm=colors.LogNorm(vmin=X.min(), vmax=X.max()))
+        return ax.pcolormesh(X.real.T, norm=colors.LogNorm(vmin=X.min(), vmax=X.max()))
     else:
-        return ax.pcolormesh(X.real)
+        return ax.pcolormesh(X.real.T)
 
 def visualize_multiple(Xs, params, log=False, figsize=(20,6), labels_func=None):
     if log:
@@ -115,7 +115,7 @@ def visualize_multiple(Xs, params, log=False, figsize=(20,6), labels_func=None):
     plt.show()
 
 
-# In[6]:
+# In[17]:
 
 
 idxes = [0,2,4,6,8]
@@ -126,7 +126,7 @@ visualize_multiple(training_snapshots[idxes], training_params[idxes])
 # 
 # We now select several _unknown_ (or _testing_) parameters in order to assess the results obtained using the parametric approach. As you can see we consider testing parameters having dishomogeneous distances from our training parameters.
 
-# In[7]:
+# In[27]:
 
 
 similar_testing_params = [1,3,5,7,9]
@@ -139,10 +139,9 @@ N_predict = 40
 N_nonpredict = 40
 
 t2 = np.array([4*np.pi + i*step for i in range(-N_nonpredict+1,N_predict+1)])
-print(t2.shape)
 xgrid2, tgrid2 = np.meshgrid(x, t2)
 
-testing_snapshots = np.array([f(p)(xgrid2, tgrid2) for p in testing_params])
+testing_snapshots = np.array([f(p)(xgrid2, tgrid2).T for p in testing_params])
 
 plt.figure(figsize=(8,2))
 plt.scatter(training_params, np.zeros(len(training_params)), label='training')
@@ -184,7 +183,7 @@ plt.yticks([],[]);
 # 
 # We choose to retain the first 10 POD modes for each parameter, and set `svd_rank=-1` for our DMD instance, in order to protect us from divergent DMD modes which may ruin the results. We also provide an instance of an `RBF` interpolator to be used for the interpolation of POD coefficients.
 
-# In[8]:
+# In[19]:
 
 
 pdmd = ParametricDMD(DMD(svd_rank=-1), POD(rank=20), RBF())
@@ -193,7 +192,7 @@ pdmd.fit(training_snapshots, training_params)
 
 # We can now set the testing parameters by chaning the propery `parameters` of our instance of `ParametricDMD`, as well as the time-frame via the property `dmd_time` (see the other tutorials for an overview of the latter):
 
-# In[9]:
+# In[23]:
 
 
 pdmd.parameters = testing_params
@@ -202,7 +201,7 @@ pdmd.dmd_time['tend'] = pdmd.original_time['tend'] + N_nonpredict
 print(len(pdmd.dmd_timesteps), pdmd.dmd_timesteps)
 
 
-# In[10]:
+# In[24]:
 
 
 approximation = pdmd.reconstructed_data
@@ -211,7 +210,7 @@ approximation.shape
 
 # As you can see above we stored the result of the approximation (which comprises both reconstrction of known time instants and prediction of future time instants) into the variable `approximation`.
 
-# In[11]:
+# In[28]:
 
 
 # this is needed to visualize the time/space in the appropriate way
@@ -235,7 +234,7 @@ visualize_multiple(np.abs(testing_snapshots.real - approximation.real),
 
 # Below we plot the dependency of the mean point-wise error of the reconstruction on the distance between the (untested) parameter and the nearest tested parameter in the training set:
 
-# In[12]:
+# In[29]:
 
 
 distances = np.abs(testing_params - training_params[similar_testing_params])
@@ -252,7 +251,7 @@ plt.ylabel('Mean point-wise error');
 # 
 # In order to apply this approach in `PyDMD`, you just need to pass a list of DMD instances in the constructor of `ParametricDMD`. Clearly you will need $p$ instances, where $p$ is the number of parameters in the training set.
 
-# In[13]:
+# In[30]:
 
 
 dmds = [DMD(svd_rank=-1) for _ in range(len(training_params))]
@@ -263,7 +262,7 @@ p_pdmd.fit(training_snapshots, training_params)
 
 # We set untested parameters and the time frame in which we want to reconstruct the system in the same way we did in the monolithic approach: 
 
-# In[14]:
+# In[31]:
 
 
 # setting unknown parameters and time
@@ -274,7 +273,7 @@ p_pdmd.dmd_time['tend'] = p_pdmd.original_time['tend'] + N_nonpredict
 
 # **Important**: Don't pass the same DMD instance $p$ times, since that would mean that this object is trained $p$ times on $p$ different training set, therefore only the last one is retained at the time in which the reconstruction is computed.
 
-# In[15]:
+# In[32]:
 
 
 approximation = p_pdmd.reconstructed_data
@@ -283,7 +282,7 @@ approximation.shape
 
 # Below we plot the point-wise absolute error:
 
-# In[16]:
+# In[33]:
 
 
 visualize_multiple(np.abs(testing_snapshots.real - approximation.real), testing_params_labels, figsize=(20,2.5))

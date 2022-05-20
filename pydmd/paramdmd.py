@@ -4,11 +4,28 @@ Module for the parametric Dynamic Mode Decomposition.
 import pickle
 import numpy as np
 
+# roll by one position the shape of X. if X.shape == (a,b,c), the returned
+# NumPy array's shape is (b,c,a)
+def back_roll_shape(X):
+    """
+    Roll by one position the shape of `X`. if `X.shape == (a,b,c)`, the returned
+    NumPy array's shape is `(b,c,a)`.
+    """
+    return np.swapaxes(np.swapaxes(X, 0, 1), 1, 2)
+
+
+def roll_shape(X):
+    """
+    Roll by one position the shape of `X`. if `X.shape == (a,b,c)`, the returned
+    NumPy array's shape is `(c,a,b)`.
+    """
+    return np.swapaxes(np.swapaxes(X, 0, 2), 1, 2)
+
 
 class ParametricDMD:
     """
     Implementation of the parametric Dynamic Mode Decomposition proposed in
-    arXiv:2110.09155v1. Both the *monolithic* and *partitioned* approaches are
+    arXiv:2110.09155v1. Both the *monolithic* and *partitioned* methods are
     available, see the documentation of the parameter `dmd` for more details.
 
     :param dmd: Instance(s) of :class:`dmdbase.DMDBase`, used by the
@@ -17,9 +34,9 @@ class ParametricDMD:
         case the number of parameters in the training set should be equal to
         the number of DMD instances provided. If `dmd` is not a list, we employ
         the monolithic approach.
-    :type dmd: DMDBase
+    :type dmd: DMDBase or list
     :param spatial_pod: Instance of an object usable for the generation of a
-        ROM of the given dataset (see for instance the class
+        ROM of the dataset (see for instance the class
         `POD <https://mathlab.github.io/EZyRB/pod.html>`_ from the Python
         library `EZyRB <https://github.com/mathLab/EZyRB>`_).
     :param approximation: An interpolator following the standard
@@ -160,7 +177,26 @@ class ParametricDMD:
         """
         The new parameters to be used in `reconstructed_data`, represented
         as a 2D array (the index of the parameter vary along the first
-        dimension).
+        dimension). For, instance, the following feeds a set of four 3D
+        parameters to `ParametricDMD`:
+
+            >>> from pydmd import ParametricDMD
+            >>> pdmd = ParametricDMD(...)
+            >>> pdmd.fit(...)
+            >>> p0 = [0.1, 0.2, 0.1]
+            >>> p1 = [0.1, 0.2, 0.3],
+            >>> p2 = [0.2, 0.2, 0.2],
+            >>> p3 = [0.1, 0.2, 0.2]
+            >>> pdmd.parameters = np.array([p0,p1,p2,p3])
+
+        Therefore, when we collect the results from `reconstructed_data`:
+
+            >>> result = pdmd.reconstructed_data
+            >>> # reconstruction corresponding to p0
+            >>> rec_p0 = result[0]
+            >>> # reconstruction corresponding to p1
+            >>> rec_p1 = result[1]
+            >>> ...
 
         :getter: Return the current parameters.
         :setter: Change the current parameters.
@@ -182,7 +218,7 @@ class ParametricDMD:
     def _arrange_parametric_snapshots(self, X):
         """
         Arrange the given parametric snapshots (see :func:`fit` for an overview
-        of the shape of `X`) into a 2D matrix in which the shape is distributed
+        of the shape of `X`) into a 2D matrix such that the shape is distributed
         as follows:
 
         - 0: Space;
@@ -206,16 +242,16 @@ class ParametricDMD:
         :math:`x(t, \mu) \in \mathbb{R}^m` is the functon which represents the
         parametric system at time :math:`t` with the parameter :math:`\\mu`.
 
-        :param X: Parametric snapshots.
+        :param X: Parametric snapshots (distribition of axes like in
+            :func:`fit`).
         :type X: numpy.ndarray
-        :return: The given parametric snapshots rearranged in a 2D matrix.
+        :return: Parametric snapshots arranged in a 2D matrix like explained
+            above.
         :rtype: numpy.ndarray
         """
-        return np.reshape(
-            np.ravel(X, "C"),
-            (self._space_dim, self._time_instants * self._ntrain),
-            "F",
-        )
+        # swap parameters dimension and space dimension
+        X = np.swapaxes(X, 0, 1)
+        return X.reshape((X.shape[0], -1), order="C")
 
     def _compute_training_modal_coefficients(self, space_timemu):
         """
@@ -258,12 +294,15 @@ class ParametricDMD:
         The returned list contains the matrices
         :math:`\\widetilde{X}_{\\mu_i} \in \\mathbb{p \\times n}`.
 
-        :param space_timemu: A matrix containing parametric/time snapshots as
-            returned by :func:`_arrange_parametric_snapshots`.
+        :param space_timemu: A matrix containing parametric/time snapshots like
+            the matrix returned by :func:`_arrange_parametric_snapshots`. The
+            input size should be `p x nk` where `p` is the dimensionality of
+            the full-dimensional space, `k` is the number of training parameters
+            and `n` is the number of time instants used for the training.
         :type space_timemu: numpy.ndarray
-        :return: A list of matrices. Each matrix contain the time evolution of
-            the POD modal coefficients corresponding to a parameter from the
-            training set.
+        :return: A list of `k` matrices. Each matrix has shape `r x n` where `r`
+            is the dimensionality of the reduced POD space, and `n`, `k` are the
+            same of the parameter `space_timemu`.
         :rtype: list
         """
 
@@ -272,48 +311,26 @@ class ParametricDMD:
         ).reduce(space_timemu)
         return np.split(spatial_modal_coefficients, self._ntrain, axis=1)
 
-    def _fit_dmd(self, training_modal_coefficients):
-        """
-        Train the DMD instance(s) on the given training modal coefficients.
-
-        :param training_modal_coefficients: Matrix (or list of matrices) of
-            modal coefficients. The time varies along columns.
-        :type training_modal_coefficients: numpy.ndarray
-        """
-
-        if self.is_partitioned:
-            # partitioned parametric DMD
-            for dmd, data in zip(self._dmd, training_modal_coefficients):
-                dmd.fit(data)
-        else:
-            spacemu_time = np.vstack(training_modal_coefficients)
-            self._dmd.fit(spacemu_time)
-
     def fit(self, X, training_parameters):
         """
         Compute the parametric Dynamic Modes Decomposition from the input data
         stored in the array `X`. The shape of the parameter `X` must be
         used as follows:
 
-        - 0: Parameters;
-        - 1: Time;
-        - 2: Space.
+        - 0: Training parameters;
+        - 1: Space;
+        - 2: Training time instants.
 
-        Which means that along the first axis the parameter varies, along the
-        second axis varies the time, and along the last axis varies the
-        space (i.e. the dimensionality of a single snapshot of the dynamical
-        system).
+        The parameter `training_parameters` contains the list of training
+        parameters corresponding to the training datasets in `X`. For instance,
+        `training_parameters[0]` is the parameter which generated the dataset
+        in `X[0]`. For this reason `len(training_parameters)` should be equal
+        to `X.shape[0]`.
 
-        The second parameter contains the list of training parameters
-        corresponding to the given array of snapshots `X`. It is fundamental
-        that `X.shape[0] == len(training_parameters)`, otherwise the number
-        of parametric snapshots would be different than the number of training
-        parameters, which obviously cannot happen.
-
-        :param numpy.ndarray X: The input snapshots, in multiple time instants
-            and parameters.
-        :param numpy.ndarray training_parameters: The parameters used for the
-            training, corresponding to the snapshots in `X`.
+        :param numpy.ndarray X: Training snapshots of the parametric system,
+            observed for two or more parameters and in multiple time instants.
+        :param numpy.ndarray training_parameters: Training parameters
+            corresponding to the snapshots in `X`.
         """
 
         if X.shape[0] != len(training_parameters):
@@ -325,7 +342,7 @@ class ParametricDMD:
             )
 
         # we store these values for faster access
-        self._ntrain, self._time_instants, self._space_dim = X.shape
+        self._ntrain, self._space_dim, self._time_instants = X.shape
         if self.is_partitioned and self._ntrain != len(self._dmd):
             raise ValueError(
                 "Invalid number of DMD instances provided: "
@@ -352,7 +369,16 @@ class ParametricDMD:
             )
 
         # fit DMD(s) with POD modal coefficients
-        self._fit_dmd(training_modal_coefficients)
+        if self.is_partitioned:
+            # partitioned parametric DMD
+            for dmd, data in zip(self._dmd, training_modal_coefficients):
+                dmd.fit(data)
+        else:
+            spacemu_time = np.vstack(training_modal_coefficients)
+            self._dmd.fit(spacemu_time)
+
+    # ------------------------------------------------------------
+    # getter properties for intermediate values of the computation
 
     @property
     def training_modal_coefficients(self):
@@ -363,8 +389,8 @@ class ParametricDMD:
 
         The tensor returned has the following shape:
 
-        - 0: Parameters;
-        - 1: POD sub-Space;
+        - 0: Training parameters;
+        - 1: Dimensionality of the POD sub-space;
         - 2: Time.
         """
         if self._light:
@@ -388,14 +414,12 @@ Property not available now, did you call `fit()`?"""
 
         The tensor returned has the following shape:
 
-        - 0: Parameters;
-        - 1: POD sub-Space;
+        - 0: Training parameters;
+        - 1: Dimensionality of the POD sub-space;
         - 2: Time.
         """
         forecasted = self._predict_modal_coefficients()
-        return forecasted.reshape(
-            (len(self.training_parameters), -1, forecasted.shape[1])
-        )
+        return forecasted.reshape((self._ntrain, -1, forecasted.shape[1]))
 
     @property
     def interpolated_modal_coefficients(self):
@@ -406,13 +430,76 @@ Property not available now, did you call `fit()`?"""
         The tensor returned has the following shape:
 
         - 0: Parameters;
-        - 1: POD sub-Space;
+        - 1: Dimensionality of the POD sub-space;
         - 2: Time.
         """
         forecasted = self._predict_modal_coefficients()
-        interpolated = self._interpolate_missing_modal_coefficients(forecasted)
-        return np.swapaxes(np.swapaxes(interpolated, 0, 1), 1, 2).reshape(
-            len(self.parameters), -1, forecasted.shape[1]
+        return self._interpolate_missing_modal_coefficients(forecasted)
+
+    # ------------------------------------------------------------
+
+    def _predict_modal_coefficients(self):
+        """
+        Predict future spatial modal coefficients in the time instants in
+        `dmd_time`.
+
+        :return: Predicted spatial modal coefficients. Shape: `rk x n` (`r`:
+            dimensionality of POD subspace, `k`: number of training parameters,
+            `n`: number of snapshots).
+        :rtype: numpy.ndarray
+        """
+        if self.is_partitioned:
+            for dmd in self._dmd:
+                # we want to "bound" this DMD objects' dmd_time
+                dmd.dmd_time = self._reference_dmd.dmd_time
+            return np.vstack(
+                list(map(lambda dmd: dmd.reconstructed_data, self._dmd))
+            )
+        return self._dmd.reconstructed_data
+
+    def _interpolate_missing_modal_coefficients(
+        self, forecasted_modal_coefficients
+    ):
+        """
+        Interpolate spatial modal coefficients for the (untested) parameters
+        stored in `parameters`. The interpolation uses the interpolator
+        provided in the constructor of this instance.
+
+        The returned value is a 3D tensor, its shape is used as follows:
+
+        - 0: Parameters;
+        - 1: Reduced POD space;
+        - 2: Time.
+
+        :param numpy.ndarray forecasted_modal_coefficients: An array of spatial
+            modal coefficients for tested parameters. The shape is used like in
+            the matrix returned by :func:`_predict_modal_coefficients`.
+        :return: An array of (interpolated) spatial modal coefficients for
+            untested parameters.
+        :rtype: numpy.ndarray
+        """
+
+        if self.parameters is None or len(self.parameters) == 0:
+            raise ValueError(
+                """
+Unknown parameters not found. Did you set `ParametricDMD.parameters`?"""
+            )
+
+        approx = self._approximation
+        forecasted_modal_coefficients = forecasted_modal_coefficients.reshape(
+            (self._ntrain, -1, forecasted_modal_coefficients.shape[1]),
+            order="C",
+        )
+
+        def interpolate_future_pod_coefficients(time_slice):
+            approx.fit(self.training_parameters, time_slice)
+            return approx.predict(self.parameters)
+
+        return np.dstack(
+            [
+                interpolate_future_pod_coefficients(time_slice)[..., None]
+                for time_slice in roll_shape(forecasted_modal_coefficients)
+            ]
         )
 
     @property
@@ -424,11 +511,11 @@ Property not available now, did you call `fit()`?"""
         The shape of the returned data is distributed as follows:
 
         - 0: Parameters;
-        - 1: Time;
-        - 2: Space.
+        - 1: Space;
+        - 2: Time.
 
-        :return: Snapshots predicted/interpolated using parametric Dynamic Mode
-            Decomposition.
+        :return: Snapshots predicted/interpolated using parametric DMD and the
+            given method for ROM.
         :rtype: numpy.ndarray
         """
         forecasted_modal_coefficients = self._predict_modal_coefficients()
@@ -438,12 +525,8 @@ Property not available now, did you call `fit()`?"""
             )
         )
 
-        interpolated_modal_coefficients = np.swapaxes(
-            interpolated_modal_coefficients, 0, 1
-        )
-
         return np.apply_along_axis(
-            self._spatial_pod.expand, 2, interpolated_modal_coefficients
+            self._spatial_pod.expand, 1, interpolated_modal_coefficients
         )
 
     def save(self, fname):
@@ -477,80 +560,4 @@ Property not available now, did you call `fit()`?"""
         >>> print(pdmd.reconstructed_data)
         """
         with open(fname, "rb") as output:
-            dmd = pickle.load(output)
-
-        return dmd
-
-    def _predict_modal_coefficients(self):
-        """
-        Predict future spatial modal coefficients in the time instants in
-        `dmd_time`.
-
-        :return: Predicted spatial modal coefficients.
-        :rtype: numpy.ndarray
-        """
-        if self.is_partitioned:
-            for dmd in self._dmd:
-                # we want to "bound" this DMD objects "dmd_time"
-                dmd.dmd_time = self._reference_dmd.dmd_time
-        if self.is_partitioned:
-            return np.vstack(
-                list(map(lambda dmd: dmd.reconstructed_data, self._dmd))
-            )
-        return self._dmd.reconstructed_data
-
-    def _interpolate_missing_modal_coefficients(
-        self, forecasted_modal_coefficients
-    ):
-        """
-        Interpolate spatial modal coefficients for the (untested) parameters
-        stored in `parameters`. The interpolation uses the interpolator
-        provided in the constructor of this instance.
-
-        The returned value is a 3D tensor, its shape is used as follows:
-
-        - 0: Time;
-        - 1: Parameters;
-        - 2: POD reduced space.
-
-        :param numpy.ndarray forecasted_modal_coefficients: An array of spatial
-            modal coefficients for tested parameters.
-        :return: An array of (interpolated) spatial modal coefficients for
-            untested parameters.
-        :rtype: numpy.ndarray
-        """
-        if self.parameters is None or len(self.parameters) == 0:
-            raise ValueError(
-                """
-Unknown parameters not found. Did you set `ParametricDMD.parameters`?"""
-            )
-
-        if forecasted_modal_coefficients.shape[1] != len(self.dmd_timesteps):
-            raise ValueError(
-                "Invalid number of time instants provided: "
-                "expected {}, got {}.".format(
-                    forecasted_modal_coefficients.shape[1],
-                    len(self.dmd_timesteps),
-                )
-            )
-
-        approx = self._approximation
-
-        forecasted_modal_coefficients = np.array(
-            np.split(forecasted_modal_coefficients, self._ntrain, axis=0)
-        )
-
-        def interpolate_future_pod_coefficients(future_training_coefficients):
-            approx.fit(
-                self.training_parameters, future_training_coefficients.T
-            )
-            return approx.predict(self.parameters)
-
-        return np.array(
-            list(
-                map(
-                    interpolate_future_pod_coefficients,
-                    forecasted_modal_coefficients.T,
-                )
-            )
-        )
+            return pickle.load(output)
