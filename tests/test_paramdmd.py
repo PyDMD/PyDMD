@@ -1,6 +1,7 @@
 from pytest import raises
 from pydmd import DMD, ParametricDMD
 from pydmd.dmdbase import DMDTimeDict
+from pydmd.paramdmd import back_roll_shape, roll_shape
 from ezyrb import POD, RBF
 import numpy as np
 import os
@@ -24,12 +25,12 @@ params = np.linspace(0,1,10)
 
 # training dataset
 # training_data = np.vstack([f(a)(xgrid, tgrid)[None,:] for a in params])
-training_data = np.load(testdir + '/training_data.npy')
+training_data = np.swapaxes(np.load(testdir + '/training_data.npy'), 1, 2)
 
 # test dataset
 test_parameters = [0.15, 0.75, 0.28]
 # testing_data = np.vstack([f(a)(xgrid, tgrid)[None,:] for a in test_parameters])
-testing_data = np.load(testdir + 'testing_data.npy')
+testing_data = np.swapaxes(np.load(testdir + 'testing_data.npy'), 1, 2)
 
 def test_is_partitioned_1():
     assert not ParametricDMD(None, None, None).is_partitioned
@@ -174,8 +175,8 @@ def test_fit_sets_quantities():
     p.fit(np.ones((10,9,8)), [0 for _ in range(10)])
 
     assert p._ntrain == 10
-    assert p._time_instants == 9
-    assert p._space_dim == 8
+    assert p._time_instants == 8
+    assert p._space_dim == 9
 
 def test_fit_stores_training_parameters():
     p = ParametricDMD(DMD(), POD(), None)
@@ -222,31 +223,24 @@ def test_compute_training_modal_coefficients2():
 
 def test_arrange_parametric_snapshots_shape():
     p = ParametricDMD(None, None, None)
-    p._space_dim = 30
-    p._time_instants = 20
-    p._ntrain = 10
-    assert p._arrange_parametric_snapshots(np.ones((10,20,30))).shape == (30, 200)
+    assert p._arrange_parametric_snapshots(np.ones((10,20,30))).shape == (20, 300)
 
 def test_arrange_parametric_snapshots():
     p = ParametricDMD(None, None, None)
-    p._space_dim = 3
-    p._time_instants = 2
-    p._ntrain = 2
 
     m1 = np.array([
         [1,2,3],
         [4,5,6]
-    ])[None,:]
+    ])
     m2 = np.array([
         [0,1,0,],
         [1,1,0]
-    ])[None,:]
-    m = np.vstack([m1,m2])
+    ])
+    m = np.stack([m1,m2])
 
     expected = np.array([
-        [1,4,0,1],
-        [2,5,1,1],
-        [3,6,0,0],
+        [1,2,3,0,1,0],
+        [4,5,6,1,1,0],
     ])
 
     np.testing.assert_array_equal(expected, p._arrange_parametric_snapshots(m))
@@ -258,21 +252,6 @@ def test_arrange_parametric_snapshots2():
     expected = np.load(testdir+'space_timemu.npy')
     actual = p._arrange_parametric_snapshots(training_data)
     np.testing.assert_allclose(actual, expected)
-
-def test_fit_dmd_partitioned():
-    p = ParametricDMD([DMD() for _ in range(5)], None, None)
-    p._fit_dmd([np.ones((20,10)) for _ in range(5)])
-    for i in range(5):
-        # assert that fit was called
-        assert p._dmd[i].modes is not None
-        assert p._dmd[i].modes.shape[0] == 20
-
-def test_fit_dmd_monolithic():
-    p = ParametricDMD(DMD(), None, None)
-    p._fit_dmd([np.ones((20,10)) for _ in range(5)])
-    # assert that fit was called
-    assert p._dmd.modes is not None
-    assert p._dmd.modes.shape[0] == 100
 
 def test_predict_modal_coefficients_shape():
     p = ParametricDMD(DMD(svd_rank=5), POD(rank=10), RBF())
@@ -296,26 +275,19 @@ def test_predict_modal_coefficients():
 def test_interpolate_missing_modal_coefficients_shape():
     p = ParametricDMD(DMD(svd_rank=5), POD(rank=10), RBF())
     p.fit(np.ones((10,20,40)), np.arange(10))
-    p.dmd_time['tend'] = 29
+    p.dmd_time['tend'] = 49
     p.parameters = [1.5, 5.5, 7.5]
-    assert p._interpolate_missing_modal_coefficients(np.random.rand(10*10, 30)).shape == (30,3,10)
-
-def test_interpolate_missing_modal_coefficients_wrong_time():
-    p = ParametricDMD(DMD(svd_rank=5), POD(rank=10), RBF())
-    p.fit(np.ones((10,20,40)), np.arange(10))
-    p.dmd_time['tend'] = 29
-    p.parameters = [1.5, 5.5, 7.5]
-    with raises(ValueError):
-        p._interpolate_missing_modal_coefficients(np.random.rand(10*10, 20))
+    assert p._interpolate_missing_modal_coefficients(np.random.rand(10*5,40)).shape == (3,5,40)
 
 def test_interpolate_missing_modal_coefficients():
     p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
     p.fit(training_data, params)
     p.parameters = test_parameters
 
-    expected = np.load(testdir+'interpolated.npy')
+    expected = back_roll_shape(np.load(testdir+'interpolated.npy'))
+    input = np.load(testdir+'forecasted.npy')
     np.testing.assert_allclose(
-        p._interpolate_missing_modal_coefficients(np.load(testdir+'forecasted.npy')),
+        p._interpolate_missing_modal_coefficients(input),
         expected, atol=1.e-12, rtol=0)
 
 def reconstructed_data_shape():
@@ -331,8 +303,6 @@ def test_reconstructed_data_noprediction():
     p.parameters = test_parameters
 
     rec = p.reconstructed_data
-
-    assert rec.shape == (3,100,1000)
 
     np.testing.assert_allclose(rec.real, testing_data.real, atol=1.e-2)
 
@@ -353,7 +323,7 @@ def test_load():
                                     loaded_p.reconstructed_data)
     os.remove('pydmd.test2')
 
-def test_load():
+def test_load2():
     p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
     p.fit(training_data, params)
     p.parameters = test_parameters
@@ -410,8 +380,7 @@ def test_forecast():
     p.dmd_time = dc
 
     for r in p.reconstructed_data:
-        assert r.shape == (100, training_data.shape[2])
-
+        assert r.shape == (training_data.shape[1], 100)
 
 def test_training_modal_coefficients_property_partitioned():
     dmds = [DMD(svd_rank=-1) for _ in range(len(params))]
@@ -478,8 +447,8 @@ def test_interpolated_modal_coefficients_reshape():
             forecasted_modal_coefficients
         )
     )
-    np.testing.assert_allclose(p.interpolated_modal_coefficients[1,3], interpolated_modal_coefficients[:,1,3])
-    np.testing.assert_allclose(p.interpolated_modal_coefficients[2,0], interpolated_modal_coefficients[:,2,0])
+    np.testing.assert_allclose(p.interpolated_modal_coefficients[1,3], interpolated_modal_coefficients[1,3])
+    np.testing.assert_allclose(p.interpolated_modal_coefficients[2,0], interpolated_modal_coefficients[2,0])
 
 def test_forecasted_modal_coefficients_shape_monolithic():
     dmds = DMD(svd_rank=-1)
@@ -521,8 +490,8 @@ def test_interpolated_modal_coefficients_reshape_monolithic():
             forecasted_modal_coefficients
         )
     )
-    np.testing.assert_allclose(p.interpolated_modal_coefficients[1,3], interpolated_modal_coefficients[:,1,3])
-    np.testing.assert_allclose(p.interpolated_modal_coefficients[2,0], interpolated_modal_coefficients[:,2,0])
+    np.testing.assert_allclose(p.interpolated_modal_coefficients[1,3], interpolated_modal_coefficients[1,3])
+    np.testing.assert_allclose(p.interpolated_modal_coefficients[2,0], interpolated_modal_coefficients[2,0])
 
 def test_no_parameters_error():
     dmds = DMD(svd_rank=-1)
