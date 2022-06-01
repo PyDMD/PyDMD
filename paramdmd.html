@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ParametricDMD &mdash; PyDMD 0.4.0.post2205 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>ParametricDMD &mdash; PyDMD 0.4.0.post2206 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2205
+                0.4.0.post2206
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -122,34 +122,34 @@
 <td><p>The original timesteps in the input fed to this instance, which coincides with the original timesteps in the input fed to the reference of this instance (see <code class="xref py py-func docutils literal notranslate"><span class="pre">_reference_dmd()</span></code>).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD._arrange_parametric_snapshots</span></code>(X)</p></td>
-<td><p>Arrange the given parametric snapshots (see <code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code> for an overview of the shape of <cite>X</cite>) into a 2D matrix in which the shape is distributed as follows:</p></td>
+<td><p>Arrange the given parametric snapshots (see <code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code> for an overview of the shape of <cite>X</cite>) into a 2D matrix such that the shape is distributed as follows:</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD._training_modal_coefficients</span></code>(…)</p></td>
-<td><p>Compute the POD modal coefficient from the given matrix, and put the resulting coefficients (along with their time evolution in matrix form) into a list.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD._training_modal_coefficients</span></code></p></td>
+<td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD._fit_dmd</span></code>(…)</p></td>
-<td><p>Train the DMD instance(s) on the given training modal coefficients.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD._fit_dmd</span></code></p></td>
+<td><p></p></td>
 </tr>
 </tbody>
 </table>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-name descname">ParametricDMD</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">spatial_pod</em>, <em class="sig-param">approximation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/paramdmd.html#ParametricDMD"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="sig-name descname">ParametricDMD</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">spatial_pod</em>, <em class="sig-param">approximation</em>, <em class="sig-param">light=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/paramdmd.html#ParametricDMD"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Implementation of the parametric Dynamic Mode Decomposition proposed in
-arXiv:2110.09155v1. Both the <em>monolithic</em> and <em>partitioned</em> approaches are
+arXiv:2110.09155v1. Both the <em>monolithic</em> and <em>partitioned</em> methods are
 available, see the documentation of the parameter <cite>dmd</cite> for more details.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dmd</strong> (<em>DMDBase</em>) – Instance(s) of <code class="xref py py-class docutils literal notranslate"><span class="pre">dmdbase.DMDBase</span></code>, used by the
+<li><p><strong>dmd</strong> (<em>DMDBase</em><em> or </em><em>list</em>) – Instance(s) of <code class="xref py py-class docutils literal notranslate"><span class="pre">dmdbase.DMDBase</span></code>, used by the
 paramtric DMD for the prediction of future spatial modal coefficients.
 If <cite>dmd</cite> is a <cite>list</cite> the <em>partitioned</em> approach is selected, in this
 case the number of parameters in the training set should be equal to
 the number of DMD instances provided. If <cite>dmd</cite> is not a list, we employ
 the monolithic approach.</p></li>
 <li><p><strong>spatial_pod</strong> – Instance of an object usable for the generation of a
-ROM of the given dataset (see for instance the class
+ROM of the dataset (see for instance the class
 <a class="reference external" href="https://mathlab.github.io/EZyRB/pod.html">POD</a> from the Python
 library <a class="reference external" href="https://github.com/mathLab/EZyRB">EZyRB</a>).</p></li>
 <li><p><strong>approximation</strong> – <p>An interpolator following the standard
@@ -157,6 +157,10 @@ learning-prediction pattern (<cite>fit()</cite> -&gt; <cite>predict()</cite>). F
 convenient wrappers see those implemented in
 <a class="reference external" href="https://github.com/mathLab/EZyRB">EZyRB</a>).</p>
 </p></li>
+<li><p><strong>light</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Whether this instance should be light or not. A light
+instance uses less memory since it caches a smaller number of resources.
+Setting <cite>light=True</cite> might invalidate several properties (see also
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">training_modal_coefficients()</span></code>).</p></li>
 </ul>
 </dd>
 </dl>
@@ -205,29 +209,50 @@ timesteps in the output of the reference of this instance (see
 stored in the array <cite>X</cite>. The shape of the parameter <cite>X</cite> must be
 used as follows:</p>
 <ul class="simple">
-<li><p>0: Parameters;</p></li>
-<li><p>1: Time;</p></li>
-<li><p>2: Space.</p></li>
+<li><p>0: Training parameters;</p></li>
+<li><p>1: Space;</p></li>
+<li><p>2: Training time instants.</p></li>
 </ul>
-<p>Which means that along the first axis the parameter varies, along the
-second axis varies the time, and along the last axis varies the
-space (i.e. the dimensionality of a single snapshot of the dynamical
-system).</p>
-<p>The second parameter contains the list of training parameters
-corresponding to the given array of snapshots <cite>X</cite>. It is fundamental
-that <cite>X.shape[0] == len(training_parameters)</cite>, otherwise the number
-of parametric snapshots would be different than the number of training
-parameters, which obviously cannot happen.</p>
+<p>The parameter <cite>training_parameters</cite> contains the list of training
+parameters corresponding to the training datasets in <cite>X</cite>. For instance,
+<cite>training_parameters[0]</cite> is the parameter which generated the dataset
+in <cite>X[0]</cite>. For this reason <cite>len(training_parameters)</cite> should be equal
+to <cite>X.shape[0]</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – The input snapshots, in multiple time instants
-and parameters.</p></li>
-<li><p><strong>training_parameters</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – The parameters used for the
-training, corresponding to the snapshots in <cite>X</cite>.</p></li>
+<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – Training snapshots of the parametric system,
+observed for two or more parameters and in multiple time instants.</p></li>
+<li><p><strong>training_parameters</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)"><em>numpy.ndarray</em></a>) – Training parameters
+corresponding to the snapshots in <cite>X</cite>.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">forecasted_modal_coefficients</code></dt>
+<dd><p>Modal coefficients forecasted for the input parameters.</p>
+<p>The tensor returned has the following shape:</p>
+<ul class="simple">
+<li><p>0: Training parameters;</p></li>
+<li><p>1: Dimensionality of the POD sub-space;</p></li>
+<li><p>2: Time.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">interpolated_modal_coefficients</code></dt>
+<dd><p>Modal coefficients forecasted and then interpolated for the untested
+parameters.</p>
+<p>The tensor returned has the following shape:</p>
+<ul class="simple">
+<li><p>0: Parameters;</p></li>
+<li><p>1: Dimensionality of the POD sub-space;</p></li>
+<li><p>2: Time.</p></li>
+</ul>
 </dd></dl>
 
 <dl class="method">
@@ -296,7 +321,27 @@ of this instance (see <code class="xref py py-func docutils literal notranslate"
 <em class="property">property </em><code class="sig-name descname">parameters</code></dt>
 <dd><p>The new parameters to be used in <cite>reconstructed_data</cite>, represented
 as a 2D array (the index of the parameter vary along the first
-dimension).</p>
+dimension). For, instance, the following feeds a set of four 3D
+parameters to <cite>ParametricDMD</cite>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydmd</span> <span class="kn">import</span> <span class="n">ParametricDMD</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdmd</span> <span class="o">=</span> <span class="n">ParametricDMD</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p0</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p2</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p3</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdmd</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">p0</span><span class="p">,</span><span class="n">p1</span><span class="p">,</span><span class="n">p2</span><span class="p">,</span><span class="n">p3</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Therefore, when we collect the results from <cite>reconstructed_data</cite>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">pdmd</span><span class="o">.</span><span class="n">reconstructed_data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># reconstruction corresponding to p0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rec_p0</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># reconstruction corresponding to p1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rec_p1</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">...</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Getter</dt>
 <dd class="field-odd"><p>Return the current parameters.</p>
@@ -318,13 +363,13 @@ dimension).</p>
 <p>The shape of the returned data is distributed as follows:</p>
 <ul class="simple">
 <li><p>0: Parameters;</p></li>
-<li><p>1: Time;</p></li>
-<li><p>2: Space.</p></li>
+<li><p>1: Space;</p></li>
+<li><p>2: Time.</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Snapshots predicted/interpolated using parametric Dynamic Mode
-Decomposition.</p>
+<dd class="field-odd"><p>Snapshots predicted/interpolated using parametric DMD and the
+given method for ROM.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.22)">numpy.ndarray</a></p>
@@ -349,6 +394,20 @@ be saved.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pdmd</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;pydmd.pdmd&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">training_modal_coefficients</code></dt>
+<dd><p>Modal coefficients of the input dataset. Since this is cached after
+calls to <code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code> this property needs to be called after <code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code>,
+and <cite>light</cite> should be set to <cite>False</cite> in the constructor of the class.</p>
+<p>The tensor returned has the following shape:</p>
+<ul class="simple">
+<li><p>0: Training parameters;</p></li>
+<li><p>1: Dimensionality of the POD sub-space;</p></li>
+<li><p>2: Time.</p></li>
+</ul>
 </dd></dl>
 
 <dl class="method">
@@ -380,7 +439,7 @@ dimension).</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on May 01, 2022.
+      <span class="lastupdated">Last updated on Jun 01, 2022.
       </span></p>
   </div>
 
