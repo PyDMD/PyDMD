@@ -243,23 +243,37 @@ class HankelDMD(DMDBase):
 
     def _pseudo_hankel_matrix(self, X):
         """
-        Method for arranging the input snapshots `X` into the (pseudo) Hankel
-        matrix. The attribute `d` controls the shape of the output matrix.
+        Arrange the snapshot in the matrix `X` into the (pseudo) Hankel
+        matrix. The attribute `d` controls the number of snapshot from `X` in
+        each snapshot of the Hankel matrix.
+
         :Example:
 
             >>> from pydmd import HankelDMD
+            >>> import numpy as np
+
             >>> dmd = HankelDMD(d=2)
             >>> a = np.array([[1, 2, 3, 4, 5]])
             >>> dmd._pseudo_hankel_matrix(a)
             array([[1, 2, 3, 4],
                    [2, 3, 4, 5]])
-            >>> dmd = pydmd.hankeldmd.HankelDMD(d=4)
+            >>> dmd = HankelDMD(d=4)
             >>> dmd._pseudo_hankel_matrix(a)
             array([[1, 2],
                    [2, 3],
                    [3, 4],
                    [4, 5]])
 
+            >>> dmd = HankelDMD(d=2)
+            >>> a = np.array([1,2,3,4,5,6]).reshape(2,3)
+            >>> a
+            array([[1, 2, 3],
+                   [4, 5, 6]])
+            >>> dmd._pseudo_hankel_matrix(a)
+            array([[1, 2],
+                   [4, 5],
+                   [2, 3],
+                   [5, 6]])
         """
         return (
             swv(X.T, (self.d, X.shape[0]))[:, 0]
