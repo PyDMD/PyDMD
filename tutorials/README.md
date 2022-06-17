@@ -17,6 +17,7 @@ An additional PDF tutorial ([DSWeb contest winner](https://dsweb.siam.org/The-Ma
 | Tutorial9&#160;[[.ipynb](tutorial9/tutorial-9-spdmd.ipynb),&#160;[.py](tutorial9/tutorial-9-spdmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial9spdmd.html)] | sparsity-promoting DMD | `pydmd.SpDMD`  |
 | Tutorial10&#160;[[.ipynb](tutorial10/tutorial-10-paramdmd.ipynb),&#160;[.py](tutorial10/tutorial-10-paramdmd.py),&#160;[.html](http://mathlab.github.io/PyDMD/tutorial10paramdmd.html)] | parametric DMD | `pydmd.ParametricDMD`  |
 | Tutorial12&#160;[[.ipynb](tutorial12/tutorial-12-cdmd.ipynb),&#160;[.py](tutorial12/tutorial-12-cdmd.py)]| cDMD for background modeling | `pydmd.CDMD`  |
+| Tutorial13&#160;[[.ipynb](tutorial13/tutorial-13-subspacedmd.ipynb),&#160;[.py](tutorial13/tutorial-13-subspacedmd.py)]| SubspaceDMD for locating eigenvalues of stochastic systems | `pydmd.SubspaceDMD`  |
 
 
 
