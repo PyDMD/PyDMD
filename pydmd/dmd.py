@@ -76,18 +76,12 @@ class DMD(DMDBase):
         return self
 
     def predict(self, X):
-        """Predict the output Y given the input X using the fitted DMD model.
+        """
+        Predict the output Y given the input X using the fitted DMD model.
 
-        Parameters
-        ----------
-        X : numpy array
-            Input data.
-
-        Returns
-        -------
-        Y : numpy array
-            Predicted output.
-
+        :param numpy.ndarray X: the input vector.
+        :return: one time-step ahead predicted output.
+        :rtype: numpy.ndarray
         """
         return np.linalg.multi_dot(
             [self.modes, np.diag(self.eigs), pinv(self.modes), X]
