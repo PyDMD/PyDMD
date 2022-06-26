@@ -55,6 +55,10 @@ class SubspaceDMDOperator(DMDOperator):
             tikhonov_regularization=None,
         )
 
+        self._Atilde = None
+        self._modes = None
+        self._Lambda = None
+
     def compute_operator(self, Yp, Yf):
         """
         Compute the low-rank operator.
