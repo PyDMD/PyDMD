@@ -42,13 +42,11 @@ def test_default_constructor():
 
 def test_constructor():
     dmd = SubspaceDMD(
-        exact=True,
         opt=True,
         rescale_mode="pippo",
         sorted_eigs="pluto",
     )
 
-    assert dmd.operator._exact
     assert dmd._opt
     assert dmd.operator._rescale_mode == "pippo"
     assert dmd.operator._sorted_eigs == "pluto"
