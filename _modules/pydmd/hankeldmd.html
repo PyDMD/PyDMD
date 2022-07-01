@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.hankeldmd &mdash; PyDMD 0.4.0.post2206 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.hankeldmd &mdash; PyDMD 0.4.0.post2207 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2206
+                0.4.0.post2207
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -314,23 +314,37 @@
 
 <div class="viewcode-block" id="HankelDMD._pseudo_hankel_matrix"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._pseudo_hankel_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">_pseudo_hankel_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Method for arranging the input snapshots `X` into the (pseudo) Hankel</span>
-<span class="sd">        matrix. The attribute `d` controls the shape of the output matrix.</span>
+<span class="sd">        Arrange the snapshot in the matrix `X` into the (pseudo) Hankel</span>
+<span class="sd">        matrix. The attribute `d` controls the number of snapshot from `X` in</span>
+<span class="sd">        each snapshot of the Hankel matrix.</span>
+
 <span class="sd">        :Example:</span>
 
 <span class="sd">            &gt;&gt;&gt; from pydmd import HankelDMD</span>
+<span class="sd">            &gt;&gt;&gt; import numpy as np</span>
+
 <span class="sd">            &gt;&gt;&gt; dmd = HankelDMD(d=2)</span>
 <span class="sd">            &gt;&gt;&gt; a = np.array([[1, 2, 3, 4, 5]])</span>
 <span class="sd">            &gt;&gt;&gt; dmd._pseudo_hankel_matrix(a)</span>
 <span class="sd">            array([[1, 2, 3, 4],</span>
 <span class="sd">                   [2, 3, 4, 5]])</span>
-<span class="sd">            &gt;&gt;&gt; dmd = pydmd.hankeldmd.HankelDMD(d=4)</span>
+<span class="sd">            &gt;&gt;&gt; dmd = HankelDMD(d=4)</span>
 <span class="sd">            &gt;&gt;&gt; dmd._pseudo_hankel_matrix(a)</span>
 <span class="sd">            array([[1, 2],</span>
 <span class="sd">                   [2, 3],</span>
 <span class="sd">                   [3, 4],</span>
 <span class="sd">                   [4, 5]])</span>
 
+<span class="sd">            &gt;&gt;&gt; dmd = HankelDMD(d=2)</span>
+<span class="sd">            &gt;&gt;&gt; a = np.array([1,2,3,4,5,6]).reshape(2,3)</span>
+<span class="sd">            &gt;&gt;&gt; a</span>
+<span class="sd">            array([[1, 2, 3],</span>
+<span class="sd">                   [4, 5, 6]])</span>
+<span class="sd">            &gt;&gt;&gt; dmd._pseudo_hankel_matrix(a)</span>
+<span class="sd">            array([[1, 2],</span>
+<span class="sd">                   [4, 5],</span>
+<span class="sd">                   [2, 3],</span>
+<span class="sd">                   [5, 6]])</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">swv</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))[:,</span> <span class="mi">0</span><span class="p">]</span>
@@ -434,7 +448,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Jun 01, 2022.
+      <span class="lastupdated">Last updated on Jul 01, 2022.
       </span></p>
   </div>
 
