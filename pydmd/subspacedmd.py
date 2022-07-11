@@ -34,6 +34,11 @@ class SubspaceDMDOperator(DMDOperator):
     """
     Subspace Dynamic Mode Decomposition operator class.
 
+    :param svd_rank: the rank for the truncation; if -1 all the columns of
+        :math:`U_q` are used, if `svd_rank` is an integer grater than zero
+        it is used as the number of columns retained from  :math:`U_q`.
+        `svd_rank=0` or float values are not supported.
+    :type svd_rank: int
     :param rescale_mode: Scale Atilde as shown in
         10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
         eigendecomposition. None means no rescaling, 'auto' means automatic
@@ -45,9 +50,9 @@ class SubspaceDMDOperator(DMDOperator):
     :type sorted_eigs: {'real', 'abs'} or False
     """
 
-    def __init__(self, rescale_mode, sorted_eigs):
+    def __init__(self, svd_rank, rescale_mode, sorted_eigs):
         super().__init__(
-            svd_rank=-1,
+            svd_rank=svd_rank,
             exact=True,
             forward_backward=False,
             rescale_mode=rescale_mode,
@@ -75,7 +80,11 @@ class SubspaceDMDOperator(DMDOperator):
         O = Yf.dot(Vp).dot(Vp.T.conj())
 
         Uq, _, _ = reducedsvd(O)
+
         r = min(np.linalg.matrix_rank(O), n)
+        if self._svd_rank > 0:
+            r = min(r, self._svd_rank)
+
         Uq1, Uq2 = Uq[:n, :r], Uq[n:, :r]
 
         U, S, V = reducedsvd(Uq1)
@@ -117,6 +126,11 @@ class SubspaceDMD(DMDBase):
     """
     Subspace Dynamic Mode Decomposition
 
+     :param svd_rank: the rank for the truncation; if -1 all the columns of
+        :math:`U_q` are used, if `svd_rank` is an integer grater than zero
+        it is used as the number of columns retained from  :math:`U_q`.
+        `svd_rank=0` or float values are not supported.
+    :type svd_rank: int
     :param opt: argument to control the computation of DMD modes amplitudes.
         See :class:`DMDBase`. Default is False.
     :type opt: bool or int
@@ -133,6 +147,7 @@ class SubspaceDMD(DMDBase):
 
     def __init__(
         self,
+        svd_rank=-1,
         opt=False,
         rescale_mode=None,
         sorted_eigs=False,
@@ -149,6 +164,7 @@ class SubspaceDMD(DMDBase):
         self._modes_activation_bitmask_proxy = None
 
         self._Atilde = SubspaceDMDOperator(
+            svd_rank=svd_rank,
             rescale_mode=rescale_mode,
             sorted_eigs=sorted_eigs,
         )

@@ -19,7 +19,6 @@ def test_fixed_parameters():
     dmd = SubspaceDMD()
 
     assert dmd._tlsq_rank == 0
-    assert dmd.operator._svd_rank == -1
     assert not dmd.operator._forward_backward
     assert dmd.operator._tikhonov_regularization is None
     assert dmd.operator._exact
@@ -29,6 +28,7 @@ def test_default_constructor():
     dmd = SubspaceDMD()
 
     assert not dmd._opt
+    assert dmd.operator._svd_rank == -1
     assert dmd.operator._rescale_mode is None
     assert not dmd.operator._sorted_eigs
 
@@ -42,12 +42,14 @@ def test_default_constructor():
 
 def test_constructor():
     dmd = SubspaceDMD(
+        svd_rank=20,
         opt=True,
         rescale_mode="pippo",
         sorted_eigs="pluto",
     )
 
     assert dmd._opt
+    assert dmd.svd_rank == 20
     assert dmd.operator._rescale_mode == "pippo"
     assert dmd.operator._sorted_eigs == "pluto"
 
@@ -124,3 +126,12 @@ def test_reducedsvd_with_r():
     assert U.shape[1] == 2
     assert V.shape[1] == 2
     assert len(s) == 2
+
+
+def test_svd_rank_positive():
+    X = np.random.rand(10, 100)
+    dmd = SubspaceDMD(svd_rank=2).fit(X)
+
+    assert len(dmd.eigs) == 2
+    assert dmd.modes.shape[1] == 2
+    assert len(dmd.amplitudes) == 2
