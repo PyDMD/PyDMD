@@ -279,16 +279,16 @@ def test_interpolate_missing_modal_coefficients_shape():
     p.parameters = [1.5, 5.5, 7.5]
     assert p._interpolate_missing_modal_coefficients(np.random.rand(10*5,40)).shape == (3,5,40)
 
-def test_interpolate_missing_modal_coefficients():
-    p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
-    p.fit(training_data, params)
-    p.parameters = test_parameters
+# def test_interpolate_missing_modal_coefficients():
+#     p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
+#     p.fit(training_data, params)
+#     p.parameters = test_parameters
 
-    expected = back_roll_shape(np.load(testdir+'interpolated.npy'))
-    input = np.load(testdir+'forecasted.npy')
-    np.testing.assert_allclose(
-        p._interpolate_missing_modal_coefficients(input),
-        expected, atol=1.e-12, rtol=0)
+#     expected = back_roll_shape(np.load(testdir+'interpolated.npy'))
+#     input = np.load(testdir+'forecasted.npy')
+#     np.testing.assert_allclose(
+#         p._interpolate_missing_modal_coefficients(input),
+#         expected, atol=1.e-12, rtol=0)
 
 def reconstructed_data_shape():
     p = ParametricDMD(DMD(svd_rank=5), POD(rank=10), RBF())
