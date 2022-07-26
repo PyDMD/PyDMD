@@ -63,6 +63,7 @@ class DMDOperator():
         """
 
         U, s, V = compute_svd(X, self._svd_rank)
+        var = np.round(s**2/np.sum(s**2), decimals=3)
 
         if self._tikhonov_regularization is not None:
             self._norm_X = np.linalg.norm(X)
@@ -81,7 +82,7 @@ class DMDOperator():
         self._compute_eigenquantities()
         self._compute_modes(Y, U, s, V)
 
-        return U, s, V
+        return U, s, V, var
 
     @property
     def shape(self):
