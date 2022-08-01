@@ -3,15 +3,10 @@ Derived module from dmdbase.py for classic dmd.
 """
 
 import numpy as np
-from scipy.linalg import pinv2
+from scipy.linalg import pinv
 
 from .dmdbase import DMDBase
 from .utils import compute_tlsq
-
-
-def pinv(x):
-    """Pseudo-inverse matrix"""
-    return pinv2(x, rcond=10 * np.finfo(float).eps)
 
 
 class DMD(DMDBase):
