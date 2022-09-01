@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.subspacedmd &mdash; PyDMD 0.4.0.post2207 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.subspacedmd &mdash; PyDMD 0.4.0.post2209 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2207
+                0.4.0.post2209
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -105,6 +105,11 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Subspace Dynamic Mode Decomposition operator class.</span>
 
+<span class="sd">    :param svd_rank: the rank for the truncation; if -1 all the columns of</span>
+<span class="sd">        :math:`U_q` are used, if `svd_rank` is an integer grater than zero</span>
+<span class="sd">        it is used as the number of columns retained from  :math:`U_q`.</span>
+<span class="sd">        `svd_rank=0` or float values are not supported.</span>
+<span class="sd">    :type svd_rank: int</span>
 <span class="sd">    :param rescale_mode: Scale Atilde as shown in</span>
 <span class="sd">        10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its</span>
 <span class="sd">        eigendecomposition. None means no rescaling, &#39;auto&#39; means automatic</span>
@@ -116,9 +121,9 @@
 <span class="sd">    :type sorted_eigs: {&#39;real&#39;, &#39;abs&#39;} or False</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rescale_mode</span><span class="p">,</span> <span class="n">sorted_eigs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">svd_rank</span><span class="p">,</span> <span class="n">rescale_mode</span><span class="p">,</span> <span class="n">sorted_eigs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">svd_rank</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span>
             <span class="n">exact</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">rescale_mode</span><span class="o">=</span><span class="n">rescale_mode</span><span class="p">,</span>
@@ -146,7 +151,11 @@
         <span class="n">O</span> <span class="o">=</span> <span class="n">Yf</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Vp</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Vp</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
 
         <span class="n">Uq</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">reducedsvd</span><span class="p">(</span><span class="n">O</span><span class="p">)</span>
+
         <span class="n">r</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">matrix_rank</span><span class="p">(</span><span class="n">O</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span><span class="p">)</span>
+
         <span class="n">Uq1</span><span class="p">,</span> <span class="n">Uq2</span> <span class="o">=</span> <span class="n">Uq</span><span class="p">[:</span><span class="n">n</span><span class="p">,</span> <span class="p">:</span><span class="n">r</span><span class="p">],</span> <span class="n">Uq</span><span class="p">[</span><span class="n">n</span><span class="p">:,</span> <span class="p">:</span><span class="n">r</span><span class="p">]</span>
 
         <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">reducedsvd</span><span class="p">(</span><span class="n">Uq1</span><span class="p">)</span>
@@ -188,6 +197,11 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Subspace Dynamic Mode Decomposition</span>
 
+<span class="sd">     :param svd_rank: the rank for the truncation; if -1 all the columns of</span>
+<span class="sd">        :math:`U_q` are used, if `svd_rank` is an integer grater than zero</span>
+<span class="sd">        it is used as the number of columns retained from  :math:`U_q`.</span>
+<span class="sd">        `svd_rank=0` or float values are not supported.</span>
+<span class="sd">    :type svd_rank: int</span>
 <span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes.</span>
 <span class="sd">        See :class:`DMDBase`. Default is False.</span>
 <span class="sd">    :type opt: bool or int</span>
@@ -204,6 +218,7 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
+        <span class="n">svd_rank</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -220,6 +235,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">SubspaceDMDOperator</span><span class="p">(</span>
+            <span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span>
             <span class="n">rescale_mode</span><span class="o">=</span><span class="n">rescale_mode</span><span class="p">,</span>
             <span class="n">sorted_eigs</span><span class="o">=</span><span class="n">sorted_eigs</span><span class="p">,</span>
         <span class="p">)</span>
@@ -262,7 +278,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Jul 01, 2022.
+      <span class="lastupdated">Last updated on Sep 01, 2022.
       </span></p>
   </div>
 

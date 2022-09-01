@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SubspaceDMD &mdash; PyDMD 0.4.0.post2207 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>SubspaceDMD &mdash; PyDMD 0.4.0.post2209 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2207
+                0.4.0.post2209
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -103,9 +103,19 @@ decomposition for stochastic Koopman analysis.” Physical Review E 96.3 (2017):
 </table>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-name descname">SubspaceDMD</code><span class="sig-paren">(</span><em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">sorted_eigs=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/subspacedmd.html#SubspaceDMD"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="sig-name descname">SubspaceDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=-1</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">sorted_eigs=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/subspacedmd.html#SubspaceDMD"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
 <p>Subspace Dynamic Mode Decomposition</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param svd_rank</dt>
+<dd class="field-odd"><p>the rank for the truncation; if -1 all the columns of
+<span class="math">U_q</span> are used, if <cite>svd_rank</cite> is an integer grater than zero
+it is used as the number of columns retained from  <span class="math">U_q</span>.
+<cite>svd_rank=0</cite> or float values are not supported.</p>
+</dd>
+</dl>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -145,7 +155,7 @@ part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p><
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Jul 01, 2022.
+      <span class="lastupdated">Last updated on Sep 01, 2022.
       </span></p>
   </div>
 
