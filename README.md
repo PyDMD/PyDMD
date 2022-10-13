@@ -54,6 +54,9 @@ In the last years many variants arose, such as multiresolution DMD, compressed D
 In PyDMD we implemented the majority of the variants mentioned above with a user friendly interface. See the [**Examples**](#examples) section below and the [**Tutorials**](tutorials/README.md) to have an idea of the potential of this package.
 
 The research in the field is growing both in computational fluid dynamic and in structural mechanics, due to the equation-free nature of the model.
+<p align="center">
+    <img src="readme/pydmd_capabilities.png" width="800" />
+</p>
 
 
 
