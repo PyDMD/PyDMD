@@ -7,7 +7,7 @@ dynamic mode decomposition. SIAM Journal on Applied Dynamical Systems, 18, 2019.
 
 import numpy as np
 from .cdmd import CDMD, CDMDOperator
-from .utils import compute_tlsq, compute_svd
+from .utils import compute_tlsq
 
 def rqb(X, k, p, q):
     """
