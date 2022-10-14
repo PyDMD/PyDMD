@@ -1,52 +1,83 @@
 """
 Derived module from cdmd.py for Randomized DMD
-References:
-- N. Benjamin Erichson, Lionel Mathelin, J. Nathan Kutz, and Steven L. Brunton. Randomized
-dynamic mode decomposition. SIAM Journal on Applied Dynamical Systems, 18, 2019.
+
+Reference:
+N. Benjamin Erichson, Lionel Mathelin, J. Nathan Kutz, Steven L. Brunton.
+Randomized dynamic mode decomposition. SIAM Journal on Applied Dynamical
+Systems, 18, 2019.
 """
 
 import numpy as np
-from .cdmd import CDMD, CDMDOperator
+from .cdmd import CDMD
 from .utils import compute_tlsq
 
-def rqb(X, k, p, q):
+def randomized_qb(X, target_rank, oversampling, power_iters):
     """
     Randomized QB Decomposition.
     
-    :param numpy.ndarray X: the matrix to decompose
-    :param int k: target rank 
-    :param int p: oversampling parameter 
-    :param int q: number of power iterations 
+    :param numpy.ndarray X: (n, m) matrix to decompose.
+    :param int target_rank: Target rank << min(m, n) of the matrix X.
+    :param int oversampling: Number of additional samples to use when 
+        computing the random test matrix. 
+        Note that oversampling = {5,10} is often sufficient. 
+    :param int power_iters: Number of power iterations to perform. 
+        Note that power_iters = {1,2} leads to considerable improvements. 
     
-    :return: a near-optimal orthonormal basis Q for the range of the matrix X, 
+    :return: a near-optimal orthonormal basis Q for the range of the matrix X,
         and the projection B of the matrix X onto the low-dimensional space Q.
-    :rtype: numpy.ndarray, numpy.ndarray
+    :rtype: (n, target_rank) numpy.ndarray, (target_rank, m) numpy.ndarray
 
-    References:
-    N. Benjamin Erichson, Lionel Mathelin, J. Nathan Kutz, and Steven L. Brunton. 
-    Randomized dynamic mode decomposition. SIAM Journal on Applied Dynamical Systems, 18, 2019.
+    Reference:
+    N. Benjamin Erichson, Lionel Mathelin, J. Nathan Kutz, Steven L. Brunton. 
+    Randomized dynamic mode decomposition. SIAM Journal on Applied Dynamical 
+    Systems, 18, 2019.
     """
-    n, m = X.shape
-    l = k + p # slight oversampling
-    Omega = np.random.randn(m, l) # generate random test matrix 
-    Y = X @ Omega # compute sampling matrix 
-    for j in range(q): # power iterations 
-        Q, _ = np.linalg.qr(Y)
-        Z, _ = np.linalg.qr(X.conj().T @ Q)
-        Y = X @ Z
-    Q, _ = np.linalg.qr(Y)
-    B = Q.conj().T @ X
+    m = X.shape[1]
+
+    # Generate random test matrix (with slight oversampling)
+    Omega = np.random.randn(m, target_rank + oversampling)
+
+    # Compute sampling matrix 
+    Y = X.dot(Omega)
+
+    # Perform power iterations 
+    for j in range(power_iters):
+        Q = np.linalg.qr(Y)[0]
+        Z = np.linalg.qr(X.conj().T.dot(Q))[0]
+        Y = X.dot(Z)
+
+    # Orthonormalize the sampling matrix
+    Q = np.linalg.qr(Y)[0]
+
+    # Project the input matrix X onto the smaller space 
+    B = Q.conj().T.dot(X)
+
     return Q, B
+
 
 class RDMD(CDMD):
     """
     Randomized Dynamic Mode Decomposition
-    :param int p: Randomized QB decomposition oversampling parameter 
-    :param int q: Randomized QB decomposition power iterations 
+
+    :param int oversampling: Number of additional samples to use when 
+        computing the random test matrix. 
+        Note that oversampling = {5,10} is often sufficient. 
+    :param int power_iters: Number of power iterations to perform. 
+        Note that power_iters = {1,2} leads to considerable improvements. 
     """
     
-    def __init__(self, svd_rank, p=10, q=2, tlsq_rank=0, opt=False, rescale_mode=None, 
-                 forward_backward=False, sorted_eigs=False, tikhonov_regularization=None):
+    def __init__(
+        self, 
+        svd_rank, 
+        oversampling=10, 
+        power_iters=2, 
+        tlsq_rank=0, 
+        opt=False, 
+        rescale_mode=None, 
+        forward_backward=False, 
+        sorted_eigs=False, 
+        tikhonov_regularization=None
+    ):
         super().__init__(
             svd_rank=svd_rank,
             tlsq_rank=tlsq_rank,
@@ -55,21 +86,27 @@ class RDMD(CDMD):
             rescale_mode=rescale_mode,
             forward_backward=forward_backward,
             sorted_eigs=sorted_eigs,
-            tikhonov_regularization=tikhonov_regularization,
+            tikhonov_regularization=tikhonov_regularization
         )
         self._svd_rank = svd_rank
-        self._p = p 
-        self._q = q
+        self._oversampling = oversampling
+        self._power_iters = power_iters
         
+
     def fit(self, X):
         """
-        Compute the Dynamic Modes Decomposition to the input data.
+        Compute the Dynamic Mode Decomposition to the input data.
 
-        :param X: the input snapshots.
+        :param X: the input snapshots
         :type X: numpy.ndarray or iterable
         """
         self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
-        Q, compressed_snapshots = rqb(self._snapshots, self._svd_rank, self._p, self._q)
+
+        # Use randomized QB decomposition for the data compression 
+        Q, compressed_snapshots = randomized_qb(self._snapshots, 
+                                                self._svd_rank, 
+                                                self._oversampling, 
+                                                self._power_iters)
         self._compression_matrix = Q.conj().T
 
         n_samples = compressed_snapshots.shape[1]
