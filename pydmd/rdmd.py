@@ -22,7 +22,7 @@ def randomized_qb(X, target_rank, oversampling, power_iters):
         Note that oversampling = {5,10} is often sufficient.
     :param int power_iters: Number of power iterations to perform.
         Note that power_iters = {1,2} leads to considerable improvements.
-    
+
     :return: a near-optimal orthonormal basis Q for the range of the matrix X,
         and the projection B of the matrix X onto the low-dimensional space Q.
     :rtype: (n, target_rank) numpy.ndarray, (target_rank, m) numpy.ndarray
