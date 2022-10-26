@@ -45,7 +45,7 @@ class RDMD(CDMD):
         self._svd_rank = svd_rank
         self._oversampling = oversampling
         self._power_iters = power_iters
-        
+    
 
     def _compress_snapshots(self):
         """
