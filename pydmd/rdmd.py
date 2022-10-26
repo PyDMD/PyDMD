@@ -9,7 +9,6 @@ Systems, 18, 2019.
 
 import numpy as np
 from .cdmd import CDMD
-from .utils import compute_tlsq
 
 class RDMD(CDMD):
     """
@@ -21,7 +20,6 @@ class RDMD(CDMD):
     :param int power_iters: Number of power iterations to perform.
         Note that power_iters = {1,2} leads to considerable improvements.
     """
-    
     def __init__(
         self,
         svd_rank,
