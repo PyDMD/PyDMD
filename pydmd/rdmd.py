@@ -78,6 +78,6 @@ class RDMD(CDMD):
 
         # Save the compression matrix
         self._compression_matrix = Q.conj().T
-        
+
         return B
     
