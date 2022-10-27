@@ -80,4 +80,4 @@ class RDMD(CDMD):
         self._compression_matrix = Q.conj().T
 
         return B
-    
+
