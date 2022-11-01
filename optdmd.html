@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OptDMD &mdash; PyDMD 0.4.0.post2210 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>OptDMD &mdash; PyDMD 0.4.0.post2211 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2210
+                0.4.0.post2211
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -200,7 +200,7 @@ snapshots), self.modes and self.eigs.</p>
 <dd class="field-odd"><p>the amplitudes array</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
+<dd class="field-even"><p>numpy.ndarray</p>
 </dd>
 </dl>
 <p>References for optimal amplitudes:
@@ -219,7 +219,7 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the array that contains the amplitudes coefficient.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
+<dd class="field-even"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -239,7 +239,7 @@ system and the reconstructed one. For futher information, see
 row.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
+<dd class="field-even"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -253,7 +253,7 @@ row.</p>
 <dd class="field-odd"><p>the eigenvalues from the eigendecomposition of <cite>atilde</cite>.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
+<dd class="field-even"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -270,8 +270,8 @@ row.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
-<li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots at sequential timestep, if passed. Default
+<li><p><strong>X</strong> (<em>numpy.ndarray</em><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
+<li><p><strong>Y</strong> (<em>numpy.ndarray</em><em> or </em><em>iterable</em>) – the input snapshots at sequential timestep, if passed. Default
 is None.</p></li>
 </ul>
 </dd>
@@ -301,7 +301,7 @@ is None.</p></li>
 <dd class="field-odd"><p>the matrix containing the DMD modes.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
+<dd class="field-even"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -332,7 +332,7 @@ set the field to a brand-new value (see example below).</p>
 <dd class="field-odd"><p>The DMD modes activation bitmask.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
+<dd class="field-even"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -343,13 +343,13 @@ set the field to a brand-new value (see example below).</p>
 <dd><p>Predict the output Y given the input X using the fitted DMD model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – the input vector.</p>
+<dd class="field-odd"><p><strong>X</strong> (<em>numpy.ndarray</em>) – the input vector.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>one time-step ahead predicted output.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
+<dd class="field-odd"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -370,7 +370,7 @@ set the field to a brand-new value (see example below).</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Oct 01, 2022.
+      <span class="lastupdated">Last updated on Nov 01, 2022.
       </span></p>
   </div>
 
