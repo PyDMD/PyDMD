@@ -192,12 +192,11 @@ def test_tdmd_plot():
     dmd.plot_eigs(show_axes=False, show_unit_circle=False)
     plt.close()
 
-# TODO: Create an equivalent test for RDMD
-# def test_cdmd_matrix_uniform():
-#     dmd = CDMD(compression_matrix='uniform')
-#     dmd.fit(X=sample_data)
-#     error_norm = np.linalg.norm(dmd.reconstructed_data - sample_data, 1)
-#     assert error_norm < 1e-10
+def test_rdmd_matrix():
+    dmd = RDMD()
+    dmd.fit(X=sample_data)
+    error_norm = np.linalg.norm(dmd.reconstructed_data - sample_data, 1)
+    assert error_norm < 1e-10
 
 def test_sorted_eigs_default():
     dmd = RDMD()
