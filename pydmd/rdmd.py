@@ -28,7 +28,7 @@ def compute_rank(X, svd_rank=0):
     singular values is, IEEE Transactions on Information Theory 60.8
     (2014): 5040-5053.
     """
-    U, s, V = np.linalg.svd(X, full_matrices=False)
+    U, s, _ = np.linalg.svd(X, full_matrices=False)
 
     def omega(x):
         return 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
