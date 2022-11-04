@@ -57,11 +57,11 @@ def test_eigs_2():
     assert len(dmd.eigs) == 5
 
 def test_eigs_3():
-    dmd = RDMD(svd_rank=2, sorted_eigs='real')
+    dmd = RDMD(svd_rank=2)
     dmd.fit(X=sample_data)
     expected_eigs = np.array(
         [-0.47386866 + 0.88059553j, -0.80901699 + 0.58778525j])
-    np.testing.assert_almost_equal(dmd.eigs, expected_eigs, decimal=6)
+    np.testing.assert_almost_equal(sorted(dmd.eigs), sorted(expected_eigs), decimal=6)
 
 def test_dynamics_1():
     dmd = RDMD(svd_rank=5)
