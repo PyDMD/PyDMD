@@ -19,3 +19,4 @@ from .spdmd import SpDMD
 from .paramdmd import ParametricDMD
 from .dmd_modes_tuner import ModesTuner
 from .subspacedmd import SubspaceDMD
+from .rdmd import RDMD
