@@ -57,7 +57,7 @@ def test_eigs_2():
     assert len(dmd.eigs) == 5
 
 def test_eigs_3():
-    dmd = RDMD(svd_rank=2)
+    dmd = RDMD(svd_rank=2, sorted_eigs='real')
     dmd.fit(X=sample_data)
     expected_eigs = np.array(
         [-0.47386866 + 0.88059553j, -0.80901699 + 0.58778525j])
