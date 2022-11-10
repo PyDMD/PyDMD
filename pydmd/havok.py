@@ -139,9 +139,8 @@ class HAVOK(HankelDMD):
             np.diag(self._svd_amps[:-1]),
             reconstructed_v.conj().T
         ])
-        reconstructed_x = self._dehankel(reconstructed_hankel_matrix)
 
-        return reconstructed_x
+        return self._dehankel(reconstructed_hankel_matrix)
 
     def fit(self, x, dt):
         """
@@ -152,7 +151,7 @@ class HAVOK(HankelDMD):
         self._snapshots = self._snapshots.squeeze()
 
         # Check that input data is a 1D time-series
-        if np.ndim(self._snapshots) != 1:
+        if self._snapshots.ndim > 1:
             raise ValueError("Input data must be a 1-D time series.")
 
         # Get number of data points
@@ -165,9 +164,7 @@ Expected at least d."""
             raise ValueError(msg.format(self._d))
 
         # Compute hankel matrix for the input data
-        self._hankel_matrix = self._pseudo_hankel_matrix(
-            self._snapshots.reshape(1, -1)
-        )
+        self._hankel_matrix = self._pseudo_hankel_matrix(self._snapshots[None])
 
         # Take SVD of the hankel matrix
         # Save the resulting U, s, and V for future reconstructions
@@ -192,7 +189,7 @@ Expected at least d."""
 
         # Save A matrix and B vector
         self._A = regression_model_continuous[:-1, :-1]
-        self._B = regression_model_continuous[:-1, -1].reshape(-1, 1)
+        self._B = regression_model_continuous[:-1, -1, None]
 
         # Set timesteps
         self._set_initial_time_dictionary(
