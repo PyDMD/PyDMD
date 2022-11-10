@@ -35,7 +35,7 @@ class HAVOK(HankelDMD):
             opt=opt,
             rescale_mode=rescale_mode,
             forward_backward=forward_backward,
-            sorted_eigs=sorted_eigs, 
+            sorted_eigs=sorted_eigs,
             tikhonov_regularization=tikhonov_regularization,
             d=d,
         )
@@ -52,6 +52,8 @@ class HAVOK(HankelDMD):
         :return: matrix containing the linear time-delay embeddings.
         :rtype: numpy.ndarray
         """
+        if self._embeddings is None:
+            raise RuntimeError("fit() not called")
         return self._embeddings[:,:-1]
 
     @property
@@ -62,6 +64,8 @@ class HAVOK(HankelDMD):
         :return: array containing the chaotic forcing term.
         :rtype: numpy.ndarray
         """
+        if self._embeddings is None:
+            raise RuntimeError("fit() not called")
         return self._embeddings[:,-1]
 
     @property
@@ -73,6 +77,8 @@ class HAVOK(HankelDMD):
         :return: linear dynamics matrix A.
         :rtype: numpy.ndarray
         """
+        if self._A is None:
+            raise RuntimeError("fit() not called")
         return self._A
 
     @property
@@ -84,6 +90,8 @@ class HAVOK(HankelDMD):
         :return: forcing dynamics vector B.
         :rtype: numpy.ndarray
         """
+        if self._B is None:
+            raise RuntimeError("fit() not called")
         return self._B
 
     def _dehankel(self, X):
@@ -100,7 +108,7 @@ class HAVOK(HankelDMD):
 
     @property
     def reconstructed_data(self):
-        # Build a continuous-time system of the following form, where 
+        # Build a continuous-time system of the following form, where
         # x, u, and y represent the states, inputs, and outputs respectively.
         #
         # dx/dt = Ax + Bu
@@ -182,7 +190,7 @@ Expected at least d."""
             regression_model_discrete - np.eye(self._r)
         ) / dt
 
-        # Save A matrix and B vector 
+        # Save A matrix and B vector
         self._A = regression_model_continuous[:-1, :-1]
         self._B = regression_model_continuous[:-1, -1].reshape(-1, 1)
 
