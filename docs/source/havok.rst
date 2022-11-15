@@ -1,11 +1,11 @@
-DMDBase
+Havok
 =================
 
-.. currentmodule:: pydmd.dmdbase
+.. currentmodule:: pydmd.havok
 
-.. automodule:: pydmd.dmdbase
+.. automodule:: pydmd.havok
 
-.. autoclass:: DMDBase
+.. autoclass:: HAVOK
 	:members:
 	:private-members:
 	:undoc-members:
