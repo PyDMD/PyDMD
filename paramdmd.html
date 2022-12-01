@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ParametricDMD &mdash; PyDMD 0.4.0.post2211 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Parametric DMD &mdash; PyDMD 0.4.0.post2212 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -17,8 +17,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="DMD Modes Tuner" href="dmd_modes_tuner.html" />
-    <link rel="prev" title="SpDMD" href="spdmd.html" /> 
+    <link rel="next" title="Randomized DMD" href="rdmd.html" />
+    <link rel="prev" title="Sparsity-promoting DMD" href="spdmd.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2211
+                0.4.0.post2212
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -43,15 +43,18 @@
 <li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">MrDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">FbDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cdmd.html">CDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">HankelDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hodmd.html">HODMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">Forward-backward DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">Compressed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">Hankel DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="havok.html">Havok</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hodmd.html">Higher-order DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMD with control</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spdmd.html">Sparsity-promoting DMD</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Parametric DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rdmd.html">Randomized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subspacedmd.html">Subspace DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
@@ -73,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="code.html">Code Documentation</a> &raquo;</li>
-      <li>ParametricDMD</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="code.html">Code Documentation</a></li>
+      <li class="breadcrumb-item active">Parametric DMD</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/paramdmd.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -86,52 +89,8 @@
            <div itemprop="articleBody">
              
   <div class="section" id="module-pydmd.paramdmd">
-<span id="parametricdmd"></span><h1>ParametricDMD<a class="headerlink" href="#module-pydmd.paramdmd" title="Permalink to this headline">¶</a></h1>
+<span id="parametric-dmd"></span><h1>Parametric DMD<a class="headerlink" href="#module-pydmd.paramdmd" title="Permalink to this headline">¶</a></h1>
 <p>Module for the parametric Dynamic Mode Decomposition.</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD.fit</span></code>(X, training_parameters)</p></td>
-<td><p>Compute the parametric Dynamic Modes Decomposition from the input data stored in the array <cite>X</cite>.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD.reconstructed_data</span></code></p></td>
-<td><p>Get the reconstructed data, for the time instants specified in <cite>dmd_time</cite>, and the parameters stored in <cite>parameters</cite>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD.parameters</span></code></p></td>
-<td><p>The new parameters to be used in <cite>reconstructed_data</cite>, represented as a 2D array (the index of the parameter vary along the first dimension).</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD.training_parameters</span></code></p></td>
-<td><p>The original parameters passed when <cite>self.fit</cite> was called, represented as a 2D array (the index of the parameter vary along the first dimension).</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD.is_partitioned</span></code></p></td>
-<td><p>Return <cite>True</cite> if this instance is partitioned, <cite>False</cite> if it is monolithic.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD.dmd_time</span></code></p></td>
-<td><p>The time dictionary used by the reference DMD instance (see also <code class="xref py py-func docutils literal notranslate"><span class="pre">_reference_dmd()</span></code>).</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD.dmd_timesteps</span></code></p></td>
-<td><p>The timesteps in the output of this instance, which coincides with the timesteps in the output of the reference of this instance (see <code class="xref py py-func docutils literal notranslate"><span class="pre">_reference_dmd()</span></code>).</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD.original_time</span></code></p></td>
-<td><p>The original time dictionary used by this instance, which coincides with the original dictionary used by the reference of this instance (see <code class="xref py py-func docutils literal notranslate"><span class="pre">_reference_dmd()</span></code>).</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD.original_timesteps</span></code></p></td>
-<td><p>The original timesteps in the input fed to this instance, which coincides with the original timesteps in the input fed to the reference of this instance (see <code class="xref py py-func docutils literal notranslate"><span class="pre">_reference_dmd()</span></code>).</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD._arrange_parametric_snapshots</span></code>(X)</p></td>
-<td><p>Arrange the given parametric snapshots (see <code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code> for an overview of the shape of <cite>X</cite>) into a 2D matrix such that the shape is distributed as follows:</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD._training_modal_coefficients</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParametricDMD._fit_dmd</span></code></p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="sig-name descname">ParametricDMD</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">spatial_pod</em>, <em class="sig-param">approximation</em>, <em class="sig-param">light=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/paramdmd.html#ParametricDMD"><span class="viewcode-link">[source]</span></a></dt>
@@ -221,9 +180,9 @@ to <cite>X.shape[0]</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>numpy.ndarray</em>) – Training snapshots of the parametric system,
+<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – Training snapshots of the parametric system,
 observed for two or more parameters and in multiple time instants.</p></li>
-<li><p><strong>training_parameters</strong> (<em>numpy.ndarray</em>) – Training parameters
+<li><p><strong>training_parameters</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – Training parameters
 corresponding to the snapshots in <cite>X</cite>.</p></li>
 </ul>
 </dd>
@@ -350,7 +309,7 @@ parameters to <cite>ParametricDMD</cite>:</p>
 <dd class="field-even"><p>Change the current parameters.</p>
 </dd>
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>numpy.ndarray</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -372,7 +331,7 @@ parameters to <cite>ParametricDMD</cite>:</p>
 given method for ROM.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -418,7 +377,7 @@ as a 2D array (the index of the parameter vary along the first
 dimension).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>numpy.ndarray</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -431,15 +390,15 @@ dimension).</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="spdmd.html" class="btn btn-neutral float-left" title="SpDMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="dmd_modes_tuner.html" class="btn btn-neutral float-right" title="DMD Modes Tuner" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="spdmd.html" class="btn btn-neutral float-left" title="Sparsity-promoting DMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rdmd.html" class="btn btn-neutral float-right" title="Randomized DMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Nov 01, 2022.
+      <span class="lastupdated">Last updated on Dec 01, 2022.
       </span></p>
   </div>
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SpDMD &mdash; PyDMD 0.4.0.post2211 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Sparsity-promoting DMD &mdash; PyDMD 0.4.0.post2212 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -17,8 +17,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="ParametricDMD" href="paramdmd.html" />
-    <link rel="prev" title="pydmd.optdmd.OptDMD.snapshots" href="_summaries/pydmd.optdmd.OptDMD.snapshots.html" /> 
+    <link rel="next" title="Parametric DMD" href="paramdmd.html" />
+    <link rel="prev" title="OptDMD" href="optdmd.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2211
+                0.4.0.post2212
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -43,15 +43,18 @@
 <li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">MrDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">FbDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cdmd.html">CDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">HankelDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hodmd.html">HODMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">Forward-backward DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">Compressed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">Hankel DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="havok.html">Havok</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hodmd.html">Higher-order DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMD with control</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">SpDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Sparsity-promoting DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">Parametric DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rdmd.html">Randomized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subspacedmd.html">Subspace DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
@@ -73,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="code.html">Code Documentation</a> &raquo;</li>
-      <li>SpDMD</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="code.html">Code Documentation</a></li>
+      <li class="breadcrumb-item active">Sparsity-promoting DMD</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/spdmd.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -86,52 +89,8 @@
            <div itemprop="articleBody">
              
   <div class="section" id="module-pydmd.spdmd">
-<span id="spdmd"></span><h1>SpDMD<a class="headerlink" href="#module-pydmd.spdmd" title="Permalink to this headline">¶</a></h1>
+<span id="sparsity-promoting-dmd"></span><h1>Sparsity-promoting DMD<a class="headerlink" href="#module-pydmd.spdmd" title="Permalink to this headline">¶</a></h1>
 <p>Derived module from dmdbase.py for sparsity-promoting DMD.</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpDMD.atilde</span></code></p></td>
-<td><p>Get the reduced Koopman operator A, called A tilde.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpDMD.dmd_timesteps</span></code></p></td>
-<td><p>Get the timesteps of the reconstructed states.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpDMD.dynamics</span></code></p></td>
-<td><p>Get the time evolution of each mode.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpDMD.eigs</span></code></p></td>
-<td><p>Get the eigenvalues of A tilde.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpDMD.fit</span></code></p></td>
-<td><p>Compute the Dynamic Modes Decomposition of the input data.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpDMD.modes</span></code></p></td>
-<td><p>Get the matrix containing the DMD modes, stored by column.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpDMD.original_timesteps</span></code></p></td>
-<td><p>Get the timesteps of the original snapshot.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpDMD.plot_eigs</span></code></p></td>
-<td><p>Plot the eigenvalues.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpDMD.plot_modes_2D</span></code></p></td>
-<td><p>Plot the DMD Modes.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpDMD.plot_snapshots_2D</span></code></p></td>
-<td><p>Plot the snapshots.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpDMD.reconstructed_data</span></code></p></td>
-<td><p>Get the reconstructed data.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpDMD.snapshots</span></code></p></td>
-<td><p>Get the original input data.</p></td>
-</tr>
-</tbody>
-</table>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="sig-name descname">SpDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=True</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">sorted_eigs=False</em>, <em class="sig-param">abs_tolerance=1e-06</em>, <em class="sig-param">rel_tolerance=0.0001</em>, <em class="sig-param">max_iterations=10000</em>, <em class="sig-param">rho=1</em>, <em class="sig-param">gamma=10</em>, <em class="sig-param">verbose=True</em>, <em class="sig-param">enforce_zero=True</em>, <em class="sig-param">release_memory=True</em>, <em class="sig-param">zero_absolute_tolerance=1e-12</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD"><span class="viewcode-link">[source]</span></a></dt>
@@ -154,7 +113,7 @@ is 0, that means TLSQ is not applied.</p></li>
 Default is True.</p></li>
 <li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes.
 See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
-<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><em>numpy.ndarray</em>) – Scale Atilde as shown in
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
 10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
 eigendecomposition. None means no rescaling, ‘auto’ means automatic
 rescaling using singular values, otherwise the scaling factors.</p></li>
@@ -349,15 +308,15 @@ of Lagrange multipliers).</p></li>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="_summaries/pydmd.optdmd.OptDMD.snapshots.html" class="btn btn-neutral float-left" title="pydmd.optdmd.OptDMD.snapshots" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="paramdmd.html" class="btn btn-neutral float-right" title="ParametricDMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="optdmd.html" class="btn btn-neutral float-left" title="OptDMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="paramdmd.html" class="btn btn-neutral float-right" title="Parametric DMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Nov 01, 2022.
+      <span class="lastupdated">Last updated on Dec 01, 2022.
       </span></p>
   </div>
 

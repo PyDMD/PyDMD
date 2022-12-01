@@ -1,11 +1,11 @@
-DMDBase
+Randomized DMD
 =================
 
-.. currentmodule:: pydmd.dmdbase
+.. currentmodule:: pydmd.rdmd
 
-.. automodule:: pydmd.dmdbase
+.. automodule:: pydmd.rdmd
 
-.. autoclass:: DMDBase
+.. autoclass:: RDMD
 	:members:
 	:private-members:
 	:undoc-members:

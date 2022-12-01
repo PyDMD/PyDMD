@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DMDBase &mdash; PyDMD 0.4.0.post2211 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>DMDBase &mdash; PyDMD 0.4.0.post2212 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -17,7 +17,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="pydmd.dmdbase.DMDBase._col_major_2darray" href="_summaries/pydmd.dmdbase.DMDBase._col_major_2darray.html" />
+    <link rel="next" title="DMD" href="dmd.html" />
     <link rel="prev" title="Code Documentation" href="code.html" /> 
 </head>
 
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2211
+                0.4.0.post2212
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -41,33 +41,20 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">DMDBase</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._col_major_2darray.html">pydmd.dmdbase.DMDBase._col_major_2darray</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._compute_amplitudes.html">pydmd.dmdbase.DMDBase._compute_amplitudes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.atilde.html">pydmd.dmdbase.DMDBase.atilde</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.dmd_timesteps.html">pydmd.dmdbase.DMDBase.dmd_timesteps</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.dynamics.html">pydmd.dmdbase.DMDBase.dynamics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.eigs.html">pydmd.dmdbase.DMDBase.eigs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.fit.html">pydmd.dmdbase.DMDBase.fit</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.modes.html">pydmd.dmdbase.DMDBase.modes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.original_timesteps.html">pydmd.dmdbase.DMDBase.original_timesteps</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_eigs.html">pydmd.dmdbase.DMDBase.plot_eigs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_modes_2D.html">pydmd.dmdbase.DMDBase.plot_modes_2D</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_snapshots_2D.html">pydmd.dmdbase.DMDBase.plot_snapshots_2D</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.reconstructed_data.html">pydmd.dmdbase.DMDBase.reconstructed_data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.snapshots.html">pydmd.dmdbase.DMDBase.snapshots</a></li>
-</ul>
-</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DMDBase</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">MrDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">FbDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cdmd.html">CDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">HankelDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hodmd.html">HODMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">Forward-backward DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">Compressed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">Hankel DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="havok.html">Havok</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hodmd.html">Higher-order DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMD with control</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spdmd.html">Sparsity-promoting DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">Parametric DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rdmd.html">Randomized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subspacedmd.html">Subspace DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
@@ -89,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="code.html">Code Documentation</a> &raquo;</li>
-      <li>DMDBase</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="code.html">Code Documentation</a></li>
+      <li class="breadcrumb-item active">DMDBase</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/dmdbase.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -104,56 +91,6 @@
   <div class="section" id="module-pydmd.dmdbase">
 <span id="dmdbase"></span><h1>DMDBase<a class="headerlink" href="#module-pydmd.dmdbase" title="Permalink to this headline">¶</a></h1>
 <p>Base module for the DMD: <cite>fit</cite> method must be implemented in inherited classes</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._col_major_2darray.html#pydmd.dmdbase.DMDBase._col_major_2darray" title="pydmd.dmdbase.DMDBase._col_major_2darray"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._col_major_2darray</span></code></a></p></td>
-<td><p>Private method that takes as input the snapshots and stores them into a 2D matrix, by column.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase._compute_amplitudes.html#pydmd.dmdbase.DMDBase._compute_amplitudes" title="pydmd.dmdbase.DMDBase._compute_amplitudes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase._compute_amplitudes</span></code></a></p></td>
-<td><p>Compute the amplitude coefficients.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.atilde.html#pydmd.dmdbase.DMDBase.atilde" title="pydmd.dmdbase.DMDBase.atilde"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.atilde</span></code></a></p></td>
-<td><p>Get the reduced Koopman operator A, called A tilde.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.dmd_timesteps.html#pydmd.dmdbase.DMDBase.dmd_timesteps" title="pydmd.dmdbase.DMDBase.dmd_timesteps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.dmd_timesteps</span></code></a></p></td>
-<td><p>Get the timesteps of the reconstructed states.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.dynamics.html#pydmd.dmdbase.DMDBase.dynamics" title="pydmd.dmdbase.DMDBase.dynamics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.dynamics</span></code></a></p></td>
-<td><p>Get the time evolution of each mode.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.eigs.html#pydmd.dmdbase.DMDBase.eigs" title="pydmd.dmdbase.DMDBase.eigs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.eigs</span></code></a></p></td>
-<td><p>Get the eigenvalues of A tilde.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.fit.html#pydmd.dmdbase.DMDBase.fit" title="pydmd.dmdbase.DMDBase.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.fit</span></code></a></p></td>
-<td><p>Abstract method to fit the snapshots matrices.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.modes.html#pydmd.dmdbase.DMDBase.modes" title="pydmd.dmdbase.DMDBase.modes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.modes</span></code></a></p></td>
-<td><p>Get the matrix containing the DMD modes, stored by column.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.original_timesteps.html#pydmd.dmdbase.DMDBase.original_timesteps" title="pydmd.dmdbase.DMDBase.original_timesteps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.original_timesteps</span></code></a></p></td>
-<td><p>Get the timesteps of the original snapshot.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_eigs.html#pydmd.dmdbase.DMDBase.plot_eigs" title="pydmd.dmdbase.DMDBase.plot_eigs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.plot_eigs</span></code></a></p></td>
-<td><p>Plot the eigenvalues.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_modes_2D.html#pydmd.dmdbase.DMDBase.plot_modes_2D" title="pydmd.dmdbase.DMDBase.plot_modes_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.plot_modes_2D</span></code></a></p></td>
-<td><p>Plot the DMD Modes.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_snapshots_2D.html#pydmd.dmdbase.DMDBase.plot_snapshots_2D" title="pydmd.dmdbase.DMDBase.plot_snapshots_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.plot_snapshots_2D</span></code></a></p></td>
-<td><p>Plot the snapshots.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.reconstructed_data.html#pydmd.dmdbase.DMDBase.reconstructed_data" title="pydmd.dmdbase.DMDBase.reconstructed_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.reconstructed_data</span></code></a></p></td>
-<td><p>Get the reconstructed data.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.snapshots.html#pydmd.dmdbase.DMDBase.snapshots" title="pydmd.dmdbase.DMDBase.snapshots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDBase.snapshots</span></code></a></p></td>
-<td><p>Get the original input data.</p></td>
-</tr>
-</tbody>
-</table>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="sig-name descname">DMDBase</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">sorted_eigs=False</em>, <em class="sig-param">tikhonov_regularization=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase"><span class="viewcode-link">[source]</span></a></dt>
@@ -184,7 +121,7 @@ when the system presents small eigenvalues. For this reason a manual
 selection of the number of eigenvalues considered for the analyisis may
 be needed (check <cite>svd_rank</cite>). Also setting <cite>svd_rank</cite> to a value
 between 0 and 1 may give better results. Default is False.</p></li>
-<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><em>numpy.ndarray</em>) – Scale Atilde as shown in
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
 10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
 eigendecomposition. None means no rescaling, ‘auto’ means automatic
 rescaling using singular values, otherwise the scaling factors.</p></li>
@@ -233,14 +170,14 @@ array, the method saves it, otherwise it also saves the original
 snapshots shape and reshapes the snapshots.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>numpy.ndarray</em>) – the input snapshots.</p>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – the input snapshots.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the 2D matrix that contains the flatten snapshots, the shape
 of original snapshots.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>numpy.ndarray, tuple</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a>, tuple</p>
 </dd>
 </dl>
 </dd></dl>
@@ -260,7 +197,7 @@ snapshots), self.modes and self.eigs.</p>
 <dd class="field-odd"><p>the amplitudes array</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 <p>References for optimal amplitudes:
@@ -272,7 +209,7 @@ Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
 <dt>
 <code class="sig-name descname">_enforce_ratio</code><span class="sig-paren">(</span><em class="sig-param">goal_ratio</em>, <em class="sig-param">supx</em>, <em class="sig-param">infx</em>, <em class="sig-param">supy</em>, <em class="sig-param">infy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdbase.html#DMDBase._enforce_ratio"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Computes the right value of <cite>supx,infx,supy,infy</cite> to obtain the desired
-ratio in <a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.plot_eigs.html#pydmd.dmdbase.DMDBase.plot_eigs" title="pydmd.dmdbase.DMDBase.plot_eigs"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_eigs()</span></code></a>. Ratio is defined as</p>
+ratio in <code class="xref py py-func docutils literal notranslate"><span class="pre">plot_eigs()</span></code>. Ratio is defined as</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dx</span> <span class="o">=</span> <span class="n">supx</span> <span class="o">-</span> <span class="n">infx</span>
 <span class="n">dy</span> <span class="o">=</span> <span class="n">supy</span> <span class="o">-</span> <span class="n">infy</span>
 <span class="nb">max</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span> <span class="o">/</span> <span class="nb">min</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span>
@@ -352,7 +289,7 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the array that contains the amplitudes coefficient.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -366,7 +303,7 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the reduced Koopman operator A.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -419,7 +356,7 @@ to <code class="xref py py-func docutils literal notranslate"><span class="pre">
 <dd class="field-odd"><p>the time intervals of the original snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -439,7 +376,7 @@ to <code class="xref py py-func docutils literal notranslate"><span class="pre">
 row.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -453,7 +390,7 @@ row.</p>
 <dd class="field-odd"><p>the eigenvalues from the eigendecomposition of <cite>atilde</cite>.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -498,7 +435,7 @@ row.</p>
 <dd class="field-odd"><p>the array that contains the frequencies of the eigenvalues.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -512,7 +449,7 @@ row.</p>
 <dd class="field-odd"><p>the Floquet values</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -543,7 +480,7 @@ row.</p>
 <dd class="field-odd"><p>the matrix containing the DMD modes.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -554,7 +491,7 @@ row.</p>
 <dd><p>Get the bitmask which controls which DMD modes are enabled at the
 moment in this DMD instance.</p>
 <p>The DMD instance must be fitted before this property becomes valid.
-After <a class="reference internal" href="_summaries/pydmd.dmdbase.DMDBase.fit.html#pydmd.dmdbase.DMDBase.fit" title="pydmd.dmdbase.DMDBase.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> is called, the defalt value of
+After <code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code> is called, the defalt value of
 <cite>modes_activation_bitmask</cite> is an array of <cite>True</cite> values of the same
 shape of <code class="xref py py-func docutils literal notranslate"><span class="pre">amplitudes()</span></code>.</p>
 <p>The array returned is read-only (this allow us to react appropriately
@@ -574,7 +511,7 @@ set the field to a brand-new value (see example below).</p>
 <dd class="field-odd"><p>The DMD modes activation bitmask.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -645,7 +582,7 @@ fit this DMD instance.</p>
 <dd class="field-odd"><p>the time intervals of the original snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -687,8 +624,8 @@ of 0.05. Not compatible with <cite>show_axes=True</cite>. Default is False.</p><
 <li><p><strong>index_mode</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>sequence</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – the index of the modes to plot. By default, all
 the modes are plotted.</p></li>
 <li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
-<li><p><strong>x</strong> (<em>numpy.ndarray</em>) – domain abscissa.</p></li>
-<li><p><strong>y</strong> (<em>numpy.ndarray</em>) – domain ordinate</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
 <li><p><strong>order</strong> (<em>{'C'</em><em>, </em><em>'F'</em><em>, </em><em>'A'}</em><em>, </em><em>default 'C'.</em>) – read the elements of snapshots using this index order,
 and place the elements into the reshaped array using this index
 order.  It has to be the same used to store the snapshot. ‘C’ means
@@ -718,8 +655,8 @@ size. Default is (8, 8).</p></li>
 <li><p><strong>index_snap</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>sequence</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – the index of the snapshots to plot. By default, all
 the snapshots are plotted.</p></li>
 <li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
-<li><p><strong>x</strong> (<em>numpy.ndarray</em>) – domain abscissa.</p></li>
-<li><p><strong>y</strong> (<em>numpy.ndarray</em>) – domain ordinate</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
 <li><p><strong>order</strong> (<em>{'C'</em><em>, </em><em>'F'</em><em>, </em><em>'A'}</em><em>, </em><em>default 'C'.</em>) – read the elements of snapshots using this index order,
 and place the elements into the reshaped array using this index
 order.  It has to be the same used to store the snapshot. ‘C’ means
@@ -748,7 +685,7 @@ size. Default is (8, 8).</p></li>
 <dd class="field-odd"><p>the matrix that contains the reconstructed snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -786,7 +723,7 @@ be saved.</p>
 <dd class="field-odd"><p>the matrix that contains the original snapshots.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -810,14 +747,14 @@ be saved.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="code.html" class="btn btn-neutral float-left" title="Code Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="_summaries/pydmd.dmdbase.DMDBase._col_major_2darray.html" class="btn btn-neutral float-right" title="pydmd.dmdbase.DMDBase._col_major_2darray" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="dmd.html" class="btn btn-neutral float-right" title="DMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Nov 01, 2022.
+      <span class="lastupdated">Last updated on Dec 01, 2022.
       </span></p>
   </div>
 

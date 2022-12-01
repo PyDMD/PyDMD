@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.dmd_modes_tuner &mdash; PyDMD 0.4.0.post2211 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.dmd_modes_tuner &mdash; PyDMD 0.4.0.post2212 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2211
+                0.4.0.post2212
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -57,9 +57,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>pydmd.dmd_modes_tuner</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pydmd.dmd_modes_tuner</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -233,7 +233,7 @@
 <span class="sd">    boilerplate code needed while applying a selector.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ModesSelectors._threshold"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesSelectors._threshold">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_threshold</span><span class="p">(</span><span class="n">dmd</span><span class="p">,</span> <span class="n">low_threshold</span><span class="p">,</span> <span class="n">up_threshold</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Non-partialized function of the modes selector `threshold`.</span>
@@ -251,7 +251,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span>
             <span class="n">eigs_module</span> <span class="o">&lt;</span> <span class="n">up_threshold</span><span class="p">,</span>
             <span class="n">eigs_module</span> <span class="o">&gt;</span> <span class="n">low_threshold</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="ModesSelectors.threshold"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesSelectors.threshold">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">threshold</span><span class="p">(</span><span class="n">low_threshold</span><span class="p">,</span> <span class="n">up_threshold</span><span class="p">):</span>
@@ -272,7 +272,7 @@
             <span class="n">up_threshold</span><span class="o">=</span><span class="n">up_threshold</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ModesSelectors._stable_modes"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesSelectors._stable_modes">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_stable_modes</span><span class="p">(</span>
         <span class="n">dmd</span><span class="p">,</span>
         <span class="n">max_distance_from_unity_inside</span><span class="p">,</span>
@@ -293,7 +293,7 @@
             <span class="n">dmd</span><span class="p">,</span>
             <span class="mi">1</span> <span class="o">-</span> <span class="n">max_distance_from_unity_inside</span><span class="p">,</span>
             <span class="mi">1</span> <span class="o">+</span> <span class="n">max_distance_from_unity_outside</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="ModesSelectors.stable_modes"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesSelectors.stable_modes">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">stable_modes</span><span class="p">(</span>
@@ -378,7 +378,7 @@
             <span class="n">max_distance_from_unity_outside</span><span class="o">=</span><span class="n">max_distance_from_unity_outside</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ModesSelectors._compute_integral_contribution"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesSelectors._compute_integral_contribution">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_compute_integral_contribution</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">dynamic</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the integral contribution across time of the given DMD mode,</span>
@@ -390,9 +390,9 @@
 <span class="sd">            returned by `dmd.dynamics[mode_index]`.</span>
 <span class="sd">        :return float: the integral contribution of the given DMD mode.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">pow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mode</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dynamic</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">pow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mode</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dynamic</span><span class="p">))</span></div>
 
-    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ModesSelectors._integral_contribution"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesSelectors._integral_contribution">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_integral_contribution</span><span class="p">(</span><span class="n">dmd</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Non-partialized function of the modes selector `integral_contribution`.</span>
@@ -423,7 +423,7 @@
 
         <span class="n">truefalse_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="kc">False</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_of_modes</span><span class="p">)])</span>
         <span class="n">truefalse_array</span><span class="p">[</span><span class="n">indexes_first_n</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="n">truefalse_array</span>
+        <span class="k">return</span> <span class="n">truefalse_array</span></div>
 
 <div class="viewcode-block" id="ModesSelectors.integral_contribution"><a class="viewcode-back" href="../../dmd_modes_tuner.html#pydmd.dmd_modes_tuner.ModesSelectors.integral_contribution">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">integral_contribution</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
@@ -616,7 +616,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Nov 01, 2022.
+      <span class="lastupdated">Last updated on Dec 01, 2022.
       </span></p>
   </div>
 

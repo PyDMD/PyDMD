@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OptDMD &mdash; PyDMD 0.4.0.post2211 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>OptDMD &mdash; PyDMD 0.4.0.post2212 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -17,8 +17,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="pydmd.optdmd.OptDMD.atilde" href="_summaries/pydmd.optdmd.OptDMD.atilde.html" />
-    <link rel="prev" title="DMDc" href="dmdc.html" /> 
+    <link rel="next" title="Sparsity-promoting DMD" href="spdmd.html" />
+    <link rel="prev" title="DMD with control" href="dmdc.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2211
+                0.4.0.post2212
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -43,29 +43,18 @@
 <li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">MrDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">FbDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cdmd.html">CDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">HankelDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hodmd.html">HODMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">OptDMD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.atilde.html">pydmd.optdmd.OptDMD.atilde</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.dmd_timesteps.html">pydmd.optdmd.OptDMD.dmd_timesteps</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.eigs.html">pydmd.optdmd.OptDMD.eigs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.fit.html">pydmd.optdmd.OptDMD.fit</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.predict.html">pydmd.optdmd.OptDMD.predict</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.modes.html">pydmd.optdmd.OptDMD.modes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.original_timesteps.html">pydmd.optdmd.OptDMD.original_timesteps</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.plot_eigs.html">pydmd.optdmd.OptDMD.plot_eigs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.plot_modes_2D.html">pydmd.optdmd.OptDMD.plot_modes_2D</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.plot_snapshots_2D.html">pydmd.optdmd.OptDMD.plot_snapshots_2D</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.reconstructed_data.html">pydmd.optdmd.OptDMD.reconstructed_data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.snapshots.html">pydmd.optdmd.OptDMD.snapshots</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">Forward-backward DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">Compressed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">Hankel DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="havok.html">Havok</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hodmd.html">Higher-order DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMD with control</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">OptDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spdmd.html">Sparsity-promoting DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">Parametric DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rdmd.html">Randomized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subspacedmd.html">Subspace DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
@@ -87,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="code.html">Code Documentation</a> &raquo;</li>
-      <li>OptDMD</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="code.html">Code Documentation</a></li>
+      <li class="breadcrumb-item active">OptDMD</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/optdmd.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -108,50 +97,6 @@ to dmd.</p>
 <p>P. Heas &amp; C. Herzet. Low-rank dynamic mode decomposition: optimal
 solution in polynomial time. arXiv:1610.02962. 2016.</p>
 </div>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.atilde.html#pydmd.optdmd.OptDMD.atilde" title="pydmd.optdmd.OptDMD.atilde"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OptDMD.atilde</span></code></a></p></td>
-<td><p>Get the reduced Koopman operator A, called A tilde.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.dmd_timesteps.html#pydmd.optdmd.OptDMD.dmd_timesteps" title="pydmd.optdmd.OptDMD.dmd_timesteps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OptDMD.dmd_timesteps</span></code></a></p></td>
-<td><p>Get the timesteps of the reconstructed states.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.eigs.html#pydmd.optdmd.OptDMD.eigs" title="pydmd.optdmd.OptDMD.eigs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OptDMD.eigs</span></code></a></p></td>
-<td><p>Get the eigenvalues of A tilde.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.fit.html#pydmd.optdmd.OptDMD.fit" title="pydmd.optdmd.OptDMD.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OptDMD.fit</span></code></a></p></td>
-<td><p>Compute the Dynamic Modes Decomposition to the input data.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.predict.html#pydmd.optdmd.OptDMD.predict" title="pydmd.optdmd.OptDMD.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OptDMD.predict</span></code></a></p></td>
-<td><p>Predict the output Y given the input X using the fitted DMD model.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.modes.html#pydmd.optdmd.OptDMD.modes" title="pydmd.optdmd.OptDMD.modes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OptDMD.modes</span></code></a></p></td>
-<td><p>Get the matrix containing the DMD modes, stored by column.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.original_timesteps.html#pydmd.optdmd.OptDMD.original_timesteps" title="pydmd.optdmd.OptDMD.original_timesteps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OptDMD.original_timesteps</span></code></a></p></td>
-<td><p>Get the timesteps of the original snapshot.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.plot_eigs.html#pydmd.optdmd.OptDMD.plot_eigs" title="pydmd.optdmd.OptDMD.plot_eigs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OptDMD.plot_eigs</span></code></a></p></td>
-<td><p>Plot the eigenvalues.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.plot_modes_2D.html#pydmd.optdmd.OptDMD.plot_modes_2D" title="pydmd.optdmd.OptDMD.plot_modes_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OptDMD.plot_modes_2D</span></code></a></p></td>
-<td><p>Plot the DMD Modes.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.plot_snapshots_2D.html#pydmd.optdmd.OptDMD.plot_snapshots_2D" title="pydmd.optdmd.OptDMD.plot_snapshots_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OptDMD.plot_snapshots_2D</span></code></a></p></td>
-<td><p>Plot the snapshots.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.reconstructed_data.html#pydmd.optdmd.OptDMD.reconstructed_data" title="pydmd.optdmd.OptDMD.reconstructed_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OptDMD.reconstructed_data</span></code></a></p></td>
-<td><p>Get the reconstructed data.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.snapshots.html#pydmd.optdmd.OptDMD.snapshots" title="pydmd.optdmd.OptDMD.snapshots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OptDMD.snapshots</span></code></a></p></td>
-<td><p>Get the original input data.</p></td>
-</tr>
-</tbody>
-</table>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="sig-name descname">OptDMD</code><span class="sig-paren">(</span><em class="sig-param">factorization='evd'</em>, <em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">opt=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/optdmd.html#OptDMD"><span class="viewcode-link">[source]</span></a></dt>
@@ -200,7 +145,7 @@ snapshots), self.modes and self.eigs.</p>
 <dd class="field-odd"><p>the amplitudes array</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 <p>References for optimal amplitudes:
@@ -219,7 +164,7 @@ system and the reconstructed one. For futher information, see
 <dd class="field-odd"><p>the array that contains the amplitudes coefficient.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -239,7 +184,7 @@ system and the reconstructed one. For futher information, see
 row.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -253,7 +198,7 @@ row.</p>
 <dd class="field-odd"><p>the eigenvalues from the eigendecomposition of <cite>atilde</cite>.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -270,8 +215,8 @@ row.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>numpy.ndarray</em><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
-<li><p><strong>Y</strong> (<em>numpy.ndarray</em><em> or </em><em>iterable</em>) – the input snapshots at sequential timestep, if passed. Default
+<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
+<li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots at sequential timestep, if passed. Default
 is None.</p></li>
 </ul>
 </dd>
@@ -301,7 +246,7 @@ is None.</p></li>
 <dd class="field-odd"><p>the matrix containing the DMD modes.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -312,7 +257,7 @@ is None.</p></li>
 <dd><p>Get the bitmask which controls which DMD modes are enabled at the
 moment in this DMD instance.</p>
 <p>The DMD instance must be fitted before this property becomes valid.
-After <a class="reference internal" href="_summaries/pydmd.optdmd.OptDMD.fit.html#pydmd.optdmd.OptDMD.fit" title="pydmd.optdmd.OptDMD.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> is called, the defalt value of
+After <code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code> is called, the defalt value of
 <cite>modes_activation_bitmask</cite> is an array of <cite>True</cite> values of the same
 shape of <code class="xref py py-func docutils literal notranslate"><span class="pre">amplitudes()</span></code>.</p>
 <p>The array returned is read-only (this allow us to react appropriately
@@ -332,7 +277,7 @@ set the field to a brand-new value (see example below).</p>
 <dd class="field-odd"><p>The DMD modes activation bitmask.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -343,13 +288,13 @@ set the field to a brand-new value (see example below).</p>
 <dd><p>Predict the output Y given the input X using the fitted DMD model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (<em>numpy.ndarray</em>) – the input vector.</p>
+<dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – the input vector.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>one time-step ahead predicted output.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>numpy.ndarray</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -362,15 +307,15 @@ set the field to a brand-new value (see example below).</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="dmdc.html" class="btn btn-neutral float-left" title="DMDc" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="_summaries/pydmd.optdmd.OptDMD.atilde.html" class="btn btn-neutral float-right" title="pydmd.optdmd.OptDMD.atilde" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="dmdc.html" class="btn btn-neutral float-left" title="DMD with control" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="spdmd.html" class="btn btn-neutral float-right" title="Sparsity-promoting DMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Nov 01, 2022.
+      <span class="lastupdated">Last updated on Dec 01, 2022.
       </span></p>
   </div>
 

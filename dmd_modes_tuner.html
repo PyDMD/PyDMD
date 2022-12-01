@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DMD Modes Tuner &mdash; PyDMD 0.4.0.post2211 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>DMD Modes Tuner &mdash; PyDMD 0.4.0.post2212 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,7 +18,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Contact" href="contact.html" />
-    <link rel="prev" title="ParametricDMD" href="paramdmd.html" /> 
+    <link rel="prev" title="Subspace DMD" href="subspacedmd.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2211
+                0.4.0.post2212
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -43,15 +43,18 @@
 <li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">MrDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">FbDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cdmd.html">CDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">HankelDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hodmd.html">HODMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMDc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">Forward-backward DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">Compressed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">Hankel DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="havok.html">Havok</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hodmd.html">Higher-order DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMD with control</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spdmd.html">Sparsity-promoting DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">Parametric DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rdmd.html">Randomized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subspacedmd.html">Subspace DMD</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">DMD Modes Tuner</a></li>
 </ul>
 </li>
@@ -73,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="code.html">Code Documentation</a> &raquo;</li>
-      <li>DMD Modes Tuner</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="code.html">Code Documentation</a></li>
+      <li class="breadcrumb-item active">DMD Modes Tuner</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/dmd_modes_tuner.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -96,7 +99,7 @@ constructor, and modifies that one whenever one of the tuning methods
 is called. Therefore there is no need to worry about subsequent
 unwanted changes in the given instance.</p>
 <p><cite>ModesTuner</cite> provides a simplified interface to the tuning functions
-<a class="reference internal" href="#pydmd.dmd_modes_tuner.select_modes" title="pydmd.dmd_modes_tuner.select_modes"><code class="xref py py-func docutils literal notranslate"><span class="pre">select_modes()</span></code></a> and <a class="reference internal" href="#pydmd.dmd_modes_tuner.stabilize_modes" title="pydmd.dmd_modes_tuner.stabilize_modes"><code class="xref py py-func docutils literal notranslate"><span class="pre">stabilize_modes()</span></code></a>, but in order to
+<code class="xref py py-func docutils literal notranslate"><span class="pre">select_modes()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">stabilize_modes()</span></code>, but in order to
 have more control on what is happening (i.e. when to use in-place
 tuning, or to check which modes have been changed) you may prefer to
 use them instead.</p>
@@ -156,12 +159,12 @@ pass (as keyword arguments) the arguments needed to construct the
 criteria (see example below).</p>
 <p>Allowed string values for <cite>criteria</cite>:</p>
 <ul class="simple">
-<li><p><cite>‘module_threshold’</cite>: Retain modes such that the module of the corresponding eigenvalue is included in the interval [<cite>low_threshold</cite>, <cite>up_threshold</cite>] (cfr. <a class="reference internal" href="#pydmd.dmd_modes_tuner.ModesSelectors.threshold" title="pydmd.dmd_modes_tuner.ModesSelectors.threshold"><code class="xref py py-func docutils literal notranslate"><span class="pre">ModesSelectors.threshold()</span></code></a>);</p></li>
-<li><p><cite>‘stable_modes’</cite>: Retain modes such that the corresponding eigenvalue is not far from the unit circle (cfr. <a class="reference internal" href="#pydmd.dmd_modes_tuner.ModesSelectors.stable_modes" title="pydmd.dmd_modes_tuner.ModesSelectors.stable_modes"><code class="xref py py-func docutils literal notranslate"><span class="pre">ModesSelectors.stable_modes()</span></code></a>);</p></li>
-<li><p><cite>‘integral_contribution’</cite>: Retain the first <cite>n</cite> modes in terms of integral contribution (cfr. <a class="reference internal" href="#pydmd.dmd_modes_tuner.ModesSelectors.integral_contribution" title="pydmd.dmd_modes_tuner.ModesSelectors.integral_contribution"><code class="xref py py-func docutils literal notranslate"><span class="pre">ModesSelectors.integral_contribution()</span></code></a>).</p></li>
+<li><p><cite>‘module_threshold’</cite>: Retain modes such that the module of the corresponding eigenvalue is included in the interval [<cite>low_threshold</cite>, <cite>up_threshold</cite>] (cfr. <code class="xref py py-func docutils literal notranslate"><span class="pre">ModesSelectors.threshold()</span></code>);</p></li>
+<li><p><cite>‘stable_modes’</cite>: Retain modes such that the corresponding eigenvalue is not far from the unit circle (cfr. <code class="xref py py-func docutils literal notranslate"><span class="pre">ModesSelectors.stable_modes()</span></code>);</p></li>
+<li><p><cite>‘integral_contribution’</cite>: Retain the first <cite>n</cite> modes in terms of integral contribution (cfr. <code class="xref py py-func docutils literal notranslate"><span class="pre">ModesSelectors.integral_contribution()</span></code>).</p></li>
 </ul>
 <p>You might want to read the documentation of
-<a class="reference internal" href="#pydmd.dmd_modes_tuner.ModesSelectors" title="pydmd.dmd_modes_tuner.ModesSelectors"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModesSelectors</span></code></a> in order to get detailed info regarding the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ModesSelectors</span></code> in order to get detailed info regarding the
 behavior of each argument.</p>
 <p>Example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydmd.dmd_modes_tuner</span> <span class="kn">import</span> <span class="n">ModesTuner</span>
@@ -245,12 +248,13 @@ DMD instances held by the caller <cite>ModesTuner</cite>.</p>
 
 </dd></dl>
 
-<span class="target" id="module-pydmd.dmd_modes_tuner"></span><p>A module which contains several functions to tune (i.e. improve) DMD instances
+<p>A module which contains several functions to tune (i.e. improve) DMD instances
 through the “manual” modification of DMD modes.</p>
 <dl class="class">
-<dt id="pydmd.dmd_modes_tuner.ModesSelectors">
-<em class="property">class </em><code class="sig-name descname">ModesSelectors</code><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesSelectors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.dmd_modes_tuner.ModesSelectors" title="Permalink to this definition">¶</a></dt>
-<dd><p>A container class which defines some static methods for pre-packed
+<dt>
+<em class="property">class </em><code class="sig-name descname">ModesSelectors</code><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesSelectors"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A container class which defines some static methods for pre-packed
 modes selectors functions to be used in <cite>select_modes</cite>.</p>
 <p>For instance, to select the first <cite>x</cite> modes by integral contributions:</p>
 <p>Example:</p>
@@ -266,8 +270,88 @@ are the output of a call to <cite>functools.partial</cite> applied to a
 non-partialized selector. This mechanism is employed to reduce the
 boilerplate code needed while applying a selector.</p>
 <dl class="method">
-<dt id="pydmd.dmd_modes_tuner.ModesSelectors.integral_contribution">
-<em class="property">static </em><code class="sig-name descname">integral_contribution</code><span class="sig-paren">(</span><em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesSelectors.integral_contribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.dmd_modes_tuner.ModesSelectors.integral_contribution" title="Permalink to this definition">¶</a></dt>
+<dt>
+<em class="property">static </em><code class="sig-name descname">_compute_integral_contribution</code><span class="sig-paren">(</span><em class="sig-param">mode</em>, <em class="sig-param">dynamic</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesSelectors._compute_integral_contribution"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute the integral contribution across time of the given DMD mode,
+given the mode and its dynamic, as shown in
+<a class="reference external" href="http://dx.doi.org/10.1016/j.euromechflu.2016.11.015">http://dx.doi.org/10.1016/j.euromechflu.2016.11.015</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – The DMD mode.</p></li>
+<li><p><strong>dynamic</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – The dynamic of the given DMD mode, as
+returned by <cite>dmd.dynamics[mode_index]</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return float</dt>
+<dd class="field-even"><p>the integral contribution of the given DMD mode.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_integral_contribution</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesSelectors._integral_contribution"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Non-partialized function of the modes selector <cite>integral_contribution</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dmd</strong> (<em>DMDBase</em>) – An instance of DMDBase.</p></li>
+<li><p><strong>n</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The number of DMD modes to be selected.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return np.ndarray</dt>
+<dd class="field-even"><p>An array of bool, where each “True” index means
+that the corresponding DMD mode is selected.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_stable_modes</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">max_distance_from_unity_inside</em>, <em class="sig-param">max_distance_from_unity_outside</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesSelectors._stable_modes"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Non-partialized function of the modes selector <cite>stable_modes</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dmd</strong> (<em>DMDBase</em>) – An instance of DMDBase.</p></li>
+<li><p><strong>max_distance_from_unity_inside</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – The maximum distance
+from the unit circle for points inside it.</p></li>
+<li><p><strong>max_distance_from_unity_outside</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – The maximum distance
+from the unit circle for points outside it.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return np.ndarray</dt>
+<dd class="field-even"><p>An array of bool, where each “True” index means
+that the corresponding DMD mode is selected.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_threshold</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">low_threshold</em>, <em class="sig-param">up_threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesSelectors._threshold"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Non-partialized function of the modes selector <cite>threshold</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dmd</strong> (<em>DMDBase</em>) – An instance of DMDBase.</p></li>
+<li><p><strong>low_threshold</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – The minimum accepted module of an
+eigenvalue.</p></li>
+<li><p><strong>up_threshold</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – The maximum accepted module of an
+eigenvalue.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return np.ndarray</dt>
+<dd class="field-even"><p>An array of bool, where each “True” index means
+that the corresponding DMD mode is selected.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">integral_contribution</code><span class="sig-paren">(</span><em class="sig-param">n</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesSelectors.integral_contribution"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Reference: <a class="reference external" href="http://dx.doi.org/10.1016/j.euromechflu.2016.11.015">http://dx.doi.org/10.1016/j.euromechflu.2016.11.015</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -282,8 +366,8 @@ the criteria of integral contribution.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pydmd.dmd_modes_tuner.ModesSelectors.stable_modes">
-<em class="property">static </em><code class="sig-name descname">stable_modes</code><span class="sig-paren">(</span><em class="sig-param">max_distance_from_unity=None</em>, <em class="sig-param">max_distance_from_unity_inside=None</em>, <em class="sig-param">max_distance_from_unity_outside=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesSelectors.stable_modes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.dmd_modes_tuner.ModesSelectors.stable_modes" title="Permalink to this definition">¶</a></dt>
+<dt>
+<em class="property">static </em><code class="sig-name descname">stable_modes</code><span class="sig-paren">(</span><em class="sig-param">max_distance_from_unity=None</em>, <em class="sig-param">max_distance_from_unity_inside=None</em>, <em class="sig-param">max_distance_from_unity_outside=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesSelectors.stable_modes"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Select all the modes corresponding to eigenvalues whose distance
 from the unit circle is less than or equal to a specified threshold. It
 is possible to specify the distance separately for eigenvalues inside
@@ -332,8 +416,8 @@ the criteria of stability.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pydmd.dmd_modes_tuner.ModesSelectors.threshold">
-<em class="property">static </em><code class="sig-name descname">threshold</code><span class="sig-paren">(</span><em class="sig-param">low_threshold</em>, <em class="sig-param">up_threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesSelectors.threshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.dmd_modes_tuner.ModesSelectors.threshold" title="Permalink to this definition">¶</a></dt>
+<dt>
+<em class="property">static </em><code class="sig-name descname">threshold</code><span class="sig-paren">(</span><em class="sig-param">low_threshold</em>, <em class="sig-param">up_threshold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesSelectors.threshold"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Retain only DMD modes associated with an eigenvalue whose module is
 between <cite>low_threshold</cite> and <cite>up_threshold</cite> (inclusive on both sides).</p>
 <dl class="field-list simple">
@@ -357,13 +441,14 @@ that the corresponding DMD mode is selected.</p>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="sig-name descname">ModesTuner</code><span class="sig-paren">(</span><em class="sig-param">dmds</em>, <em class="sig-param">in_place=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Class for semi-automatic tuning of DMD modes.</p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class for semi-automatic tuning of DMD modes.</p>
 <p>This class generates a new instance from the instance passed to the
 constructor, and modifies that one whenever one of the tuning methods
 is called. Therefore there is no need to worry about subsequent
 unwanted changes in the given instance.</p>
 <p><cite>ModesTuner</cite> provides a simplified interface to the tuning functions
-<a class="reference internal" href="#pydmd.dmd_modes_tuner.select_modes" title="pydmd.dmd_modes_tuner.select_modes"><code class="xref py py-func docutils literal notranslate"><span class="pre">select_modes()</span></code></a> and <a class="reference internal" href="#pydmd.dmd_modes_tuner.stabilize_modes" title="pydmd.dmd_modes_tuner.stabilize_modes"><code class="xref py py-func docutils literal notranslate"><span class="pre">stabilize_modes()</span></code></a>, but in order to
+<code class="xref py py-func docutils literal notranslate"><span class="pre">select_modes()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">stabilize_modes()</span></code>, but in order to
 have more control on what is happening (i.e. when to use in-place
 tuning, or to check which modes have been changed) you may prefer to
 use them instead.</p>
@@ -423,12 +508,12 @@ pass (as keyword arguments) the arguments needed to construct the
 criteria (see example below).</p>
 <p>Allowed string values for <cite>criteria</cite>:</p>
 <ul class="simple">
-<li><p><cite>‘module_threshold’</cite>: Retain modes such that the module of the corresponding eigenvalue is included in the interval [<cite>low_threshold</cite>, <cite>up_threshold</cite>] (cfr. <a class="reference internal" href="#pydmd.dmd_modes_tuner.ModesSelectors.threshold" title="pydmd.dmd_modes_tuner.ModesSelectors.threshold"><code class="xref py py-func docutils literal notranslate"><span class="pre">ModesSelectors.threshold()</span></code></a>);</p></li>
-<li><p><cite>‘stable_modes’</cite>: Retain modes such that the corresponding eigenvalue is not far from the unit circle (cfr. <a class="reference internal" href="#pydmd.dmd_modes_tuner.ModesSelectors.stable_modes" title="pydmd.dmd_modes_tuner.ModesSelectors.stable_modes"><code class="xref py py-func docutils literal notranslate"><span class="pre">ModesSelectors.stable_modes()</span></code></a>);</p></li>
-<li><p><cite>‘integral_contribution’</cite>: Retain the first <cite>n</cite> modes in terms of integral contribution (cfr. <a class="reference internal" href="#pydmd.dmd_modes_tuner.ModesSelectors.integral_contribution" title="pydmd.dmd_modes_tuner.ModesSelectors.integral_contribution"><code class="xref py py-func docutils literal notranslate"><span class="pre">ModesSelectors.integral_contribution()</span></code></a>).</p></li>
+<li><p><cite>‘module_threshold’</cite>: Retain modes such that the module of the corresponding eigenvalue is included in the interval [<cite>low_threshold</cite>, <cite>up_threshold</cite>] (cfr. <code class="xref py py-func docutils literal notranslate"><span class="pre">ModesSelectors.threshold()</span></code>);</p></li>
+<li><p><cite>‘stable_modes’</cite>: Retain modes such that the corresponding eigenvalue is not far from the unit circle (cfr. <code class="xref py py-func docutils literal notranslate"><span class="pre">ModesSelectors.stable_modes()</span></code>);</p></li>
+<li><p><cite>‘integral_contribution’</cite>: Retain the first <cite>n</cite> modes in terms of integral contribution (cfr. <code class="xref py py-func docutils literal notranslate"><span class="pre">ModesSelectors.integral_contribution()</span></code>).</p></li>
 </ul>
 <p>You might want to read the documentation of
-<a class="reference internal" href="#pydmd.dmd_modes_tuner.ModesSelectors" title="pydmd.dmd_modes_tuner.ModesSelectors"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModesSelectors</span></code></a> in order to get detailed info regarding the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ModesSelectors</span></code> in order to get detailed info regarding the
 behavior of each argument.</p>
 <p>Example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pydmd.dmd_modes_tuner</span> <span class="kn">import</span> <span class="n">ModesTuner</span>
@@ -513,13 +598,13 @@ DMD instances held by the caller <cite>ModesTuner</cite>.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pydmd.dmd_modes_tuner.select_modes">
-<code class="sig-name descname">select_modes</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">criteria</em>, <em class="sig-param">in_place=True</em>, <em class="sig-param">return_indexes=False</em>, <em class="sig-param">nullify_amplitudes=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#select_modes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.dmd_modes_tuner.select_modes" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">select_modes</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">criteria</em>, <em class="sig-param">in_place=True</em>, <em class="sig-param">return_indexes=False</em>, <em class="sig-param">nullify_amplitudes=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#select_modes"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Select the DMD modes by using the given <cite>criteria</cite>.
 <cite>criteria</cite> is a function which takes as input the DMD
 object itself and return a numpy.ndarray of boolean where <cite>False</cite>
 indicates that the corresponding mode will be discarded.
-The class <a class="reference internal" href="#pydmd.dmd_modes_tuner.ModesSelectors" title="pydmd.dmd_modes_tuner.ModesSelectors"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModesSelectors</span></code></a> contains some pre-packed selector
+The class <code class="xref py py-class docutils literal notranslate"><span class="pre">ModesSelectors</span></code> contains some pre-packed selector
 functions.</p>
 <p>Example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dmd</span> <span class="o">=</span> <span class="o">...</span>
@@ -568,8 +653,8 @@ whose items are:</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="pydmd.dmd_modes_tuner.stabilize_modes">
-<code class="sig-name descname">stabilize_modes</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">inner_radius</em>, <em class="sig-param">outer_radius=inf</em>, <em class="sig-param">in_place=True</em>, <em class="sig-param">return_indexes=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#stabilize_modes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.dmd_modes_tuner.stabilize_modes" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="sig-name descname">stabilize_modes</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">inner_radius</em>, <em class="sig-param">outer_radius=inf</em>, <em class="sig-param">in_place=True</em>, <em class="sig-param">return_indexes=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#stabilize_modes"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Stabilize modes in a circular sector of radius [<cite>inner_radius</cite>,
 <cite>outer_radius</cite>].</p>
 <p>Stabilizing a mode means that the corresponding eigenvalue is divided
@@ -622,7 +707,7 @@ whose items are:</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="paramdmd.html" class="btn btn-neutral float-left" title="ParametricDMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="subspacedmd.html" class="btn btn-neutral float-left" title="Subspace DMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="contact.html" class="btn btn-neutral float-right" title="Contact" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
@@ -630,7 +715,7 @@ whose items are:</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Nov 01, 2022.
+      <span class="lastupdated">Last updated on Dec 01, 2022.
       </span></p>
   </div>
 

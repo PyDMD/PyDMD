@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forward-backward DMD &mdash; PyDMD 0.4.0.post2212 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Randomized DMD &mdash; PyDMD 0.4.0.post2212 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -17,8 +17,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Compressed DMD" href="cdmd.html" />
-    <link rel="prev" title="Multi-resolution DMD" href="mrdmd.html" /> 
+    <link rel="next" title="Subspace DMD" href="subspacedmd.html" />
+    <link rel="prev" title="Parametric DMD" href="paramdmd.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,7 +44,7 @@
 <li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Forward-backward DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">Forward-backward DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cdmd.html">Compressed DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">Hankel DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="havok.html">Havok</a></li>
@@ -53,7 +53,7 @@
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="spdmd.html">Sparsity-promoting DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="paramdmd.html">Parametric DMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rdmd.html">Randomized DMD</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Randomized DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="subspacedmd.html">Subspace DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
@@ -78,9 +78,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home"></a></li>
           <li class="breadcrumb-item"><a href="code.html">Code Documentation</a></li>
-      <li class="breadcrumb-item active">Forward-backward DMD</li>
+      <li class="breadcrumb-item active">Randomized DMD</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="_sources/fbdmd.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/rdmd.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -88,40 +88,39 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="module-pydmd.fbdmd">
-<span id="forward-backward-dmd"></span><h1>Forward-backward DMD<a class="headerlink" href="#module-pydmd.fbdmd" title="Permalink to this headline">¶</a></h1>
-<p>Derived module from dmdbase.py for forward/backward dmd.</p>
+  <div class="section" id="module-pydmd.rdmd">
+<span id="randomized-dmd"></span><h1>Randomized DMD<a class="headerlink" href="#module-pydmd.rdmd" title="Permalink to this headline">¶</a></h1>
+<p>Derived module from cdmd.py for Randomized DMD</p>
+<p>Reference:
+N. Benjamin Erichson, Lionel Mathelin, J. Nathan Kutz, Steven L. Brunton.
+Randomized dynamic mode decomposition. SIAM Journal on Applied Dynamical
+Systems, 18, 2019.</p>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-name descname">FbDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=False</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">sorted_eigs=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/fbdmd.html#FbDMD"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmd.DMD</span></code></p>
-<p>Forward/backward DMD class.</p>
+<em class="property">class </em><code class="sig-name descname">RDMD</code><span class="sig-paren">(</span><em class="sig-param">oversampling=10</em>, <em class="sig-param">power_iters=2</em>, <em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">sorted_eigs=False</em>, <em class="sig-param">tikhonov_regularization=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/rdmd.html#RDMD"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.cdmd.CDMD</span></code></p>
+<p>Randomized Dynamic Mode Decomposition</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If 0, the method computes the
-optimal rank and uses it for truncation; if positive interger, the
-method uses the argument for the truncation; if float between 0 and 1,
-the rank is the number of the biggest singular values that are needed
-to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1, the method does
-not compute truncation.</p></li>
-<li><p><strong>tlsq_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation computing Total Least Square. Default
-is 0, that means no truncation.</p></li>
-<li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute either exact DMD or projected DMD.
-Default is False.</p></li>
-<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes.
-See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
-<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
-10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
-eigendecomposition. None means no rescaling, ‘auto’ means automatic
-rescaling using singular values, otherwise the scaling factors.</p></li>
-<li><p><strong>sorted_eigs</strong> (<em>{'real'</em><em>, </em><em>'abs'}</em><em> or </em><em>False</em>) – Sort eigenvalues (and modes/dynamics accordingly) by
-magnitude if <cite>sorted_eigs=’abs’</cite>, by real part (and then by imaginary
-part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p></li>
+<li><p><strong>oversampling</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of additional samples to use when
+computing the random test matrix.
+Note that oversampling = {5,10} is often sufficient.</p></li>
+<li><p><strong>power_iters</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of power iterations to perform.
+Note that power_iters = {1,2} leads to considerable improvements.</p></li>
 </ul>
 </dd>
 </dl>
-<p>Reference: Dawson et al. <a class="reference external" href="https://arxiv.org/abs/1507.02264">https://arxiv.org/abs/1507.02264</a></p>
+<dl class="method">
+<dt>
+<code class="sig-name descname">_compress_snapshots</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/rdmd.html#RDMD._compress_snapshots"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Private method that compresses the snapshot matrix X by projecting X
+onto a near-optimal orthonormal basis for the range of X computed via
+the Randomized QB Decomposition.
+:return: the compressed snapshots
+:rtype: numpy.ndarray</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -130,8 +129,8 @@ part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p><
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="mrdmd.html" class="btn btn-neutral float-left" title="Multi-resolution DMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="cdmd.html" class="btn btn-neutral float-right" title="Compressed DMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="paramdmd.html" class="btn btn-neutral float-left" title="Parametric DMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="subspacedmd.html" class="btn btn-neutral float-right" title="Subspace DMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

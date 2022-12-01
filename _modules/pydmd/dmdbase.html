@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.dmdbase &mdash; PyDMD 0.4.0.post2211 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.dmdbase &mdash; PyDMD 0.4.0.post2212 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2211
+                0.4.0.post2212
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -57,9 +57,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>pydmd.dmdbase</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pydmd.dmdbase</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -186,7 +186,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_amplitudes</span>
 
 
-<div class="viewcode-block" id="DMDBase"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase">[docs]</a><span class="k">class</span> <span class="nc">DMDBase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="DMDBase"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase">[docs]</a><span class="k">class</span> <span class="nc">DMDBase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dynamic Mode Decomposition base class.</span>
 
@@ -331,7 +331,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">],</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="DMDBase.allocate_proxy"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.allocate_proxy">[docs]</a>    <span class="k">def</span> <span class="nf">allocate_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DMDBase.allocate_proxy"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase.allocate_proxy">[docs]</a>    <span class="k">def</span> <span class="nf">allocate_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># if this is not true, this call is probably a sub-call of some</span>
         <span class="c1"># get-access to self.modes (most likely in compute_amplitudes())</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_b&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -393,7 +393,7 @@
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">eigenvalues</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span><span class="o">.</span><span class="n">eigs</span>
 
-<div class="viewcode-block" id="DMDBase._translate_eigs_exponent"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase._translate_eigs_exponent">[docs]</a>    <span class="k">def</span> <span class="nf">_translate_eigs_exponent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tpow</span><span class="p">):</span>
+<div class="viewcode-block" id="DMDBase._translate_eigs_exponent"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._translate_eigs_exponent">[docs]</a>    <span class="k">def</span> <span class="nf">_translate_eigs_exponent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tpow</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Transforms the exponent of the eigenvalues in the dynamics formula</span>
 <span class="sd">        according to the selected value of `self.opt` (check the documentation</span>
@@ -684,7 +684,7 @@
     <span class="k">def</span> <span class="nf">dmd_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_time</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DMDBase._set_initial_time_dictionary"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase._set_initial_time_dictionary">[docs]</a>    <span class="k">def</span> <span class="nf">_set_initial_time_dictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_dict</span><span class="p">):</span>
+<div class="viewcode-block" id="DMDBase._set_initial_time_dictionary"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._set_initial_time_dictionary">[docs]</a>    <span class="k">def</span> <span class="nf">_set_initial_time_dictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_dict</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the initial values for the class fields `time_dict` and</span>
 <span class="sd">        `original_time`. This is usually called in `fit()` and never again.</span>
@@ -706,7 +706,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_original_time</span> <span class="o">=</span> <span class="n">DMDTimeDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">time_dict</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_time</span> <span class="o">=</span> <span class="n">DMDTimeDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">time_dict</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="DMDBase.fit"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<div class="viewcode-block" id="DMDBase.fit"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Abstract method to fit the snapshots matrices.</span>
 
@@ -718,7 +718,7 @@
             <span class="p">)</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="DMDBase.save"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+<div class="viewcode-block" id="DMDBase.save"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save the object to `fname` using the pickle module.</span>
 
@@ -735,7 +735,7 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output</span><span class="p">:</span>
             <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">HIGHEST_PROTOCOL</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DMDBase.load"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.load">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DMDBase.load"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase.load">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load the object from `fname` using the pickle module.</span>
@@ -753,7 +753,7 @@
 
         <span class="k">return</span> <span class="n">dmd</span></div>
 
-<div class="viewcode-block" id="DMDBase._col_major_2darray"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase._col_major_2darray">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DMDBase._col_major_2darray"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._col_major_2darray">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Private method that takes as input the snapshots and stores them into a</span>
@@ -793,7 +793,7 @@
 
         <span class="k">return</span> <span class="n">snapshots</span><span class="p">,</span> <span class="n">snapshots_shape</span></div>
 
-<div class="viewcode-block" id="DMDBase._optimal_dmd_matrices"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase._optimal_dmd_matrices">[docs]</a>    <span class="k">def</span> <span class="nf">_optimal_dmd_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DMDBase._optimal_dmd_matrices"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._optimal_dmd_matrices">[docs]</a>    <span class="k">def</span> <span class="nf">_optimal_dmd_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># compute the vandermonde matrix</span>
         <span class="n">vander</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vander</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_timesteps</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
 
@@ -818,7 +818,7 @@
 
         <span class="k">return</span> <span class="n">P</span><span class="p">,</span> <span class="n">q</span></div>
 
-<div class="viewcode-block" id="DMDBase._compute_amplitudes"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase._compute_amplitudes">[docs]</a>    <span class="k">def</span> <span class="nf">_compute_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DMDBase._compute_amplitudes"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._compute_amplitudes">[docs]</a>    <span class="k">def</span> <span class="nf">_compute_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the amplitude coefficients. If `self.opt` is False the</span>
 <span class="sd">        amplitudes are computed by minimizing the error between the modes and</span>
@@ -853,7 +853,7 @@
 
         <span class="k">return</span> <span class="n">a</span></div>
 
-<div class="viewcode-block" id="DMDBase._enforce_ratio"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase._enforce_ratio">[docs]</a>    <span class="k">def</span> <span class="nf">_enforce_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">goal_ratio</span><span class="p">,</span> <span class="n">supx</span><span class="p">,</span> <span class="n">infx</span><span class="p">,</span> <span class="n">supy</span><span class="p">,</span> <span class="n">infy</span><span class="p">):</span>
+<div class="viewcode-block" id="DMDBase._enforce_ratio"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._enforce_ratio">[docs]</a>    <span class="k">def</span> <span class="nf">_enforce_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">goal_ratio</span><span class="p">,</span> <span class="n">supx</span><span class="p">,</span> <span class="n">infx</span><span class="p">,</span> <span class="n">supy</span><span class="p">,</span> <span class="n">infy</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes the right value of `supx,infx,supy,infy` to obtain the desired</span>
 <span class="sd">        ratio in :func:`plot_eigs`. Ratio is defined as</span>
@@ -893,7 +893,7 @@
 
         <span class="k">return</span> <span class="p">(</span><span class="n">supx</span><span class="p">,</span> <span class="n">infx</span><span class="p">,</span> <span class="n">supy</span><span class="p">,</span> <span class="n">infy</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DMDBase._plot_limits"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase._plot_limits">[docs]</a>    <span class="k">def</span> <span class="nf">_plot_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">narrow_view</span><span class="p">):</span>
+<div class="viewcode-block" id="DMDBase._plot_limits"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._plot_limits">[docs]</a>    <span class="k">def</span> <span class="nf">_plot_limits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">narrow_view</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">narrow_view</span><span class="p">:</span>
             <span class="n">supx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.05</span>
             <span class="n">infx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.05</span>
@@ -905,7 +905,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">)))</span></div>
 
-<div class="viewcode-block" id="DMDBase.plot_eigs"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.plot_eigs">[docs]</a>    <span class="k">def</span> <span class="nf">plot_eigs</span><span class="p">(</span>
+<div class="viewcode-block" id="DMDBase.plot_eigs"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase.plot_eigs">[docs]</a>    <span class="k">def</span> <span class="nf">plot_eigs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">show_axes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">show_unit_circle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -1035,7 +1035,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="DMDBase.plot_modes_2D"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.plot_modes_2D">[docs]</a>    <span class="k">def</span> <span class="nf">plot_modes_2D</span><span class="p">(</span>
+<div class="viewcode-block" id="DMDBase.plot_modes_2D"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase.plot_modes_2D">[docs]</a>    <span class="k">def</span> <span class="nf">plot_modes_2D</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">index_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1146,7 +1146,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="DMDBase.plot_snapshots_2D"><a class="viewcode-back" href="../../dmdbase.html#pydmd.cdmd.DMDBase.plot_snapshots_2D">[docs]</a>    <span class="k">def</span> <span class="nf">plot_snapshots_2D</span><span class="p">(</span>
+<div class="viewcode-block" id="DMDBase.plot_snapshots_2D"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase.plot_snapshots_2D">[docs]</a>    <span class="k">def</span> <span class="nf">plot_snapshots_2D</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">index_snap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1262,7 +1262,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Nov 01, 2022.
+      <span class="lastupdated">Last updated on Dec 01, 2022.
       </span></p>
   </div>
 

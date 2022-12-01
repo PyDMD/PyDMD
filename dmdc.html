@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DMDc &mdash; PyDMD 0.4.0.post2211 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>DMD with control &mdash; PyDMD 0.4.0.post2212 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,7 +18,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="OptDMD" href="optdmd.html" />
-    <link rel="prev" title="pydmd.hodmd.HODMD.snapshots" href="_summaries/pydmd.hodmd.HODMD.snapshots.html" /> 
+    <link rel="prev" title="Higher-order DMD" href="hodmd.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2211
+                0.4.0.post2212
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -43,15 +43,18 @@
 <li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">MrDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">FbDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="cdmd.html">CDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">HankelDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hodmd.html">HODMD</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">DMDc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">Forward-backward DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">Compressed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">Hankel DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="havok.html">Havok</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hodmd.html">Higher-order DMD</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DMD with control</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spdmd.html">SpDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">ParametricDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spdmd.html">Sparsity-promoting DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">Parametric DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rdmd.html">Randomized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subspacedmd.html">Subspace DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
 </ul>
 </li>
@@ -73,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="code.html">Code Documentation</a> &raquo;</li>
-      <li>DMDc</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="code.html">Code Documentation</a></li>
+      <li class="breadcrumb-item active">DMD with control</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/dmdc.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -86,61 +89,11 @@
            <div itemprop="articleBody">
              
   <div class="section" id="module-pydmd.dmdc">
-<span id="dmdc"></span><h1>DMDc<a class="headerlink" href="#module-pydmd.dmdc" title="Permalink to this headline">¶</a></h1>
+<span id="dmd-with-control"></span><h1>DMD with control<a class="headerlink" href="#module-pydmd.dmdc" title="Permalink to this headline">¶</a></h1>
 <p>Derived module from dmdbase.py for dmd with control.</p>
 <p>Reference:
 - Proctor, J.L., Brunton, S.L. and Kutz, J.N., 2016. Dynamic mode decomposition
 with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.atilde.html#pydmd.dmdc.DMDc.atilde" title="pydmd.dmdc.DMDc.atilde"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.atilde</span></code></a></p></td>
-<td><p>Get the reduced Koopman operator A, called A tilde.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.B.html#pydmd.dmdc.DMDc.B" title="pydmd.dmdc.DMDc.B"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.B</span></code></a></p></td>
-<td><p>Get the operator B.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.basis.html#pydmd.dmdc.DMDc.basis" title="pydmd.dmdc.DMDc.basis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.basis</span></code></a></p></td>
-<td><p>Get the basis used to reduce the linear operator to the low dimensional space.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.dmd_timesteps.html#pydmd.dmdc.DMDc.dmd_timesteps" title="pydmd.dmdc.DMDc.dmd_timesteps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.dmd_timesteps</span></code></a></p></td>
-<td><p>Get the timesteps of the reconstructed states.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.dynamics.html#pydmd.dmdc.DMDc.dynamics" title="pydmd.dmdc.DMDc.dynamics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.dynamics</span></code></a></p></td>
-<td><p>Get the time evolution of each mode.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.eigs.html#pydmd.dmdc.DMDc.eigs" title="pydmd.dmdc.DMDc.eigs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.eigs</span></code></a></p></td>
-<td><p>Get the eigenvalues of A tilde.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.fit.html#pydmd.dmdc.DMDc.fit" title="pydmd.dmdc.DMDc.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.fit</span></code></a>(X, I[, B])</p></td>
-<td><p>Compute the Dynamic Modes Decomposition with control given the original snapshots and the control input data.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.modes.html#pydmd.dmdc.DMDc.modes" title="pydmd.dmdc.DMDc.modes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.modes</span></code></a></p></td>
-<td><p>Get the matrix containing the DMD modes, stored by column.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.original_timesteps.html#pydmd.dmdc.DMDc.original_timesteps" title="pydmd.dmdc.DMDc.original_timesteps"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.original_timesteps</span></code></a></p></td>
-<td><p>Get the timesteps of the original snapshot.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.plot_eigs.html#pydmd.dmdc.DMDc.plot_eigs" title="pydmd.dmdc.DMDc.plot_eigs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.plot_eigs</span></code></a>([show_axes, …])</p></td>
-<td><p>Plot the eigenvalues.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.plot_modes_2D.html#pydmd.dmdc.DMDc.plot_modes_2D" title="pydmd.dmdc.DMDc.plot_modes_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.plot_modes_2D</span></code></a>([index_mode, filename, …])</p></td>
-<td><p>Plot the DMD Modes.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.plot_snapshots_2D.html#pydmd.dmdc.DMDc.plot_snapshots_2D" title="pydmd.dmdc.DMDc.plot_snapshots_2D"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.plot_snapshots_2D</span></code></a>([index_snap, …])</p></td>
-<td><p>Plot the snapshots.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.reconstructed_data.html#pydmd.dmdc.DMDc.reconstructed_data" title="pydmd.dmdc.DMDc.reconstructed_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.reconstructed_data</span></code></a>([control_input])</p></td>
-<td><p>Return the reconstructed data, computed using the <cite>control_input</cite> argument.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="_summaries/pydmd.dmdc.DMDc.snapshots.html#pydmd.dmdc.DMDc.snapshots" title="pydmd.dmdc.DMDc.snapshots"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DMDc.snapshots</span></code></a></p></td>
-<td><p>Get the original input data.</p></td>
-</tr>
-</tbody>
-</table>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="sig-name descname">DMDc</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">svd_rank_omega=-1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdc.html#DMDc"><span class="viewcode-link">[source]</span></a></dt>
@@ -178,7 +131,7 @@ equal than <cite>svd_rank</cite>. For the possible values please refer to the
 <dd class="field-odd"><p>the operator B.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -193,7 +146,7 @@ space.</p>
 <dd class="field-odd"><p>the matrix which columns are the basis vectors.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>numpy.ndarray</p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -208,9 +161,9 @@ the user; otherwise, it is computed by the algorithm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>numpy.ndarray</em><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
-<li><p><strong>I</strong> (<em>numpy.ndarray</em><em> or </em><em>iterable</em>) – the control input.</p></li>
-<li><p><strong>B</strong> (<em>numpy.ndarray</em><em> or </em><em>iterable</em>) – matrix that controls the control input
+<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
+<li><p><strong>I</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the control input.</p></li>
+<li><p><strong>B</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – matrix that controls the control input
 influences the system evolution.</p></li>
 </ul>
 </dd>
@@ -226,13 +179,13 @@ the <cite>fit</cite> method) is used. The input dimension has to be consistent
 with the dynamics.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>control_input</strong> (<em>numpy.ndarray</em>) – the input control matrix.</p>
+<dd class="field-odd"><p><strong>control_input</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)"><em>numpy.ndarray</em></a>) – the input control matrix.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the matrix that contains the reconstructed snapshots.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>numpy.ndarray</p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.23)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -250,7 +203,7 @@ with the dynamics.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="_summaries/pydmd.hodmd.HODMD.snapshots.html" class="btn btn-neutral float-left" title="pydmd.hodmd.HODMD.snapshots" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hodmd.html" class="btn btn-neutral float-left" title="Higher-order DMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="optdmd.html" class="btn btn-neutral float-right" title="OptDMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
@@ -258,7 +211,7 @@ with the dynamics.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Nov 01, 2022.
+      <span class="lastupdated">Last updated on Dec 01, 2022.
       </span></p>
   </div>
 
