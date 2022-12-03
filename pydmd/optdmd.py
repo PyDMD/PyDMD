@@ -108,7 +108,7 @@ class DMDOptOperator(DMDOperator):
     """
 
     def _compute_eigenquantities(self, P, Q):
-        Atilde = self.as_numpy_array
+        Atilde = self.as_array
 
         vals, vecs_left, vecs_right = eig(Atilde, left=True, right=True)
 

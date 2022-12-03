@@ -44,14 +44,14 @@ def test_noncompute_error():
         operator.eigenvectors
 
     with raises(ValueError):
-        operator.as_numpy_array
+        operator.as_array
 
 def test_compute_operator():
     operator = DMDOperator(svd_rank=0, exact=True, forward_backward=False,
         rescale_mode='auto', sorted_eigs=False, tikhonov_regularization=None)
     operator.compute_operator(np.ones((3, 3)), np.ones((3, 3)))
 
-    assert operator.as_numpy_array is not None
+    assert operator.as_array is not None
     assert operator.eigenvalues is not None
     assert operator.eigenvectors is not None
     assert operator.modes is not None
