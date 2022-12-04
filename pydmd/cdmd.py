@@ -12,6 +12,7 @@ from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 
 from .utils import compute_tlsq, compute_svd
+from .linalg import build_linalg_module
 
 
 class CDMDOperator(DMDOperator):
@@ -191,8 +192,11 @@ class CDMD(DMDBase):
             C[np.arange(self._snapshots.shape[1]),
               np.random.choice(*self._snapshots.shape, replace=False)] = 1.
 
+        linalg_module = build_linalg_module(self._snapshots)
+        C = linalg_module.to(C, self._snapshots)
+
         # compress the matrix
-        Y = C.dot(self._snapshots)
+        Y = C @ self._snapshots
 
         return Y
 
