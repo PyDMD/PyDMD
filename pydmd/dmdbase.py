@@ -17,6 +17,7 @@ from past.utils import old_div
 
 from .dmdoperator import DMDOperator
 from .utils import compute_svd
+from .linalg import build_linalg_module, same_linalg_type, cast_as_array, is_array
 
 mpl.rcParams["figure.max_open_warning"] = 0
 
@@ -52,14 +53,16 @@ class ActivationBitmaskProxy:
     """
 
     def __init__(self, dmd_operator, amplitudes):
+        linalg_module = build_linalg_module(dmd_operator.modes)
         self._original_modes = dmd_operator.modes
-        self._original_eigs = np.atleast_1d(dmd_operator.eigenvalues)
-        self._original_amplitudes = np.atleast_1d(amplitudes)
+        self._original_eigs = linalg_module.atleast_1d(dmd_operator.eigenvalues)
+        self._original_amplitudes = linalg_module.atleast_1d(amplitudes)
 
         self._operator_id = id(dmd_operator.as_numpy_array)
 
         self.old_bitmask = None
-        self.change_bitmask(np.full(len(dmd_operator.eigenvalues), True))
+
+        self.change_bitmask(linalg_module.full(len(dmd_operator.eigenvalues), True))
 
     def change_bitmask(self, value):
         """
@@ -80,9 +83,10 @@ class ActivationBitmaskProxy:
             self._original_eigs[self.old_bitmask] = self.eigs
             self._original_amplitudes[self.old_bitmask] = self.amplitudes
 
-        self._modes = np.array(self._original_modes)[:, value]
-        self._eigs = np.array(self._original_eigs)[value]
-        self._amplitudes = np.array(self._original_amplitudes)[value]
+        linalg_module = build_linalg_module(self._original_modes)
+        self._modes = self._original_modes[:, value]
+        self._eigs = self._original_eigs[value]
+        self._amplitudes = self._original_amplitudes[value]
 
         self.old_bitmask = value
 
@@ -245,7 +249,8 @@ class DMDBase(object):
         :return: the time intervals of the original snapshots.
         :rtype: numpy.ndarray
         """
-        return np.arange(
+        linalg_module = build_linalg_module(self.eigs)
+        return linalg_module.arange(
             self.dmd_time["t0"],
             self.dmd_time["tend"] + self.dmd_time["dt"],
             self.dmd_time["dt"],
@@ -259,7 +264,8 @@ class DMDBase(object):
         :return: the time intervals of the original snapshots.
         :rtype: numpy.ndarray
         """
-        return np.arange(
+        linalg_module = build_linalg_module(self.eigs)
+        return linalg_module.arange(
             self.original_time["t0"],
             self.original_time["tend"] + self.original_time["dt"],
             self.original_time["dt"],
@@ -306,7 +312,7 @@ class DMDBase(object):
         :return: the reduced Koopman operator A.
         :rtype: numpy.ndarray
         """
-        return self.operator.as_numpy_array
+        return self.operator.as_array
 
     @property
     def operator(self):
@@ -375,7 +381,8 @@ class DMDBase(object):
             row.
         :rtype: numpy.ndarray
         """
-        temp = np.repeat(
+        linalg_module = build_linalg_module(self.eigs)
+        temp = linalg_module.repeat(
             self.eigs[:, None], self.dmd_timesteps.shape[0], axis=1
         )
         tpow = old_div(
@@ -390,7 +397,7 @@ class DMDBase(object):
         # Therefore tpow must be scaled appropriately.
         tpow = self._translate_eigs_exponent(tpow)
 
-        return np.power(temp, tpow) * self.amplitudes[:, None]
+        return linalg_module.pow(temp, tpow) * self.amplitudes[:, None]
 
     @property
     def reconstructed_data(self):
@@ -400,7 +407,7 @@ class DMDBase(object):
         :return: the matrix that contains the reconstructed snapshots.
         :rtype: numpy.ndarray
         """
-        return self.modes.dot(self.dynamics)
+        return self.modes @ self.dynamics
 
     @property
     def snapshots(self):
@@ -420,7 +427,9 @@ class DMDBase(object):
         :return: the array that contains the frequencies of the eigenvalues.
         :rtype: numpy.ndarray
         """
-        return np.log(self.eigs).imag / (2 * np.pi * self.original_time["dt"])
+        linalg_module = self.eigs
+        div = 2 * np.pi * self.original_time["dt"]
+        return linalg_module.log(self.eigs).imag / div
 
     @property
     def growth_rate(self):  # To check
@@ -498,7 +507,7 @@ class DMDBase(object):
 
         bitmask = self._modes_activation_bitmask_proxy.old_bitmask
         # make sure that the array is immutable
-        bitmask.flags.writeable = False
+        build_linalg_module(bitmask).make_not_writeable(bitmask)
         return bitmask
 
     @modes_activation_bitmask.setter
@@ -507,7 +516,6 @@ class DMDBase(object):
         if not self.fitted:
             raise RuntimeError("This DMD instance has not been fitted yet.")
 
-        value = np.array(value)
         if value.dtype != bool:
             raise RuntimeError(
                 "Unxpected dtype, expected bool, got {}.".format(value.dtype)
@@ -707,25 +715,23 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
 
         :param X: the input snapshots.
         :type X: int or numpy.ndarray
-        :return: the 2D matrix that contains the flatten snapshots, the shape
-            of original snapshots.
+        :return: the 2D matrix that contains the flatten snapshots
         :rtype: numpy.ndarray, tuple
         """
-        # If the data is already 2D ndarray
-        if isinstance(X, np.ndarray) and X.ndim == 2:
-            snapshots = X
-            snapshots_shape = None
-        else:
-            input_shapes = [np.asarray(x).shape for x in X]
+        snapshots = cast_as_array(X)
 
-            if len(set(input_shapes)) != 1:
-                raise ValueError("Snapshots have not the same dimension.")
+        linalg_module = build_linalg_module(snapshots)
+        snapshots = linalg_module.atleast_2d(snapshots)
+        n_snapshots, *snapshots_shape = snapshots.shape
 
-            snapshots_shape = input_shapes[0]
-            snapshots = np.transpose([np.asarray(x).flatten() for x in X])
+        snapshots_2d = snapshots.reshape((n_snapshots, -1))
+        # when snapshots are wrapped in a list each member of the list is
+        # a snapshot
+        if not is_array(X):
+            snapshots_2d = snapshots_2d.T
 
         # check condition number of the data passed in
-        cond_number = np.linalg.cond(snapshots)
+        cond_number = linalg_module.cond(snapshots_2d)
         if cond_number > 10e4:
             warnings.warn(
                 "Input data matrix X has condition number {}. "
@@ -735,30 +741,40 @@ matrix, or regularization methods.""".format(
                 )
             )
 
-        return snapshots, snapshots_shape
+        return snapshots_2d, snapshots_shape
 
     def _optimal_dmd_matrices(self):
         # compute the vandermonde matrix
-        vander = np.vander(self.eigs, len(self.dmd_timesteps), True)
+        linalg_module = build_linalg_module(self.eigs)
+        vander = linalg_module.vander(self.eigs, len(self.dmd_timesteps), True)
 
-        P = np.multiply(
-            np.dot(self.modes.conj().T, self.modes),
-            np.conj(np.dot(vander, vander.conj().T)),
-        )
+        a = self.modes.conj().T @ self.modes
+        b = (vander @ vander.conj().T).conj()
+        P = a @ b
 
         if self.exact:
-            q = np.conj(np.diag(np.linalg.multi_dot([vander,
-                                                     self._snapshots.conj().T,
-                                                     self.modes])))
+            q = (
+                linalg_module.diag(
+                    linalg_module.multi_dot(
+                        (vander, self._snapshots.conj().T, self.modes)
+                    )
+                )
+            ).conj()
         else:
-            U, s, V = compute_svd(self._snapshots[:, :-1],
-                                  self.svd_rank)
+            U, s, V = compute_svd(self._snapshots[:, :-1], self.svd_rank)
 
-            q = np.conj(np.diag(
-                np.linalg.multi_dot([vander[:, :-1],
-                                     V,
-                                     np.diag(s).conj(),
-                                     self.operator.eigenvectors])))
+            q = (
+                linalg_module.diag(
+                    linalg_module.linalg.multi_dot(
+                        [
+                            vander[:, :-1],
+                            V,
+                            linalg_module.diag(s).conj(),
+                            self.operator.eigenvectors,
+                        ]
+                    )
+                )
+            ).conj()
 
         return P, q
 
@@ -782,14 +798,24 @@ matrix, or regularization methods.""".format(
         """
         if isinstance(self.opt, bool) and self.opt:
             # b optimal
-            a = np.linalg.solve(*self._optimal_dmd_matrices())
+            A, b = self._optimal_dmd_matrices()
+            if not same_linalg_type(A, b):
+                raise ValueError(
+                    "A and b should belong to the same module. A: {}, b: {}".format(
+                        type(A), type(b)
+                    )
+                )
+
+            linalg_module = build_linalg_module(A)
+            a = linalg_module.solve(A, b)
         else:
             if isinstance(self.opt, bool):
                 amplitudes_snapshot_index = 0
             else:
                 amplitudes_snapshot_index = self.opt
 
-            a = np.linalg.lstsq(
+            linalg_module = build_linalg_module(self.modes)
+            a = linalg_module.lstsq(
                 self.modes,
                 self._snapshots.T[amplitudes_snapshot_index],
                 rcond=None,
@@ -847,7 +873,8 @@ matrix, or regularization methods.""".format(
 
             return self._enforce_ratio(8, supx, infx, supy, infy)
         else:
-            return np.max(np.ceil(np.absolute(self.eigs)))
+            linalg_module = build_linalg_module(self.eigs)
+            return linalg_module.ceil(linalg_module.abs(self.eigs)).max()
 
     def plot_eigs(
         self,
@@ -903,19 +930,19 @@ matrix, or regularization methods.""".format(
 
             # x and y axes
             if show_axes:
-                endx = np.min([supx, 1.0])
+                endx = min(supx, 1.0)
                 ax.annotate(
                     "",
                     xy=(endx, 0.0),
-                    xytext=(np.max([infx, -1.0]), 0.0),
+                    xytext=(max(infx, -1.0), 0.0),
                     arrowprops=dict(arrowstyle=("->" if endx == 1.0 else "-")),
                 )
 
-                endy = np.min([supy, 1.0])
+                endy = min(supy, 1.0)
                 ax.annotate(
                     "",
                     xy=(0.0, endy),
-                    xytext=(0.0, np.max([infy, -1.0])),
+                    xytext=(0.0, max(infy, -1.0)),
                     arrowprops=dict(arrowstyle=("->" if endy == 1.0 else "-")),
                 )
         else:
@@ -929,14 +956,14 @@ matrix, or regularization methods.""".format(
             if show_axes:
                 ax.annotate(
                     "",
-                    xy=(np.max([limit * 0.8, 1.0]), 0.0),
-                    xytext=(np.min([-limit * 0.8, -1.0]), 0.0),
+                    xy=(max(limit * 0.8, 1.0), 0.0),
+                    xytext=(min(-limit * 0.8, -1.0), 0.0),
                     arrowprops=dict(arrowstyle="->"),
                 )
                 ax.annotate(
                     "",
-                    xy=(0.0, np.max([limit * 0.8, 1.0])),
-                    xytext=(0.0, np.min([-limit * 0.8, -1.0])),
+                    xy=(0.0, max(limit * 0.8, 1.0)),
+                    xytext=(0.0, min(-limit * 0.8, -1.0)),
                     arrowprops=dict(arrowstyle="->"),
                 )
 
@@ -997,19 +1024,6 @@ matrix, or regularization methods.""".format(
         :param str filename: if specified, the plot is saved at `filename`.
         :param numpy.ndarray x: domain abscissa.
         :param numpy.ndarray y: domain ordinate
-        :param order: read the elements of snapshots using this index order,
-            and place the elements into the reshaped array using this index
-            order.  It has to be the same used to store the snapshot. 'C' means
-            to read/ write the elements using C-like index order, with the last
-            axis index changing fastest, back to the first axis index changing
-            slowest.  'F' means to read / write the elements using Fortran-like
-            index order, with the first index changing fastest, and the last
-            index changing slowest.  Note that the 'C' and 'F' options take no
-            account of the memory layout of the underlying array, and only
-            refer to the order of indexing.  'A' means to read / write the
-            elements in Fortran-like index order if a is Fortran contiguous in
-            memory, C-like order otherwise.
-        :type order: {'C', 'F', 'A'}, default 'C'.
         :param tuple(int,int) figsize: tuple in inches defining the figure
             size. Default is (8, 8).
         """
@@ -1053,7 +1067,7 @@ matrix, or regularization methods.""".format(
             real_ax = fig.add_subplot(1, 2, 1)
             imag_ax = fig.add_subplot(1, 2, 2)
 
-            mode = self.modes.T[idx].reshape(xgrid.shape, order=order)
+            mode = self.modes.T[idx].reshape(xgrid.shape)
 
             real = real_ax.pcolor(
                 xgrid,
@@ -1108,19 +1122,6 @@ matrix, or regularization methods.""".format(
         :param str filename: if specified, the plot is saved at `filename`.
         :param numpy.ndarray x: domain abscissa.
         :param numpy.ndarray y: domain ordinate
-        :param order: read the elements of snapshots using this index order,
-            and place the elements into the reshaped array using this index
-            order.  It has to be the same used to store the snapshot. 'C' means
-            to read/ write the elements using C-like index order, with the last
-            axis index changing fastest, back to the first axis index changing
-            slowest.  'F' means to read / write the elements using Fortran-like
-            index order, with the first index changing fastest, and the last
-            index changing slowest.  Note that the 'C' and 'F' options take no
-            account of the memory layout of the underlying array, and only
-            refer to the order of indexing.  'A' means to read / write the
-            elements in Fortran-like index order if a is Fortran contiguous in
-            memory, C-like order otherwise.
-        :type order: {'C', 'F', 'A'}, default 'C'.
         :param tuple(int,int) figsize: tuple in inches defining the figure
             size. Default is (8, 8).
         """
@@ -1158,9 +1159,7 @@ matrix, or regularization methods.""".format(
             fig = plt.figure(figsize=figsize)
             fig.suptitle("Snapshot {}".format(idx))
 
-            snapshot = self._snapshots.T[idx].real.reshape(
-                xgrid.shape, order=order
-            )
+            snapshot = self._snapshots.T[idx].real.reshape(xgrid.shape)
 
             contour = plt.pcolor(
                 xgrid,

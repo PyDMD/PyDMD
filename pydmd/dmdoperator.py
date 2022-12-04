@@ -1,11 +1,11 @@
 import numpy as np
-from scipy.linalg import sqrtm
 import matplotlib.pyplot as plt
 
 from .utils import compute_svd
+from .linalg import build_linalg_module, is_array, same_linalg_type
 
 
-class DMDOperator():
+class DMDOperator:
     """
     Dynamic Mode Decomposition standard operator class. Non-standard ways of
     computing the low-rank Atilde operator should be coded into subclasses of
@@ -38,8 +38,15 @@ class DMDOperator():
     :type tikhonov_regularization: int or float
     """
 
-    def __init__(self, svd_rank, exact, forward_backward, rescale_mode,
-                 sorted_eigs, tikhonov_regularization):
+    def __init__(
+        self,
+        svd_rank,
+        exact,
+        forward_backward,
+        rescale_mode,
+        sorted_eigs,
+        tikhonov_regularization,
+    ):
         self._exact = exact
         self._rescale_mode = rescale_mode
         self._svd_rank = svd_rank
@@ -64,17 +71,27 @@ class DMDOperator():
 
         U, s, V = compute_svd(X, self._svd_rank)
 
+        if not same_linalg_type(X, Y):
+            raise ValueError(
+                "X and Y should belong to the same module. X: {}, Y: {}".format(
+                    type(X), type(Y)
+                )
+            )
+        linalg_module = build_linalg_module(X)
+
         if self._tikhonov_regularization is not None:
-            self._norm_X = np.linalg.norm(X)
+            self._norm_X = linalg_module.norm(X)
         atilde = self._least_square_operator(U, s, V, Y)
 
         if self._forward_backward:
             # b stands for "backward"
             bU, bs, bV = compute_svd(Y, svd_rank=len(s))
             atilde_back = self._least_square_operator(bU, bs, bV, X)
-            atilde = sqrtm(atilde.dot(np.linalg.inv(atilde_back)))
+            atilde = linalg_module.sqrtm(
+                atilde @ linalg_module.inv(atilde_back)
+            )
 
-        if self._rescale_mode == 'auto':
+        if self._rescale_mode == "auto":
             self._rescale_mode = s
 
         self._Atilde = atilde
@@ -86,7 +103,7 @@ class DMDOperator():
     @property
     def shape(self):
         """Shape of the operator"""
-        return self.as_numpy_array.shape
+        return self.as_array.shape
 
     def __call__(self, snapshot_lowrank_modal_coefficients):
         """
@@ -99,36 +116,36 @@ class DMDOperator():
         :rtype: numpy.ndarray
         """
 
-        return self._Atilde.dot(snapshot_lowrank_modal_coefficients)
+        return self._Atilde @ snapshot_lowrank_modal_coefficients
 
     @property
     def eigenvalues(self):
-        if not hasattr(self, '_eigenvalues'):
-            raise ValueError('You need to call fit before')
+        if not hasattr(self, "_eigenvalues"):
+            raise ValueError("You need to call fit before")
         return self._eigenvalues
 
     @property
     def eigenvectors(self):
-        if not hasattr(self, '_eigenvectors'):
-            raise ValueError('You need to call fit before')
+        if not hasattr(self, "_eigenvectors"):
+            raise ValueError("You need to call fit before")
         return self._eigenvectors
 
     @property
     def modes(self):
-        if not hasattr(self, '_modes'):
-            raise ValueError('You need to call fit before')
+        if not hasattr(self, "_modes"):
+            raise ValueError("You need to call fit before")
         return self._modes
 
     @property
     def Lambda(self):
-        if not hasattr(self, '_Lambda'):
-            raise ValueError('You need to call fit before')
+        if not hasattr(self, "_Lambda"):
+            raise ValueError("You need to call fit before")
         return self._Lambda
 
     @property
-    def as_numpy_array(self):
-        if not hasattr(self, '_Atilde') or self._Atilde is None:
-            raise ValueError('You need to call fit before')
+    def as_array(self):
+        if not hasattr(self, "_Atilde") or self._Atilde is None:
+            raise ValueError("You need to call fit before")
         else:
             return self._Atilde
 
@@ -153,10 +170,30 @@ class DMDOperator():
         :return: the lowrank operator
         :rtype: numpy.ndarray
         """
+        if not same_linalg_type(U, s):
+            raise ValueError(
+                "U and s should belong to the same module. U: {}, s: {}".format(
+                    type(U), type(s)
+                )
+            )
+        if not same_linalg_type(U, V):
+            raise ValueError(
+                "U and V should belong to the same module. U: {}, V: {}".format(
+                    type(U), type(V)
+                )
+            )
+        if not same_linalg_type(U, Y):
+            raise ValueError(
+                "U and Y should belong to the same module. U: {}, Y: {}".format(
+                    type(U), type(Y)
+                )
+            )
+
         if self._tikhonov_regularization is not None:
-            s = (s**2 + self._tikhonov_regularization * self._norm_X) \
-                * np.reciprocal(s)
-        return np.linalg.multi_dot([U.T.conj(), Y, V]) * np.reciprocal(s)
+            s = (s**2 + self._tikhonov_regularization * self._norm_X) / s
+
+        linalg_module = build_linalg_module(U)
+        return linalg_module.multi_dot((U.T.conj(), Y, V)) / s
 
     def _compute_eigenquantities(self):
         """
@@ -167,51 +204,68 @@ class DMDOperator():
         if self._rescale_mode is None:
             # scaling isn't required
             Ahat = self._Atilde
-        elif isinstance(self._rescale_mode, np.ndarray):
-            if len(self._rescale_mode) != self.as_numpy_array.shape[0]:
-                raise ValueError('''Scaling by an invalid number of
-                        coefficients''')
+            linalg_module = build_linalg_module(Ahat)
+        elif is_array(self._rescale_mode):
+            if len(self._rescale_mode) != self.as_array.shape[0]:
+                raise ValueError(
+                    """Scaling by an invalid number of
+                        coefficients"""
+                )
             scaling_factors_array = self._rescale_mode
 
-            factors_inv_sqrt = np.diag(np.power(scaling_factors_array, -0.5))
-            factors_sqrt = np.diag(np.power(scaling_factors_array, 0.5))
+            linalg_module = build_linalg_module(scaling_factors_array)
+            factors_inv_sqrt = linalg_module.diag(
+                1 / linalg_module.sqrtm(scaling_factors_array)
+            )
+            factors_sqrt = linalg_module.diag(
+                linalg_module.sqrtm(scaling_factors_array)
+            )
 
             # if an index is 0, we get inf when taking the reciprocal
-            for idx, item in enumerate(scaling_factors_array):
-                if item == 0:
-                    factors_inv_sqrt[idx] = 0
+            factors_inv_sqrt[scaling_factors_array == 0] = 0
 
-            Ahat = np.linalg.multi_dot([factors_inv_sqrt, self.as_numpy_array,
-                                        factors_sqrt])
+            Ahat = linalg_module.multi_dot(
+                (factors_inv_sqrt, self.as_array, factors_sqrt)
+            )
         else:
-            raise ValueError('Invalid value for rescale_mode: {} of type {}'
-                             .format(self._rescale_mode,
-                                     type(self._rescale_mode)))
+            raise ValueError(
+                "Invalid value for rescale_mode: {} of type {}".format(
+                    self._rescale_mode, type(self._rescale_mode)
+                )
+            )
 
-        self._eigenvalues, self._eigenvectors = np.linalg.eig(Ahat)
+        self._eigenvalues, self._eigenvectors = linalg_module.eig(Ahat)
 
         if self._sorted_eigs is not False and self._sorted_eigs is not None:
-            if self._sorted_eigs == 'abs':
+            if self._sorted_eigs == "abs":
+
                 def k(tp):
                     return abs(tp[0])
-            elif self._sorted_eigs == 'real':
+
+            elif self._sorted_eigs == "real":
+
                 def k(tp):
                     eig = tp[0]
                     if isinstance(eig, complex):
                         return (eig.real, eig.imag)
                     return (eig.real, 0)
+
             else:
-                raise ValueError('Invalid value for sorted_eigs: {}'.format(
-                    self._sorted_eigs))
+                raise ValueError(
+                    "Invalid value for sorted_eigs: {}".format(
+                        self._sorted_eigs
+                    )
+                )
 
             # each column is an eigenvector, therefore we take the
             # transpose to associate each row (former column) to an
             # eigenvalue before sorting
-            a, b = zip(*sorted(zip(self._eigenvalues, self._eigenvectors.T),
-                               key=k))
-            self._eigenvalues = np.array([eig for eig in a])
+            a, b = zip(
+                *sorted(zip(self._eigenvalues, self._eigenvectors.T), key=k)
+            )
+            self._eigenvalues = linalg_module.new_array(a)
             # we restore the original condition (eigenvectors in columns)
-            self._eigenvectors = np.array([vec for vec in b]).T
+            self._eigenvectors = linalg_module.new_array(b).T
 
     def _compute_modes(self, Y, U, Sigma, V):
         """
@@ -224,24 +278,45 @@ class DMDOperator():
         :param numpy.ndarray Sigma: (truncated) singular values of X
         :param numpy.ndarray V: (truncated) right singular vectors of X
         """
+        if not same_linalg_type(U, Y):
+            raise ValueError(
+                "U and Y should belong to the same module. U: {}, Y: {}".format(
+                    type(U), type(Y)
+                )
+            )
+        if not same_linalg_type(U, Sigma):
+            raise ValueError(
+                "U and Sigma should belong to the same module. U: {}, Sigma: {}".format(
+                    type(U), type(Sigma)
+                )
+            )
+        if not same_linalg_type(U, V):
+            raise ValueError(
+                "U and V should belong to the same module. U: {}, V: {}".format(
+                    type(U), type(V)
+                )
+            )
 
         if self._rescale_mode is None:
             W = self.eigenvectors
+            linalg_module = build_linalg_module(W)
         else:
             # compute W as shown in arXiv:1409.5496 (section 2.4)
-            factors_sqrt = np.diag(np.power(self._rescale_mode, 0.5))
-            W = factors_sqrt.dot(self.eigenvectors)
+            linalg_module = build_linalg_module(self._rescale_mode)
+            factors_sqrt = linalg_module.diag(
+                linalg_module.sqrtm(self._rescale_mode)
+            )
+            W = factors_sqrt @ self.eigenvectors
 
         # compute the eigenvectors of the high-dimensional operator
         if self._exact:
             if self._tikhonov_regularization is not None:
-                Sigma = (Sigma**2 + \
-                    self._tikhonov_regularization * self._norm_X) \
-                        * np.reciprocal(Sigma)
-            high_dimensional_eigenvectors = ((Y.dot(V) *
-                                              np.reciprocal(Sigma)).dot(W))
+                Sigma = (
+                    Sigma**2 + self._tikhonov_regularization * self._norm_X
+                ) / Sigma
+            high_dimensional_eigenvectors = ((Y @ V) / Sigma) @ W
         else:
-            high_dimensional_eigenvectors = U.dot(W)
+            high_dimensional_eigenvectors = U @ W
 
         # eigenvalues are the same of lowrank
         high_dimensional_eigenvalues = self.eigenvalues
@@ -254,18 +329,20 @@ class DMDOperator():
         Plot the low-rank Atilde operator
         """
 
-        matrix = self.as_numpy_array
+        matrix = self.as_array
+        linalg_module = build_linalg_module(matrix)
+
         cmatrix = matrix.real
         rmatrix = matrix.imag
 
-        if np.linalg.norm(cmatrix) > 1.e-12:
+        if linalg_module.norm(cmatrix) > 1.0e-12:
             _, axes = plt.subplots(nrows=1, ncols=2)
 
-            axes[0].set_title('Real')
-            axes[0].matshow(rmatrix, cmap='jet')
-            axes[1].set_title('Complex')
-            axes[1].matshow(cmatrix, cmap='jet')
+            axes[0].set_title("Real")
+            axes[0].matshow(rmatrix, cmap="jet")
+            axes[1].set_title("Complex")
+            axes[1].matshow(cmatrix, cmap="jet")
         else:
-            plt.title('Real')
+            plt.title("Real")
             plt.matshow(rmatrix)
         plt.show()
