@@ -159,27 +159,28 @@ class LinalgPyTorch(LinalgBase):
             )
         elif module == "torch":
             return X.to(target_device, dtype=other_torch_array.dtype)
-        elif module == "scipy.sparse._coo":
-            i = torch.LongTensor(np.stack((X.row, X.col)))
-            v = torch.FloatTensor(X.data)
-            return torch.sparse_coo_tensor(
-                i,
-                v,
-                dtype=other_torch_array.dtype,
-                size=X.shape,
-                device=target_device,
-            )
-        elif module == "scipy.sparse._csr":
-            return torch.sparse_csr_tensor(
-                X.indptr,
-                X.indices,
-                X.data,
-                dtype=other_torch_array.dtype,
-                size=X.shape,
-                device=target_device,
-            )
-        else:
-            raise ValueError("Unsupported module type: {}".format(module))
+        elif module.startswith("scipy.sparse"):
+            if "coo" in module:
+                i = torch.LongTensor(np.stack((X.row, X.col)))
+                v = torch.FloatTensor(X.data)
+                return torch.sparse_coo_tensor(
+                    i,
+                    v,
+                    dtype=other_torch_array.dtype,
+                    size=X.shape,
+                    device=target_device,
+                )
+            elif "csr" in module:
+                return torch.sparse_csr_tensor(
+                    X.indptr,
+                    X.indices,
+                    X.data,
+                    dtype=other_torch_array.dtype,
+                    size=X.shape,
+                    device=target_device,
+                )
+            raise ValueError("Unsupported sparse matrix type: {}", type(X))
+        raise ValueError("Unsupported module type: {}".format(module))
 
     @classmethod
     def vander(cls, X, N, increasing):

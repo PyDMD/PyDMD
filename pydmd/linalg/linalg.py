@@ -11,6 +11,9 @@ __linalg_module_mapper = {
     "torch": LinalgPyTorch(),
     # TODO
     "scipy.sparse._coo": LinalgBase(),
+    "scipy.sparse._csr": LinalgBase(),
+    "scipy.sparse.coo": LinalgBase(),
+    "scipy.sparse.csr": LinalgBase(),
 }
 
 
