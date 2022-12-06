@@ -68,6 +68,11 @@ class LinalgSciPySparse(LinalgBase):
         raise ValueError("LinalgSciPySparse requires sparse matrices")
 
     @classmethod
+    def dot(cls, X, Y):
+        # TODO
+        raise NotImplementedError
+
+    @classmethod
     def eig(cls, X):
         import scipy.sparse as sp
 

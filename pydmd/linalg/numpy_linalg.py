@@ -35,6 +35,10 @@ class LinalgNumPy(LinalgBase):
         return np.linalg.cond(X)
 
     @classmethod
+    def dot(cls, X, Y):
+        return X.dot(Y)
+
+    @classmethod
     def diag(cls, X):
         return np.diag(X)
 

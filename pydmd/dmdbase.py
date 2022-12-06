@@ -407,7 +407,8 @@ class DMDBase(object):
         :return: the matrix that contains the reconstructed snapshots.
         :rtype: numpy.ndarray
         """
-        return self.modes @ self.dynamics
+        linalg_module = build_linalg_module(self.modes)
+        return linalg_module.dot(self.modes, self.dynamics)
 
     @property
     def snapshots(self):
@@ -748,9 +749,9 @@ matrix, or regularization methods.""".format(
         linalg_module = build_linalg_module(self.eigs)
         vander = linalg_module.vander(self.eigs, len(self.dmd_timesteps), True)
 
-        a = self.modes.conj().T @ self.modes
-        b = (vander @ vander.conj().T).conj()
-        P = a @ b
+        a = linalg_module.dot(self.modes.conj().T, self.modes)
+        b = linalg_module.dot(vander, vander.conj().T).conj()
+        P = linalg_module.dot(a, b)
 
         if self.exact:
             q = (

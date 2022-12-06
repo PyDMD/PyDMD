@@ -31,6 +31,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def dot(cls, X, Y):
+        raise NotImplementedError
+
+    @classmethod
     def eig(cls, X):
         raise NotImplementedError
 

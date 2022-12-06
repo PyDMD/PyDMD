@@ -50,6 +50,12 @@ class LinalgPyTorch(LinalgBase):
         return torch.diag(X)
 
     @classmethod
+    def dot(cls, X, Y):
+        import torch
+
+        return torch.matmul(X, Y)
+
+    @classmethod
     def eig(cls, X):
         import torch
 

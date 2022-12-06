@@ -88,7 +88,7 @@ class DMDOperator:
             bU, bs, bV = compute_svd(Y, svd_rank=len(s))
             atilde_back = self._least_square_operator(bU, bs, bV, X)
             atilde = linalg_module.sqrtm(
-                atilde @ linalg_module.inv(atilde_back)
+                linalg_module.dot(atilde, linalg_module.inv(atilde_back))
             )
 
         if self._rescale_mode == "auto":
@@ -115,8 +115,8 @@ class DMDOperator:
         :return: low-rank representation (in modal coefficients) of x{n+1}.
         :rtype: numpy.ndarray
         """
-
-        return self._Atilde @ snapshot_lowrank_modal_coefficients
+        linalg_module = build_linalg_module(self._Atilde)
+        return linalg_module(self._Atilde, snapshot_lowrank_modal_coefficients)
 
     @property
     def eigenvalues(self):
@@ -306,7 +306,7 @@ class DMDOperator:
             factors_sqrt = linalg_module.diag(
                 linalg_module.sqrtm(self._rescale_mode)
             )
-            W = factors_sqrt @ self.eigenvectors
+            W = linalg_module.dot(factors_sqrt, self.eigenvectors)
 
         # compute the eigenvectors of the high-dimensional operator
         if self._exact:
@@ -314,9 +314,10 @@ class DMDOperator:
                 Sigma = (
                     Sigma**2 + self._tikhonov_regularization * self._norm_X
                 ) / Sigma
-            high_dimensional_eigenvectors = ((Y @ V) / Sigma) @ W
+            YV = linalg_module.dot(Y, V)
+            high_dimensional_eigenvectors = linalg_module.dot((YV / Sigma), W)
         else:
-            high_dimensional_eigenvectors = U @ W
+            high_dimensional_eigenvectors = linalg_module.dot(U, W)
 
         # eigenvalues are the same of lowrank
         high_dimensional_eigenvalues = self.eigenvalues

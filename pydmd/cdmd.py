@@ -196,7 +196,7 @@ class CDMD(DMDBase):
         C = linalg_module.to(C, self._snapshots)
 
         # compress the matrix
-        Y = C @ self._snapshots
+        Y = linalg_module.dot(C, self._snapshots)
 
         return Y
 
