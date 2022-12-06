@@ -19,6 +19,7 @@ class LinalgBase:
     def ceil(cls, X):
         raise NotImplementedError
 
+    @classmethod
     def cond(cls, X):
         raise NotImplementedError
 
@@ -97,3 +98,5 @@ class LinalgBase:
     @classmethod
     def vander(cls, X, N, increasing):
         raise NotImplementedError
+
+
