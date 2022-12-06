@@ -1,11 +1,12 @@
-import functools
 import logging
 
 from .linalg_base import LinalgBase
 
 
-@functools.lru_cache(maxsize=None)
 class LinalgSciPySparse(LinalgBase):
+    def __init__(self):
+        raise RuntimeError("Instances not allowed")
+
     @classmethod
     def abs(cls, X):
         import numpy as np

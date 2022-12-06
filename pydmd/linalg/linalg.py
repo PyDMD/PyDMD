@@ -7,13 +7,13 @@ from .scipysparse_linalg import LinalgSciPySparse
 
 
 __linalg_module_mapper = {
-    "numpy": LinalgNumPy(),
-    "torch": LinalgPyTorch(),
+    "numpy": LinalgNumPy,
+    "torch": LinalgPyTorch,
     # TODO
-    "scipy.sparse._coo": LinalgBase(),
-    "scipy.sparse._csr": LinalgBase(),
-    "scipy.sparse.coo": LinalgBase(),
-    "scipy.sparse.csr": LinalgBase(),
+    "scipy.sparse._coo": LinalgBase,
+    "scipy.sparse._csr": LinalgBase,
+    "scipy.sparse.coo": LinalgBase,
+    "scipy.sparse.csr": LinalgBase,
 }
 
 

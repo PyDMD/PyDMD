@@ -1,4 +1,3 @@
-import functools
 import logging
 
 from .linalg_base import LinalgBase
@@ -7,8 +6,10 @@ from .linalg_base import LinalgBase
 import numpy as np
 
 
-@functools.lru_cache(maxsize=None)
 class LinalgNumPy(LinalgBase):
+    def __init__(self):
+        raise RuntimeError("Instances not allowed")
+
     @classmethod
     def abs(cls, X):
         return np.abs(X)

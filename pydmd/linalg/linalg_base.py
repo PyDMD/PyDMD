@@ -1,4 +1,7 @@
 class LinalgBase:
+    def __init__(self):
+        raise RuntimeError("Instances not allowed")
+
     @classmethod
     def abs(cls, X):
         raise NotImplementedError
