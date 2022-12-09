@@ -85,7 +85,7 @@ def compute_svd(X, svd_rank=0):
             )
             rank = 1
     elif 0 < svd_rank < 1:
-        cumulative_energy = (s**2 / (s**2).sum()).cumsum()
+        cumulative_energy = (s**2 / (s**2).sum()).cumsum(0)
         rank = linalg_module.searchsorted(cumulative_energy, svd_rank) + 1
     elif svd_rank >= 1 and isinstance(svd_rank, int):
         rank = min(svd_rank, U.shape[1])
