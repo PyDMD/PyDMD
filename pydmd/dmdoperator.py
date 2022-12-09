@@ -201,29 +201,26 @@ class DMDOperator:
         low-dimensional operator, scaled according to self._rescale_mode.
         """
 
+        linalg_module = build_linalg_module(self._Atilde)
         if self._rescale_mode is None:
             # scaling isn't required
             Ahat = self._Atilde
-            linalg_module = build_linalg_module(Ahat)
         elif is_array(self._rescale_mode):
             if len(self._rescale_mode) != self.as_array.shape[0]:
                 raise ValueError(
                     """Scaling by an invalid number of
                         coefficients"""
                 )
-            linalg_module = build_linalg_module(self._Atilde)
-            scaling_factors_array = linalg_module.to(self._rescale_mode,
-                    self._Atilde)
-
+            scaling_factors = linalg_module.to(self._rescale_mode, self._Atilde)
             factors_inv_sqrt = linalg_module.diag(
-                1 / linalg_module.sqrtm(scaling_factors_array)
+                1 / linalg_module.sqrtm(scaling_factors)
             )
             factors_sqrt = linalg_module.diag(
-                linalg_module.sqrtm(scaling_factors_array)
+                linalg_module.sqrtm(scaling_factors)
             )
 
             # if an index is 0, we get inf when taking the reciprocal
-            factors_inv_sqrt[scaling_factors_array == 0] = 0
+            factors_inv_sqrt[scaling_factors == 0] = 0
 
             factors_sqrt = linalg_module.to(factors_sqrt, self.as_array)
             factors_inv_sqrt = linalg_module.to(factors_inv_sqrt, self.as_array)
