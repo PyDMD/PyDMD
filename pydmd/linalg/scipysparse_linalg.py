@@ -94,7 +94,9 @@ class LinalgSciPySparse(LinalgBase):
 
     @classmethod
     def log(cls, X):
-        raise ValueError("log() is not recommended when dealing with sparse matrices")
+        raise ValueError(
+            "log() is not recommended when dealing with sparse matrices"
+        )
 
     @classmethod
     def lstsq(cls, X, Y, rcond):
@@ -132,6 +134,11 @@ class LinalgSciPySparse(LinalgBase):
         import numpy as np
 
         return np.linalg.norm(X, *args, **kwargs)
+
+    @classmethod
+    def pinv(cls, X):
+        # TODO
+        raise NotImplementedError
 
     @classmethod
     def pow(cls, X, power):

@@ -75,6 +75,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def pinv(cls, X):
+        raise NotImplementedError
+
+    @classmethod
     def pow(cls, X, power):
         raise NotImplementedError
 

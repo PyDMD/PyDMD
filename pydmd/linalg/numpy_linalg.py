@@ -83,6 +83,12 @@ class LinalgNumPy(LinalgBase):
         return np.linalg.norm(X, *args, **kwargs)
 
     @classmethod
+    def pinv(cls, X):
+        import scipy
+
+        return scipy.linalg.pinv(X)
+
+    @classmethod
     def pow(cls, X, power):
         return np.power(X, power)
 
@@ -100,9 +106,7 @@ class LinalgNumPy(LinalgBase):
 
     @classmethod
     def sqrtm(cls, X):
-        from scipy.linalg import sqrtm
-
-        return sqrtm(X)
+        return np.power(X, 0.5)
 
     @classmethod
     def svd(cls, X, *args, **kwargs):

@@ -110,13 +110,26 @@ class LinalgPyTorch(LinalgBase):
     def new_array(cls, X):
         import torch
 
-        return torch.tensor(X)
+        if torch.is_tensor(X):
+            return X
+        if isinstance(X, (list, tuple)):
+            if not X:
+                return torch.zeros(0)
+            if isinstance(X[0], (list, tuple)) or torch.is_tensor(X[0]):
+                X = tuple(map(np.array, X))
+        return torch.from_numpy(np.array(X))
 
     @classmethod
     def norm(cls, Xs, *args, **kwargs):
         import torch
 
         return torch.linalg.norm(X, *args, **kwargs)
+
+    @classmethod
+    def pinv(cls, X):
+        import torch
+
+        return torch.linalg.pinv(X)
 
     @classmethod
     def pow(cls, X, power):
