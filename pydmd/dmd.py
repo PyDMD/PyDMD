@@ -3,10 +3,10 @@ Derived module from dmdbase.py for classic dmd.
 """
 
 import numpy as np
-from scipy.linalg import pinv
 
 from .dmdbase import DMDBase
 from .utils import compute_tlsq
+from .linalg import build_linalg_module, same_linalg_type
 
 
 class DMD(DMDBase):
@@ -78,6 +78,20 @@ class DMD(DMDBase):
         :return: one time-step ahead predicted output.
         :rtype: numpy.ndarray
         """
-        return np.linalg.multi_dot(
-            [self.modes, np.diag(self.eigs), pinv(self.modes), X]
+        if not same_linalg_type(X, self.modes):
+            raise ValueError(
+                "X and self.modes should belong to the same module. X: {}, self.modes: {}".format(
+                    type(X), type(self.modes)
+                )
+            )
+        if not same_linalg_type(X, self.eigs):
+            raise ValueError(
+                "X and self.eigs should belong to the same module. X: {}, self.eigs: {}".format(
+                    type(X), type(self.eigs)
+                )
+            )
+        linalg_module = build_linalg_module(X)
+        return linalg_module.multi_dot(
+            (self.modes, linalg_module.diag(self.eigs),
+                linalg_module.pinv(self.modes), X)
         )

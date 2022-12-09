@@ -1,5 +1,6 @@
 from pytest import raises
 import pytest
+import os
 
 from pydmd.cdmd import CDMD
 
@@ -165,7 +166,7 @@ def test_plot_modes_2(X):
 @pytest.mark.parametrize("X", data_backends)
 def test_plot_modes_3(X):
     dmd = CDMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
+    snapshots = [snap.reshape(20, 20) for snap in X.T]
     dmd.fit(X=snapshots)
     dmd.plot_modes_2D()
     plt.close()
@@ -174,7 +175,7 @@ def test_plot_modes_3(X):
 @pytest.mark.parametrize("X", data_backends)
 def test_plot_modes_4(X):
     dmd = CDMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
+    snapshots = [snap.reshape(20, 20) for snap in X.T]
     dmd.fit(X=snapshots)
     dmd.plot_modes_2D(index_mode=1)
     plt.close()
@@ -183,12 +184,9 @@ def test_plot_modes_4(X):
 @pytest.mark.parametrize("X", data_backends)
 def test_plot_modes_5(X):
     dmd = CDMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
+    snapshots = [snap.reshape(20, 20) for snap in X.T]
     dmd.fit(X=snapshots)
     dmd.plot_modes_2D(index_mode=1, filename="tmp.png")
-
-    import os
-
     os.remove("tmp.1.png")
 
 
@@ -211,7 +209,7 @@ def test_plot_snapshots_2(X):
 @pytest.mark.parametrize("X", data_backends)
 def test_plot_snapshots_3(X):
     dmd = CDMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
+    snapshots = [snap.reshape(20, 20) for snap in X.T]
     dmd.fit(X=snapshots)
     dmd.plot_snapshots_2D()
     plt.close()
@@ -220,7 +218,7 @@ def test_plot_snapshots_3(X):
 @pytest.mark.parametrize("X", data_backends)
 def test_plot_snapshots_4(X):
     dmd = CDMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
+    snapshots = [snap.reshape(20, 20) for snap in X.T]
     dmd.fit(X=snapshots)
     dmd.plot_snapshots_2D(index_snap=2)
     plt.close()
@@ -229,12 +227,9 @@ def test_plot_snapshots_4(X):
 @pytest.mark.parametrize("X", data_backends)
 def test_plot_snapshots_5(X):
     dmd = CDMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
+    snapshots = [snap.reshape(20, 20) for snap in X.T]
     dmd.fit(X=snapshots)
     dmd.plot_snapshots_2D(index_snap=2, filename="tmp.png")
-
-    import os
-
     os.remove("tmp.2.png")
 
 

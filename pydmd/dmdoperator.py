@@ -211,9 +211,10 @@ class DMDOperator:
                     """Scaling by an invalid number of
                         coefficients"""
                 )
-            scaling_factors_array = self._rescale_mode
+            linalg_module = build_linalg_module(self._Atilde)
+            scaling_factors_array = linalg_module.to(self._rescale_mode,
+                    self._Atilde)
 
-            linalg_module = build_linalg_module(scaling_factors_array)
             factors_inv_sqrt = linalg_module.diag(
                 1 / linalg_module.sqrtm(scaling_factors_array)
             )
@@ -224,6 +225,8 @@ class DMDOperator:
             # if an index is 0, we get inf when taking the reciprocal
             factors_inv_sqrt[scaling_factors_array == 0] = 0
 
+            factors_sqrt = linalg_module.to(factors_sqrt, self.as_array)
+            factors_inv_sqrt = linalg_module.to(factors_inv_sqrt, self.as_array)
             Ahat = linalg_module.multi_dot(
                 (factors_inv_sqrt, self.as_array, factors_sqrt)
             )
@@ -297,15 +300,14 @@ class DMDOperator:
                 )
             )
 
+        linalg_module = build_linalg_module(self.eigenvectors)
         if self._rescale_mode is None:
             W = self.eigenvectors
-            linalg_module = build_linalg_module(W)
         else:
             # compute W as shown in arXiv:1409.5496 (section 2.4)
-            linalg_module = build_linalg_module(self._rescale_mode)
-            factors_sqrt = linalg_module.diag(
-                linalg_module.sqrtm(self._rescale_mode)
-            )
+            factors = linalg_module.to(self._rescale_mode,
+                self.eigenvectors)
+            factors_sqrt = linalg_module.diag(linalg_module.sqrtm(factors))
             W = linalg_module.dot(factors_sqrt, self.eigenvectors)
 
         # compute the eigenvectors of the high-dimensional operator

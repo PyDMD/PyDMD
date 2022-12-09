@@ -428,7 +428,7 @@ class DMDBase(object):
         :return: the array that contains the frequencies of the eigenvalues.
         :rtype: numpy.ndarray
         """
-        linalg_module = self.eigs
+        linalg_module = build_linalg_module(self.eigs)
         div = 2 * np.pi * self.original_time["dt"]
         return linalg_module.log(self.eigs).imag / div
 
@@ -764,13 +764,19 @@ matrix, or regularization methods.""".format(
         else:
             U, s, V = compute_svd(self._snapshots[:, :-1], self.svd_rank)
 
+            # this is needed to support torch multi_dot, which requires all
+            # tensors to have the same dtype
+            target = self.operator.eigenvectors
+            vander = linalg_module.to(vander, target)
+            V = linalg_module.to(V, target)
+            s_conj = linalg_module.to(linalg_module.diag(s).conj(), target)
             q = (
                 linalg_module.diag(
-                    linalg_module.linalg.multi_dot(
+                    linalg_module.multi_dot(
                         [
                             vander[:, :-1],
                             V,
-                            linalg_module.diag(s).conj(),
+                            s_conj,
                             self.operator.eigenvectors,
                         ]
                     )
