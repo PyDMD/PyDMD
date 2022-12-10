@@ -1,5 +1,6 @@
 """Utilities module."""
 
+import warnings
 import numpy as np
 
 
@@ -62,6 +63,13 @@ def compute_svd(X, svd_rank=0):
         beta = np.divide(*sorted(X.shape))
         tau = np.median(s) * omega(beta)
         rank = np.sum(s > tau)
+        if rank == 0:
+            warnings.warn(
+                'SVD optimal rank is 0. The largest singular values are '
+                'indistinguishable from noise. Setting rank truncation to 1.',
+                RuntimeWarning
+            )
+            rank = 1
     elif 0 < svd_rank < 1:
         cumulative_energy = np.cumsum(s**2 / (s**2).sum())
         rank = np.searchsorted(cumulative_energy, svd_rank) + 1
