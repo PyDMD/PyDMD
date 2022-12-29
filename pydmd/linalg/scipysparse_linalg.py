@@ -1,5 +1,7 @@
 import logging
 
+import numpy as np
+
 from .linalg_base import LinalgBase
 
 
@@ -9,8 +11,6 @@ class LinalgSciPySparse(LinalgBase):
 
     @classmethod
     def abs(cls, X):
-        import numpy as np
-
         return np.abs(X)
 
     @classmethod
@@ -31,8 +31,6 @@ class LinalgSciPySparse(LinalgBase):
 
     @classmethod
     def arange(cls, *args, **kwargs):
-        import numpy as np
-
         return np.arange(*args, **kwargs)
 
     @classmethod
@@ -113,26 +111,18 @@ class LinalgSciPySparse(LinalgBase):
 
     @classmethod
     def median(cls, X, *args, **kwargs):
-        import numpy as np
-
         return np.median(X)
 
     @classmethod
     def multi_dot(cls, Xs, *args, **kwargs):
-        import numpy as np
-
         return np.linalg.multi_dot(Xs, *args, **kwargs)
 
     @classmethod
     def new_array(cls, X):
-        import numpy as np
-
         return np.array(X)
 
     @classmethod
-    def norm(cls, Xs, *args, **kwargs):
-        import numpy as np
-
+    def norm(cls, X, *args, **kwargs):
         return np.linalg.norm(X, *args, **kwargs)
 
     @classmethod
@@ -142,26 +132,18 @@ class LinalgSciPySparse(LinalgBase):
 
     @classmethod
     def pow(cls, X, power):
-        import numpy as np
-
         return np.power(X, power)
 
     @classmethod
     def repeat(cls, X, repeats, axis):
-        import numpy as np
-
         return np.repeat(X, repeats, axis=axis)
 
     @classmethod
     def searchsorted(cls, X, val, *args, **kwargs):
-        import numpy as np
-
         return np.searchsorted(X, val)
 
     @classmethod
     def solve(cls, A, b):
-        import numpy as np
-
         return np.linalg.solve(A, b)
 
     @classmethod
@@ -172,8 +154,6 @@ class LinalgSciPySparse(LinalgBase):
 
     @classmethod
     def svd(cls, X, *args, **kwargs):
-        import numpy as np
-
         return np.linalg.svd(X, *args, **kwargs)
 
     @classmethod
@@ -186,6 +166,4 @@ class LinalgSciPySparse(LinalgBase):
 
     @classmethod
     def vander(cls, X, N, increasing):
-        import numpy as np
-
         return np.vander(X, N, increasing)

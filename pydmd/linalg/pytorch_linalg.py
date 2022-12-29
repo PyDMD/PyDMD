@@ -120,7 +120,7 @@ class LinalgPyTorch(LinalgBase):
         return torch.from_numpy(np.array(X))
 
     @classmethod
-    def norm(cls, Xs, *args, **kwargs):
+    def norm(cls, X, *args, **kwargs):
         import torch
 
         return torch.linalg.norm(X, *args, **kwargs)
