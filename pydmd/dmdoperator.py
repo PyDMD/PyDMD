@@ -91,7 +91,7 @@ class DMDOperator:
                 linalg_module.dot(atilde, linalg_module.inv(atilde_back))
             )
 
-        if self._rescale_mode == "auto":
+        if isinstance(self._rescale_mode, str) and self._rescale_mode == "auto":
             self._rescale_mode = s
 
         self._Atilde = atilde
