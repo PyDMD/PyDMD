@@ -99,6 +99,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def split(cls, X, n_arrays, axis):
+        raise NotImplementedError
+
+    @classmethod
     def sqrtm(cls, X):
         raise NotImplementedError
 

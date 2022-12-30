@@ -1,5 +1,8 @@
 import logging
-logging.basicConfig(format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s")
+
+logging.basicConfig(
+    format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 from .linalg_base import LinalgBase
@@ -113,6 +116,14 @@ class LinalgNumPy(LinalgBase):
     @classmethod
     def solve(cls, A, b):
         return np.linalg.solve(A, b)
+
+    @classmethod
+    def split(cls, X, n_arrays, axis):
+        if not isinstance(n_arrays, int):
+            raise ValueError(
+                "The only supported split strategy at the moment is splitting in arrays of same size"
+            )
+        return np.split(X, n_arrays, axis)
 
     @classmethod
     def sqrtm(cls, X):

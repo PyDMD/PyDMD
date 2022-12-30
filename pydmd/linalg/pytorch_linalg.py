@@ -180,6 +180,16 @@ class LinalgPyTorch(LinalgBase):
         return torch.linalg.solve(A, b)
 
     @classmethod
+    def split(cls, X, n_arrays, axis):
+        import torch
+
+        if not isinstance(n_arrays, int):
+            raise ValueError(
+                "The only supported split strategy at the moment is splitting in arrays of same size"
+            )
+        return torch.split(X, n_arrays, axis)
+
+    @classmethod
     def sqrtm(cls, X):
         import torch
 
