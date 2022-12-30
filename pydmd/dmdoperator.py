@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from .utils import compute_svd
-from .linalg import build_linalg_module, is_array, same_linalg_type
+from .linalg import build_linalg_module, is_array
 
 
 class DMDOperator:
@@ -71,12 +71,6 @@ class DMDOperator:
 
         U, s, V = compute_svd(X, self._svd_rank)
 
-        if not same_linalg_type(X, Y):
-            raise ValueError(
-                "X and Y should belong to the same module. X: {}, Y: {}".format(
-                    type(X), type(Y)
-                )
-            )
         linalg_module = build_linalg_module(X)
 
         if self._tikhonov_regularization is not None:
@@ -170,25 +164,6 @@ class DMDOperator:
         :return: the lowrank operator
         :rtype: numpy.ndarray
         """
-        if not same_linalg_type(U, s):
-            raise ValueError(
-                "U and s should belong to the same module. U: {}, s: {}".format(
-                    type(U), type(s)
-                )
-            )
-        if not same_linalg_type(U, V):
-            raise ValueError(
-                "U and V should belong to the same module. U: {}, V: {}".format(
-                    type(U), type(V)
-                )
-            )
-        if not same_linalg_type(U, Y):
-            raise ValueError(
-                "U and Y should belong to the same module. U: {}, Y: {}".format(
-                    type(U), type(Y)
-                )
-            )
-
         if self._tikhonov_regularization is not None:
             s = (s**2 + self._tikhonov_regularization * self._norm_X) / s
 
@@ -278,25 +253,6 @@ class DMDOperator:
         :param numpy.ndarray Sigma: (truncated) singular values of X
         :param numpy.ndarray V: (truncated) right singular vectors of X
         """
-        if not same_linalg_type(U, Y):
-            raise ValueError(
-                "U and Y should belong to the same module. U: {}, Y: {}".format(
-                    type(U), type(Y)
-                )
-            )
-        if not same_linalg_type(U, Sigma):
-            raise ValueError(
-                "U and Sigma should belong to the same module. U: {}, Sigma: {}".format(
-                    type(U), type(Sigma)
-                )
-            )
-        if not same_linalg_type(U, V):
-            raise ValueError(
-                "U and V should belong to the same module. U: {}, V: {}".format(
-                    type(U), type(V)
-                )
-            )
-
         linalg_module = build_linalg_module(self.eigenvectors)
         if self._rescale_mode is None:
             W = self.eigenvectors

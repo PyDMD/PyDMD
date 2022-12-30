@@ -15,7 +15,7 @@ for `build_linalg_module()`, as they clearly do not convey information about use
 
 ### Check aggressively ...
 Always check that the user is providing appropriate array pairs/triplets in PyDMD entrypoints (e.g. `fit()`).
-`linalg.py` provides some utility functions (`is_array(X)`, `same_linalg_type(X,Y)`) to facilitate writing
+`linalg.py` provides some utility functions (`is_array(X)`, `assert_same_linalg_type(X,*args)`) to facilitate writing
 this kind of checks.
 
 ### ... but trust the team

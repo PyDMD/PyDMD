@@ -3,7 +3,7 @@
 import warnings
 import numpy as np
 
-from .linalg import build_linalg_module, same_linalg_type
+from .linalg import build_linalg_module
 
 
 def compute_tlsq(X, Y, tlsq_rank):
@@ -27,19 +27,11 @@ def compute_tlsq(X, Y, tlsq_rank):
     if tlsq_rank == 0:
         return X, Y
 
-    if not same_linalg_type(X, Y):
-        raise ValueError(
-            "X and Y should belong to the same module. X: {}, Y: {}".format(
-                type(X), type(Y)
-            )
-        )
     linalg_module = build_linalg_module(X)
-
     concatenated = linalg_module.append(X, Y, axis=0)
     _, _, V = linalg_module.svd(concatenated, full_matrices=False)
     rank = min(tlsq_rank, V.shape[0])
     VV = linalg_module.dot(V[:rank].conj().T, V[:rank])
-
     return linalg_module.dot(X, VV), linalg_module.dot(Y, VV)
 
 

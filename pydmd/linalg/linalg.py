@@ -29,8 +29,16 @@ def build_linalg_module(obj):
     return __linalg_module_mapper[module]
 
 
-def same_linalg_type(X, Y):
-    return X.__class__.__module__ == Y.__class__.__module__
+def _extract_module_name(X):
+    return X.__class__.__module__
+
+
+def assert_same_linalg_type(X, *args):
+    module_names = map(_extract_module_name, args)
+    unexpected_module_names = set(module_names) - {_extract_module_name(X)}
+    if unexpected_module_names:
+        types = unexpected_module_names + {_extract_module_name(X)}
+        raise ValueError(f"Found types: {types}")
 
 
 def is_array(X):

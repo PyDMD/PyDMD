@@ -17,7 +17,7 @@ from past.utils import old_div
 
 from .dmdoperator import DMDOperator
 from .utils import compute_svd
-from .linalg import build_linalg_module, same_linalg_type, cast_as_array, is_array
+from .linalg import build_linalg_module, cast_as_array, is_array
 
 mpl.rcParams["figure.max_open_warning"] = 0
 
@@ -806,13 +806,6 @@ matrix, or regularization methods.""".format(
         if isinstance(self.opt, bool) and self.opt:
             # b optimal
             A, b = self._optimal_dmd_matrices()
-            if not same_linalg_type(A, b):
-                raise ValueError(
-                    "A and b should belong to the same module. A: {}, b: {}".format(
-                        type(A), type(b)
-                    )
-                )
-
             linalg_module = build_linalg_module(A)
             a = linalg_module.solve(A, b)
         else:

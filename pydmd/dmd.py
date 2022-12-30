@@ -6,7 +6,7 @@ import numpy as np
 
 from .dmdbase import DMDBase
 from .utils import compute_tlsq
-from .linalg import build_linalg_module, same_linalg_type
+from .linalg import build_linalg_module, assert_same_linalg_type
 
 
 class DMD(DMDBase):
@@ -78,18 +78,8 @@ class DMD(DMDBase):
         :return: one time-step ahead predicted output.
         :rtype: numpy.ndarray
         """
-        if not same_linalg_type(X, self.modes):
-            raise ValueError(
-                "X and self.modes should belong to the same module. X: {}, self.modes: {}".format(
-                    type(X), type(self.modes)
-                )
-            )
-        if not same_linalg_type(X, self.eigs):
-            raise ValueError(
-                "X and self.eigs should belong to the same module. X: {}, self.eigs: {}".format(
-                    type(X), type(self.eigs)
-                )
-            )
+        assert_same_linalg_type(X, self.modes)
+        
         linalg_module = build_linalg_module(X)
         return linalg_module.multi_dot(
             (self.modes, linalg_module.diag(self.eigs),
