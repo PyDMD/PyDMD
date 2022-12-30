@@ -68,11 +68,6 @@ class LinalgSciPySparse(LinalgBase):
         raise ValueError("LinalgSciPySparse requires sparse matrices")
 
     @classmethod
-    def dot(cls, X, Y):
-        # TODO
-        raise NotImplementedError
-
-    @classmethod
     def eig(cls, X):
         import scipy.sparse as sp
 
@@ -84,10 +79,6 @@ class LinalgSciPySparse(LinalgBase):
         raise ValueError(
             "full() is not recommended when dealing with sparse matrices"
         )
-
-    @classmethod
-    def hstack(cls, Xs):
-        raise NotImplementedError
 
     @classmethod
     def inv(cls, X):
@@ -120,10 +111,6 @@ class LinalgSciPySparse(LinalgBase):
         return np.median(X)
 
     @classmethod
-    def multiply_elementwise(cls, X, Y):
-        raise NotImplementedError
-
-    @classmethod
     def multi_dot(cls, Xs, *args, **kwargs):
         return np.linalg.multi_dot(Xs, *args, **kwargs)
 
@@ -134,11 +121,6 @@ class LinalgSciPySparse(LinalgBase):
     @classmethod
     def norm(cls, X, *args, **kwargs):
         return np.linalg.norm(X, *args, **kwargs)
-
-    @classmethod
-    def pinv(cls, X):
-        # TODO
-        raise NotImplementedError
 
     @classmethod
     def pow(cls, X, power):
@@ -167,13 +149,5 @@ class LinalgSciPySparse(LinalgBase):
         return np.linalg.svd(X, *args, **kwargs)
 
     @classmethod
-    def to(cls, X, other_numpy_array):
-        return NotImplementedError
-
-    @classmethod
     def vander(cls, X, N, increasing):
         return np.vander(X, N, increasing)
-
-    @classmethod
-    def vstack(cls, Xs):
-        raise NotImplementedError
