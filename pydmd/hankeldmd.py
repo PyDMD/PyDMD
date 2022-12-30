@@ -9,10 +9,10 @@ Applied Dynamical Systems, 2017, 16.4: 2096-2126.
 from copy import copy
 
 import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view as swv
 
 from .dmdbase import DMDBase
 from .dmd import DMD
+from .linalg import build_linalg_module, cast_as_array
 
 
 class HankelDMD(DMDBase):
@@ -165,10 +165,11 @@ class HankelDMD(DMDBase):
         space_dim = rec.shape[0] // self.d
         time_instants = rec.shape[1] + self.d - 1
 
+        linalg_module = build_linalg_module(rec)
         # for each time instance, we collect all its appearences.  each
         # snapshot appears at most d times (for instance, the first appears
         # only once).
-        reconstructed_snapshots = np.full(
+        reconstructed_snapshots = linalg_module.full(
             (time_instants, self.d, space_dim), np.nan, dtype=rec.dtype
         )
 
@@ -179,8 +180,9 @@ class HankelDMD(DMDBase):
         )
         c_idxes[..., 0] += np.arange(rec.shape[1])[:, None]
 
-        reconstructed_snapshots[c_idxes[..., 0], c_idxes[..., 1]] = np.array(
-            np.swapaxes(np.split(rec.T, self.d, axis=1), 0, 1)
+        reconstructed_snapshots[c_idxes[..., 0], c_idxes[..., 1]] = (
+            cast_as_array(linalg_module.split(rec.T, self.d, axis=1))
+            .swapaxes(0, 1)
         )
 
         if timeindex is None:
@@ -200,30 +202,44 @@ class HankelDMD(DMDBase):
             available time instant.
         :rtype: np.ndarray
         """
-        first_nonmasked_idx = np.repeat(
-            np.arange(reconstructions.shape[0])[:, None], 2, axis=1
-        )
-        first_nonmasked_idx[self.d - 1 :, 1] = self.d - 1
+        first_nonmasked_idx_1 = np.arange(reconstructions.shape[0])
+        first_nonmasked_idx_2 = first_nonmasked_idx_1.copy()
+        first_nonmasked_idx_2[self.d - 1 :] = self.d - 1
+        return reconstructions[first_nonmasked_idx_1, first_nonmasked_idx_2].T
 
-        return reconstructions[
-            first_nonmasked_idx[:, 0], first_nonmasked_idx[:, 1]
-        ].T
+    @staticmethod
+    def _masked_weighted_average(arr, weights):
+        if weights.ndim != 1:
+            raise ValueError("Expected 1D weights")
+
+        linalg_module = build_linalg_module(arr)
+
+        arr0, _, arr2 = arr.shape
+        repeated_weights = linalg_module.repeat(weights[None, :, None], arr0, 0)
+        repeated_weights = linalg_module.repeat(repeated_weights, arr2, 2)
+        del weights
+
+        non_normalized_mean = linalg_module.nansum(arr * repeated_weights, axis=1)
+
+        weights_sum = linalg_module.nansum(repeated_weights, axis=1)
+        # avoid divide by zero
+        weights_sum[weights_sum == 0.] = 1
+        return non_normalized_mean / weights_sum
 
     @property
     def reconstructed_data(self):
         self._update_sub_dmd_time()
 
         rec = self.reconstructions_of_timeindex()
-        rec = np.ma.array(rec, mask=np.isnan(rec))
+        linalg_module = build_linalg_module(rec)
 
         if self._reconstruction_method == "first":
             result = self._first_reconstructions(rec)
         elif self._reconstruction_method == "mean":
-            result = np.mean(rec, axis=1).T
+            result = linalg_module.nanmean(rec, axis=1).T
         elif isinstance(self._reconstruction_method, (np.ndarray, list)):
-            result = np.average(
-                rec, axis=1, weights=self._reconstruction_method
-            ).T
+            weights = linalg_module.new_array(self._reconstruction_method)
+            result = HankelDMD._masked_weighted_average(rec, weights).T
         else:
             raise ValueError(
                 "The reconstruction method wasn't recognized: {}".format(
@@ -241,7 +257,8 @@ class HankelDMD(DMDBase):
         )
         result = result[:, time_index : time_index + len(self.dmd_timesteps)]
 
-        return result.filled(fill_value=0)
+        result[linalg_module.isnan(result)] = 0
+        return result
 
     def _pseudo_hankel_matrix(self, X):
         """
@@ -277,11 +294,14 @@ class HankelDMD(DMDBase):
                    [2, 3],
                    [5, 6]])
         """
-        return (
-            swv(X.T, (self.d, X.shape[0]))[:, 0]
-            .reshape(X.shape[1] - self.d + 1, -1)
-            .T
+        linalg_module = build_linalg_module(X)
+
+        n_ho_snapshots = X.shape[1] - self._d + 1
+        idxes = linalg_module.repeat(
+            linalg_module.arange(self._d)[None], repeats=n_ho_snapshots, axis=0
         )
+        idxes += linalg_module.arange(n_ho_snapshots)[:,None]
+        return X.T[idxes].reshape((-1, X.shape[0] * self._d)).T
 
     @property
     def modes(self):
@@ -349,15 +369,13 @@ class HankelDMD(DMDBase):
         :type X: numpy.ndarray or iterable
         """
 
-        if isinstance(X, np.ndarray) and X.ndim == 2:
+        if hasattr(X, "shape") and X.ndim == 2:
             n_samples = X.shape[1]
         else:
             n_samples = len(X)
 
         if n_samples < self._d:
-            msg = """The number of snapshots provided is not enough for d={}.
-Expected at least d."""
-            raise ValueError(msg.format(self._d))
+            raise ValueError(f"The number of snapshots provided is not enough for d={self._d}.")
 
         snp, self._snapshots_shape = self._col_major_2darray(X)
         self._snapshots = self._pseudo_hankel_matrix(snp)
