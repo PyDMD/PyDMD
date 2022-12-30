@@ -178,37 +178,47 @@ class LinalgPyTorch(LinalgBase):
         return torch.linalg.svd(X, *args, **kwargs)
 
     @classmethod
-    def to(cls, X, other_torch_array):
+    def to(cls, reference, *args):
         import torch
 
-        target_device = other_torch_array.device
-        module = X.__class__.__module__
-        if module == "numpy":
-            return torch.from_numpy(X).to(target_device, dtype=other_torch_array.dtype)
-        elif module == "torch":
-            return X.to(target_device, dtype=other_torch_array.dtype)
-        elif module.startswith("scipy.sparse"):
-            if "coo" in module:
-                i = torch.LongTensor(np.stack((X.row, X.col)))
-                v = torch.FloatTensor(X.data)
-                return torch.sparse_coo_tensor(
-                    i,
-                    v,
-                    dtype=other_torch_array.dtype,
-                    size=X.shape,
-                    device=target_device,
-                )
-            elif "csr" in module:
-                return torch.sparse_csr_tensor(
-                    X.indptr,
-                    X.indices,
-                    X.data,
-                    dtype=other_torch_array.dtype,
-                    size=X.shape,
-                    device=target_device,
-                )
-            raise ValueError(f"Unsupported sparse matrix type: {type(X)}")
-        raise ValueError(f"Unsupported module type: {module}")
+        target_device = reference.device
+        transformed = []
+
+        for X in args:
+            module = X.__class__.__module__
+            if module == "numpy":
+                X_transformed = torch.from_numpy(X).to(target_device, dtype=reference.dtype)
+            elif module == "torch":
+                X_transformed = X.to(target_device, dtype=reference.dtype)
+            elif module.startswith("scipy.sparse"):
+                if "coo" in module:
+                    i = torch.LongTensor(np.stack((X.row, X.col)))
+                    v = torch.FloatTensor(X.data)
+                    X_transformed = torch.sparse_coo_tensor(
+                        i,
+                        v,
+                        dtype=reference.dtype,
+                        size=X.shape,
+                        device=target_device,
+                    )
+                elif "csr" in module:
+                    X_transformed = torch.sparse_csr_tensor(
+                        X.indptr,
+                        X.indices,
+                        X.data,
+                        dtype=reference.dtype,
+                        size=X.shape,
+                        device=target_device,
+                    )
+                else:
+                    raise ValueError(f"Unsupported sparse matrix type: {type(X)}")
+            else:
+                raise ValueError(f"Unsupported module type: {module}")
+            transformed.append(X_transformed)
+
+        if len(transformed) == 1:
+            return transformed[0]
+        return transformed
 
     @classmethod
     def vander(cls, X, N, increasing):

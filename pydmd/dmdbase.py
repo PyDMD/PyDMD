@@ -767,9 +767,9 @@ matrix, or regularization methods.""".format(
             # this is needed to support torch multi_dot, which requires all
             # tensors to have the same dtype
             target = self.operator.eigenvectors
-            vander = linalg_module.to(vander, target)
-            V = linalg_module.to(V, target)
-            s_conj = linalg_module.to(linalg_module.diag(s).conj(), target)
+            s_conj = linalg_module.diag(s).conj()
+            
+            s_conj, V, vander = linalg_module.to(target, s_conj, V, vander)
             q = (
                 linalg_module.diag(
                     linalg_module.multi_dot(

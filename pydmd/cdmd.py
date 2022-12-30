@@ -193,7 +193,7 @@ class CDMD(DMDBase):
               np.random.choice(*self._snapshots.shape, replace=False)] = 1.
 
         linalg_module = build_linalg_module(self._snapshots)
-        C = linalg_module.to(C, self._snapshots)
+        C = linalg_module.to(self._snapshots, C)
 
         # compress the matrix
         Y = linalg_module.dot(C, self._snapshots)

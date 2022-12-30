@@ -121,12 +121,15 @@ class LinalgNumPy(LinalgBase):
         return np.linalg.svd(X, *args, **kwargs)
 
     @classmethod
-    def to(cls, X, other_numpy_array):
+    def to(cls, reference, *args):
         # in general it's not critical to convert X to NumPy because the
         # operation is already handled quietly by all the frameworks
         # TODO implement properly if this generates problems
-        logging.info("to(X, other_numpy_array) ignored quietly")
-        return X
+        logging.info("to(reference, *args) ignored quietly")
+
+        if len(args) == 1:
+            return args[0]
+        return args
 
     @classmethod
     def vander(cls, X, N, increasing):

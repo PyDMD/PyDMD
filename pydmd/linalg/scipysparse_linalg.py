@@ -166,11 +166,7 @@ class LinalgSciPySparse(LinalgBase):
 
     @classmethod
     def to(cls, X, other_numpy_array):
-        # in general it's not critical to convert X to NumPy because the
-        # operation is already handled quietly by all the frameworks
-        # TODO implement properly if this generates problems
-        logging.info("to(X, other_numpy_array) ignored quietly")
-        return X
+        return NotImplementedError
 
     @classmethod
     def vander(cls, X, N, increasing):
