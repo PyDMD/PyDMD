@@ -70,6 +70,10 @@ class LinalgPyTorch(LinalgBase):
         return torch.full(size, fill_value)
 
     @classmethod
+    def hstack(cls, Xs):
+        return torch.hstack(Xs)
+
+    @classmethod
     def inv(cls, X):
         import torch
 
@@ -213,3 +217,9 @@ class LinalgPyTorch(LinalgBase):
         import torch
 
         return torch.vander(X, N, increasing)
+
+    @classmethod
+    def vstack(cls, Xs):
+        import torch
+        
+        return torch.vstack(Xs)

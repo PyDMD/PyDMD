@@ -84,6 +84,10 @@ class LinalgSciPySparse(LinalgBase):
         )
 
     @classmethod
+    def hstack(cls, Xs):
+        raise NotImplementedError
+
+    @classmethod
     def inv(cls, X):
         import scipy as sp
 
@@ -171,3 +175,7 @@ class LinalgSciPySparse(LinalgBase):
     @classmethod
     def vander(cls, X, N, increasing):
         return np.vander(X, N, increasing)
+
+    @classmethod
+    def vstack(cls, Xs):
+        raise NotImplementedError

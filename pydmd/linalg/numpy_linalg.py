@@ -51,6 +51,10 @@ class LinalgNumPy(LinalgBase):
         return np.full(size, fill_value)
 
     @classmethod
+    def hstack(cls, Xs):
+        return np.hstack(Xs)
+
+    @classmethod
     def inv(cls, X):
         return np.linalg.inv(X)
 
@@ -127,3 +131,7 @@ class LinalgNumPy(LinalgBase):
     @classmethod
     def vander(cls, X, N, increasing):
         return np.vander(X, N, increasing)
+
+    @classmethod
+    def vstack(cls, Xs):
+        return np.vstack(Xs)

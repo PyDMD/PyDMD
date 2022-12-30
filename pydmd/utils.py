@@ -28,7 +28,7 @@ def compute_tlsq(X, Y, tlsq_rank):
         return X, Y
 
     linalg_module = build_linalg_module(X)
-    concatenated = linalg_module.append(X, Y, axis=0)
+    concatenated = linalg_module.vstack((X, Y))
     _, _, V = linalg_module.svd(concatenated, full_matrices=False)
     rank = min(tlsq_rank, V.shape[0])
     VV = linalg_module.dot(V[:rank].conj().T, V[:rank])

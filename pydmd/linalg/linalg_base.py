@@ -7,10 +7,6 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
-    def append(cls, X, Y, axis):
-        raise NotImplementedError
-
-    @classmethod
     def arange(cls, *args, **kwargs):
         raise NotImplementedError
 
@@ -40,6 +36,10 @@ class LinalgBase:
 
     @classmethod
     def full(cls, size, fill_value):
+        raise NotImplementedError
+
+    @classmethod
+    def hstack(cls, Xs):
         raise NotImplementedError
 
     @classmethod
@@ -112,6 +112,10 @@ class LinalgBase:
 
     @classmethod
     def vander(cls, X, N, increasing):
+        raise NotImplementedError
+
+    @classmethod
+    def vstack(cls, Xs):
         raise NotImplementedError
 
 
