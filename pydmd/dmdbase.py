@@ -803,10 +803,10 @@ matrix, or regularization methods.""".format(
         Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
         https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document
         """
+        linalg_module = build_linalg_module(self.modes)
         if isinstance(self.opt, bool) and self.opt:
             # b optimal
             A, b = self._optimal_dmd_matrices()
-            linalg_module = build_linalg_module(A)
             a = linalg_module.solve(A, b)
         else:
             if isinstance(self.opt, bool):
@@ -814,10 +814,10 @@ matrix, or regularization methods.""".format(
             else:
                 amplitudes_snapshot_index = self.opt
 
-            linalg_module = build_linalg_module(self.modes)
+            selected_snapshots = self._snapshots.T[amplitudes_snapshot_index]
             a = linalg_module.lstsq(
                 self.modes,
-                self._snapshots.T[amplitudes_snapshot_index],
+                linalg_module.to(self.modes, selected_snapshots),
                 rcond=None,
             )[0]
 
