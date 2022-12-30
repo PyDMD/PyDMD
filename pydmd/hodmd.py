@@ -6,10 +6,10 @@ Reference:
 Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.
 """
 import warnings
-import numpy as np
 
 from .hankeldmd import HankelDMD
 from .utils import compute_svd
+from .linalg import build_linalg_module
 
 
 class HODMD(HankelDMD):
@@ -101,12 +101,13 @@ class HODMD(HankelDMD):
             selected, in this case the output becomes a 2D matrix.
         :rtype: numpy.ndarray
         """
+        linalg_module = build_linalg_module(self.U_extra)
         snapshots = super().reconstructions_of_timeindex(timeindex)
         if snapshots.ndim == 2:  # single time instant
-            snapshots = self.U_extra.dot(snapshots.T).T
+            snapshots = linalg_module.dot(self.U_extra, snapshots.T).T
         elif snapshots.ndim == 3:  # all time instants
-            snapshots = np.array(
-                [self.U_extra.dot(snapshot.T).T for snapshot in snapshots]
+            snapshots = linalg_module.new_array(
+                [linalg_module.dot(self.U_extra, snapshot.T).T for snapshot in snapshots]
             )
         else:
             raise RuntimeError
@@ -122,6 +123,7 @@ class HODMD(HankelDMD):
 
         """
         org_snp, snapshots_shape = self._col_major_2darray(X)
+        linalg_module = build_linalg_module(org_snp)
 
         if org_snp.shape[0] == 1:
             self.U_extra, _, _ = compute_svd(org_snp, -1)
@@ -132,7 +134,7 @@ class HODMD(HankelDMD):
         else:
             self.U_extra, _, _ = compute_svd(org_snp, self.svd_rank_extra)
 
-        snp = self.U_extra.T.dot(org_snp)
+        snp = linalg_module.dot(self.U_extra.T, org_snp)
 
         super().fit(snp)
         self._snapshots_shape = snapshots_shape
