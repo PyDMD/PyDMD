@@ -47,6 +47,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def isnan(cls, X):
+        raise NotImplementedError
+
+    @classmethod
     def log(cls, X):
         raise NotImplementedError
 
@@ -68,6 +72,14 @@ class LinalgBase:
 
     @classmethod
     def multi_dot(cls, Xs, *args, **kwargs):
+        raise NotImplementedError
+
+    @classmethod
+    def nanmean(cls, X, axis):
+        raise NotImplementedError
+
+    @classmethod
+    def nansum(cls, X, axis):
         raise NotImplementedError
 
     @classmethod

@@ -64,6 +64,10 @@ class LinalgNumPy(LinalgBase):
         return np.linalg.inv(X)
 
     @classmethod
+    def isnan(cls, X):
+        return np.isnan(X)
+
+    @classmethod
     def log(cls, X):
         return np.log(X)
 
@@ -86,6 +90,14 @@ class LinalgNumPy(LinalgBase):
     @classmethod
     def multi_dot(cls, Xs, *args, **kwargs):
         return np.linalg.multi_dot(Xs, *args, **kwargs)
+
+    @classmethod
+    def nanmean(cls, X, axis):
+        return np.nanmean(X, axis=axis)
+
+    @classmethod
+    def nansum(cls, X, axis):
+        return np.nansum(X, axis=axis)
 
     @classmethod
     def new_array(cls, X):

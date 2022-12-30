@@ -91,6 +91,12 @@ class LinalgPyTorch(LinalgBase):
         return torch.linalg.inv(X)
 
     @classmethod
+    def isnan(cls, X):
+        import torch
+
+        return torch.isnan(X)
+
+    @classmethod
     def log(cls, X):
         import torch
 
@@ -129,6 +135,26 @@ class LinalgPyTorch(LinalgBase):
             logger.info(f"Converting tensors to {complex_dtypes[-1]}")
             Xs = tuple(map(lambda X: X.type(complex_dtypes[-1]), Xs))
         return torch.linalg.multi_dot(Xs, *args, **kwargs)
+
+    @classmethod
+    def nanmean(cls, X, axis):
+        import torch
+        
+        if torch.is_complex(X):
+            real = torch.nanmean(X.real, dim=axis)
+            imag = torch.nanmean(X.imag, dim=axis)
+            return torch.complex(real, imag)
+        return torch.nanmean(X, dim=axis)
+
+    @classmethod
+    def nansum(cls, X, axis):
+        import torch
+        
+        if torch.is_complex(X):
+            real = torch.nansum(X.real, dim=axis)
+            imag = torch.nansum(X.imag, dim=axis)
+            return torch.complex(real, imag)
+        return torch.nansum(X, dim=axis)
 
     @classmethod
     def new_array(cls, X):
@@ -187,7 +213,7 @@ class LinalgPyTorch(LinalgBase):
             raise ValueError(
                 "The only supported split strategy at the moment is splitting in arrays of same size"
             )
-        return torch.split(X, n_arrays, axis)
+        return torch.tensor_split(X, n_arrays, axis)
 
     @classmethod
     def sqrtm(cls, X):
