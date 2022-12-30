@@ -444,7 +444,7 @@ def test_sorted_eigs_abs_right_eigs(X):
     dmd2.fit(X)
 
     assert len(dmd.eigs) == len(dmd2.eigs)
-    assert set(dmd.eigs) == set(dmd2.eigs)
+    assert set(np.array(dmd.eigs)) == set(np.array(dmd2.eigs))
 
     previous = dmd.eigs[0]
     for eig in dmd.eigs[1:]:
@@ -491,7 +491,7 @@ def test_sorted_eigs_real_right_eigs(X):
     dmd2.fit(X)
 
     assert len(dmd.eigs) == len(dmd2.eigs)
-    assert set(dmd.eigs) == set(dmd2.eigs)
+    assert set(np.array(dmd.eigs)) == set(np.array(dmd2.eigs))
 
     previous = complex(dmd.eigs[0])
     for eig in dmd.eigs[1:]:
