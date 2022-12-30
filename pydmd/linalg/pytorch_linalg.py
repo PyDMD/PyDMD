@@ -71,6 +71,8 @@ class LinalgPyTorch(LinalgBase):
 
     @classmethod
     def hstack(cls, Xs):
+        import torch
+
         return torch.hstack(Xs)
 
     @classmethod
@@ -94,9 +96,7 @@ class LinalgPyTorch(LinalgBase):
     @classmethod
     def make_not_writeable(cls, X):
         # not supported
-        logging.info(
-            "PyTorch does not support non-writeable tensors, ignoring ..."
-        )
+        logging.info("PyTorch does not support non-writeable tensors, ignoring ...")
 
     @classmethod
     def median(cls, X, *args, **kwargs):
@@ -184,9 +184,7 @@ class LinalgPyTorch(LinalgBase):
         target_device = other_torch_array.device
         module = X.__class__.__module__
         if module == "numpy":
-            return torch.from_numpy(X).to(
-                target_device, dtype=other_torch_array.dtype
-            )
+            return torch.from_numpy(X).to(target_device, dtype=other_torch_array.dtype)
         elif module == "torch":
             return X.to(target_device, dtype=other_torch_array.dtype)
         elif module.startswith("scipy.sparse"):
@@ -209,8 +207,8 @@ class LinalgPyTorch(LinalgBase):
                     size=X.shape,
                     device=target_device,
                 )
-            raise ValueError("Unsupported sparse matrix type: {}", type(X))
-        raise ValueError("Unsupported module type: {}".format(module))
+            raise ValueError(f"Unsupported sparse matrix type: {type(X)}")
+        raise ValueError(f"Unsupported module type: {module}")
 
     @classmethod
     def vander(cls, X, N, increasing):
@@ -221,5 +219,5 @@ class LinalgPyTorch(LinalgBase):
     @classmethod
     def vstack(cls, Xs):
         import torch
-        
+
         return torch.vstack(Xs)
