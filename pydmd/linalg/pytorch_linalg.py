@@ -1,5 +1,8 @@
 import logging
 
+logging.basicConfig(format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s")
+logger = logging.getLogger(__name__)
+
 from .linalg_base import LinalgBase
 
 import numpy as np
@@ -96,7 +99,7 @@ class LinalgPyTorch(LinalgBase):
     @classmethod
     def make_not_writeable(cls, X):
         # not supported
-        logging.info("PyTorch does not support non-writeable tensors, ignoring ...")
+        logger.info("PyTorch does not support non-writeable tensors, ignoring ...")
 
     @classmethod
     def median(cls, X, *args, **kwargs):
@@ -187,7 +190,9 @@ class LinalgPyTorch(LinalgBase):
         for X in args:
             module = X.__class__.__module__
             if module == "numpy":
-                X_transformed = torch.from_numpy(X).to(target_device, dtype=reference.dtype)
+                X_transformed = torch.from_numpy(X).to(
+                    target_device, dtype=reference.dtype
+                )
             elif module == "torch":
                 X_transformed = X.to(target_device, dtype=reference.dtype)
             elif module.startswith("scipy.sparse"):

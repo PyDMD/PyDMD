@@ -1,4 +1,6 @@
 import logging
+logging.basicConfig(format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s")
+logger = logging.getLogger(__name__)
 
 import numpy as np
 
@@ -109,7 +111,7 @@ class LinalgSciPySparse(LinalgBase):
     @classmethod
     def make_not_writeable(cls, X):
         # not supported
-        logging.info(
+        logger.info(
             "SciPy.sparse does not support non-writeable tensors, ignoring ..."
         )
 
