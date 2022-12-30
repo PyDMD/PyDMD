@@ -1,18 +1,20 @@
-from __future__ import division
-from past.utils import old_div
-from pydmd import DMDc
-import matplotlib.pyplot as plt
-import numpy as np
-import scipy
+import pytest
 from pytest import raises
 
+import scipy
+import numpy as np
+import torch
+
+from pydmd import DMDc
+
+
+np.random.seed(10)
 
 def create_system_with_B():
     snapshots = np.array([[4, 2, 1, .5, .25], [7, .7, .07, .007, .0007]])
     u = np.array([-4, -2, -1, -.5])
     B = np.array([[1, 0]]).T
     return {'snapshots': snapshots, 'u': u, 'B': B}
-
 
 def create_system_without_B():
     n = 5  # dimension snapshots
@@ -27,62 +29,75 @@ def create_system_without_B():
     snapshots = np.array(snapshots).T
     return {'snapshots': snapshots, 'u': u, 'B': B, 'A': A}
 
+data_backends_with_B = (
+    # NumPy
+    create_system_with_B(),
+    # PyTorch
+    {key : torch.from_numpy(value) for key, value in create_system_with_B().items()},
+)
 
-def test_eigs_b_known():
-    system = create_system_with_B()
+data_backends_without_B = (
+    # NumPy
+    create_system_without_B(),
+    # PyTorch
+    {key : torch.from_numpy(value) for key, value in create_system_without_B().items()},
+)
+
+
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_eigs_b_known(system):
     dmdc = DMDc(svd_rank=-1)
     dmdc.fit(system['snapshots'], system['u'], system['B'])
     real_eigs = np.array([0.1, 1.5])
-    np.testing.assert_array_almost_equal(dmdc.eigs, real_eigs)
+    np.testing.assert_array_almost_equal(np.array(dmdc.eigs), real_eigs)
 
-def test_eigs_b_unknown():
-    system = create_system_without_B()
+@pytest.mark.parametrize("system", data_backends_without_B)
+def test_eigs_b_unknown(system):
     dmdc = DMDc(svd_rank=3, opt=False, svd_rank_omega=4)
     dmdc.fit(system['snapshots'], system['u'])
     assert dmdc.eigs.shape[0] == 3
 
-def test_modes_b_unknown():
-    system = create_system_without_B()
+@pytest.mark.parametrize("system", data_backends_without_B)
+def test_modes_b_unknown(system):
     dmdc = DMDc(svd_rank=3, opt=False, svd_rank_omega=4)
     dmdc.fit(system['snapshots'], system['u'])
     assert dmdc.modes.shape[1] == 3
 
-def test_reconstruct_b_known():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_reconstruct_b_known(system):
     dmdc = DMDc(svd_rank=-1)
     dmdc.fit(system['snapshots'], system['u'], system['B'])
-    np.testing.assert_array_almost_equal(dmdc.reconstructed_data(),
-                                            system['snapshots'])
+    np.testing.assert_array_almost_equal(np.array(dmdc.reconstructed_data()),
+                                            np.array(system['snapshots']))
 
-def test_B_b_known():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_B_b_known(system):
     dmdc = DMDc(svd_rank=-1)
     dmdc.fit(system['snapshots'], system['u'], system['B'])
-    np.testing.assert_array_almost_equal(dmdc.B, system['B'])
+    np.testing.assert_array_almost_equal(np.array(dmdc.B), np.array(system['B']))
 
-def test_reconstruct_b_unknown():
-    system = create_system_without_B()
+@pytest.mark.parametrize("system", data_backends_without_B)
+def test_reconstruct_b_unknown(system):
     dmdc = DMDc(svd_rank=-1, opt=True)
     dmdc.fit(system['snapshots'], system['u'])
     np.testing.assert_array_almost_equal(
-        dmdc.reconstructed_data(), system['snapshots'], decimal=6)
+       np.array(dmdc.reconstructed_data()), np.array(system['snapshots']), decimal=6)
 
-def test_atilde_b_unknown():
-    system = create_system_without_B()
+@pytest.mark.parametrize("system", data_backends_without_B)
+def test_atilde_b_unknown(system):
     dmdc = DMDc(svd_rank=-1, opt=True)
     dmdc.fit(system['snapshots'], system['u'])
-    expected_atilde = dmdc.basis.T.conj().dot(system['A']).dot(dmdc.basis)
-    np.testing.assert_array_almost_equal(
-        dmdc.atilde, expected_atilde, decimal=1)
+    expected_atilde = np.array(dmdc.basis.T.conj()).dot(np.array(system['A'])).dot(np.array(dmdc.basis))
+    np.testing.assert_array_almost_equal(np.array(dmdc.atilde), expected_atilde, decimal=1)
 
-def test_get_bitmask_default():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_get_bitmask_default(system):
     dmd = DMDc(svd_rank=-1, opt=True)
     dmd.fit(system['snapshots'], system['u'], system['B'])
-    assert np.all(dmd.modes_activation_bitmask == True)
+    assert dmd.modes_activation_bitmask.all()
 
-def test_set_bitmask():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_set_bitmask(system):
     dmd = DMDc(svd_rank=-1, opt=True)
     dmd.fit(system['snapshots'], system['u'], system['B'])
 
@@ -91,7 +106,7 @@ def test_set_bitmask():
     dmd.modes_activation_bitmask = new_bitmask
 
     assert dmd.modes_activation_bitmask[0] == False
-    assert np.all(dmd.modes_activation_bitmask[1:] == True)
+    assert (dmd.modes_activation_bitmask[1:] == True).all()
 
 def test_not_fitted_get_bitmask_raises():
     dmd = DMDc(svd_rank=-1, opt=True)
@@ -103,67 +118,70 @@ def test_not_fitted_set_bitmask_raises():
     with raises(RuntimeError):
         dmd.modes_activation_bitmask = np.full(3, True, dtype=bool)
 
-def test_raise_wrong_dtype_bitmask():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_raise_wrong_dtype_bitmask(system):
     dmd = DMDc(svd_rank=-1, opt=True)
     dmd.fit(system['snapshots'], system['u'], system['B'])
     with raises(RuntimeError):
         dmd.modes_activation_bitmask = np.full(3, 0.1)
 
-def test_fitted():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_fitted(system):
     dmd = DMDc(svd_rank=-1, opt=True)
     assert not dmd.fitted
     dmd.fit(system['snapshots'], system['u'], system['B'])
     assert dmd.fitted
 
-def test_bitmask_amplitudes():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_bitmask_amplitudes(system):
     dmd = DMDc(svd_rank=-1, opt=True)
     dmd.fit(system['snapshots'], system['u'], system['B'])
 
-    old_n_amplitudes = dmd.amplitudes.shape[0]
-    retained_amplitudes = np.delete(dmd.amplitudes, [0,-1])
+    ampls = np.array(dmd.amplitudes)
+    old_n_amplitudes = ampls.shape[0]
+    retained_amplitudes = np.delete(ampls, [0,-1])
 
-    new_bitmask = np.full(dmd.amplitudes.shape[0], True, dtype=bool)
+    new_bitmask = np.full(ampls.shape[0], True, dtype=bool)
     new_bitmask[[0,-1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
     assert dmd.amplitudes.shape[0] == old_n_amplitudes - 2
-    np.testing.assert_almost_equal(dmd.amplitudes, retained_amplitudes)
+    np.testing.assert_almost_equal(np.array(dmd.amplitudes), retained_amplitudes)
 
-def test_bitmask_eigs():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_bitmask_eigs(system):
     dmd = DMDc(svd_rank=-1, opt=True)
     dmd.fit(system['snapshots'], system['u'], system['B'])
 
-    old_n_eigs = dmd.eigs.shape[0]
-    retained_eigs = np.delete(dmd.eigs, [0,-1])
+    eigs = np.array(dmd.eigs)
+    old_n_eigs = eigs.shape[0]
+    retained_eigs = np.delete(eigs, [0,-1])
 
-    new_bitmask = np.full(dmd.amplitudes.shape[0], True, dtype=bool)
+    new_bitmask = np.full(eigs.shape[0], True, dtype=bool)
     new_bitmask[[0,-1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
     assert dmd.eigs.shape[0] == old_n_eigs - 2
-    np.testing.assert_almost_equal(dmd.eigs, retained_eigs)
+    np.testing.assert_almost_equal(np.array(dmd.eigs), retained_eigs)
 
-def test_bitmask_modes():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_bitmask_modes(system):
     dmd = DMDc(svd_rank=-1, opt=True)
     dmd.fit(system['snapshots'], system['u'], system['B'])
 
-    old_n_modes = dmd.modes.shape[1]
-    retained_modes = np.delete(dmd.modes, [0,-1], axis=1)
+    modes = np.array(dmd.modes)
+    old_n_modes = modes.shape[1]
+    retained_modes = np.delete(modes, [0,-1], axis=1)
 
-    new_bitmask = np.full(dmd.amplitudes.shape[0], True, dtype=bool)
+    new_bitmask = np.full(modes.shape[0], True, dtype=bool)
     new_bitmask[[0,-1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
     assert dmd.modes.shape[1] == old_n_modes - 2
-    np.testing.assert_almost_equal(dmd.modes, retained_modes)
+    np.testing.assert_almost_equal(np.array(dmd.modes), retained_modes)
 
-def test_reconstructed_data():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_reconstructed_data(system):
     dmd = DMDc(svd_rank=-1, opt=True)
     dmd.fit(system['snapshots'], system['u'], system['B'])
 
@@ -171,32 +189,31 @@ def test_reconstructed_data():
     new_bitmask[[0,-1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
-    dmd.reconstructed_data
-    assert True
+    assert dmd.reconstructed_data is not None
 
-def test_getitem_modes():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_getitem_modes(system):
     dmd = DMDc(svd_rank=-1)
     dmd.fit(system['snapshots'], system['u'], system['B'])
     old_n_modes = dmd.modes.shape[1]
 
     assert dmd[[0,-1]].modes.shape[1] == 2
-    np.testing.assert_almost_equal(dmd[[0,-1]].modes, dmd.modes[:,[0,-1]])
+    np.testing.assert_almost_equal(np.array(dmd[[0,-1]].modes), np.array(dmd.modes[:,[0,-1]]))
 
     assert dmd.modes.shape[1] == old_n_modes
 
     assert dmd[1::2].modes.shape[1] == old_n_modes // 2
-    np.testing.assert_almost_equal(dmd[1::2].modes, dmd.modes[:,1::2])
+    np.testing.assert_almost_equal(np.array(dmd[1::2].modes), np.array(dmd.modes[:,1::2]))
 
     assert dmd.modes.shape[1] == old_n_modes
 
     assert dmd[1].modes.shape[1] == 1
-    np.testing.assert_almost_equal(np.squeeze(dmd[1].modes), dmd.modes[:,1])
+    np.testing.assert_almost_equal(np.squeeze(np.array(dmd[1].modes)), np.array(dmd.modes[:,1]))
 
     assert dmd.modes.shape[1] == old_n_modes
 
-def test_getitem_raises():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_getitem_raises(system):
     dmd = DMDc(svd_rank=-1)
     dmd.fit(system['snapshots'], system['u'], system['B'])
 
@@ -211,8 +228,8 @@ def test_getitem_raises():
 # between DMDBase and the modes activation bitmask. if this test fails
 # you probably need to call allocate_proxy once again after you compute
 # the final value of the amplitudes
-def test_correct_amplitudes():
-    system = create_system_with_B()
+@pytest.mark.parametrize("system", data_backends_with_B)
+def test_correct_amplitudes(system):
     dmd = DMDc(svd_rank=-1)
     dmd.fit(system['snapshots'], system['u'], system['B'])
-    np.testing.assert_array_almost_equal(dmd.amplitudes, dmd._b)
+    np.testing.assert_array_almost_equal(np.array(dmd.amplitudes), np.array(dmd._b))

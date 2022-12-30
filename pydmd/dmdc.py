@@ -11,7 +11,7 @@ import numpy as np
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .utils import compute_tlsq, compute_svd
-from .linalg import build_linalg_module, assert_same_linalg_type
+from .linalg import build_linalg_module, assert_same_linalg_type, cast_as_array
 
 
 class DMDControlOperator(DMDOperator):
@@ -84,7 +84,9 @@ class DMDBKnownOperator(DMDControlOperator):
         :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
         """
         X, Y = compute_tlsq(X, Y, self._tlsq_rank)
-        Y = Y - B.dot(controlin)
+
+        linalg_module = build_linalg_module(X)
+        Y = Y - linalg_module.dot(B, controlin)
         return super(DMDBKnownOperator, self).compute_operator(X, Y)
 
 
@@ -122,9 +124,10 @@ class DMDBUnknownOperator(DMDControlOperator):
             the product between the left-singular vectors of Y and Btilde.
         :rtype: numpy.ndarray, numpy.ndarray
         """
+        linalg_module = build_linalg_module(X)
         snapshots_rows = X.shape[0]
 
-        omega = np.vstack([X, controlin])
+        omega = linalg_module.vstack((X, controlin))
 
         Up, sp, Vp = compute_svd(omega, self._svd_rank_omega)
 
@@ -133,27 +136,27 @@ class DMDBUnknownOperator(DMDControlOperator):
 
         Ur, _, _ = compute_svd(Y, self._svd_rank)
 
-        self._Atilde = np.linalg.multi_dot([Ur.T.conj(), Y, Vp,
-                                            np.diag(np.reciprocal(sp)),
-                                            Up1.T.conj(), Ur])
+        self._Atilde = linalg_module.multi_dot((Ur.T.conj(), Y, Vp,
+                                            linalg_module.diag(1 / sp),
+                                            Up1.T.conj(), Ur))
         self._compute_eigenquantities()
         self._compute_modes(Y, sp, Vp, Up1, Ur)
 
-        Btilde = np.linalg.multi_dot([Ur.T.conj(), Y, Vp,
-                                      np.diag(np.reciprocal(sp)),
-                                      Up2.T.conj()])
+        Btilde = linalg_module.multi_dot((Ur.T.conj(), Y, Vp,
+                                      linalg_module.diag(np.reciprocal(sp)),
+                                      Up2.T.conj()))
 
-        return Ur, Ur.dot(Btilde)
+        return Ur, linalg_module.dot(Ur, Btilde)
 
     def _compute_modes(self, Y, sp, Vp, Up1, Ur):
         """
         Private method that computes eigenvalues and eigenvectors of the
         high-dimensional operator (stored in self.modes and self.Lambda).
         """
-
-        self._modes = np.linalg.multi_dot([Y, Vp, np.diag(np.reciprocal(sp)),
+        linalg_module = build_linalg_module(Y)
+        self._modes = linalg_module.multi_dot((Y, Vp, linalg_module.diag(1 / sp),
                                            Up1.T.conj(), Ur,
-                                           self.eigenvectors])
+                                           self.eigenvectors))
         self._Lambda = self.eigenvalues
 
 
@@ -240,9 +243,10 @@ class DMDc(DMDBase):
         :rtype: numpy.ndarray
         """
         if control_input is None:
-            controlin, controlin_shape = self._controlin, self._controlin_shape
+            controlin = self._controlin
         else:
-            controlin, controlin_shape = self._col_major_2darray(control_input)
+            assert_same_linalg_type(self.modes, control_input)
+            controlin, _ = self._col_major_2darray(control_input)
 
         if controlin.shape[1] != self.dynamics.shape[1] - 1:
             raise RuntimeError(
@@ -250,18 +254,18 @@ class DMDc(DMDBase):
                 'reconstruct has to be the same'
             )
 
-        eigs = np.power(self.eigs,
+        linalg_module = build_linalg_module(self.eigs)
+        eigs = linalg_module.pow(self.eigs,
                         old_div(self.dmd_time['dt'], self.original_time['dt']))
-        A = np.linalg.multi_dot([self.modes, np.diag(eigs),
-                                 np.linalg.pinv(self.modes)])
+        A = linalg_module.multi_dot((self.modes, linalg_module.diag(eigs),
+                                 linalg_module.pinv(self.modes)))
 
         data = [self._snapshots[:, 0]]
 
         for i, u in enumerate(controlin.T):
-            data.append(A.dot(data[i]) + self._B.dot(u))
+            data.append(linalg_module.dot(A, data[i]) + linalg_module.dot(self._B, u))
 
-        data = np.array(data).T
-        return data
+        return cast_as_array(data).T
 
     def fit(self, X, I, B=None):
         """
@@ -279,6 +283,9 @@ class DMDc(DMDBase):
         :type B: numpy.ndarray or iterable
         """
         self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+        
+        linalg_module = build_linalg_module(X)
+        I = linalg_module.to(X, I)
         self._controlin, self._controlin_shape = self._col_major_2darray(I)
 
         n_samples = self._snapshots.shape[1]
@@ -290,15 +297,15 @@ class DMDc(DMDBase):
         )
 
         if B is None:
+            assert_same_linalg_type(X, self._controlin)
             self._Atilde = DMDBUnknownOperator(**self._dmd_operator_kwargs)
             self._basis, self._B = self.operator.compute_operator(
                 X, Y, self._controlin)
         else:
+            assert_same_linalg_type(X, self._controlin, B)
+            self._B = linalg_module.to(X, B)
             self._Atilde = DMDBKnownOperator(**self._dmd_operator_kwargs)
-            U, _, _ = self.operator.compute_operator(X, Y, B, self._controlin)
-
-            self._basis = U
-            self._B = B
+            self._basis, _, _ = self.operator.compute_operator(X, Y, self._B, self._controlin)
 
         self._b = self._compute_amplitudes()
 
