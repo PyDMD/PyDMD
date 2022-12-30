@@ -2,33 +2,20 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
-from pytest import raises
 import pytest
+from pytest import raises
 
 from pydmd.hodmd import HODMD
 from pydmd.linalg import build_linalg_module
 
-from .utils import assert_allclose
-
-# 15 snapshot with 400 data. The matrix is 400x15 and it contains
-# the following data: f1 + f2 where
-# f1 = lambda x,t: sech(x+3)*(1.*np.exp(1j*2.3*t))
-# f2 = lambda x,t: (sech(x)*np.tanh(x))*(2.*np.exp(1j*2.8*t))
-sample_data = np.load('tests/test_datasets/input_sample.npy')
-data_backends = (
-    # NumPy
-    sample_data,
-    # PyTorch
-    torch.from_numpy(sample_data),
-)
+from .utils import assert_allclose, data_backends
 
 
 @pytest.mark.parametrize("X", data_backends)
 def test_shape(X):
     dmd = HODMD(svd_rank=-1, d=2, svd_rank_extra=-1)
     dmd.fit(X=X)
-    assert dmd.modes.shape[1] == sample_data.shape[1] - 2
+    assert dmd.modes.shape[1] == X.shape[1] - 2
 
 @pytest.mark.parametrize("X", data_backends)
 def test_truncation_shape(X):
@@ -61,9 +48,8 @@ def test_d(X):
 def test_Atilde_values(X):
     dmd = HODMD(svd_rank=2)
     dmd.fit(X=X)
-    exact_atilde = np.array(
-        [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
-            [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]])
+    exact_atilde = [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
+                    [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]]
     assert_allclose(exact_atilde, dmd.atilde)
 
 @pytest.mark.parametrize("X", data_backends)
@@ -82,9 +68,9 @@ def test_eigs_2(X):
 def test_eigs_3(X):
     dmd = HODMD(svd_rank=2)
     dmd.fit(X=X)
-    expected_eigs = np.array([
+    expected_eigs = [
         -8.09016994e-01 + 5.87785252e-01j, -4.73868662e-01 + 8.80595532e-01j
-    ])
+    ]
     assert_allclose(dmd.eigs, expected_eigs, atol=1.e-6)
 
 @pytest.mark.parametrize("X", data_backends)
@@ -97,25 +83,25 @@ def test_eigs_4(X):
 def test_dynamics_1(X):
     dmd = HODMD(svd_rank=5, svd_rank_extra=-1)
     dmd.fit(X=X)
-    assert dmd.dynamics.shape == (5, sample_data.shape[1])
+    assert dmd.dynamics.shape == (5, X.shape[1])
 
 @pytest.mark.parametrize("X", data_backends)
 def test_dynamics_2(X):
     dmd = HODMD(svd_rank=5, svd_rank_extra=4)
     dmd.fit(X=X)
-    assert dmd.dynamics.shape == (4, sample_data.shape[1])
+    assert dmd.dynamics.shape == (4, X.shape[1])
 
 @pytest.mark.parametrize("X", data_backends)
 def test_dynamics_opt_1(X):
     dmd = HODMD(svd_rank=5, svd_rank_extra=-1, opt=True)
     dmd.fit(X=X)
-    assert dmd.dynamics.shape == (5, sample_data.shape[1])
+    assert dmd.dynamics.shape == (5, X.shape[1])
 
 @pytest.mark.parametrize("X", data_backends)
 def test_dynamics_opt_2(X):
     dmd = HODMD(svd_rank=5, svd_rank_extra=4, opt=True)
     dmd.fit(X=X)
-    assert dmd.dynamics.shape == (4, sample_data.shape[1])
+    assert dmd.dynamics.shape == (4, X.shape[1])
 
 @pytest.mark.parametrize("X", data_backends)
 def test_reconstructed_data(X):
@@ -123,7 +109,7 @@ def test_reconstructed_data(X):
     dmd.fit(X=X)
     dmd.reconstructions_of_timeindex(2)
     dmd_data = dmd.reconstructed_data
-    assert_allclose(dmd_data, sample_data)
+    assert_allclose(dmd_data, X)
 
 @pytest.mark.parametrize("X", data_backends)
 def test_original_time(X):
@@ -137,7 +123,7 @@ def test_original_timesteps(X):
     dmd = HODMD()
     dmd.fit(X=X)
     assert_allclose(dmd.original_timesteps,
-                                np.arange(sample_data.shape[1]))
+                                np.arange(X.shape[1]))
 
 @pytest.mark.parametrize("X", data_backends)
 def test_dmd_time_1(X):
@@ -152,7 +138,7 @@ def test_dmd_time_2(X):
     dmd.fit(X=X)
     dmd.dmd_time['t0'] = 10
     dmd.dmd_time['tend'] = 14
-    expected_data = sample_data[:, -5:]
+    expected_data = X[:, -5:]
     assert_allclose(dmd.reconstructed_data, expected_data)
 
 @pytest.mark.parametrize("X", data_backends)
@@ -161,7 +147,7 @@ def test_dmd_time_3(X):
     dmd.fit(X=X)
     dmd.dmd_time['t0'] = 8
     dmd.dmd_time['tend'] = 11
-    expected_data = sample_data[:, 8:12]
+    expected_data = X[:, 8:12]
     assert_allclose(dmd.reconstructed_data, expected_data)
 
 @pytest.mark.parametrize("X", data_backends)
@@ -170,9 +156,9 @@ def test_dmd_time_4(X):
     dmd.fit(X=X)
     dmd.dmd_time['t0'] = 20
     dmd.dmd_time['tend'] = 20
-    expected_data = np.array([[7.29383297e+00 + 0.0j],
-                                [5.69109796e+00 + 2.74068833e+00j],
-                                [           0.0 + 0.0j]])
+    expected_data = [[7.29383297e+00 + 0.0j],
+                    [5.69109796e+00 + 2.74068833e+00j],
+                    [           0.0 + 0.0j]]
     assert_allclose(dmd.dynamics, expected_data, atol=1.e-6)
 
 @pytest.mark.parametrize("X", data_backends)
@@ -223,7 +209,7 @@ def test_plot_snapshots_2(X):
 def test_plot_snapshots_3(X):
     dmd = HODMD()
     linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in sample_data.T]
+    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
     dmd.fit(X=snapshots)
     dmd.plot_snapshots_2D()
     plt.close()
@@ -232,7 +218,7 @@ def test_plot_snapshots_3(X):
 def test_plot_snapshots_4(X):
     dmd = HODMD()
     linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in sample_data.T]
+    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
     dmd.fit(X=snapshots)
     dmd.plot_snapshots_2D(index_snap=2)
     plt.close()
@@ -241,7 +227,7 @@ def test_plot_snapshots_4(X):
 def test_plot_snapshots_5(X):
     dmd = HODMD()
     linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in sample_data.T]
+    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
     dmd.fit(X=snapshots)
     dmd.plot_snapshots_2D(index_snap=2, filename='tmp.png')
     os.remove('tmp.2.png')
@@ -279,7 +265,7 @@ def test_reconstruction_method_default_constructor():
 def test_reconstruction_method_constructor():
     assert HODMD(reconstruction_method='mean')._reconstruction_method == 'mean'
     assert HODMD(reconstruction_method=[3])._reconstruction_method == [3]
-    assert all(HODMD(reconstruction_method=np.array([1, 2]), d=2)._reconstruction_method == np.array([1, 2]))
+    assert_allclose(HODMD(reconstruction_method=np.array([1, 2]), d=2)._reconstruction_method, [1, 2])
 
 @pytest.mark.parametrize("X", data_backends)
 def test_nonan_nomask(X):
@@ -294,7 +280,7 @@ def test_nonan_nomask(X):
 def test_extract_versions_nonan(X):
     dmd = HODMD(d=3)
     dmd.fit(X=X)
-    for timeindex in range(sample_data.shape[1]):
+    for timeindex in range(X.shape[1]):
         assert not np.nan in dmd.reconstructions_of_timeindex(timeindex)
 
 @pytest.mark.parametrize("X", data_backends)

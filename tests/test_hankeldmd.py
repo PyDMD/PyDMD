@@ -2,32 +2,20 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 import pytest
 from pytest import raises
 
 from pydmd import HankelDMD
 from pydmd.linalg import build_linalg_module
 
-from .utils import assert_allclose
+from .utils import assert_allclose, data_backends
 
-# 15 snapshot with 400 data. The matrix is 400x15 and it contains
-# the following data: f1 + f2 where
-# f1 = lambda x,t: sech(x+3)*(1.*np.exp(1j*2.3*t))
-# f2 = lambda x,t: (sech(x)*np.tanh(x))*(2.*np.exp(1j*2.8*t))
-sample_data = np.load("tests/test_datasets/input_sample.npy")
-data_backends = (
-    # NumPy
-    sample_data,
-    # PyTorch
-    torch.from_numpy(sample_data),
-)
 
 @pytest.mark.parametrize("X", data_backends)
 def test_shape(X):
     dmd = HankelDMD(svd_rank=-1)
     dmd.fit(X=X)
-    assert dmd.modes.shape[1] == sample_data.shape[1] - 1
+    assert dmd.modes.shape[1] == X.shape[1] - 1
 
 @pytest.mark.parametrize("X", data_backends)
 def test_truncation_shape(X):
@@ -60,12 +48,10 @@ def test_d(X):
 def test_Atilde_values(X):
     dmd = HankelDMD(svd_rank=2)
     dmd.fit(X=X)
-    exact_atilde = np.array(
-        [
+    exact_atilde = [
             [-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
             [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j],
-        ]
-    )
+    ]
     assert_allclose(exact_atilde, dmd.atilde)
 
 @pytest.mark.parametrize("X", data_backends)
@@ -84,27 +70,23 @@ def test_eigs_2(X):
 def test_eigs_3(X):
     dmd = HankelDMD(svd_rank=2)
     dmd.fit(X=X)
-    expected_eigs = np.array(
-        [
+    expected_eigs = [
             -8.09016994e-01 + 5.87785252e-01j,
             -4.73868662e-01 + 8.80595532e-01j,
         ]
-    )
     assert_allclose(dmd.eigs, expected_eigs, atol=1.e-6)
 
 @pytest.mark.parametrize("X", data_backends)
 def test_dynamics_1(X):
     dmd = HankelDMD(svd_rank=5)
     dmd.fit(X=X)
-    assert dmd.dynamics.shape == (5, sample_data.shape[1])
+    assert dmd.dynamics.shape == (5, X.shape[1])
 
 @pytest.mark.parametrize("X", data_backends)
 def test_dynamics_2(X):
     dmd = HankelDMD(svd_rank=1)
     dmd.fit(X=X)
-    expected_dynamics = np.array(
-        [
-            [
+    expected_dynamics = [[
                 -2.20639502 - 9.10168802e-16j,
                 1.55679980 - 1.49626864e00j,
                 -0.08375915 + 2.11149018e00j,
@@ -120,22 +102,20 @@ def test_dynamics_2(X):
                 1.65485808 + 4.01263449e-01j,
                 -1.43976061 + 8.39117825e-01j,
                 0.44682540 - 1.56844403e00j,
-            ]
-        ]
-    )
+    ]]
     assert_allclose(dmd.dynamics, expected_dynamics)
 
 @pytest.mark.parametrize("X", data_backends)
 def test_dynamics_opt_1(X):
     dmd = HankelDMD(svd_rank=5, opt=True)
     dmd.fit(X=X)
-    assert dmd.dynamics.shape == (5, sample_data.shape[1])
+    assert dmd.dynamics.shape == (5, X.shape[1])
 
 @pytest.mark.parametrize("X", data_backends)
 def test_dynamics_opt_2(X):
     dmd = HankelDMD(svd_rank=1, opt=True, exact=False)
     dmd.fit(X=X)
-    expected_dynamics = np.array([[
+    expected_dynamics = [[
         -4.609718826226513-6.344781724790875j,
         7.5552686987577165+1.3506997434096375j,
         -6.246864367654589+4.170577993207872j,
@@ -151,7 +131,7 @@ def test_dynamics_opt_2(X):
         2.303531963541068+5.597105176945707j,
         -5.421019770795679-2.3870927539102658j,
         5.443800581850978-1.9919716610066682j,
-    ]])
+    ]]
     assert_allclose(dmd.dynamics, expected_dynamics)
 
 @pytest.mark.parametrize("X", data_backends)
@@ -159,21 +139,21 @@ def test_reconstructed_data(X):
     dmd = HankelDMD()
     dmd.fit(X=X)
     dmd_data = dmd.reconstructed_data
-    assert_allclose(dmd_data, sample_data)
+    assert_allclose(dmd_data, X)
 
 @pytest.mark.parametrize("X", data_backends)
 def test_original_time(X):
     dmd = HankelDMD(svd_rank=2)
     dmd.fit(X=X)
     expected_dict = {"dt": 1, "t0": 0, "tend": 14}
-    np.testing.assert_equal(dmd.original_time, expected_dict)
+    assert dmd.original_time == expected_dict
 
 @pytest.mark.parametrize("X", data_backends)
 def test_original_timesteps(X):
     dmd = HankelDMD()
     dmd.fit(X=X)
     assert_allclose(
-        dmd.original_timesteps, np.arange(sample_data.shape[1])
+        dmd.original_timesteps, np.arange(X.shape[1])
     )
 
 @pytest.mark.parametrize("X", data_backends)
@@ -181,7 +161,7 @@ def test_dmd_time_1(X):
     dmd = HankelDMD(svd_rank=2)
     dmd.fit(X=X)
     expected_dict = {"dt": 1, "t0": 0, "tend": 14}
-    np.testing.assert_equal(dmd.dmd_time, expected_dict)
+    assert dmd.dmd_time == expected_dict
 
 @pytest.mark.parametrize("X", data_backends)
 def test_dmd_time_2(X):
@@ -189,7 +169,7 @@ def test_dmd_time_2(X):
     dmd.fit(X=X)
     dmd.dmd_time["t0"] = 10
     dmd.dmd_time["tend"] = 14
-    expected_data = sample_data[:, -5:]
+    expected_data = X[:, -5:]
     assert_allclose(dmd.reconstructed_data, expected_data)
 
 @pytest.mark.parametrize("X", data_backends)
@@ -198,7 +178,7 @@ def test_dmd_time_3(X):
     dmd.fit(X=X)
     dmd.dmd_time["t0"] = 8
     dmd.dmd_time["tend"] = 11
-    expected_data = sample_data[:, 8:12]
+    expected_data = X[:, 8:12]
     assert_allclose(dmd.reconstructed_data, expected_data)
 
 @pytest.mark.parametrize("X", data_backends)
@@ -207,13 +187,11 @@ def test_dmd_time_4(X):
     dmd.fit(X=X)
     dmd.dmd_time["t0"] = 20
     dmd.dmd_time["tend"] = 20
-    expected_data = np.array(
-        [
+    expected_data = [
             [-7.29383297e00 - 4.90248179e-14j],
             [-5.69109796e00 - 2.74068833e00j],
             [3.38410649e-83 + 3.75677740e-83j],
         ]
-    )
     assert_allclose(dmd.dynamics, expected_data, atol=1.e-6)
 
 @pytest.mark.parametrize("X", data_backends)
@@ -386,7 +364,7 @@ def test_nonan_nomask(X):
 def test_extract_versions_nonan(X):
     dmd = HankelDMD(d=3)
     dmd.fit(X=X)
-    for timeindex in range(sample_data.shape[1]):
+    for timeindex in range(X.shape[1]):
         assert not np.nan in dmd.reconstructions_of_timeindex(timeindex)
 
 @pytest.mark.parametrize("X", data_backends)
@@ -655,7 +633,7 @@ def test_getitem_raises(X):
 def test_correct_amplitudes(X):
     dmd = HankelDMD(svd_rank=-1, d=5)
     dmd.fit(X=X)
-    np.testing.assert_array_almost_equal(dmd.amplitudes, dmd._sub_dmd._b)
+    assert_allclose(dmd.amplitudes, dmd._sub_dmd._b)
 
 def test_raises_not_enough_snapshots():
     dmd = HankelDMD(svd_rank=-1, d=5)
