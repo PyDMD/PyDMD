@@ -7,6 +7,20 @@ The static factory method is the method `build_linalg_module` in `linalg.py`. Th
 concrete implementation of `LinalgBase` depending on the type of the array passed as the first 
 argument.
 
+## Things to keep in mind
+Due to the strong requirements of `torch.mul` and `torch.linalg.multi_dot`, the implementation of these
+two functions in `pytorch_linalg.py` forces a cast to the biggest **complex** type found in the argumnets.
+We decided to take this path instead of placing the burden on user/implementors since for some algorithms
+it's hard to control consistently whether the output is complex or real (e.g. `torch.linalg.eig`) and casts
+will happen internally quite often. This damages memory efficiency and performance, but ensures correct 
+results. It will be subject of investigation if we receive complains from our users.
+
+This kind of casts is logged, in order to get the logs enable the `INFO` logging level:
+```python
+import logging
+logging.basicConfig(level=logging.DEBUG)
+```
+
 ## Guidelines
 ### Calling `build_linalg_module()`
 Be careful on the argument on which you call `build_linalg_module()`. It may happen that some NumPy arrays

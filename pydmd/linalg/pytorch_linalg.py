@@ -56,6 +56,12 @@ class LinalgPyTorch(LinalgBase):
     def dot(cls, X, Y):
         import torch
 
+        if torch.is_complex(X) and not torch.is_complex(Y):
+            logger.info(f"Y dtype is not complex, casting to {X.dtype}")
+            Y = Y.type(X.dtype)
+        elif torch.is_complex(Y) and not torch.is_complex(X):
+            logger.info(f"X dtype is not complex, casting to {Y.dtype}")
+            X = X.type(Y.dtype)
         return torch.matmul(X, Y)
 
     @classmethod
@@ -117,6 +123,11 @@ class LinalgPyTorch(LinalgBase):
     def multi_dot(cls, Xs, *args, **kwargs):
         import torch
 
+        complex_dtypes = [arr.dtype for arr in Xs if torch.is_complex(arr)]
+        if complex_dtypes:
+            complex_dtypes.sort(key=lambda dtype: torch.finfo(dtype).bits)
+            logger.info(f"Converting tensors to {complex_dtypes[-1]}")
+            Xs = tuple(map(lambda X: X.type(complex_dtypes[-1]), Xs))
         return torch.linalg.multi_dot(Xs, *args, **kwargs)
 
     @classmethod
