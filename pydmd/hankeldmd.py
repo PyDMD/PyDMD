@@ -173,13 +173,13 @@ class HankelDMD(DMDBase):
         )
 
         c_idxes = (
-            np.array(range(self.d))[:, None]
-            .repeat(2, axis=1)[None, :]
+            np.arange(self.d)[:, None]
+            .repeat(2, axis=1)[None]
             .repeat(rec.shape[1], axis=0)
         )
-        c_idxes[:, :, 0] += np.array(range(rec.shape[1]))[:, None]
+        c_idxes[..., 0] += np.arange(rec.shape[1])[:, None]
 
-        reconstructed_snapshots[c_idxes[:, :, 0], c_idxes[:, :, 1]] = np.array(
+        reconstructed_snapshots[c_idxes[..., 0], c_idxes[..., 1]] = np.array(
             np.swapaxes(np.split(rec.T, self.d, axis=1), 0, 1)
         )
 
@@ -201,7 +201,7 @@ class HankelDMD(DMDBase):
         :rtype: np.ndarray
         """
         first_nonmasked_idx = np.repeat(
-            np.array(range(reconstructions.shape[0]))[:, None], 2, axis=1
+            np.arange(reconstructions.shape[0])[:, None], 2, axis=1
         )
         first_nonmasked_idx[self.d - 1 :, 1] = self.d - 1
 
