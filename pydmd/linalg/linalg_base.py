@@ -63,6 +63,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def multiply_elementwise(cls, X, Y):
+        raise NotImplementedError
+
+    @classmethod
     def multi_dot(cls, Xs, *args, **kwargs):
         raise NotImplementedError
 

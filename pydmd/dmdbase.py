@@ -751,7 +751,7 @@ matrix, or regularization methods.""".format(
 
         a = linalg_module.dot(self.modes.conj().T, self.modes)
         b = linalg_module.dot(vander, vander.conj().T).conj()
-        P = linalg_module.dot(a, b)
+        P = linalg_module.multiply_elementwise(a, b)
 
         if self.exact:
             q = (

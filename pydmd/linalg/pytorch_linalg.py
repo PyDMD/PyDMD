@@ -101,6 +101,12 @@ class LinalgPyTorch(LinalgBase):
         return torch.median(X)
 
     @classmethod
+    def multiply_elementwise(cls, X, Y):
+        import torch
+
+        return torch.mul(X, Y)
+
+    @classmethod
     def multi_dot(cls, Xs, *args, **kwargs):
         import torch
 

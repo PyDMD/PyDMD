@@ -71,6 +71,10 @@ class LinalgNumPy(LinalgBase):
         return np.median(X)
 
     @classmethod
+    def multiply_elementwise(cls, X, Y):
+        return np.multiply(X, Y)
+
+    @classmethod
     def multi_dot(cls, Xs, *args, **kwargs):
         return np.linalg.multi_dot(Xs, *args, **kwargs)
 

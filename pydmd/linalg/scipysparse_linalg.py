@@ -114,6 +114,10 @@ class LinalgSciPySparse(LinalgBase):
         return np.median(X)
 
     @classmethod
+    def multiply_elementwise(cls, X, Y):
+        raise NotImplementedError
+
+    @classmethod
     def multi_dot(cls, Xs, *args, **kwargs):
         return np.linalg.multi_dot(Xs, *args, **kwargs)
 
