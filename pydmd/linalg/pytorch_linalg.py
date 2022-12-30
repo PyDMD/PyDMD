@@ -71,12 +71,12 @@ class LinalgPyTorch(LinalgBase):
         return torch.linalg.eig(X)
 
     @classmethod
-    def full(cls, size, fill_value):
+    def full(cls, size, fill_value, *args, **kwargs):
         import torch
 
         if isinstance(size, int):
             size = (size,)
-        return torch.full(size, fill_value)
+        return torch.full(size, fill_value, *args, **kwargs)
 
     @classmethod
     def hstack(cls, Xs):

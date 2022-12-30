@@ -75,7 +75,7 @@ class LinalgSciPySparse(LinalgBase):
             return sp.linalg.eig(X)
 
     @classmethod
-    def full(cls, size, fill_value):
+    def full(cls, size, fill_value, *args, **kwargs):
         raise ValueError(
             "full() is not recommended when dealing with sparse matrices"
         )

@@ -49,8 +49,8 @@ class LinalgNumPy(LinalgBase):
         return np.linalg.eig(X)
 
     @classmethod
-    def full(cls, size, fill_value):
-        return np.full(size, fill_value)
+    def full(cls, size, fill_value, *args, **kwargs):
+        return np.full(size, fill_value, *args, **kwargs)
 
     @classmethod
     def hstack(cls, Xs):
