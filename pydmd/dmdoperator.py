@@ -1,8 +1,7 @@
-import numpy as np
 import matplotlib.pyplot as plt
 
-from .utils import compute_svd
 from .linalg import build_linalg_module, is_array
+from .utils import compute_svd
 
 
 class DMDOperator:
@@ -110,6 +109,7 @@ class DMDOperator:
         :rtype: numpy.ndarray
         """
         linalg_module = build_linalg_module(self._Atilde)
+        snapshot_lowrank_modal_coefficients = linalg_module.to(self._Atilde, snapshot_lowrank_modal_coefficients)
         return linalg_module.dot(self._Atilde, snapshot_lowrank_modal_coefficients)
 
     @property

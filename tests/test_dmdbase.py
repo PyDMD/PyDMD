@@ -1,14 +1,11 @@
-from pydmd.dmdbase import DMDBase
-from pydmd import DMD
-import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 from pytest import raises
 
-# 15 snapshot with 400 data. The matrix is 400x15 and it contains
-# the following data: f1 + f2 where
-# f1 = lambda x,t: sech(x+3)*(1.*np.exp(1j*2.3*t))
-# f2 = lambda x,t: (sech(x)*np.tanh(x))*(2.*np.exp(1j*2.8*t))
-sample_data = np.load('tests/test_datasets/input_sample.npy')
+from pydmd import DMD
+from pydmd.dmdbase import DMDBase
+
+from .utils import data_backends
 
 
 def test_svd_rank_default():
@@ -43,10 +40,11 @@ def test_opt():
     dmd = DMDBase(opt=True)
     assert dmd.opt == True
 
-def test_fit():
+@pytest.mark.parametrize("X", data_backends)
+def test_fit(X):
     dmd = DMDBase(exact=False)
     with raises(NotImplementedError):
-        dmd.fit(sample_data)
+        dmd.fit(X)
 
 def test_plot_eigs():
     dmd = DMDBase()
@@ -81,16 +79,18 @@ def test_translate_tpow_positive():
     assert dmd._translate_eigs_exponent(10) == 6
     assert dmd._translate_eigs_exponent(0) == -4
 
-def test_translate_tpow_negative():
+@pytest.mark.parametrize("X", data_backends)
+def test_translate_tpow_negative(X):
     dmd = DMDBase(opt=-1)
-    dmd._snapshots = sample_data
+    dmd._snapshots = X
 
-    assert dmd._translate_eigs_exponent(10) == 10 - (sample_data.shape[1] - 1)
-    assert dmd._translate_eigs_exponent(0) == 1 - sample_data.shape[1]
+    assert dmd._translate_eigs_exponent(10) == 10 - (X.shape[1] - 1)
+    assert dmd._translate_eigs_exponent(0) == 1 - X.shape[1]
 
-def test_translate_tpow_vector():
+@pytest.mark.parametrize("X", data_backends)
+def test_translate_tpow_vector(X):
     dmd = DMDBase(opt=-1)
-    dmd._snapshots = sample_data
+    dmd._snapshots = X
 
     tpow = np.ndarray([0,1,2,3,5,6,7,11])
     for idx,x in enumerate(dmd._translate_eigs_exponent(tpow)):
@@ -144,9 +144,10 @@ def test_plot_limits():
     limit = dmd._plot_limits(False)
     assert limit == 5
 
-def test_dmd_time_wrong_key():
+@pytest.mark.parametrize("X", data_backends)
+def test_dmd_time_wrong_key(X):
     dmd = DMD(svd_rank=10)
-    dmd.fit(sample_data)
+    dmd.fit(X)
 
     with raises(KeyError):
         dmd.dmd_time['tstart'] = 10

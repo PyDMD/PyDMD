@@ -3,21 +3,20 @@ Base module for the DMD: `fit` method must be implemented in inherited classes
 """
 from __future__ import division
 
-from builtins import object
-from builtins import range
-from os.path import splitext
-import warnings
 import pickle
+import warnings
+from builtins import object, range
 from copy import copy, deepcopy
+from os.path import splitext
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 from past.utils import old_div
 
 from .dmdoperator import DMDOperator
-from .utils import compute_svd
 from .linalg import build_linalg_module, cast_as_array, is_array
+from .utils import compute_svd
 
 mpl.rcParams["figure.max_open_warning"] = 0
 

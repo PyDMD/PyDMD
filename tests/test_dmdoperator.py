@@ -1,19 +1,13 @@
-from builtins import range
+import matplotlib.pyplot as plt
 import numpy as np
-import os
-
+import pytest
 from pytest import raises
 
 from pydmd.dmdoperator import DMDOperator
 from pydmd.utils import compute_tlsq
 
-import matplotlib.pyplot as plt
+from .utils import assert_allclose, data_backends
 
-# 15 snapshot with 400 data. The matrix is 400x15 and it contains
-# the following data: f1 + f2 where
-# f1 = lambda x,t: sech(x+3)*(1.*np.exp(1j*2.3*t))
-# f2 = lambda x,t: (sech(x)*np.tanh(x))*(2.*np.exp(1j*2.8*t))
-sample_data = np.load('tests/test_datasets/input_sample.npy')
 
 def test_constructor():
     operator = DMDOperator(svd_rank=2, exact=True, forward_backward=False,
@@ -63,22 +57,21 @@ def test_rescalemode_auto_singular_values():
     operator = DMDOperator(svd_rank=0, exact=True, forward_backward=False,
         rescale_mode='auto', sorted_eigs=False, tikhonov_regularization=None)
     operator.compute_operator(np.ones((3, 3)), np.ones((3, 3)))
-    np.testing.assert_almost_equal(operator._rescale_mode, np.array([3.]),
-        decimal=1)
+    assert_allclose(operator._rescale_mode, [3.])
 
-def test_call():
+@pytest.mark.parametrize("X", data_backends)
+def test_call(X):
     operator = DMDOperator(svd_rank=2, exact=True, forward_backward=False,
         rescale_mode=None, sorted_eigs=False, tikhonov_regularization=None)
 
-    X = sample_data[:, :-1]
-    Y = sample_data[:, 1:]
-    X, Y = compute_tlsq(X, Y, 0)
+    a = X[:, :-1]
+    b = X[:, 1:]
+    a, b = compute_tlsq(a, b, 0)
 
-    operator.compute_operator(X,Y)
+    operator.compute_operator(a, b)
 
-    expected = np.array([-0.47643628 + 0.87835227j, -0.47270971 + 0.88160808j])
-
-    np.testing.assert_almost_equal(operator(np.ones(2)), expected, decimal=6)
+    expected = [-0.47643628 + 0.87835227j, -0.47270971 + 0.88160808j]
+    assert_allclose(operator(np.ones(2)), expected, atol=1.e-6)
 
 def test_compute_eigenquantities_wrong_rescalemode():
     operator = DMDOperator(svd_rank=0, exact=True, forward_backward=False,
@@ -91,14 +84,15 @@ def test_compute_eigenquantities_wrong_rescalemode():
     with raises(ValueError):
         operator.compute_operator(np.ones((3, 3)), np.ones((3, 3)))
 
-def test_plot_operator():
+@pytest.mark.parametrize("X", data_backends)
+def test_plot_operator(X):
     operator = DMDOperator(svd_rank=2, exact=True, forward_backward=False,
         rescale_mode=None, sorted_eigs=False, tikhonov_regularization=None)
 
-    X = sample_data[:, :-1]
-    Y = sample_data[:, 1:]
-    X, Y = compute_tlsq(X, Y, 0)
+    a = X[:, :-1]
+    b = X[:, 1:]
+    a, b = compute_tlsq(a, b, 0)
 
-    operator.compute_operator(X, Y)
+    operator.compute_operator(a, b)
     operator.plot_operator()
     plt.close()
