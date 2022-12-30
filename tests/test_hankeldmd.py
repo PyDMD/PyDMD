@@ -378,12 +378,10 @@ def test_rec_method_mean():
 def test_rec_method_weighted():
     dmd = HankelDMD(d=2, reconstruction_method=[10, 20])
     dmd.fit(X=sample_data)
-    assert (
-        dmd.reconstructed_data.T[4]
-        == np.average(
+    np.testing.assert_almost_equal(dmd.reconstructed_data[..., 4], np.average(
             dmd.reconstructions_of_timeindex(4), axis=0, weights=[10, 20]
-        ).T
-    ).all()
+        )
+    )
 
 def test_hankeldmd_timesteps():
     x = np.linspace(0, 10, 64)
