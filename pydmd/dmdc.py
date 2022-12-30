@@ -5,13 +5,13 @@ Reference:
 - Proctor, J.L., Brunton, S.L. and Kutz, J.N., 2016. Dynamic mode decomposition
 with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.
 """
-from past.utils import old_div
 import numpy as np
+from past.utils import old_div
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from .utils import compute_tlsq, compute_svd
-from .linalg import build_linalg_module, assert_same_linalg_type, cast_as_array
+from .linalg import assert_same_linalg_type, build_linalg_module, cast_as_array
+from .utils import compute_svd, compute_tlsq
 
 
 class DMDControlOperator(DMDOperator):

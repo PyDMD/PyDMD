@@ -4,15 +4,15 @@ As a reference consult this work by Erichson, Brunton and Kutz:
 https://doi.org/10.1007/s11554-016-0655-2
 """
 from __future__ import division
+
 import numpy as np
 import scipy.sparse
 from scipy.linalg import sqrtm
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-
-from .utils import compute_tlsq, compute_svd
 from .linalg import build_linalg_module
+from .utils import compute_svd, compute_tlsq
 
 
 class CDMDOperator(DMDOperator):

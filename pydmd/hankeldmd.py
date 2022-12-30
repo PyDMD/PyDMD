@@ -10,8 +10,8 @@ from copy import copy
 
 import numpy as np
 
-from .dmdbase import DMDBase
 from .dmd import DMD
+from .dmdbase import DMDBase
 from .linalg import build_linalg_module, cast_as_array
 
 

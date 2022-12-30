@@ -5,8 +5,8 @@ Derived module from dmdbase.py for classic dmd.
 import numpy as np
 
 from .dmdbase import DMDBase
+from .linalg import assert_same_linalg_type, build_linalg_module
 from .utils import compute_tlsq
-from .linalg import build_linalg_module, assert_same_linalg_type
 
 
 class DMD(DMDBase):
