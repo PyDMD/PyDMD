@@ -110,7 +110,7 @@ class DMDOperator:
         :rtype: numpy.ndarray
         """
         linalg_module = build_linalg_module(self._Atilde)
-        return linalg_module(self._Atilde, snapshot_lowrank_modal_coefficients)
+        return linalg_module.dot(self._Atilde, snapshot_lowrank_modal_coefficients)
 
     @property
     def eigenvalues(self):
