@@ -11,6 +11,7 @@ import numpy as np
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .utils import compute_tlsq, compute_svd
+from .linalg import build_linalg_module, same_linalg_type
 
 
 class DMDControlOperator(DMDOperator):

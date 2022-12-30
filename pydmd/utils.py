@@ -38,9 +38,9 @@ def compute_tlsq(X, Y, tlsq_rank):
     concatenated = linalg_module.append(X, Y, axis=0)
     _, _, V = linalg_module.svd(concatenated, full_matrices=False)
     rank = min(tlsq_rank, V.shape[0])
-    VV = V[:rank].conj().T @ V[:rank]
+    VV = linalg_module.dot(V[:rank].conj().T, V[:rank])
 
-    return X @ VV, Y @ VV
+    return linalg_module.dot(X, VV), linalg_module.dot(Y, VV)
 
 
 def compute_svd(X, svd_rank=0):
