@@ -359,7 +359,7 @@ class HankelDMD(DMDBase):
 Expected at least d."""
             raise ValueError(msg.format(self._d))
 
-        snp, self._snapshots_shape = self._col_major_2darray(X)
+        snp = self._col_major_2darray(X)
         self._snapshots = self._pseudo_hankel_matrix(snp)
         self._sub_dmd.fit(self._snapshots)
 

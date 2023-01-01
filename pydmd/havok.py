@@ -158,7 +158,7 @@ class HAVOK(HankelDMD):
         Perform HAVOK analysis on 1-D time-series data x given the size of
         the time step dt separating the observations in x.
         """
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(x)
+        self._snapshots = self._col_major_2darray(x)
         self._snapshots = self._snapshots.squeeze()
 
         # Check that input data is a 1D time-series

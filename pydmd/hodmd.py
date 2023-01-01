@@ -121,7 +121,7 @@ class HODMD(HankelDMD):
         :type X: numpy.ndarray or iterable
 
         """
-        org_snp, snapshots_shape = self._col_major_2darray(X)
+        org_snp = self._col_major_2darray(X)
 
         if org_snp.shape[0] == 1:
             self.U_extra, _, _ = compute_svd(org_snp, -1)
@@ -135,7 +135,6 @@ class HODMD(HankelDMD):
         snp = self.U_extra.T.dot(org_snp)
 
         super().fit(snp)
-        self._snapshots_shape = snapshots_shape
         self._snapshots = org_snp
 
         return self

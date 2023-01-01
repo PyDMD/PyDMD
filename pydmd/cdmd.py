@@ -203,7 +203,7 @@ class CDMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+        self._snapshots = self._col_major_2darray(X)
 
         compressed_snapshots = self._compress_snapshots()
 
