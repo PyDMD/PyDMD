@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import pytest
 
 def assert_allclose(X, Y, *args, **kwargs):
     X = np.array(X)
@@ -16,7 +17,7 @@ def load_sample_data():
 sample_data = load_sample_data()
 data_backends = (
     # NumPy
-    sample_data,
+    pytest.param(sample_data, id="NumPy"),
     # PyTorch
-    torch.from_numpy(sample_data),
+    pytest.param(torch.from_numpy(sample_data), id="PyTorch CPU"),
 )
