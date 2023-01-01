@@ -13,6 +13,10 @@ import pytest
 # f2 = lambda x,t: (sech(x)*np.tanh(x))*(2.*np.exp(1j*2.8*t))
 sample_data = np.load('tests/test_datasets/input_sample.npy')
 
+class FakeDMDOperator:
+    def __init__(self):
+        self.as_numpy_array = np.ones(10)
+
 def test_select_modes():
     def stable_modes(dmd_object):
         toll = 1e-3
@@ -43,9 +47,6 @@ def test_select_modes_nullified_indexes():
     assert dmd.amplitudes.shape == dmdc[noncut_indexes].amplitudes.shape
 
 def test_select_modes_index():
-    class FakeDMDOperator:
-        pass
-
     fake_dmd_operator = FakeDMDOperator()
     fake_dmd = DMD()
 
@@ -70,9 +71,6 @@ def test_select_modes_index():
     assert len(fake_dmd.amplitudes) == 3
 
 def test_select_modes_index_and_deepcopy():
-    class FakeDMDOperator:
-        pass
-
     fake_dmd_operator = FakeDMDOperator()
     fake_dmd = DMD()
 
@@ -184,9 +182,6 @@ def test_integral_contribution_reconstruction():
     np.testing.assert_array_almost_equal(exp, dmd.reconstructed_data)
 
 def test_stabilize_modes():
-    class FakeDMDOperator:
-        pass
-
     dmd = DMD()
     fake_dmd_operator = FakeDMDOperator()
 
@@ -211,9 +206,6 @@ def test_stabilize_modes():
         np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
 def test_stabilize_modes_index():
-    class FakeDMDOperator:
-        pass
-
     dmd = DMD()
     fake_dmd_operator = FakeDMDOperator()
 
@@ -241,9 +233,6 @@ def test_stabilize_modes_index():
     np.testing.assert_almost_equal(indexes, [1,2,3])
 
 def test_stabilize_modes_index_deepcopy():
-    class FakeDMDOperator:
-        pass
-
     dmd = DMD()
     fake_dmd_operator = FakeDMDOperator()
 
@@ -391,9 +380,6 @@ def test_modes_tuner_select_raises():
         ModesTuner(fake_dmd).select(2)
 
 def test_modes_tuner_select():
-    class FakeDMDOperator:
-        pass
-
     fake_dmd_operator = FakeDMDOperator()
     fake_dmd = DMD()
 
@@ -419,9 +405,6 @@ def test_modes_tuner_select():
     assert dmd.modes.shape[1] == 3
 
 def test_modes_tuner_stabilize():
-    class FakeDMDOperator:
-        pass
-
     dmd = DMD()
     fake_dmd_operator = FakeDMDOperator()
 
@@ -449,9 +432,6 @@ def test_modes_tuner_stabilize():
         np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
 def test_modes_tuner_stabilize_multiple():
-    class FakeDMDOperator:
-        pass
-
     def cook_fake_dmd():
         dmd = DMD()
         fake_dmd_operator = FakeDMDOperator()
@@ -489,9 +469,6 @@ def test_modes_tuner_stabilize_multiple():
             np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
 def test_modes_tuner_subset():
-    class FakeDMDOperator:
-        pass
-
     def cook_fake_dmd():
         dmd = DMD()
         fake_dmd_operator = FakeDMDOperator()
@@ -523,9 +500,6 @@ def test_modes_tuner_subset():
     assert mtuner.subset([0,2]).get()[1] == mtuner._dmds[2]
 
 def test_modes_tuner_stabilize_multiple_subset():
-    class FakeDMDOperator:
-        pass
-
     def cook_fake_dmd():
         dmd = DMD()
         fake_dmd_operator = FakeDMDOperator()

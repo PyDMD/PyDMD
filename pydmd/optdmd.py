@@ -204,6 +204,7 @@ class OptDMD(DMDBase):
             is None.
         :type Y: numpy.ndarray or iterable
         """
+        self.reset()
 
         if Y is None:
             self._snapshots, self._snapshots_shape = self._col_major_2darray(X)

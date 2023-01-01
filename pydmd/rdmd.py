@@ -10,6 +10,7 @@ Systems, 18, 2019.
 import numpy as np
 from .cdmd import CDMD
 
+
 def compute_rank(X, svd_rank=0):
     """
     Rank computation for the truncated Singular Value Decomposition.
@@ -84,7 +85,6 @@ class RDMD(CDMD):
         self._oversampling = oversampling
         self._power_iters = power_iters
 
-
     def _compress_snapshots(self):
         """
         Private method that compresses the snapshot matrix X by projecting X
@@ -121,4 +121,3 @@ class RDMD(CDMD):
         self._compression_matrix = Q.conj().T
 
         return B
-        

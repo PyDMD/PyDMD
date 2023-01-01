@@ -171,11 +171,13 @@ class SubspaceDMD(DMDBase):
 
     def fit(self, X):
         """
-        Compute the SubspaceDynamic Modes Decomposition to the input data.
+        Compute the Subspace Dynamic Modes Decomposition to the input data.
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
+        self.reset()
+
         self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
 
         n_samples = self._snapshots.shape[1]

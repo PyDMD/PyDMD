@@ -43,7 +43,7 @@ def test_opt():
     dmd = DMDBase(opt=True)
     assert dmd.opt == True
 
-def test_fit():
+def test_fit_resets_mode_activation_bitmask():
     dmd = DMDBase(exact=False)
     with raises(NotImplementedError):
         dmd.fit(sample_data)
