@@ -82,7 +82,6 @@ class ActivationBitmaskProxy:
             self._original_eigs[self.old_bitmask] = self.eigs
             self._original_amplitudes[self.old_bitmask] = self.amplitudes
 
-        linalg_module = build_linalg_module(self._original_modes)
         self._modes = self._original_modes[:, value]
         self._eigs = self._original_eigs[value]
         self._amplitudes = self._original_amplitudes[value]
