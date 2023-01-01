@@ -356,7 +356,7 @@ class HankelDMD(DMDBase):
         """
 
         sub_dmd_copy = copy(self._sub_dmd)
-        sub_dmd_copy.allocate_proxy()
+        sub_dmd_copy._allocate_proxy()
 
         shallow_copy = copy(self)
         shallow_copy._sub_dmd = sub_dmd_copy
