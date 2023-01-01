@@ -119,7 +119,6 @@ class HODMD(HankelDMD):
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
-
         """
         org_snp, snapshots_shape = self._col_major_2darray(X)
 

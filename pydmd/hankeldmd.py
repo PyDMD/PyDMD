@@ -335,7 +335,7 @@ class HankelDMD(DMDBase):
         """
 
         sub_dmd_copy = copy(self._sub_dmd)
-        sub_dmd_copy.allocate_proxy()
+        sub_dmd_copy.allocate_modes_bitmask_proxy()
 
         shallow_copy = copy(self)
         shallow_copy._sub_dmd = sub_dmd_copy
@@ -348,6 +348,7 @@ class HankelDMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
+        self.reset()
 
         if isinstance(X, np.ndarray) and X.ndim == 2:
             n_samples = X.shape[1]

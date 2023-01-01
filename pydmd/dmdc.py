@@ -277,6 +277,8 @@ class DMDc(DMDBase):
             influences the system evolution.
         :type B: numpy.ndarray or iterable
         """
+        self.reset()
+
         self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
         self._controlin, self._controlin_shape = self._col_major_2darray(I)
 

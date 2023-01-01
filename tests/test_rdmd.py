@@ -333,10 +333,6 @@ def test_reconstructed_data():
     dmd.reconstructed_data
     assert True
 
-# this is a test for the correctness of the amplitudes saved in the Proxy
-# between DMDBase and the modes activation bitmask. if this test fails
-# you probably need to call allocate_proxy once again after you compute
-# the final value of the amplitudes
 def test_correct_amplitudes():
     dmd = RDMD()
     dmd.fit(X=sample_data)
