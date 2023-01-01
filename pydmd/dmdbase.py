@@ -57,7 +57,7 @@ class ActivationBitmaskProxy:
         self._original_eigs = linalg_module.atleast_1d(dmd_operator.eigenvalues)
         self._original_amplitudes = linalg_module.atleast_1d(amplitudes)
 
-        self._operator_id = id(dmd_operator.as_numpy_array)
+        self._operator_id = id(dmd_operator.as_array)
 
         self.old_bitmask = None
 
@@ -280,7 +280,7 @@ class DMDBase(object):
             pass
         else:
             old_id = self._modes_activation_bitmask_proxy._operator_id
-            new_id = id(self.operator.as_numpy_array)
+            new_id = id(self.operator.as_array)
             if old_id != new_id:
                 self._modes_activation_bitmask_proxy = None
 
