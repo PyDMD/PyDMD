@@ -2,12 +2,14 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 import pytest
+from pytest import raises
 
 from pydmd.dmd import DMD
 from pydmd.linalg import build_linalg_module
 
-from .utils import assert_allclose, data_backends
+from .utils import assert_allclose, data_backends, load_sample_data
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -468,8 +470,9 @@ def test_sorted_eigs_abs_right_modes(X):
                 assert_allclose(dmd.modes.T[idx_new], mode, atol=1.e-6)
                 break
 
-@pytest.mark.parametrize("X", data_backends)
-def test_sorted_eigs_real_right_eigs(X):
+def test_sorted_eigs_real_right_eigs():
+    X = load_sample_data()
+
     dmd = DMD(svd_rank=20, sorted_eigs='real')
     dmd.fit(X)
 
@@ -485,8 +488,9 @@ def test_sorted_eigs_real_right_eigs(X):
         assert x.real > previous.real or (x.real == previous.real and x.imag >= previous.imag)
         previous = x
 
-@pytest.mark.parametrize("X", data_backends)
-def test_sorted_eigs_real_right_eigenvectors(X):
+def test_sorted_eigs_real_right_eigenvectors():
+    X = load_sample_data()
+
     dmd = DMD(svd_rank=20, sorted_eigs='real')
     dmd.fit(X)
 
@@ -500,8 +504,9 @@ def test_sorted_eigs_real_right_eigenvectors(X):
                 assert all(dmd.operator.eigenvectors.T[idx_new] == eigenvector)
                 break
 
-@pytest.mark.parametrize("X", data_backends)
-def test_sorted_eigs_real_right_modes(X):
+def test_sorted_eigs_real_right_modes():
+    X = load_sample_data()
+
     dmd = DMD(svd_rank=20, sorted_eigs='real')
     dmd.fit(X)
 
@@ -514,6 +519,13 @@ def test_sorted_eigs_real_right_modes(X):
             if eig_new == eig:
                 assert_allclose(dmd.modes.T[idx_new], mode, atol=1.e-6)
                 break
+
+def test_sorted_eigs_real_fails_with_pytorch():
+    X = torch.from_numpy(load_sample_data())
+
+    dmd = DMD(svd_rank=20, sorted_eigs='real')
+    with raises(NotImplementedError):
+        dmd.fit(X)
 
 @pytest.mark.parametrize("X", data_backends)
 def test_sorted_eigs_dynamics(X):

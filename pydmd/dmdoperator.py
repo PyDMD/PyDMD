@@ -208,38 +208,20 @@ class DMDOperator:
                 )
             )
 
-        self._eigenvalues, self._eigenvectors = linalg_module.eig(Ahat)
+        eigs, eigenvecs = linalg_module.eig(Ahat)
 
-        if self._sorted_eigs is not False and self._sorted_eigs is not None:
-            if self._sorted_eigs == "abs":
-
-                def k(tp):
-                    return abs(tp[0])
-
-            elif self._sorted_eigs == "real":
-
-                def k(tp):
-                    eig = tp[0]
-                    if isinstance(eig, complex):
-                        return (eig.real, eig.imag)
-                    return (eig.real, 0)
-
-            else:
-                raise ValueError(
-                    "Invalid value for sorted_eigs: {}".format(
-                        self._sorted_eigs
-                    )
-                )
-
-            # each column is an eigenvector, therefore we take the
-            # transpose to associate each row (former column) to an
-            # eigenvalue before sorting
-            a, b = zip(
-                *sorted(zip(self._eigenvalues, self._eigenvectors.T), key=k)
-            )
-            self._eigenvalues = linalg_module.new_array(a)
-            # we restore the original condition (eigenvectors in columns)
-            self._eigenvectors = linalg_module.new_array(b).T
+        if self._sorted_eigs == "abs":
+            sort_mask = linalg_module.argsort(linalg_module.abs(eigs))
+        elif self._sorted_eigs == "real":
+            sort_mask = linalg_module.argsort(eigs)
+        elif not self._sorted_eigs:
+            sort_mask = linalg_module.arange(len(eigs))
+        else:
+            raise ValueError(f"Invalid value for sorted_eigs: {self._sorted_eigs}")
+        
+        self._eigenvalues = eigs[sort_mask]
+        self._eigenvectors = eigenvecs[:,sort_mask]
+            
 
     def _compute_modes(self, Y, U, Sigma, V):
         """
