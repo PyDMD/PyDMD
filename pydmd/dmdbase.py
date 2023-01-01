@@ -818,7 +818,7 @@ matrix, or regularization methods.""".format(
                 self.modes,
                 linalg_module.to(self.modes, selected_snapshots),
                 rcond=None,
-            )[0]
+            )
 
         return a
 

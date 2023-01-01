@@ -77,7 +77,7 @@ class LinalgNumPy(LinalgBase):
 
     @classmethod
     def lstsq(cls, X, Y, rcond):
-        return np.linalg.lstsq(X, Y, rcond=rcond)
+        return np.linalg.lstsq(X, Y, rcond=rcond)[0]
 
     @classmethod
     def make_not_writeable(cls, X):
