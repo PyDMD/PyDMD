@@ -4,7 +4,6 @@ Base module for the DMD: `fit` method must be implemented in inherited classes
 from __future__ import division
 
 import pickle
-import warnings
 from builtins import object, range
 from copy import copy, deepcopy
 from os.path import splitext
@@ -15,7 +14,7 @@ import numpy as np
 from past.utils import old_div
 
 from .dmdoperator import DMDOperator
-from .linalg import build_linalg_module, cast_as_array, is_array
+from .linalg import build_linalg_module
 from .utils import compute_svd
 
 mpl.rcParams["figure.max_open_warning"] = 0
@@ -703,44 +702,6 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
             dmd = pickle.load(output)
 
         return dmd
-
-    @staticmethod
-    def _col_major_2darray(X):
-        """
-        Private method that takes as input the snapshots and stores them into a
-        2D matrix, by column. If the input data is already formatted as 2D
-        array, the method saves it, otherwise it also saves the original
-        snapshots shape and reshapes the snapshots.
-
-        :param X: the input snapshots.
-        :type X: int or numpy.ndarray
-        :return: the 2D matrix that contains the flatten snapshots
-        :rtype: numpy.ndarray, tuple
-        """
-        snapshots = cast_as_array(X)
-
-        linalg_module = build_linalg_module(snapshots)
-        snapshots = linalg_module.atleast_2d(snapshots)
-        n_snapshots, *snapshots_shape = snapshots.shape
-
-        snapshots_2d = snapshots.reshape((n_snapshots, -1))
-        # when snapshots are wrapped in a list each member of the list is
-        # a snapshot
-        if not is_array(X):
-            snapshots_2d = snapshots_2d.T
-
-        # check condition number of the data passed in
-        cond_number = linalg_module.cond(snapshots_2d)
-        if cond_number > 10e4:
-            warnings.warn(
-                "Input data matrix X has condition number {}. "
-                """Consider preprocessing data, passing in augmented data
-matrix, or regularization methods.""".format(
-                    cond_number
-                )
-            )
-
-        return snapshots_2d, snapshots_shape
 
     def _optimal_dmd_matrices(self):
         # compute the vandermonde matrix

@@ -11,7 +11,7 @@ from past.utils import old_div
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .linalg import assert_same_linalg_type, build_linalg_module, cast_as_array
-from .utils import compute_svd, compute_tlsq
+from .utils import compute_svd, compute_tlsq, prepare_snapshots
 
 
 class DMDControlOperator(DMDOperator):
@@ -246,7 +246,7 @@ class DMDc(DMDBase):
             controlin = self._controlin
         else:
             assert_same_linalg_type(self.modes, control_input)
-            controlin, _ = self._col_major_2darray(control_input)
+            controlin, _ = prepare_snapshots(control_input)
 
         if controlin.shape[1] != self.dynamics.shape[1] - 1:
             raise RuntimeError(
@@ -282,11 +282,11 @@ class DMDc(DMDBase):
             influences the system evolution.
         :type B: numpy.ndarray or iterable
         """
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+        self._snapshots, self._snapshots_shape = prepare_snapshots(X)
         
         linalg_module = build_linalg_module(X)
         I = linalg_module.to(X, I)
-        self._controlin, self._controlin_shape = self._col_major_2darray(I)
+        self._controlin, self._controlin_shape = prepare_snapshots(I)
 
         n_samples = self._snapshots.shape[1]
         X = self._snapshots[:, :-1]

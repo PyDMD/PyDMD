@@ -6,7 +6,7 @@ import numpy as np
 
 from .dmdbase import DMDBase
 from .linalg import assert_same_linalg_type, build_linalg_module
-from .utils import compute_tlsq
+from .utils import compute_tlsq, prepare_snapshots
 
 
 class DMD(DMDBase):
@@ -52,7 +52,7 @@ class DMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+        self._snapshots, self._snapshots_shape = prepare_snapshots(X)
 
         n_samples = self._snapshots.shape[1]
         X = self._snapshots[:, :-1]

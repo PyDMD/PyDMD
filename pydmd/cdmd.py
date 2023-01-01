@@ -12,7 +12,7 @@ from scipy.linalg import sqrtm
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .linalg import build_linalg_module
-from .utils import compute_svd, compute_tlsq
+from .utils import compute_svd, compute_tlsq, prepare_snapshots
 
 
 class CDMDOperator(DMDOperator):
@@ -207,7 +207,7 @@ class CDMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+        self._snapshots, self._snapshots_shape = prepare_snapshots(X)
 
         compressed_snapshots = self._compress_snapshots()
 

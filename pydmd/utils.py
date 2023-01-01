@@ -1,9 +1,8 @@
 """Utilities module."""
 
 import warnings
-import numpy as np
 
-from .linalg import build_linalg_module
+from .linalg import build_linalg_module, cast_as_array, is_array
 
 
 def compute_tlsq(X, Y, tlsq_rank):
@@ -89,3 +88,30 @@ def compute_svd(X, svd_rank=0):
     s = s[:rank]
 
     return U, s, V
+
+
+def prepare_snapshots(X):
+    snapshots = cast_as_array(X)
+
+    linalg_module = build_linalg_module(snapshots)
+    snapshots = linalg_module.atleast_2d(snapshots)
+    n_snapshots, *snapshots_shape = snapshots.shape
+
+    snapshots_2d = snapshots.reshape((n_snapshots, -1))
+    # when snapshots are wrapped in a list each member of the list is
+    # a snapshot
+    if not is_array(X):
+        snapshots_2d = snapshots_2d.T
+
+    # check condition number of the data passed in
+    cond_number = linalg_module.cond(snapshots_2d)
+    if cond_number > 10e4:
+        warnings.warn(
+            "Input data matrix X has condition number {}. "
+            """Consider preprocessing data, passing in augmented data
+matrix, or regularization methods.""".format(
+                cond_number
+            )
+        )
+
+    return snapshots_2d, snapshots_shape

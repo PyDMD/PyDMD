@@ -9,7 +9,7 @@ import warnings
 
 from .hankeldmd import HankelDMD
 from .linalg import build_linalg_module
-from .utils import compute_svd
+from .utils import compute_svd, prepare_snapshots
 
 
 class HODMD(HankelDMD):
@@ -122,7 +122,7 @@ class HODMD(HankelDMD):
         :type X: numpy.ndarray or iterable
 
         """
-        org_snp, snapshots_shape = self._col_major_2darray(X)
+        org_snp, snapshots_shape = prepare_snapshots(X)
         linalg_module = build_linalg_module(org_snp)
 
         if org_snp.shape[0] == 1:

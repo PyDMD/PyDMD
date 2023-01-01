@@ -13,6 +13,7 @@ import numpy as np
 from .dmd import DMD
 from .dmdbase import DMDBase
 from .linalg import build_linalg_module, cast_as_array
+from .utils import prepare_snapshots
 
 
 class HankelDMD(DMDBase):
@@ -377,7 +378,7 @@ class HankelDMD(DMDBase):
         if n_samples < self._d:
             raise ValueError(f"The number of snapshots provided is not enough for d={self._d}.")
 
-        snp, self._snapshots_shape = self._col_major_2darray(X)
+        snp, self._snapshots_shape = prepare_snapshots(X)
         self._snapshots = self._pseudo_hankel_matrix(snp)
         self._sub_dmd.fit(self._snapshots)
 
