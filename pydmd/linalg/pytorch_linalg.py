@@ -29,6 +29,12 @@ class LinalgPyTorch(LinalgBase):
         return torch.arange(*args, **kwargs)
 
     @classmethod
+    def atleast_1d(cls, X):
+        import torch
+
+        return torch.atleast_1d(X)
+
+    @classmethod
     def atleast_2d(cls, X):
         import torch
 

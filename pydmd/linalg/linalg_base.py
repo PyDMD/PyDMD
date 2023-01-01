@@ -11,6 +11,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def atleast_1d(cls, X):
+        raise NotImplementedError
+
+    @classmethod
     def atleast_2d(cls, X):
         raise NotImplementedError
 

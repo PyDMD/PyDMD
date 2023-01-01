@@ -28,6 +28,10 @@ class LinalgNumPy(LinalgBase):
         return np.arange(*args, **kwargs)
 
     @classmethod
+    def atleast_1d(cls, X):
+        return np.atleast_1d(X)
+
+    @classmethod
     def atleast_2d(cls, X):
         return np.atleast_2d(X)
 
