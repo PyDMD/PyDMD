@@ -40,21 +40,19 @@ class ActivationBitmaskProxy:
     last available moment before losing the information provided by the ``old''
     bitmask.
 
-    :param modes: A matrix containing the original DMD modes.
-    :type modes: np.ndarray
-    :param eigs: An array containing the original DMD eigenvalues.
-    :type eigs: np.ndarray
-    :param amplitudes: An array containing the original DMD amplitudes.
+    :param dmd_operator: DMD operator to be proxied.
+    :type dmd_operator: DMDOperator
+    :param amplitudes: DMD amplitudes.
     :type amplitudes: np.ndarray
     """
 
-    def __init__(self, modes, eigs, amplitudes):
-        self._original_modes = modes
-        self._original_eigs = eigs
-        self._original_amplitudes = amplitudes
+    def __init__(self, dmd_operator, amplitudes):
+        self._original_modes = dmd_operator.modes
+        self._original_eigs = np.atleast_1d(dmd_operator.eigenvalues)
+        self._original_amplitudes = np.atleast_1d(amplitudes)
 
         self.old_bitmask = None
-        self.change_bitmask(np.full(len(eigs), True))
+        self.change_bitmask(np.full(len(dmd_operator.eigenvalues), True))
 
     def change_bitmask(self, value):
         """
@@ -260,13 +258,25 @@ class DMDBase(object):
             self.original_time["dt"],
         )
 
-    def allocate_proxy(self):
-        # if this is not true, this call is probably a sub-call of some
-        # get-access to self.modes (most likely in compute_amplitudes())
+    def allocate_modes_bitmask_proxy(self):
+        """
+        Utility method which allocates the activation bitmask proxy using the
+        quantities that are currently available in this DMD instance. Fails
+        quietly if the amplitudes are not set.
+        """
         if hasattr(self, "_b") and self._b is not None:
             self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(
-                self.operator.modes, self.operator.eigenvalues, self._b
+                self.operator,
+                self._b
             )
+
+    def reset(self):
+        """
+        Reset this instance. Should be called in :func:`fit`.
+        """
+        self._modes_activation_bitmask_proxy = None
+        self._snapshots = None
+        self._b = None
 
     @property
     def modes(self):
@@ -278,7 +288,7 @@ class DMDBase(object):
         """
         if self.fitted:
             if not self._modes_activation_bitmask_proxy:
-                self.allocate_proxy()
+                self.allocate_modes_bitmask_proxy()
                 # if the value is still None, it means that we cannot create
                 # the proxy at the moment
                 if not self._modes_activation_bitmask_proxy:
@@ -315,7 +325,7 @@ class DMDBase(object):
         """
         if self.fitted:
             if not self._modes_activation_bitmask_proxy:
-                self.allocate_proxy()
+                self.allocate_modes_bitmask_proxy()
                 # if the value is still None, it means that we cannot create
                 # the proxy at the moment
                 if not self._modes_activation_bitmask_proxy:
@@ -430,7 +440,7 @@ class DMDBase(object):
         """
         if self.fitted:
             if not self._modes_activation_bitmask_proxy:
-                self.allocate_proxy()
+                self.allocate_modes_bitmask_proxy()
             return self._modes_activation_bitmask_proxy.amplitudes
 
     @property
@@ -479,7 +489,7 @@ class DMDBase(object):
             raise RuntimeError("This DMD instance has not been fitted yet.")
 
         if not self._modes_activation_bitmask_proxy:
-            self.allocate_proxy()
+            self.allocate_modes_bitmask_proxy()
 
         bitmask = self._modes_activation_bitmask_proxy.old_bitmask
         # make sure that the array is immutable
@@ -551,7 +561,7 @@ class DMDBase(object):
         mask[key] = True
 
         shallow_copy = copy(self)
-        shallow_copy.allocate_proxy()
+        shallow_copy.allocate_modes_bitmask_proxy()
         shallow_copy.modes_activation_bitmask = mask
 
         return shallow_copy
@@ -641,11 +651,9 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
 
         Not implemented, it has to be implemented in subclasses.
         """
-        raise NotImplementedError(
-            "Subclass must implement abstract method {}.fit".format(
-                self.__class__.__name__
-            )
-        )
+        name = self.__class__.__name__
+        msg = f"Subclass must implement abstract method {name}.fit"
+        raise NotImplementedError(msg)
 
     def save(self, fname):
         """
