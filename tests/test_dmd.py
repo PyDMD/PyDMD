@@ -640,6 +640,20 @@ def test_bitmask_modes():
     assert dmd.modes.shape[1] == old_n_modes - 2
     np.testing.assert_almost_equal(dmd.modes, retained_modes)
 
+def test_second_fit():
+    dmd = DMD(svd_rank=-1)
+    dmd.fit(X=sample_data)
+    modes = dmd.modes
+    id1 = id(dmd.modes_activation_bitmask)
+
+    dmd.fit(X=sample_data + 1)
+    modes2 = dmd.modes
+    id2 = id(dmd.modes_activation_bitmask)
+
+    assert id1 != id2
+    with raises(AssertionError):
+        np.testing.assert_allclose(modes, modes2)
+
 def test_reconstructed_data():
     dmd = DMD(svd_rank=10)
     dmd.fit(X=sample_data)
