@@ -32,6 +32,10 @@ class LinalgNumPy(LinalgBase):
         return np.atleast_2d(X)
 
     @classmethod
+    def argsort(cls, X, *args, **kwargs):
+        return np.argsort(X, *args, **kwargs)
+
+    @classmethod
     def ceil(cls, X):
         return np.ceil(X)
 

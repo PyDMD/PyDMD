@@ -15,6 +15,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def argsort(cls, X, *args, **kwargs):
+        raise NotImplementedError
+
+    @classmethod
     def ceil(cls, X):
         raise NotImplementedError
 

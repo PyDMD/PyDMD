@@ -35,6 +35,14 @@ class LinalgPyTorch(LinalgBase):
         return torch.atleast_2d(X)
 
     @classmethod
+    def argsort(cls, X, *args, **kwargs):
+        import torch
+
+        if not torch.is_complex(X):
+            return torch.argsort(X, *args, **kwargs)
+        raise NotImplementedError("This feature is not supported in PyTorch")
+
+    @classmethod
     def ceil(cls, X):
         import torch
 
