@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import scipy
 import torch
-from pytest import raises
+from pytest import raises, param
 
 from pydmd import DMDc
 
@@ -31,16 +31,16 @@ def create_system_without_B():
 
 data_backends_with_B = (
     # NumPy
-    create_system_with_B(),
+    param(create_system_with_B(), id="NumPy"),
     # PyTorch
-    {key : torch.from_numpy(value) for key, value in create_system_with_B().items()},
+    param({key : torch.from_numpy(value) for key, value in create_system_with_B().items()}, id="PyTorch CPU"),
 )
 
 data_backends_without_B = (
     # NumPy
-    create_system_without_B(),
+    param(create_system_without_B(), id="NumPy"),
     # PyTorch
-    {key : torch.from_numpy(value) for key, value in create_system_without_B().items()},
+    param({key : torch.from_numpy(value) for key, value in create_system_without_B().items()}, id="PyTorch CPU"),
 )
 
 
