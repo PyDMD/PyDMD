@@ -702,14 +702,10 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
                 )
             ).conj()
         else:
-            U, s, V = compute_svd(self._snapshots[:, :-1], self.svd_rank)
+            _, s, V = compute_svd(self._snapshots[:, :-1], self.svd_rank)
 
-            # this is needed to support torch multi_dot, which requires all
-            # tensors to have the same dtype
-            target = self.operator.eigenvectors
             s_conj = linalg_module.diag(s).conj()
-            
-            s_conj, V, vander = linalg_module.to(target, s_conj, V, vander)
+            s_conj, V, vander = linalg_module.to(self.operator.eigenvectors, s_conj, V, vander)
             q = (
                 linalg_module.diag(
                     linalg_module.multi_dot(
