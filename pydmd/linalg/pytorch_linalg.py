@@ -293,4 +293,7 @@ class LinalgPyTorch(LinalgBase):
     def vander(cls, X, N, increasing):
         import torch
 
-        return torch.vander(X, N, increasing)
+        vd = torch.linalg.vander(X, N=N)
+        if increasing:
+            return vd
+        return vd.flip(-1)
