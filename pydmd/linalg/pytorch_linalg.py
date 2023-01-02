@@ -1,6 +1,9 @@
 import logging
+import numbers
 
-logging.basicConfig(format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s")
+logging.basicConfig(
+    format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 from .linalg_base import LinalgBase
@@ -121,14 +124,16 @@ class LinalgPyTorch(LinalgBase):
         import torch
 
         if Y.ndim == 1:
-            solution = torch.linalg.lstsq(X, Y[:,None], rcond=rcond).solution
+            solution = torch.linalg.lstsq(X, Y[:, None], rcond=rcond).solution
             return torch.squeeze(solution)
         return torch.linalg.lstsq(X, Y, rcond=rcond).solution
 
     @classmethod
     def make_not_writeable(cls, X):
         # not supported
-        logger.info("PyTorch does not support non-writeable tensors, ignoring ...")
+        logger.info(
+            "PyTorch does not support non-writeable tensors, ignoring ..."
+        )
 
     @classmethod
     def median(cls, X, *args, **kwargs):
@@ -156,7 +161,7 @@ class LinalgPyTorch(LinalgBase):
     @classmethod
     def nanmean(cls, X, axis):
         import torch
-        
+
         if torch.is_complex(X):
             real = torch.nanmean(X.real, dim=axis)
             imag = torch.nanmean(X.imag, dim=axis)
@@ -166,7 +171,7 @@ class LinalgPyTorch(LinalgBase):
     @classmethod
     def nansum(cls, X, axis):
         import torch
-        
+
         if torch.is_complex(X):
             real = torch.nansum(X.real, dim=axis)
             imag = torch.nansum(X.imag, dim=axis)
@@ -178,13 +183,17 @@ class LinalgPyTorch(LinalgBase):
         import torch
 
         if torch.is_tensor(X):
-            return X
+            return X.clone()
+        if isinstance(X, np.ndarray):
+            return torch.from_numpy(X)
         if isinstance(X, (list, tuple)):
-            if not X:
-                return torch.zeros(0)
-            if isinstance(X[0], (list, tuple)) or torch.is_tensor(X[0]):
-                X = tuple(map(np.array, X))
-        return torch.from_numpy(np.array(X))
+            if torch.is_tensor(X[0]) or isinstance(X[0], np.ndarray):
+                return torch.stack(X)
+            if isinstance(X[0], numbers.Number):
+                return torch.tensor(X)
+        raise ValueError(
+            f"Unsupported array type {type(X)} (first item: {type(X[0])})"
+        )
 
     @classmethod
     def norm(cls, X, *args, **kwargs):
@@ -280,7 +289,9 @@ class LinalgPyTorch(LinalgBase):
                         device=target_device,
                     )
                 else:
-                    raise ValueError(f"Unsupported sparse matrix type: {type(X)}")
+                    raise ValueError(
+                        f"Unsupported sparse matrix type: {type(X)}"
+                    )
             else:
                 raise ValueError(f"Unsupported module type: {module}")
             transformed.append(X_transformed)
