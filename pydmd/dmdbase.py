@@ -268,6 +268,8 @@ class DMDBase(object):
         Reset this instance. Should be called in :func:`fit`.
         """
         self._modes_activation_bitmask_proxy = None
+        self._snapshots = None
+        self._b = None
 
     @property
     def modes(self):
