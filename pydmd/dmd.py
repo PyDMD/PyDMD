@@ -54,7 +54,7 @@ class DMD(DMDBase):
         """
         self.reset()
 
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+        self._snapshots = self._col_major_2darray(X)
 
         n_samples = self._snapshots.shape[1]
         X = self._snapshots[:, :-1]

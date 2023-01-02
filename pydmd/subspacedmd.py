@@ -159,7 +159,6 @@ class SubspaceDMD(DMDBase):
 
         self._b = None
         self._snapshots = None
-        self._snapshots_shape = None
 
         self._modes_activation_bitmask_proxy = None
 
@@ -178,7 +177,7 @@ class SubspaceDMD(DMDBase):
         """
         self.reset()
 
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+        self._snapshots = self._col_major_2darray(X)
 
         n_samples = self._snapshots.shape[1]
         Y0 = self._snapshots[:, :-3]

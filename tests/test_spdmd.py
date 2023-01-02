@@ -1,7 +1,8 @@
-from pydmd import SpDMD, DMD
-import scipy.io
 import numpy as np
+import scipy.io
 from pytest import raises
+
+from pydmd import DMD, SpDMD
 
 data = np.load("tests/test_datasets/heat_90.npy")
 gammas = [1.0e-1, 0.5, 2, 5, 10, 20, 40, 50, 100]

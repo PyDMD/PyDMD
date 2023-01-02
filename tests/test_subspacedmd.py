@@ -1,6 +1,7 @@
+import numpy as np
+
 from pydmd import SubspaceDMD
 from pydmd.subspacedmd import SubspaceDMDOperator, reducedsvd
-import numpy as np
 
 
 def test_smoke():
@@ -36,7 +37,6 @@ def test_default_constructor():
     assert dmd._dmd_time is None
     assert dmd._b is None
     assert dmd._snapshots is None
-    assert dmd._snapshots_shape is None
     assert dmd._modes_activation_bitmask_proxy is None
 
 

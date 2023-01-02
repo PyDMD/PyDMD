@@ -175,8 +175,7 @@ class OptDMD(DMDBase):
         self._svds = None
         self._input_space = None
         self._output_space = None
-        self._input_snapshots, self._input_snapshots_shape = None, None
-        self._output_snapshots, self._output_snapshots_shape = None, None
+        self._input_snapshots, self._output_snapshots = None, None
 
     @property
     def factorization(self):
@@ -207,19 +206,13 @@ class OptDMD(DMDBase):
         self.reset()
 
         if Y is None:
-            self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+            self._snapshots = self._col_major_2darray(X)
 
             Y = X[:, 1:]  # y = x[k+1]
             X = X[:, :-1]  # x = x[k]
         else:
-            (
-                self._input_snapshots,
-                self._input_snapshots_shape,
-            ) = self._col_major_2darray(X)
-            (
-                self._output_snapshots,
-                self._output_snapshots_shape,
-            ) = self._col_major_2darray(Y)
+            self._input_snapshots = self._col_major_2darray(X)
+            self._output_snapshots = self._col_major_2darray(Y)
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
         Uz, Q = self.operator.compute_operator(X, Y)

@@ -195,7 +195,6 @@ class DMDc(DMDBase):
         self._opt = opt
 
         self._B = None
-        self._snapshots_shape = None
         self._controlin = None
         self._controlin_shape = None
         self._basis = None
@@ -279,8 +278,8 @@ class DMDc(DMDBase):
         """
         self.reset()
 
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
-        self._controlin, self._controlin_shape = self._col_major_2darray(I)
+        self._snapshots = self._col_major_2darray(X)
+        self._controlin = self._col_major_2darray(I)
 
         n_samples = self._snapshots.shape[1]
         X = self._snapshots[:, :-1]

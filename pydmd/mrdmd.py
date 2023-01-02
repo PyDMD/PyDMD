@@ -462,7 +462,7 @@ Expected one item per level, got {} out of {} levels.""".format(
         """
         self.reset()
 
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+        self._snapshots = self._col_major_2darray(X)
 
         # Redefine max level if it is too big.
         lvl_threshold = (

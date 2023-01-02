@@ -161,8 +161,7 @@ class HAVOK(HankelDMD):
         """
         self.reset()
 
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(x)
-        self._snapshots = self._snapshots.squeeze()
+        self._snapshots = self._col_major_2darray(x).squeeze()
 
         # Check that input data is a 1D time-series
         if self._snapshots.ndim > 1:

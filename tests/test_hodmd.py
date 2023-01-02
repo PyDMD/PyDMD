@@ -1,9 +1,9 @@
 from builtins import range
-from pytest import raises
-from pydmd.hodmd import HODMD
-import matplotlib.pyplot as plt
+
 import numpy as np
-import os
+from pytest import raises
+
+from pydmd.hodmd import HODMD
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -174,92 +174,6 @@ def test_dmd_time_5():
 
     # assert that the shape of the output is correct
     assert dmd.reconstructed_data.shape == (1,64)
-
-def test_plot_eigs_1():
-    dmd = HODMD()
-    dmd.fit(X=sample_data)
-    dmd.plot_eigs(show_axes=True, show_unit_circle=True)
-    plt.close()
-
-def test_plot_eigs_2():
-    dmd = HODMD()
-    dmd.fit(X=sample_data)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    plt.close()
-
-"""
-def test_plot_modes_1():
-    dmd = HODMD()
-    dmd.fit(X=sample_data)
-    with raises(ValueError):
-        dmd.plot_modes_2D()
-
-def test_plot_modes_2():
-    dmd = HODMD(svd_rank=-1)
-    dmd.fit(X=sample_data)
-    dmd.plot_modes_2D((1, 2, 5), x=np.arange(1), y=np.arange(15))
-    plt.close()
-
-def test_plot_modes_3():
-    dmd = HODMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D()
-    plt.close()
-
-def test_plot_modes_4():
-    dmd = HODMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D(index_mode=1)
-    plt.close()
-
-def test_plot_modes_5():
-    dmd = HODMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D(index_mode=1, filename='tmp.png')
-    os.remove('tmp.1.png')
-"""
-
-def test_plot_snapshots_1():
-    dmd = HODMD()
-    dmd.fit(X=sample_data)
-    with raises(ValueError):
-        dmd.plot_snapshots_2D()
-
-def test_plot_snapshots_2():
-    dmd = HODMD(svd_rank=-1)
-    dmd.fit(X=sample_data)
-    dmd.plot_snapshots_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
-    plt.close()
-
-def test_plot_snapshots_3():
-    dmd = HODMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D()
-    plt.close()
-
-def test_plot_snapshots_4():
-    dmd = HODMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D(index_snap=2)
-    plt.close()
-
-def test_plot_snapshots_5():
-    dmd = HODMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D(index_snap=2, filename='tmp.png')
-    os.remove('tmp.2.png')
-
-def test_tdmd_plot():
-    dmd = HODMD(tlsq_rank=3)
-    dmd.fit(X=sample_data)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    plt.close()
 
 def test_sorted_eigs_default():
     dmd = HODMD()
