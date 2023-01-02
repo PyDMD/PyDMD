@@ -576,13 +576,13 @@ def test_second_fit(X):
     dmd = DMD(svd_rank=-1)
     dmd.fit(X=X)
     modes = dmd.modes
-    id1 = id(dmd.modes_activation_bitmask)
+    proxy1 = dmd._modes_activation_bitmask_proxy
 
     dmd.fit(X=X + 1)
     modes2 = dmd.modes
-    id2 = id(dmd.modes_activation_bitmask)
+    proxy2 = dmd._modes_activation_bitmask_proxy
 
-    assert id1 != id2
+    assert proxy1 != proxy2
     with raises(AssertionError):
         assert_allclose(modes, modes2)
 
