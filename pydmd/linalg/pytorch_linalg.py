@@ -49,6 +49,12 @@ class LinalgPyTorch(LinalgBase):
         raise NotImplementedError("This feature is not supported in PyTorch")
 
     @classmethod
+    def cat(cls, Xs, axis):
+        import torch
+
+        return torch.cat(Xs, dim=axis)
+
+    @classmethod
     def ceil(cls, X):
         import torch
 
@@ -91,12 +97,6 @@ class LinalgPyTorch(LinalgBase):
         if isinstance(size, int):
             size = (size,)
         return torch.full(size, fill_value, *args, **kwargs)
-
-    @classmethod
-    def hstack(cls, Xs):
-        import torch
-
-        return torch.hstack(Xs)
 
     @classmethod
     def inv(cls, X):
@@ -294,9 +294,3 @@ class LinalgPyTorch(LinalgBase):
         import torch
 
         return torch.vander(X, N, increasing)
-
-    @classmethod
-    def vstack(cls, Xs):
-        import torch
-
-        return torch.vstack(Xs)

@@ -40,6 +40,10 @@ class LinalgNumPy(LinalgBase):
         return np.argsort(X, *args, **kwargs)
 
     @classmethod
+    def cat(cls, Xs, axis):
+        return np.concatenate(Xs, axis=axis)
+
+    @classmethod
     def ceil(cls, X):
         return np.ceil(X)
 
@@ -62,10 +66,6 @@ class LinalgNumPy(LinalgBase):
     @classmethod
     def full(cls, size, fill_value, *args, **kwargs):
         return np.full(size, fill_value, *args, **kwargs)
-
-    @classmethod
-    def hstack(cls, Xs):
-        return np.hstack(Xs)
 
     @classmethod
     def inv(cls, X):
@@ -167,7 +167,3 @@ class LinalgNumPy(LinalgBase):
     @classmethod
     def vander(cls, X, N, increasing):
         return np.vander(X, N, increasing)
-
-    @classmethod
-    def vstack(cls, Xs):
-        return np.vstack(Xs)

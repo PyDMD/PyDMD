@@ -127,7 +127,7 @@ class DMDBUnknownOperator(DMDControlOperator):
         linalg_module = build_linalg_module(X)
         snapshots_rows = X.shape[0]
 
-        omega = linalg_module.vstack((X, controlin))
+        omega = linalg_module.cat((X, controlin), axis=0)
 
         Up, sp, Vp = compute_svd(omega, self._svd_rank_omega)
 

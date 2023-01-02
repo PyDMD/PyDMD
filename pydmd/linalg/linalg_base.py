@@ -23,6 +23,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def cat(cls, Xs, axis):
+        raise NotImplementedError
+
+    @classmethod
     def ceil(cls, X):
         raise NotImplementedError
 
@@ -44,10 +48,6 @@ class LinalgBase:
 
     @classmethod
     def full(cls, size, fill_value):
-        raise NotImplementedError
-
-    @classmethod
-    def hstack(cls, Xs):
         raise NotImplementedError
 
     @classmethod
@@ -136,10 +136,6 @@ class LinalgBase:
 
     @classmethod
     def vander(cls, X, N, increasing):
-        raise NotImplementedError
-
-    @classmethod
-    def vstack(cls, Xs):
         raise NotImplementedError
 
 
