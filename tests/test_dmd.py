@@ -641,16 +641,19 @@ def test_correct_amplitudes(X):
 @pytest.mark.parametrize("X", data_backends)
 def test_backprop(X):
     if torch.is_tensor(X):
+        X = X.clone()
         X.requires_grad = True
         dmd = DMD(svd_rank=-1)
         dmd.fit(X=X)
         dmd.reconstructed_data.sum().backward()
+        X.requires_grad = False
     else:
         pass
 
 @pytest.mark.parametrize("X", data_backends)
 def test_second_fit_backprop(X):
     if torch.is_tensor(X):
+        X = X.clone()
         X.requires_grad = True
         dmd = DMD(svd_rank=-1)
         dmd.fit(X=X)
@@ -658,5 +661,6 @@ def test_second_fit_backprop(X):
 
         dmd.fit(X=X.clone())
         dmd.reconstructed_data.sum().backward()
+        X.requires_grad = False
     else:
         pass

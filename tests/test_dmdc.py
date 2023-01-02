@@ -227,3 +227,30 @@ def test_correct_amplitudes(system):
     dmd = DMDc(svd_rank=-1)
     dmd.fit(system['snapshots'], system['u'], system['B'])
     assert_allclose(dmd.amplitudes, dmd._b)
+
+@pytest.mark.parametrize("X", data_backends_with_B)
+def test_backprop(X):
+    if torch.is_tensor(X):
+        X = X.clone()
+        X.requires_grad = True
+        dmd = DMDc(svd_rank=-1)
+        dmd.fit(X=X)
+        dmd.reconstructed_data.sum().backward()
+        X.requires_grad = False
+    else:
+        pass
+
+@pytest.mark.parametrize("X", data_backends_with_B)
+def test_second_fit_backprop(X):
+    if torch.is_tensor(X):
+        X = X.clone()
+        X.requires_grad = True
+        dmd = DMDc(svd_rank=-1)
+        dmd.fit(X=X)
+        dmd.reconstructed_data.sum().backward()
+
+        dmd.fit(X=X.clone())
+        dmd.reconstructed_data.sum().backward()
+        X.requires_grad = False
+    else:
+        pass

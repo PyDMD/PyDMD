@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import pytest
 from pytest import raises
 
@@ -185,3 +186,30 @@ def test_correct_amplitudes(X):
     dmd = FbDMD(svd_rank=-1)
     dmd.fit(X=np.load('tests/test_datasets/input_sample.npy'))
     assert_allclose(dmd.amplitudes, dmd._b)
+
+@pytest.mark.parametrize("X", data_backends)
+def test_backprop(X):
+    if torch.is_tensor(X):
+        X = X.clone()
+        X.requires_grad = True
+        dmd = FbDMD(svd_rank=-1)
+        dmd.fit(X=X)
+        dmd.reconstructed_data.sum().backward()
+        X.requires_grad = False
+    else:
+        pass
+
+@pytest.mark.parametrize("X", data_backends)
+def test_second_fit_backprop(X):
+    if torch.is_tensor(X):
+        X = X.clone()
+        X.requires_grad = True
+        dmd = FbDMD(svd_rank=-1)
+        dmd.fit(X=X)
+        dmd.reconstructed_data.sum().backward()
+
+        dmd.fit(X=X.clone())
+        dmd.reconstructed_data.sum().backward()
+        X.requires_grad = False
+    else:
+        pass

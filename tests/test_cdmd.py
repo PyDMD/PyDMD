@@ -1,10 +1,9 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import torch
 import pytest
 from pytest import raises
 
 from pydmd.cdmd import CDMD
-from pydmd.linalg import build_linalg_module
 
 from .utils import assert_allclose, data_backends
 
@@ -329,3 +328,30 @@ def test_correct_amplitudes(X):
     dmd = CDMD(compression_matrix="normal")
     dmd.fit(X=X)
     assert_allclose(dmd.amplitudes, dmd._b)
+
+@pytest.mark.parametrize("X", data_backends)
+def test_backprop(X):
+    if torch.is_tensor(X):
+        X = X.clone()
+        X.requires_grad = True
+        dmd = CDMD(svd_rank=-1, compression_matrix="normal")
+        dmd.fit(X=X)
+        dmd.reconstructed_data.sum().backward()
+        X.requires_grad = False
+    else:
+        pass
+
+@pytest.mark.parametrize("X", data_backends)
+def test_second_fit_backprop(X):
+    if torch.is_tensor(X):
+        X = X.clone()
+        X.requires_grad = True
+        dmd = CDMD(svd_rank=-1, compression_matrix="normal")
+        dmd.fit(X=X)
+        dmd.reconstructed_data.sum().backward()
+
+        dmd.fit(X=X.clone())
+        dmd.reconstructed_data.sum().backward()
+        X.requires_grad = False
+    else:
+        pass
