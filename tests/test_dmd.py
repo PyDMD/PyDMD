@@ -640,6 +640,20 @@ def test_bitmask_modes():
     assert dmd.modes.shape[1] == old_n_modes - 2
     np.testing.assert_almost_equal(dmd.modes, retained_modes)
 
+def test_second_fit():
+    dmd = DMD(svd_rank=-1)
+    dmd.fit(X=sample_data)
+    modes = dmd.modes
+    proxy1 = dmd._modes_activation_bitmask_proxy
+
+    dmd.fit(X=sample_data + 1)
+    modes2 = dmd.modes
+    proxy2 = dmd._modes_activation_bitmask_proxy
+
+    assert proxy1 != proxy2
+    with raises(AssertionError):
+        np.testing.assert_allclose(modes, modes2)
+
 def test_reconstructed_data():
     dmd = DMD(svd_rank=10)
     dmd.fit(X=sample_data)
@@ -687,10 +701,6 @@ def test_getitem_raises():
     with raises(ValueError):
         dmd[1.0]
 
-# this is a test for the correctness of the amplitudes saved in the Proxy
-# between DMDBase and the modes activation bitmask. if this test fails
-# you probably need to call allocate_proxy once again after you compute
-# the final value of the amplitudes
 def test_correct_amplitudes():
     dmd = DMD(svd_rank=-1)
     dmd.fit(X=sample_data)
