@@ -120,10 +120,8 @@ class HODMD(HankelDMD):
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
-
         """
-        org_snp, snapshots_shape = prepare_snapshots(X)
-        linalg_module = build_linalg_module(org_snp)
+        org_snp = prepare_snapshots(X)
 
         if org_snp.shape[0] == 1:
             self.U_extra, _, _ = compute_svd(org_snp, -1)
@@ -134,10 +132,10 @@ class HODMD(HankelDMD):
         else:
             self.U_extra, _, _ = compute_svd(org_snp, self.svd_rank_extra)
 
+        linalg_module = build_linalg_module(org_snp)
         snp = linalg_module.dot(self.U_extra.T, org_snp)
 
         super().fit(snp)
-        self._snapshots_shape = snapshots_shape
         self._snapshots = org_snp
 
         return self

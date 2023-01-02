@@ -9,8 +9,9 @@ Nature Communications, 8, 2017.
 
 import numpy as np
 from scipy import signal
-from .hankeldmd import HankelDMD
+from .hankeldmd import HankelDMD, DMDBase
 from .utils import compute_svd
+
 
 class HAVOK(HankelDMD):
     """
@@ -158,8 +159,9 @@ class HAVOK(HankelDMD):
         Perform HAVOK analysis on 1-D time-series data x given the size of
         the time step dt separating the observations in x.
         """
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(x)
-        self._snapshots = self._snapshots.squeeze()
+        self.reset()
+
+        self._snapshots = self._col_major_2darray(x).squeeze()
 
         # Check that input data is a 1D time-series
         if self._snapshots.ndim > 1:

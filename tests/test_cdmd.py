@@ -1,5 +1,3 @@
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -101,7 +99,6 @@ def test_dmd_time_2(X):
     expected_data = X[:, -5:]
     assert_allclose(dmd.reconstructed_data, expected_data)
 
-
 @pytest.mark.parametrize("X", data_backends)
 def test_dmd_time_3(X):
     dmd = CDMD()
@@ -111,130 +108,12 @@ def test_dmd_time_3(X):
     expected_data = X[:, 8:12]
     assert_allclose(dmd.reconstructed_data, expected_data)
 
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_eigs_1(X):
-    dmd = CDMD()
-    dmd.fit(X=X)
-    dmd.plot_eigs(show_axes=True, show_unit_circle=True)
-    plt.close()
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_eigs_2(X):
-    dmd = CDMD()
-    dmd.fit(X=X)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    plt.close()
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_modes_1(X):
-    dmd = CDMD()
-    dmd.fit(X=X)
-    with raises(ValueError):
-        dmd.plot_modes_2D()
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_modes_2(X):
-    dmd = CDMD(svd_rank=-1)
-    dmd.fit(X=X)
-    dmd.plot_modes_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
-    plt.close()
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_modes_3(X):
-    dmd = CDMD()
-    linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D()
-    plt.close()
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_modes_4(X):
-    dmd = CDMD()
-    linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D(index_mode=1)
-    plt.close()
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_modes_5(X):
-    dmd = CDMD()
-    linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D(index_mode=1, filename="tmp.png")
-    os.remove("tmp.1.png")
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_snapshots_1(X):
-    dmd = CDMD()
-    dmd.fit(X=X)
-    with raises(ValueError):
-        dmd.plot_snapshots_2D()
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_snapshots_2(X):
-    dmd = CDMD(svd_rank=-1)
-    dmd.fit(X=X)
-    dmd.plot_snapshots_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
-    plt.close()
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_snapshots_3(X):
-    dmd = CDMD()
-    linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D()
-    plt.close()
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_snapshots_4(X):
-    dmd = CDMD()
-    linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D(index_snap=2)
-    plt.close()
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_snapshots_5(X):
-    dmd = CDMD()
-    linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D(index_snap=2, filename="tmp.png")
-    os.remove("tmp.2.png")
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_tdmd_plot(X):
-    dmd = CDMD(tlsq_rank=3)
-    dmd.fit(X=X)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    plt.close()
-
-
 @pytest.mark.parametrize("X", data_backends)
 def test_cdmd_matrix_uniform(X):
-    dmd = CDMD(compression_matrix="uniform")
+    dmd = CDMD(compression_matrix='uniform')
     dmd.fit(X=X)
     error_norm = np.linalg.norm(dmd.reconstructed_data - X, 1)
     assert error_norm < 1e-10
-
 
 @pytest.mark.parametrize("X", data_backends)
 def test_cdmd_matrix_sample(X):
@@ -445,11 +324,6 @@ def test_reconstructed_data(X):
     dmd.reconstructed_data
     assert True
 
-
-# this is a test for the correctness of the amplitudes saved in the Proxy
-# between DMDBase and the modes activation bitmask. if this test fails
-# you probably need to call allocate_proxy once again after you compute
-# the final value of the amplitudes
 @pytest.mark.parametrize("X", data_backends)
 def test_correct_amplitudes(X):
     dmd = CDMD(compression_matrix="normal")

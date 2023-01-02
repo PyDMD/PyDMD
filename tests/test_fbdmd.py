@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from pytest import raises
@@ -34,22 +33,7 @@ def test_reconstructed_data(X):
     dmd_data_correct = np.load('tests/test_datasets/fbdmd_data.npy')
     assert_allclose(dmd_data, dmd_data_correct)
 
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_eigs_1(X):
-    dmd = FbDMD(svd_rank=-1)
-    dmd.fit(X=X)
-    dmd.plot_eigs(show_axes=True, show_unit_circle=True)
-    plt.close()
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_eigs_2(X):
-    dmd = FbDMD(svd_rank=-1)
-    dmd.fit(X=X)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    plt.close()
-
-@pytest.mark.parametrize("X", data_backends)
-def test_sorted_eigs_default(X):
+def test_sorted_eigs_default():
     dmd = FbDMD(svd_rank=-1)
     assert dmd.operator._sorted_eigs == False
 
@@ -196,10 +180,6 @@ def test_getitem_raises(X):
     with raises(ValueError):
         dmd[1.0]
 
-# this is a test for the correctness of the amplitudes saved in the Proxy
-# between DMDBase and the modes activation bitmask. if this test fails
-# you probably need to call allocate_proxy once again after you compute
-# the final value of the amplitudes
 @pytest.mark.parametrize("X", data_backends)
 def test_correct_amplitudes(X):
     dmd = FbDMD(svd_rank=-1)

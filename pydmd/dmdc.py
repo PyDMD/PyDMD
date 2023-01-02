@@ -199,7 +199,6 @@ class DMDc(DMDBase):
         self._opt = opt
 
         self._B = None
-        self._snapshots_shape = None
         self._controlin = None
         self._controlin_shape = None
         self._basis = None
@@ -282,11 +281,12 @@ class DMDc(DMDBase):
             influences the system evolution.
         :type B: numpy.ndarray or iterable
         """
-        self._snapshots, self._snapshots_shape = prepare_snapshots(X)
+        self.reset()
+        self._snapshots = prepare_snapshots(X)
         
         linalg_module = build_linalg_module(X)
         I = linalg_module.to(X, I)
-        self._controlin, self._controlin_shape = prepare_snapshots(I)
+        self._controlin = prepare_snapshots(I)
 
         n_samples = self._snapshots.shape[1]
         X = self._snapshots[:, :-1]

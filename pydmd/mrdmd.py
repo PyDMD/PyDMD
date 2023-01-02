@@ -460,7 +460,9 @@ Expected one item per level, got {} out of {} levels.""".format(
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+        self.reset()
+
+        self._snapshots = self._col_major_2darray(X)
 
         # Redefine max level if it is too big.
         lvl_threshold = (

@@ -356,7 +356,7 @@ class HankelDMD(DMDBase):
         """
 
         sub_dmd_copy = copy(self._sub_dmd)
-        sub_dmd_copy._allocate_proxy()
+        sub_dmd_copy.allocate_modes_bitmask_proxy()
 
         shallow_copy = copy(self)
         shallow_copy._sub_dmd = sub_dmd_copy
@@ -369,6 +369,7 @@ class HankelDMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
+        self.reset()
 
         if hasattr(X, "shape") and X.ndim == 2:
             n_samples = X.shape[1]
@@ -378,7 +379,7 @@ class HankelDMD(DMDBase):
         if n_samples < self._d:
             raise ValueError(f"The number of snapshots provided is not enough for d={self._d}.")
 
-        snp, self._snapshots_shape = prepare_snapshots(X)
+        snp = prepare_snapshots(X)
         self._snapshots = self._pseudo_hankel_matrix(snp)
         self._sub_dmd.fit(self._snapshots)
 

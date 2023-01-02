@@ -222,10 +222,6 @@ def test_getitem_raises(system):
     with raises(ValueError):
         dmd[1.0]
 
-# this is a test for the correctness of the amplitudes saved in the Proxy
-# between DMDBase and the modes activation bitmask. if this test fails
-# you probably need to call allocate_proxy once again after you compute
-# the final value of the amplitudes
 @pytest.mark.parametrize("system", data_backends_with_B)
 def test_correct_amplitudes(system):
     dmd = DMDc(svd_rank=-1)

@@ -1,7 +1,8 @@
-from pydmd import SpDMD, DMD
-import scipy.io
 import numpy as np
+import scipy.io
 from pytest import raises
+
+from pydmd import DMD, SpDMD
 
 data = np.load("tests/test_datasets/heat_90.npy")
 gammas = [1.0e-1, 0.5, 2, 5, 10, 20, 40, 50, 100]
@@ -285,10 +286,6 @@ def test_getitem_raises():
     with raises(ValueError):
         dmd[1.0]
 
-# this is a test for the correctness of the amplitudes saved in the Proxy
-# between DMDBase and the modes activation bitmask. if this test fails
-# you probably need to call allocate_proxy once again after you compute
-# the final value of the amplitudes
 def test_correct_amplitudes():
     dmd = SpDMD(release_memory=True, svd_rank=-1)
     dmd.fit(X=data)

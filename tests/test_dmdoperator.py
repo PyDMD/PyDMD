@@ -83,16 +83,3 @@ def test_compute_eigenquantities_wrong_rescalemode():
         rescale_mode=np.ones((4,)), sorted_eigs=False, tikhonov_regularization=None)
     with raises(ValueError):
         operator.compute_operator(np.ones((3, 3)), np.ones((3, 3)))
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_operator(X):
-    operator = DMDOperator(svd_rank=2, exact=True, forward_backward=False,
-        rescale_mode=None, sorted_eigs=False, tikhonov_regularization=None)
-
-    a = X[:, :-1]
-    b = X[:, 1:]
-    a, b = compute_tlsq(a, b, 0)
-
-    operator.compute_operator(a, b)
-    operator.plot_operator()
-    plt.close()

@@ -52,7 +52,9 @@ class DMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self._snapshots, self._snapshots_shape = prepare_snapshots(X)
+        self.reset()
+
+        self._snapshots = prepare_snapshots(X)
 
         n_samples = self._snapshots.shape[1]
         X = self._snapshots[:, :-1]

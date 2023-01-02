@@ -95,16 +95,14 @@ def prepare_snapshots(X):
 
     linalg_module = build_linalg_module(snapshots)
     snapshots = linalg_module.atleast_2d(snapshots)
-    n_snapshots, *snapshots_shape = snapshots.shape
 
-    snapshots_2d = snapshots.reshape((n_snapshots, -1))
     # when snapshots are wrapped in a list each member of the list is
     # a snapshot
     if not is_array(X):
-        snapshots_2d = snapshots_2d.T
+        snapshots = snapshots.T
 
     # check condition number of the data passed in
-    cond_number = linalg_module.cond(snapshots_2d)
+    cond_number = linalg_module.cond(snapshots)
     if cond_number > 10e4:
         warnings.warn(
             "Input data matrix X has condition number {}. "
@@ -114,4 +112,4 @@ matrix, or regularization methods.""".format(
             )
         )
 
-    return snapshots_2d, snapshots_shape
+    return snapshots

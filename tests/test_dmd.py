@@ -173,116 +173,6 @@ def test_dmd_time_4(X):
                     [3.38410649e-83 + 3.75677740e-83j]]
     assert_allclose(dmd.dynamics, expected_data, atol=1.e-6)
 
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_eigs_1(X):
-    dmd = DMD()
-    dmd.fit(X=X)
-    dmd.plot_eigs(show_axes=True, show_unit_circle=True)
-    plt.close()
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_eigs_2(X):
-    dmd = DMD()
-    dmd.fit(X=X)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    plt.close()
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_eigs_3(X):
-    dmd = DMD()
-    dmd.fit(X=X)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=True, filename='eigs.png')
-    os.remove('eigs.png')
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_modes_1(X):
-    dmd = DMD()
-    dmd.fit(X=X)
-    with pytest.raises(ValueError):
-        dmd.plot_modes_2D()
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_modes_2(X):
-    dmd = DMD(svd_rank=-1)
-    dmd.fit(X=X)
-    dmd.plot_modes_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
-    plt.close()
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_modes_3(X):
-    dmd = DMD()
-    linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D()
-    plt.close()
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_modes_4(X):
-    dmd = DMD()
-    linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D(index_mode=1)
-    plt.close()
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_modes_5(X):
-    dmd = DMD()
-    linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D(index_mode=1, filename='tmp.png')
-    os.remove('tmp.1.png')
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_snapshots_1(X):
-    dmd = DMD()
-    dmd.fit(X=X)
-    with pytest.raises(ValueError):
-        dmd.plot_snapshots_2D()
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_snapshots_2(X):
-    dmd = DMD(svd_rank=-1)
-    dmd.fit(X=X)
-    dmd.plot_snapshots_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
-    plt.close()
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_snapshots_3(X):
-    dmd = DMD()
-    linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D()
-    plt.close()
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_snapshots_4(X):
-    dmd = DMD()
-    linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D(index_snap=2)
-    plt.close()
-
-@pytest.mark.parametrize("X", data_backends)
-def test_plot_snapshots_5(X):
-    dmd = DMD()
-    linalg_module = build_linalg_module(X)
-    snapshots = [linalg_module.new_array(snap.reshape(20, 20)) for snap in X.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D(index_snap=2, filename='tmp.png')
-    os.remove('tmp.2.png')
-
-@pytest.mark.parametrize("X", data_backends)
-def test_tdmd_plot(X):
-    dmd = DMD(tlsq_rank=3)
-    dmd.fit(X=X)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    plt.close()
-
 # we check that modes are the same vector multiplied by a coefficient
 # when we rescale
 @pytest.mark.parametrize("X", data_backends)
@@ -746,10 +636,6 @@ def test_getitem_raises(X):
     with pytest.raises(ValueError):
         dmd[1.0]
 
-# this is a test for the correctness of the amplitudes saved in the Proxy
-# between DMDBase and the modes activation bitmask. if this test fails
-# you probably need to call allocate_proxy once again after you compute
-# the final value of the amplitudes
 @pytest.mark.parametrize("X", data_backends)
 def test_correct_amplitudes(X):
     dmd = DMD(svd_rank=-1)

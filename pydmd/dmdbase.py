@@ -4,20 +4,15 @@ Base module for the DMD: `fit` method must be implemented in inherited classes
 from __future__ import division
 
 import pickle
-from builtins import object, range
+from builtins import object
 from copy import copy, deepcopy
-from os.path import splitext
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 from past.utils import old_div
 
 from .dmdoperator import DMDOperator
 from .linalg import build_linalg_module
 from .utils import compute_svd
-
-mpl.rcParams["figure.max_open_warning"] = 0
 
 
 class ActivationBitmaskProxy:
@@ -39,11 +34,6 @@ class ActivationBitmaskProxy:
     last available moment before losing the information provided by the ``old''
     bitmask.
 
-    In order to make sure the proxy is invalidated when :func:`DMDBase.fit` is
-    called multiple times we cache the Python object ID of the array representing
-    the lowrank DMD operator. When the ID changes, the bitmask is invalidated (see
-    :func:`DMDBase._try_invalidate_bitmask_proxy`).
-
     :param dmd_operator: DMD operator to be proxied.
     :type dmd_operator: DMDOperator
     :param amplitudes: DMD amplitudes.
@@ -56,11 +46,8 @@ class ActivationBitmaskProxy:
         self._original_eigs = linalg_module.atleast_1d(dmd_operator.eigenvalues)
         self._original_amplitudes = linalg_module.atleast_1d(amplitudes)
 
-        self._operator_id = id(dmd_operator.as_array)
-
         self.old_bitmask = None
-
-        self.change_bitmask(linalg_module.full(len(dmd_operator.eigenvalues), True))
+        self.change_bitmask(np.full(len(dmd_operator.eigenvalues), True))
 
     def change_bitmask(self, value):
         """
@@ -210,7 +197,6 @@ class DMDBase(object):
 
         self._b = None  # amplitudes
         self._snapshots = None
-        self._snapshots_shape = None
 
         self._modes_activation_bitmask_proxy = None
 
@@ -268,20 +254,20 @@ class DMDBase(object):
             self.original_time["dt"],
         )
 
-    def _allocate_proxy(self):
+    def allocate_modes_bitmask_proxy(self):
         # if this is not true, this call is probably a sub-call of some
         # get-access to self.modes (most likely in compute_amplitudes())
         if hasattr(self, "_b") and self._b is not None:
-            self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(self.operator, self._b)
+            self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(
+                self.operator,
+                self._b
+            )
 
-    def _try_invalidate_bitmask_proxy(self):
-        if not self._modes_activation_bitmask_proxy:
-            pass
-        else:
-            old_id = self._modes_activation_bitmask_proxy._operator_id
-            new_id = id(self.operator.as_array)
-            if old_id != new_id:
-                self._modes_activation_bitmask_proxy = None
+    def reset(self):
+        """
+        Reset this instance. Should be called in :func:`fit`.
+        """
+        self._modes_activation_bitmask_proxy = None
 
     @property
     def modes(self):
@@ -292,9 +278,8 @@ class DMDBase(object):
         :rtype: numpy.ndarray
         """
         if self.fitted:
-            self._try_invalidate_bitmask_proxy()
             if not self._modes_activation_bitmask_proxy:
-                self._allocate_proxy()
+                self.allocate_modes_bitmask_proxy()
                 # if the value is still None, it means that we cannot create
                 # the proxy at the moment
                 if not self._modes_activation_bitmask_proxy:
@@ -330,9 +315,8 @@ class DMDBase(object):
         :rtype: numpy.ndarray
         """
         if self.fitted:
-            self._try_invalidate_bitmask_proxy()
             if not self._modes_activation_bitmask_proxy:
-                self._allocate_proxy()
+                self.allocate_modes_bitmask_proxy()
                 # if the value is still None, it means that we cannot create
                 # the proxy at the moment
                 if not self._modes_activation_bitmask_proxy:
@@ -450,9 +434,8 @@ class DMDBase(object):
         :rtype: numpy.ndarray
         """
         if self.fitted:
-            self._try_invalidate_bitmask_proxy()
             if not self._modes_activation_bitmask_proxy:
-                self._allocate_proxy()
+                self.allocate_modes_bitmask_proxy()
             return self._modes_activation_bitmask_proxy.amplitudes
 
     @property
@@ -501,7 +484,7 @@ class DMDBase(object):
             raise RuntimeError("This DMD instance has not been fitted yet.")
 
         if not self._modes_activation_bitmask_proxy:
-            self._allocate_proxy()
+            self.allocate_modes_bitmask_proxy()
 
         bitmask = self._modes_activation_bitmask_proxy.old_bitmask
         # make sure that the array is immutable
@@ -572,7 +555,7 @@ class DMDBase(object):
         mask[key] = True
 
         shallow_copy = copy(self)
-        shallow_copy._allocate_proxy()
+        shallow_copy.allocate_modes_bitmask_proxy()
         shallow_copy.modes_activation_bitmask = mask
 
         return shallow_copy
@@ -662,11 +645,9 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
 
         Not implemented, it has to be implemented in subclasses.
         """
-        raise NotImplementedError(
-            "Subclass must implement abstract method {}.fit".format(
-                self.__class__.__name__
-            )
-        )
+        name = self.__class__.__name__
+        msg = f"Subclass must implement abstract method {name}.fit"
+        raise NotImplementedError(msg)
 
     def save(self, fname):
         """
@@ -781,361 +762,6 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
             )
 
         return a
-
-    def _enforce_ratio(self, goal_ratio, supx, infx, supy, infy):
-        """
-        Computes the right value of `supx,infx,supy,infy` to obtain the desired
-        ratio in :func:`plot_eigs`. Ratio is defined as
-        ::
-            dx = supx - infx
-            dy = supy - infy
-            max(dx,dy) / min(dx,dy)
-
-        :param float goal_ratio: the desired ratio.
-        :param float supx: the old value of `supx`, to be adjusted.
-        :param float infx: the old value of `infx`, to be adjusted.
-        :param float supy: the old value of `supy`, to be adjusted.
-        :param float infy: the old value of `infy`, to be adjusted.
-        :return tuple: a tuple which contains the updated values of
-            `supx,infx,supy,infy` in this order.
-        """
-
-        dx = supx - infx
-        if dx == 0:
-            dx = 1.0e-16
-        dy = supy - infy
-        if dy == 0:
-            dy = 1.0e-16
-        ratio = max(dx, dy) / min(dx, dy)
-
-        if ratio >= goal_ratio:
-            if dx < dy:
-                goal_size = dy / goal_ratio
-
-                supx += (goal_size - dx) / 2
-                infx -= (goal_size - dx) / 2
-            elif dy < dx:
-                goal_size = dx / goal_ratio
-
-                supy += (goal_size - dy) / 2
-                infy -= (goal_size - dy) / 2
-
-        return (supx, infx, supy, infy)
-
-    def _plot_limits(self, narrow_view):
-        if narrow_view:
-            supx = max(self.eigs.real) + 0.05
-            infx = min(self.eigs.real) - 0.05
-
-            supy = max(self.eigs.imag) + 0.05
-            infy = min(self.eigs.imag) - 0.05
-
-            return self._enforce_ratio(8, supx, infx, supy, infy)
-        else:
-            linalg_module = build_linalg_module(self.eigs)
-            return linalg_module.ceil(linalg_module.abs(self.eigs)).max()
-
-    def plot_eigs(
-        self,
-        show_axes=True,
-        show_unit_circle=True,
-        figsize=(8, 8),
-        title="",
-        narrow_view=False,
-        dpi=None,
-        filename=None,
-    ):
-        """
-        Plot the eigenvalues.
-        :param bool show_axes: if True, the axes will be showed in the plot.
-            Default is True.
-        :param bool show_unit_circle: if True, the circle with unitary radius
-            and center in the origin will be showed. Default is True.
-        :param tuple(int,int) figsize: tuple in inches defining the figure
-            size. Default is (8, 8).
-        :param str title: title of the plot.
-        :param narrow_view bool: if True, the plot will show only the smallest
-            rectangular area which contains all the eigenvalues, with a padding
-            of 0.05. Not compatible with `show_axes=True`. Default is False.
-        :param dpi int: If not None, the given value is passed to
-            ``plt.figure``.
-        :param str filename: if specified, the plot is saved at `filename`.
-        """
-        if self.eigs is None:
-            raise ValueError(
-                "The eigenvalues have not been computed."
-                "You have to call the fit() method."
-            )
-
-        if dpi is not None:
-            plt.figure(figsize=figsize, dpi=dpi)
-        else:
-            plt.figure(figsize=figsize)
-
-        plt.title(title)
-        plt.gcf()
-        ax = plt.gca()
-
-        (points,) = ax.plot(
-            self.eigs.real, self.eigs.imag, "bo", label="Eigenvalues"
-        )
-
-        if narrow_view:
-            supx, infx, supy, infy = self._plot_limits(narrow_view)
-
-            # set limits for axis
-            ax.set_xlim((infx, supx))
-            ax.set_ylim((infy, supy))
-
-            # x and y axes
-            if show_axes:
-                endx = min(supx, 1.0)
-                ax.annotate(
-                    "",
-                    xy=(endx, 0.0),
-                    xytext=(max(infx, -1.0), 0.0),
-                    arrowprops=dict(arrowstyle=("->" if endx == 1.0 else "-")),
-                )
-
-                endy = min(supy, 1.0)
-                ax.annotate(
-                    "",
-                    xy=(0.0, endy),
-                    xytext=(0.0, max(infy, -1.0)),
-                    arrowprops=dict(arrowstyle=("->" if endy == 1.0 else "-")),
-                )
-        else:
-            # set limits for axis
-            limit = self._plot_limits(narrow_view)
-
-            ax.set_xlim((-limit, limit))
-            ax.set_ylim((-limit, limit))
-
-            # x and y axes
-            if show_axes:
-                ax.annotate(
-                    "",
-                    xy=(max(limit * 0.8, 1.0), 0.0),
-                    xytext=(min(-limit * 0.8, -1.0), 0.0),
-                    arrowprops=dict(arrowstyle="->"),
-                )
-                ax.annotate(
-                    "",
-                    xy=(0.0, max(limit * 0.8, 1.0)),
-                    xytext=(0.0, min(-limit * 0.8, -1.0)),
-                    arrowprops=dict(arrowstyle="->"),
-                )
-
-        plt.ylabel("Imaginary part")
-        plt.xlabel("Real part")
-
-        if show_unit_circle:
-            unit_circle = plt.Circle(
-                (0.0, 0.0),
-                1.0,
-                color="green",
-                fill=False,
-                label="Unit circle",
-                linestyle="--",
-            )
-            ax.add_artist(unit_circle)
-
-        # Dashed grid
-        gridlines = ax.get_xgridlines() + ax.get_ygridlines()
-        for line in gridlines:
-            line.set_linestyle("-.")
-        ax.grid(True)
-
-        # legend
-        if show_unit_circle:
-            ax.add_artist(
-                plt.legend(
-                    [points, unit_circle],
-                    ["Eigenvalues", "Unit circle"],
-                    loc="best",
-                )
-            )
-        else:
-            ax.add_artist(plt.legend([points], ["Eigenvalues"], loc="best"))
-
-        ax.set_aspect("equal")
-
-        if filename:
-            plt.savefig(filename)
-        else:
-            plt.show()
-
-    def plot_modes_2D(
-        self,
-        index_mode=None,
-        filename=None,
-        x=None,
-        y=None,
-        order="C",
-        figsize=(8, 8),
-    ):
-        """
-        Plot the DMD Modes.
-
-        :param index_mode: the index of the modes to plot. By default, all
-            the modes are plotted.
-        :type index_mode: int or sequence(int)
-        :param str filename: if specified, the plot is saved at `filename`.
-        :param numpy.ndarray x: domain abscissa.
-        :param numpy.ndarray y: domain ordinate
-        :param tuple(int,int) figsize: tuple in inches defining the figure
-            size. Default is (8, 8).
-        """
-        if self.modes is None:
-            raise ValueError(
-                "The modes have not been computed."
-                "You have to perform the fit method."
-            )
-
-        if x is None and y is None:
-            if self._snapshots_shape is None:
-                raise ValueError(
-                    "No information about the original shape of the snapshots."
-                )
-
-            if len(self._snapshots_shape) != 2:
-                raise ValueError(
-                    "The dimension of the input snapshots is not 2D."
-                )
-
-        # If domain dimensions have not been passed as argument,
-        # use the snapshots dimensions
-        if x is None and y is None:
-            x = np.arange(self._snapshots_shape[0])
-            y = np.arange(self._snapshots_shape[1])
-
-        xgrid, ygrid = np.meshgrid(x, y)
-
-        if index_mode is None:
-            index_mode = list(range(self.modes.shape[1]))
-        elif isinstance(index_mode, int):
-            index_mode = [index_mode]
-
-        if filename:
-            basename, ext = splitext(filename)
-
-        for idx in index_mode:
-            fig = plt.figure(figsize=figsize)
-            fig.suptitle("DMD Mode {}".format(idx))
-
-            real_ax = fig.add_subplot(1, 2, 1)
-            imag_ax = fig.add_subplot(1, 2, 2)
-
-            mode = self.modes.T[idx].reshape(xgrid.shape)
-
-            real = real_ax.pcolor(
-                xgrid,
-                ygrid,
-                mode.real,
-                cmap="jet",
-                vmin=mode.real.min(),
-                vmax=mode.real.max(),
-            )
-            imag = imag_ax.pcolor(
-                xgrid,
-                ygrid,
-                mode.imag,
-                vmin=mode.imag.min(),
-                vmax=mode.imag.max(),
-            )
-
-            fig.colorbar(real, ax=real_ax)
-            fig.colorbar(imag, ax=imag_ax)
-
-            real_ax.set_aspect("auto")
-            imag_ax.set_aspect("auto")
-
-            real_ax.set_title("Real")
-            imag_ax.set_title("Imag")
-
-            # padding between elements
-            plt.tight_layout(pad=2.0)
-
-            if filename:
-                plt.savefig("{0}.{1}{2}".format(basename, idx, ext))
-                plt.close(fig)
-
-        if not filename:
-            plt.show()
-
-    def plot_snapshots_2D(
-        self,
-        index_snap=None,
-        filename=None,
-        x=None,
-        y=None,
-        order="C",
-        figsize=(8, 8),
-    ):
-        """
-        Plot the snapshots.
-
-        :param index_snap: the index of the snapshots to plot. By default, all
-            the snapshots are plotted.
-        :type index_snap: int or sequence(int)
-        :param str filename: if specified, the plot is saved at `filename`.
-        :param numpy.ndarray x: domain abscissa.
-        :param numpy.ndarray y: domain ordinate
-        :param tuple(int,int) figsize: tuple in inches defining the figure
-            size. Default is (8, 8).
-        """
-        if self._snapshots is None:
-            raise ValueError("Input snapshots not found.")
-
-        if x is None and y is None:
-            if self._snapshots_shape is None:
-                raise ValueError(
-                    "No information about the original shape of the snapshots."
-                )
-
-            if len(self._snapshots_shape) != 2:
-                raise ValueError(
-                    "The dimension of the input snapshots is not 2D."
-                )
-
-        # If domain dimensions have not been passed as argument,
-        # use the snapshots dimensions
-        if x is None and y is None:
-            x = np.arange(self._snapshots_shape[0])
-            y = np.arange(self._snapshots_shape[1])
-
-        xgrid, ygrid = np.meshgrid(x, y)
-
-        if index_snap is None:
-            index_snap = list(range(self._snapshots.shape[1]))
-        elif isinstance(index_snap, int):
-            index_snap = [index_snap]
-
-        if filename:
-            basename, ext = splitext(filename)
-
-        for idx in index_snap:
-            fig = plt.figure(figsize=figsize)
-            fig.suptitle("Snapshot {}".format(idx))
-
-            snapshot = self._snapshots.T[idx].real.reshape(xgrid.shape)
-
-            contour = plt.pcolor(
-                xgrid,
-                ygrid,
-                snapshot,
-                vmin=snapshot.min(),
-                vmax=snapshot.max(),
-            )
-
-            fig.colorbar(contour)
-
-            if filename:
-                plt.savefig("{0}.{1}{2}".format(basename, idx, ext))
-                plt.close(fig)
-
-        if not filename:
-            plt.show()
 
 
 class DMDTimeDict(dict):
