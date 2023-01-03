@@ -78,11 +78,11 @@ class DMDOperator:
 
         if self._forward_backward:
             # b stands for "backward"
-            bU, bs, bV = compute_svd(Y, svd_rank=len(s))
+            bU, bs, bV = compute_svd(Y, svd_rank=s.shape[-1])
             atilde_back = self._least_square_operator(bU, bs, bV, X)
-            atilde = linalg_module.sqrtm(
-                linalg_module.dot(atilde, linalg_module.inv(atilde_back))
-            )
+            atilde_back_inv = linalg_module.inv(atilde_back)
+            atilde_dotted = linalg_module.dot(atilde, atilde_back_inv)
+            atilde = linalg_module.sqrtm(atilde_dotted)
 
         if isinstance(self._rescale_mode, str) and self._rescale_mode == "auto":
             self._rescale_mode = s
@@ -168,7 +168,11 @@ class DMDOperator:
             s = (s**2 + self._tikhonov_regularization * self._norm_X) / s
 
         linalg_module = build_linalg_module(U)
-        return linalg_module.multi_dot((U.T.conj(), Y, V)) / s
+        UY = linalg_module.dot(U.swapaxes(-1, -2).conj(), Y)
+        UYV = linalg_module.dot(UY, V)
+        if UYV.ndim == 3:
+            s = s[:, None]
+        return UYV / s
 
     def _compute_eigenquantities(self):
         """
@@ -195,12 +199,11 @@ class DMDOperator:
             )
 
             # if an index is 0, we get inf when taking the reciprocal
-            factors_inv_sqrt[scaling_factors == 0] = 0
+            factors_inv_sqrt[..., scaling_factors == 0] = 0
 
             factors_sqrt, factors_inv_sqrt = linalg_module.to(self.as_array, factors_sqrt, factors_inv_sqrt)
-            Ahat = linalg_module.multi_dot(
-                (factors_inv_sqrt, self.as_array, factors_sqrt)
-            )
+            temp = linalg_module.dot(factors_inv_sqrt, self.as_array)
+            Ahat = linalg_module.dot(temp, factors_sqrt)
         else:
             raise ValueError(
                 "Invalid value for rescale_mode: {} of type {}".format(
@@ -210,17 +213,22 @@ class DMDOperator:
 
         eigs, eigenvecs = linalg_module.eig(Ahat)
 
-        if self._sorted_eigs == "abs":
-            sort_mask = linalg_module.argsort(linalg_module.abs(eigs))
-        elif self._sorted_eigs == "real":
-            sort_mask = linalg_module.argsort(eigs)
-        elif not self._sorted_eigs:
-            sort_mask = linalg_module.arange(len(eigs))
+        if self._sorted_eigs:
+            if eigenvecs.ndim > 2:
+                raise ValueError("Sorting not allowed for batched DMD")
+
+            if self._sorted_eigs == "abs":
+                sort_mask = linalg_module.argsort(linalg_module.abs(eigs))
+            elif self._sorted_eigs == "real":
+                sort_mask = linalg_module.argsort(eigs)
+            else:
+                raise ValueError(f"Invalid value for sorted_eigs: {self._sorted_eigs}")
+            
+            self._eigenvalues = eigs[sort_mask]
+            self._eigenvectors = eigenvecs[:, sort_mask]
         else:
-            raise ValueError(f"Invalid value for sorted_eigs: {self._sorted_eigs}")
-        
-        self._eigenvalues = eigs[sort_mask]
-        self._eigenvectors = eigenvecs[:,sort_mask]
+            self._eigenvalues = eigs
+            self._eigenvectors = eigenvecs
             
 
     def _compute_modes(self, Y, U, Sigma, V):

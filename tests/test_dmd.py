@@ -583,7 +583,7 @@ def test_second_fit(X):
         assert_allclose(modes, modes2)
 
 @pytest.mark.parametrize("X", data_backends)
-def test_reconstructed_data(X):
+def test_reconstructed_data_with_bitmask(X):
     dmd = DMD(svd_rank=10)
     dmd.fit(X=X)
 
@@ -591,8 +591,7 @@ def test_reconstructed_data(X):
     new_bitmask[[0,-1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
-    dmd.reconstructed_data
-    assert True
+    assert dmd.reconstructed_data is not None
 
 @pytest.mark.parametrize("X", data_backends)
 def test_getitem_modes(X):
@@ -664,3 +663,36 @@ def test_second_fit_backprop(X):
         X.requires_grad = False
     else:
         pass
+
+@pytest.mark.parametrize("X", data_backends)
+def test_batched_snapshots(X):
+    if torch.is_tensor(X):
+        X = torch.stack([X*i for i in range(1,11)])
+    else:
+        X = np.stack([X*i for i in range(1,11)])
+
+    dmd = DMD(svd_rank=-1)
+
+    if torch.is_tensor(X):
+        dmd.fit(X=X)
+        assert dmd._snapshots.shape == X.shape
+        assert_allclose(dmd._snapshots[0], X[0])
+    else:
+        with raises(ValueError):
+            dmd.fit(X=X)
+
+@pytest.mark.parametrize("X", data_backends)
+def test_batched_reconstructed_data(X):
+    if torch.is_tensor(X):
+        X = torch.stack([X*i for i in range(1,11)])
+    else:
+        X = np.stack([X*i for i in range(1,11)])
+
+    dmd = DMD(svd_rank=-1)
+
+    if torch.is_tensor(X):
+        dmd.fit(X=X)
+        assert_allclose(dmd.reconstructed_data, X)
+    else:
+        with raises(ValueError):
+            dmd.fit(X=X)

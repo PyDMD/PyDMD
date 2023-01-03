@@ -56,9 +56,9 @@ class DMD(DMDBase):
 
         self._snapshots = prepare_snapshots(X)
 
-        n_samples = self._snapshots.shape[1]
-        X = self._snapshots[:, :-1]
-        Y = self._snapshots[:, 1:]
+        n_samples = self._snapshots.shape[-1]
+        X = self._snapshots[..., :-1]
+        Y = self._snapshots[..., 1:]
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
         self._svd_modes, _, _ = self.operator.compute_operator(X, Y)

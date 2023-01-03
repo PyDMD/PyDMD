@@ -2,10 +2,13 @@ import numpy as np
 import torch
 import pytest
 
+def numpyfy(X):
+    if torch.is_tensor(X):
+        return X.detach().resolve_conj().numpy()
+    return np.array(X)
+
 def assert_allclose(X, Y, *args, **kwargs):
-    X = np.array(X)
-    Y = np.array(Y)
-    np.testing.assert_allclose(X, Y, *args, **kwargs)
+    np.testing.assert_allclose(numpyfy(X), numpyfy(Y), *args, **kwargs)
 
 def load_sample_data():
     # 15 snapshot with 400 data. The matrix is 400x15 and it contains

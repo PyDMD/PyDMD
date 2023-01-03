@@ -47,7 +47,7 @@ class ActivationBitmaskProxy:
         self._original_amplitudes = linalg_module.atleast_1d(amplitudes)
 
         self.old_bitmask = None
-        self.change_bitmask(np.full(len(dmd_operator.eigenvalues), True))
+        self.change_bitmask(np.full(dmd_operator.eigenvalues.shape[-1], True))
 
     def change_bitmask(self, value):
         """
@@ -64,13 +64,13 @@ class ActivationBitmaskProxy:
 
         # apply changes made on the proxied values to the original values
         if self.old_bitmask is not None:
-            self._original_modes[:, self.old_bitmask] = self.modes
-            self._original_eigs[self.old_bitmask] = self.eigs
-            self._original_amplitudes[self.old_bitmask] = self.amplitudes
+            self._original_modes[..., self.old_bitmask] = self.modes
+            self._original_eigs[..., self.old_bitmask] = self.eigs
+            self._original_amplitudes[..., self.old_bitmask] = self.amplitudes
 
-        self._modes = self._original_modes[:, value]
-        self._eigs = self._original_eigs[value]
-        self._amplitudes = self._original_amplitudes[value]
+        self._modes = self._original_modes[..., value]
+        self._eigs = self._original_eigs[..., value]
+        self._amplitudes = self._original_amplitudes[..., value]
 
         self.old_bitmask = value
 
@@ -346,7 +346,7 @@ class DMDBase(object):
 
         if amplitudes_snapshot_index < 0:
             # we take care of negative indexes: -n becomes T - n
-            return tpow - (self.snapshots.shape[1] + amplitudes_snapshot_index)
+            return tpow - (self.snapshots.shape[-1] + amplitudes_snapshot_index)
         else:
             return tpow - amplitudes_snapshot_index
 
@@ -368,7 +368,7 @@ class DMDBase(object):
         """
         linalg_module = build_linalg_module(self.eigs)
         temp = linalg_module.repeat(
-            self.eigs[:, None], self.dmd_timesteps.shape[0], axis=1
+            self.eigs[..., None], self.dmd_timesteps.shape[0], axis=-1
         )
         tpow = old_div(
             self.dmd_timesteps - self.original_time["t0"],
@@ -382,7 +382,7 @@ class DMDBase(object):
         # Therefore tpow must be scaled appropriately.
         tpow = self._translate_eigs_exponent(tpow)
 
-        return linalg_module.pow(temp, tpow) * self.amplitudes[:, None]
+        return linalg_module.pow(temp, tpow) * self.amplitudes[..., None]
 
     @property
     def reconstructed_data(self):
@@ -693,35 +693,23 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         linalg_module = build_linalg_module(self.eigs)
         vander = linalg_module.vander(self.eigs, len(self.dmd_timesteps), True)
 
-        a = linalg_module.dot(self.modes.conj().T, self.modes)
-        b = linalg_module.dot(vander, vander.conj().T).conj()
+        a = linalg_module.dot(self.modes.conj().swapaxes(-1, -2), self.modes)
+        b = linalg_module.dot(vander, vander.conj().swapaxes(-1, -2)).conj()
         P = linalg_module.multiply_elementwise(a, b)
 
         if self.exact:
-            q = (
-                linalg_module.diag(
-                    linalg_module.multi_dot(
-                        (vander, self._snapshots.conj().T, self.modes)
-                    )
-                )
-            ).conj()
+            vs = linalg_module.dot(vander, self._snapshots.conj().swapaxes(-1, -2))
+            vsm = linalg_module.dot(vs, self.modes)
+            q = linalg_module.diag(vsm).conj()
         else:
-            _, s, V = compute_svd(self._snapshots[:, :-1], self.svd_rank)
+            _, s, V = compute_svd(self._snapshots[..., :-1], self.svd_rank)
 
             s_conj = linalg_module.diag(s).conj()
             s_conj, V, vander = linalg_module.to(self.operator.eigenvectors, s_conj, V, vander)
-            q = (
-                linalg_module.diag(
-                    linalg_module.multi_dot(
-                        [
-                            vander[:, :-1],
-                            V,
-                            s_conj,
-                            self.operator.eigenvectors,
-                        ]
-                    )
-                )
-            ).conj()
+            vV = linalg_module.dot(vander[..., :-1], V)
+            vVs = linalg_module.dot(vV, s_conj)
+            vVse = linalg_module.dot(vVs, self.operator.eigenvectors)
+            q = linalg_module.diag(vVse).conj()
 
         return P, q
 
@@ -754,7 +742,7 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
             else:
                 amplitudes_snapshot_index = self.opt
 
-            selected_snapshots = self._snapshots.T[amplitudes_snapshot_index]
+            selected_snapshots = self._snapshots[..., amplitudes_snapshot_index]
             a = linalg_module.lstsq(
                 self.modes,
                 linalg_module.to(self.modes, selected_snapshots),

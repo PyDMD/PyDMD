@@ -2,6 +2,8 @@
 
 import warnings
 
+import numpy as np
+
 from .linalg import build_linalg_module, cast_as_array, is_array
 
 
@@ -27,10 +29,9 @@ def compute_tlsq(X, Y, tlsq_rank):
         return X, Y
 
     linalg_module = build_linalg_module(X)
-    concatenated = linalg_module.cat((X, Y), axis=0)
-    _, _, V = linalg_module.svd(concatenated, full_matrices=False)
-    rank = min(tlsq_rank, V.shape[0])
-    VV = linalg_module.dot(V[:rank].conj().T, V[:rank])
+    concatenated = linalg_module.cat((X, Y), axis=-2)
+    _, _, V = linalg_module.svd(concatenated)
+    VV = linalg_module.dot(V[..., :tlsq_rank].conj().T, V[..., :tlsq_rank])
     return linalg_module.dot(X, VV), linalg_module.dot(Y, VV)
 
 
@@ -55,10 +56,14 @@ def compute_svd(X, svd_rank=0):
     singular values is, IEEE Transactions on Information Theory 60.8
     (2014): 5040-5053.
     """
+    if X.ndim > 2:
+        if svd_rank == 0 or not isinstance(svd_rank, int):
+            raise ValueError("Automatic SVD rank selection not available in batched DMD")
+
     linalg_module = build_linalg_module(X)
 
     U, s, V = linalg_module.svd(X, full_matrices=False)
-    V = V.conj().T
+    V = V.conj().swapaxes(-1, -2)
 
     def omega(x):
         return 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
@@ -79,15 +84,11 @@ def compute_svd(X, svd_rank=0):
         cumulative_energy = (s**2 / (s**2).sum()).cumsum(0)
         rank = linalg_module.searchsorted(cumulative_energy, svd_rank) + 1
     elif svd_rank >= 1 and isinstance(svd_rank, int):
-        rank = min(svd_rank, U.shape[1])
+        rank = min(svd_rank, U.shape[-1])
     else:
-        rank = X.shape[1]
+        rank = X.shape[-1]
 
-    U = U[:, :rank]
-    V = V[:, :rank]
-    s = s[:rank]
-
-    return U, s, V
+    return U[..., :rank], s[..., :rank], V[..., :rank]
 
 
 def prepare_snapshots(X):
@@ -95,10 +96,14 @@ def prepare_snapshots(X):
 
     linalg_module = build_linalg_module(snapshots)
     snapshots = linalg_module.atleast_2d(snapshots)
+    if snapshots.ndim < 2:
+        raise ValueError("Expected at least 2D array.")
+    if snapshots.ndim > 2 and isinstance(snapshots, np.ndarray):
+        raise ValueError("Batched DMD not supported in NumPy")
 
     # when snapshots are wrapped in a list each member of the list is
     # a snapshot
-    if not is_array(X):
+    if not is_array(X) and snapshots.ndim == 2:
         snapshots = snapshots.T
 
     # check condition number of the data passed in

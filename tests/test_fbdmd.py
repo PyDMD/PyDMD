@@ -31,8 +31,7 @@ def test_reconstructed_data(X):
     dmd = FbDMD(exact=True, svd_rank=-1)
     dmd.fit(X=X)
     dmd_data = dmd.reconstructed_data
-    dmd_data_correct = np.load('tests/test_datasets/fbdmd_data.npy')
-    assert_allclose(dmd_data, dmd_data_correct)
+    assert_allclose(dmd_data, X)
 
 def test_sorted_eigs_default():
     dmd = FbDMD(svd_rank=-1)
@@ -133,7 +132,7 @@ def test_bitmask_modes(X):
     assert_allclose(dmd.modes, retained_modes)
 
 @pytest.mark.parametrize("X", data_backends)
-def test_reconstructed_data(X):
+def test_reconstructed_data_with_bitmask(X):
     dmd = FbDMD(svd_rank=-1)
     dmd.fit(X=X)
 
@@ -213,3 +212,19 @@ def test_second_fit_backprop(X):
         X.requires_grad = False
     else:
         pass
+
+@pytest.mark.parametrize("X", data_backends)
+def test_batched_reconstructed_data(X):
+    if torch.is_tensor(X):
+        X = torch.stack([X*i for i in range(1,11)])
+    else:
+        X = np.stack([X*i for i in range(1,11)])
+
+    dmd = FbDMD(svd_rank=-1)
+
+    if torch.is_tensor(X):
+        dmd.fit(X=X)
+        assert_allclose(dmd.reconstructed_data, X)
+    else:
+        with raises(ValueError):
+            dmd.fit(X=X)
