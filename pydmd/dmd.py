@@ -84,6 +84,6 @@ class DMD(DMDBase):
         
         linalg_module = build_linalg_module(X)
         return linalg_module.multi_dot(
-            (self.modes, linalg_module.diag(self.eigs),
+            (self.modes, linalg_module.diag_matrix(self.eigs),
                 linalg_module.pinv(self.modes), X)
         )

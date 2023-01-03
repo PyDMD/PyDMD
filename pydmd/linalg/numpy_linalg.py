@@ -55,12 +55,16 @@ class LinalgNumPy(LinalgBase):
         return X.dot(Y)
 
     @classmethod
-    def diag(cls, X):
+    def diag_matrix(cls, X):
         return np.diag(X)
 
     @classmethod
     def eig(cls, X):
         return np.linalg.eig(X)
+
+    @classmethod
+    def extract_diagonal(cls, X):
+        return np.diag(X)
 
     @classmethod
     def full(cls, size, fill_value, *args, **kwargs):

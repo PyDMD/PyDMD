@@ -137,13 +137,13 @@ class DMDBUnknownOperator(DMDControlOperator):
         Ur, _, _ = compute_svd(Y, self._svd_rank)
 
         self._Atilde = linalg_module.multi_dot((Ur.T.conj(), Y, Vp,
-                                            linalg_module.diag(1 / sp),
+                                            linalg_module.diag_matrix(1 / sp),
                                             Up1.T.conj(), Ur))
         self._compute_eigenquantities()
         self._compute_modes(Y, sp, Vp, Up1, Ur)
 
         Btilde = linalg_module.multi_dot((Ur.T.conj(), Y, Vp,
-                                      linalg_module.diag(np.reciprocal(sp)),
+                                      linalg_module.diag_matrix(1 / sp),
                                       Up2.T.conj()))
 
         return Ur, linalg_module.dot(Ur, Btilde)
@@ -154,7 +154,7 @@ class DMDBUnknownOperator(DMDControlOperator):
         high-dimensional operator (stored in self.modes and self.Lambda).
         """
         linalg_module = build_linalg_module(Y)
-        self._modes = linalg_module.multi_dot((Y, Vp, linalg_module.diag(1 / sp),
+        self._modes = linalg_module.multi_dot((Y, Vp, linalg_module.diag_matrix(1 / sp),
                                            Up1.T.conj(), Ur,
                                            self.eigenvectors))
         self._Lambda = self.eigenvalues
@@ -256,7 +256,7 @@ class DMDc(DMDBase):
         linalg_module = build_linalg_module(self.eigs)
         eigs = linalg_module.pow(self.eigs,
                         old_div(self.dmd_time['dt'], self.original_time['dt']))
-        A = linalg_module.multi_dot((self.modes, linalg_module.diag(eigs),
+        A = linalg_module.multi_dot((self.modes, linalg_module.diag_matrix(eigs),
                                  linalg_module.pinv(self.modes)))
 
         data = [self._snapshots[:, 0]]

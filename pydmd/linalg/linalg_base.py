@@ -35,7 +35,7 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
-    def diag(cls, X):
+    def diag_matrix(cls, X):
         raise NotImplementedError
 
     @classmethod
@@ -44,6 +44,10 @@ class LinalgBase:
 
     @classmethod
     def eig(cls, X):
+        raise NotImplementedError
+
+    @classmethod
+    def extract_diagonal(cls, X):
         raise NotImplementedError
 
     @classmethod

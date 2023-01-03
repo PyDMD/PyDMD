@@ -696,3 +696,36 @@ def test_batched_reconstructed_data(X):
     else:
         with raises(ValueError):
             dmd.fit(X=X)
+
+@pytest.mark.parametrize("X", data_backends)
+def test_batched_reconstructed_data_opt(X):
+    if torch.is_tensor(X):
+        X = torch.stack([X*i for i in range(1,11)])
+    else:
+        X = np.stack([X*i for i in range(1,11)])
+
+    dmd = DMD(svd_rank=-1, opt=True)
+
+    if torch.is_tensor(X):
+        batched = dmd.fit(X=X).reconstructed_data
+        nonbatched = DMD(svd_rank=-1, opt=True).fit(X[3]).reconstructed_data
+        assert_allclose(batched[3], nonbatched)
+    else:
+        with raises(ValueError):
+            dmd.fit(X=X)
+
+@pytest.mark.parametrize("X", data_backends)
+def test_batched_reconstructed_data_exact(X):
+    if torch.is_tensor(X):
+        X = torch.stack([X*i for i in range(1,11)])
+    else:
+        X = np.stack([X*i for i in range(1,11)])
+
+    dmd = DMD(svd_rank=-1, exact=True)
+
+    if torch.is_tensor(X):
+        dmd.fit(X=X)
+        assert_allclose(dmd.reconstructed_data, X)
+    else:
+        with raises(ValueError):
+            dmd.fit(X=X)

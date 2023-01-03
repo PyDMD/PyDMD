@@ -69,10 +69,10 @@ class LinalgPyTorch(LinalgBase):
         return torch.linalg.cond(X)
 
     @classmethod
-    def diag(cls, X):
+    def diag_matrix(cls, X):
         import torch
 
-        return torch.diag(X)
+        return torch.diag_embed(X)
 
     @classmethod
     def dot(cls, X, Y):
@@ -91,6 +91,12 @@ class LinalgPyTorch(LinalgBase):
         import torch
 
         return torch.linalg.eig(X)
+
+    @classmethod
+    def extract_diagonal(cls, X):
+        import torch
+
+        return torch.diagonal(X, dim1=-2, dim2=-1)
 
     @classmethod
     def full(cls, size, fill_value, *args, **kwargs):

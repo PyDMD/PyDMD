@@ -700,16 +700,16 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         if self.exact:
             vs = linalg_module.dot(vander, self._snapshots.conj().swapaxes(-1, -2))
             vsm = linalg_module.dot(vs, self.modes)
-            q = linalg_module.diag(vsm).conj()
+            q = linalg_module.extract_diagonal(vsm).conj()
         else:
             _, s, V = compute_svd(self._snapshots[..., :-1], self.svd_rank)
 
-            s_conj = linalg_module.diag(s).conj()
+            s_conj = linalg_module.diag_matrix(s).conj()
             s_conj, V, vander = linalg_module.to(self.operator.eigenvectors, s_conj, V, vander)
             vV = linalg_module.dot(vander[..., :-1], V)
             vVs = linalg_module.dot(vV, s_conj)
             vVse = linalg_module.dot(vVs, self.operator.eigenvectors)
-            q = linalg_module.diag(vVse).conj()
+            q = linalg_module.extract_diagonal(vVse).conj()
 
         return P, q
 
@@ -733,7 +733,6 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         """
         linalg_module = build_linalg_module(self.modes)
         if isinstance(self.opt, bool) and self.opt:
-            # b optimal
             A, b = self._optimal_dmd_matrices()
             a = linalg_module.solve(A, b)
         else:

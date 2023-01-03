@@ -191,10 +191,10 @@ class DMDOperator:
                         coefficients"""
                 )
             scaling_factors = linalg_module.to(self.as_array, self._rescale_mode)
-            factors_inv_sqrt = linalg_module.diag(
+            factors_inv_sqrt = linalg_module.diag_matrix(
                 1 / linalg_module.sqrtm(scaling_factors)
             )
-            factors_sqrt = linalg_module.diag(
+            factors_sqrt = linalg_module.diag_matrix(
                 linalg_module.sqrtm(scaling_factors)
             )
 
@@ -248,7 +248,7 @@ class DMDOperator:
         else:
             # compute W as shown in arXiv:1409.5496 (section 2.4)
             factors = linalg_module.to(self.eigenvectors, self._rescale_mode)
-            factors_sqrt = linalg_module.diag(linalg_module.sqrtm(factors))
+            factors_sqrt = linalg_module.diag_matrix(linalg_module.sqrtm(factors))
             W = linalg_module.dot(factors_sqrt, self.eigenvectors)
 
         # compute the eigenvectors of the high-dimensional operator
