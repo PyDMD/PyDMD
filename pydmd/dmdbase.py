@@ -237,6 +237,7 @@ class DMDBase(object):
             self.dmd_time["t0"],
             self.dmd_time["tend"] + self.dmd_time["dt"],
             self.dmd_time["dt"],
+            device=self._snapshots.device
         )
 
     @property
@@ -252,6 +253,7 @@ class DMDBase(object):
             self.original_time["t0"],
             self.original_time["tend"] + self.original_time["dt"],
             self.original_time["dt"],
+            device=self._snapshots.device
         )
 
     def allocate_modes_bitmask_proxy(self):
