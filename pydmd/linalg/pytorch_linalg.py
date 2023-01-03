@@ -128,10 +128,9 @@ class LinalgPyTorch(LinalgBase):
     def lstsq(cls, X, Y, rcond):
         import torch
 
-        if Y.ndim == 1:
-            solution = torch.linalg.lstsq(X, Y[:, None], rcond=rcond).solution
-            return torch.squeeze(solution)
-        return torch.linalg.lstsq(X, Y, rcond=rcond).solution
+        if Y.ndim == X.ndim:
+            return torch.linalg.lstsq(X, Y, rcond=rcond).solution
+        return torch.linalg.lstsq(X, Y[..., None], rcond=rcond).solution[..., 0]
 
     @classmethod
     def make_not_writeable(cls, X):

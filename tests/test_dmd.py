@@ -729,3 +729,30 @@ def test_batched_reconstructed_data_exact(X):
     else:
         with raises(ValueError):
             dmd.fit(X=X)
+
+@pytest.mark.parametrize("X", data_backends)
+def test_batched_backprop(X):
+    if torch.is_tensor(X):
+        X = torch.stack([X*i for i in range(1,11)])
+        X.requires_grad = True
+        dmd = DMD(svd_rank=-1)
+        dmd.fit(X=X)
+        dmd.reconstructed_data.sum().backward()
+        X.requires_grad = False
+    else:
+        pass
+
+@pytest.mark.parametrize("X", data_backends)
+def test_batched_second_fit_backprop(X):
+    if torch.is_tensor(X):
+        X = torch.stack([X*i for i in range(1,11)])
+        X.requires_grad = True
+        dmd = DMD(svd_rank=-1)
+        dmd.fit(X=X)
+        dmd.reconstructed_data.sum().backward()
+        
+        dmd.fit(X=X.clone())
+        dmd.reconstructed_data.sum().backward()
+        X.requires_grad = False
+    else:
+        pass
