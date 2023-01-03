@@ -3,7 +3,6 @@ import logging
 logging.basicConfig(
     format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 )
-logger = logging.getLogger(__name__)
 
 from .linalg_base import LinalgBase
 
@@ -158,7 +157,7 @@ class LinalgNumPy(LinalgBase):
         # in general it's not critical to convert X to NumPy because the
         # operation is already handled quietly by all the frameworks
         # TODO implement properly if this generates problems
-        logger.info("to(reference, *args) ignored quietly")
+        logging.debug("to(reference, *args) ignored quietly")
 
         if len(args) == 1:
             return args[0]
