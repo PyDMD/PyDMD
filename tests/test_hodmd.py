@@ -52,13 +52,13 @@ def test_rank():
 def test_Atilde_shape():
     dmd = HODMD(svd_rank=3)
     dmd.fit(X=sample_data)
-    assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+    assert dmd.operator.as_numpy_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
 
 def test_d():
-    single_data = np.sin(np.linspace(0, 10, 100))
+    single_data = np.sin(np.linspace(0, 10, 100))[None]
     dmd = HODMD(svd_rank=-1, d=50, opt=True, exact=True, svd_rank_extra=-1)
     dmd.fit(single_data)
-    assert np.allclose(dmd.reconstructed_data.flatten(), single_data)
+    assert np.allclose(dmd.reconstructed_data, single_data)
     assert dmd.d == 50
 
 def test_Atilde_values():
@@ -67,7 +67,7 @@ def test_Atilde_values():
     exact_atilde = np.array(
         [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
             [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]])
-    np.testing.assert_allclose(exact_atilde, dmd.atilde)
+    np.testing.assert_allclose(exact_atilde, dmd.operator.as_numpy_array)
 
 def test_eigs_1():
     dmd = HODMD(svd_rank=-1, svd_rank_extra=-1)
@@ -164,15 +164,15 @@ def test_dmd_time_4():
     np.testing.assert_almost_equal(dmd.dynamics, expected_data, decimal=6)
 
 def test_dmd_time_5():
-    x = np.linspace(0, 10, 64)
+    x = np.linspace(0, 10, 64)[None]
     y = np.cos(x)*np.sin(np.cos(x)) + np.cos(x*.2)
 
     dmd = HODMD(svd_rank=-1, exact=True, opt=True, d=30, svd_rank_extra=-1)
     dmd.fit(y)
 
-    dmd.original_time['dt'] = dmd.dmd_time['dt'] = x[1] - x[0]
-    dmd.original_time['t0'] = dmd.dmd_time['t0'] = x[0]
-    dmd.original_time['tend'] = dmd.dmd_time['tend'] = x[-1]
+    dmd.original_time['dt'] = dmd.dmd_time['dt'] = x[0, 1] - x[0, 0]
+    dmd.original_time['t0'] = dmd.dmd_time['t0'] = x[0, 0]
+    dmd.original_time['tend'] = dmd.dmd_time['tend'] = x[0, -1]
 
     # assert that the shape of the output is correct
     assert dmd.reconstructed_data.shape == (1,64)
@@ -323,25 +323,9 @@ def test_rec_method_weighted():
     dmd = HODMD(d=2, svd_rank_extra=-1,reconstruction_method=[10,20])
     dmd.fit(X=sample_data)
     assert (dmd.reconstructed_data.T[4] == np.average(dmd.reconstructions_of_timeindex(4), axis=0, weights=[10,20]).T).all()
-"""
-def test_dynamics_opt_2():
-    dmd = HODMD(svd_rank=1, opt=True)
-    dmd.fit(X=sample_data)
-    expected_dynamics = np.array([[
-        -5.03688923-6.13804898j,  7.71392231+0.99781981j,
-        -6.17317754+4.46645858j, 1.40580999-7.33054163j,
-        3.91802381+6.17354485j, -6.93951835-1.77423468j,
-        6.14189948-3.39268579j, -2.10431578+6.54348298j,
-        -2.89133864-6.08093842j, 6.14488387+2.39737718j,
-        -5.99329708+2.41468142j,  2.6548298 -5.74598891j,
-        1.96322997+5.8815406j, -5.34888809-2.87815739j,
-        5.74815609-1.53732875j
-    ]])
-    np.testing.assert_allclose(dmd.dynamics, expected_dynamics)
-"""
 
-def test_scalar_func_warning():
-    x = np.linspace(0, 10, 64)
+def test_scalar_func():
+    x = np.linspace(0, 10, 64)[None]
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
     # we check that this does not fail
     dmd = HODMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
@@ -482,4 +466,6 @@ def test_raises_not_enough_snapshots():
     dmd = HODMD(svd_rank=-1, d=5)
     with raises(ValueError,  match="The number of snapshots provided is not enough for d=5.\nExpected at least d."):
         dmd.fit(np.ones((20,4)))
-    dmd.fit(np.ones((20,5)))
+    with raises(ValueError,  match="Received only one time snapshot."):
+        dmd.fit(np.ones((20,5)))
+    dmd.fit(np.ones((20,6)))

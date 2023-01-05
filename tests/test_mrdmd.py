@@ -338,7 +338,7 @@ def test_one_dmd():
         for leaf in range(leaves):
             dmd = m.dmd_tree[level, leaf]
             assert isinstance(dmd, DMD)
-            assert dmd.svd_rank == 4
+            assert dmd.operator._svd_rank == 4
 
 def test_list_dmd():
     l = [DMD(svd_rank=5-i) for i in range(4)]
@@ -349,7 +349,7 @@ def test_list_dmd():
         for leaf in range(leaves):
             dmd = m.dmd_tree[level, leaf]
             assert isinstance(dmd, DMD)
-            assert dmd.svd_rank == 5 - level
+            assert dmd.operator._svd_rank == 5 - level
 
 def test_tuple_dmd():
     l = tuple(DMD(svd_rank=5-i) for i in range(4))
@@ -360,7 +360,7 @@ def test_tuple_dmd():
         for leaf in range(leaves):
             dmd = m.dmd_tree[level, leaf]
             assert isinstance(dmd, DMD)
-            assert dmd.svd_rank == 5 - level
+            assert dmd.operator._svd_rank == 5 - level
 
 def test_list_wrong_size_dmd():
     l = [DMD(svd_rank=5-i) for i in range(4)]
@@ -382,7 +382,7 @@ def test_func_dmd():
         for leaf in range(leaves):
             dmd = m.dmd_tree[level, leaf]
             assert isinstance(dmd, FbDMD)
-            assert dmd.svd_rank == level * leaf
+            assert dmd.operator._svd_rank == level * leaf
 
 def test_quantitative_list_dmd():
     l = [DMD(svd_rank=4) for i in range(4)]

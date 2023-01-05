@@ -76,10 +76,10 @@ def fit(self, X):
     self._snapshots = np.apply_along_axis(self.__func, 0, self._snapshots)
 
     # build the matrices X and Y
-    n_samples = self._snapshots.shape[1]
-    X = self._snapshots[:, :-1]
-    Y = self._snapshots[:, 1:]
-    X, Y = compute_tlsq(X, Y, self.tlsq_rank)
+    n_samples = self.snapshots.shape[-1]
+    X = self.snapshots[:, :-1]
+    Y = self.snapshots[:, 1:]
+    X, Y = compute_tlsq(X, Y, self._tlsq_rank)
 
     # compute the DMD operator
     self._svd_modes, _, _ = self.operator.compute_operator(X,Y)
@@ -128,10 +128,10 @@ class MyFancyNameDMD(DMDBase):
         self._snapshots = np.apply_along_axis(self.__func, 0, self._snapshots)
 
         # build the matrices X and Y
-        n_samples = self._snapshots.shape[1]
-        X = self._snapshots[:, :-1]
-        Y = self._snapshots[:, 1:]
-        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
+        n_samples = self.snapshots.shape[-1]
+        X = self.snapshots[:, :-1]
+        Y = self.snapshots[:, 1:]
+        X, Y = compute_tlsq(X, Y, self._tlsq_rank)
 
         # compute the DMD operator
         self._svd_modes, _, _ = self.operator.compute_operator(X,Y)

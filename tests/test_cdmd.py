@@ -47,7 +47,7 @@ def test_truncation_shape():
 def test_Atilde_shape():
     dmd = CDMD(svd_rank=3)
     dmd.fit(X=sample_data)
-    assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+    assert dmd.operator.as_numpy_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
 
 def test_eigs_1():
     dmd = CDMD(svd_rank=-1)
