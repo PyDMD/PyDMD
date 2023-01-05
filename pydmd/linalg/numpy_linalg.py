@@ -24,6 +24,10 @@ class LinalgNumPy(LinalgBase):
 
     @classmethod
     def arange(cls, *args, **kwargs):
+        if "device" in kwargs:
+            if kwargs["device"] != "cpu":
+                raise ValueError("Cannot create NumPy array on GPU")
+            del kwargs["device"]
         return np.arange(*args, **kwargs)
 
     @classmethod
@@ -51,12 +55,16 @@ class LinalgNumPy(LinalgBase):
         return np.linalg.cond(X)
 
     @classmethod
-    def dot(cls, X, Y):
-        return X.dot(Y)
+    def device(cls, X):
+        return "cpu"
 
     @classmethod
     def diag_matrix(cls, X):
         return np.diag(X)
+
+    @classmethod
+    def dot(cls, X, Y):
+        return X.dot(Y)
 
     @classmethod
     def eig(cls, X):

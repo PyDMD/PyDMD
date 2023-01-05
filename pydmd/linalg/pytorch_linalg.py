@@ -69,6 +69,10 @@ class LinalgPyTorch(LinalgBase):
         return torch.linalg.cond(X)
 
     @classmethod
+    def device(cls, X):
+        return X.device
+
+    @classmethod
     def diag_matrix(cls, X):
         import torch
 

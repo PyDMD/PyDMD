@@ -106,13 +106,11 @@ def prepare_snapshots(X):
     if not is_array(X) and snapshots.ndim == 2:
         snapshots = snapshots.T
 
-    # check condition number of the data passed in
     cond_number = linalg_module.cond(snapshots)
     if isinstance(cond_number, float) or hasattr(cond_number, "ndim") and cond_number.ndim == 0:
         max_cond_number = float(cond_number)
     else:
         max_cond_number = max(cond_number)
-
     if max_cond_number > 10e4:
         warnings.warn(
             f"Input data matrix X has condition number {max_cond_number}. "

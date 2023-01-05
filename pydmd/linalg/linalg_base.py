@@ -35,6 +35,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def device(cls, X):
+        raise NotImplementedError
+
+    @classmethod
     def diag_matrix(cls, X):
         raise NotImplementedError
 
