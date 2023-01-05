@@ -26,6 +26,7 @@ import numpy as np
 
 from pydmd import DMDBase, DMD
 from pydmd.utils import compute_tlsq
+from pydmd.snapshots import Snapshots
 
 import matplotlib.colors as colors
 
@@ -70,16 +71,23 @@ def fit(self, X):
     """
     
     # adjust the shape of the snapshots
-    self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+    input_snapshots = Snapshots(X).snapshots
 
     # apply the mapping
-    self._snapshots = np.apply_along_axis(self.__func, 0, self._snapshots)
+    mapped_snapshots = np.apply_along_axis(self.__func, 0, input_snapshots)
+
+    # store the snapshots
+    self._snapshots_holder = Snapshots(mapped_snapshots)
 
     # build the matrices X and Y
     n_samples = self.snapshots.shape[-1]
     X = self.snapshots[:, :-1]
     Y = self.snapshots[:, 1:]
+<<<<<<< HEAD
     X, Y = compute_tlsq(X, Y, self._tlsq_rank)
+=======
+    X, Y = compute_tlsq(X, Y, self.tlsq_rank)
+>>>>>>> e490542 (update tutorial)
 
     # compute the DMD operator
     self._svd_modes, _, _ = self.operator.compute_operator(X,Y)
@@ -116,16 +124,19 @@ class MyFancyNameDMD(DMDBase):
     def fit(self, X):
         """
         Compute the DMD to the input data.
-        
+
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        
+
         # adjust the shape of the snapshots
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(X)
+        input_snapshots = Snapshots(X).snapshots
 
         # apply the mapping
-        self._snapshots = np.apply_along_axis(self.__func, 0, self._snapshots)
+        mapped_snapshots = np.apply_along_axis(self.__func, 0, input_snapshots)
+
+        # store the snapshots
+        self._snapshots_holder = Snapshots(mapped_snapshots)
 
         # build the matrices X and Y
         n_samples = self.snapshots.shape[-1]
@@ -135,7 +146,7 @@ class MyFancyNameDMD(DMDBase):
 
         # compute the DMD operator
         self._svd_modes, _, _ = self.operator.compute_operator(X,Y)
-        
+
         # Default timesteps
         self._set_initial_time_dictionary(
             {"t0": 0, "tend": n_samples - 1, "dt": 1}
@@ -144,7 +155,7 @@ class MyFancyNameDMD(DMDBase):
         # compute DMD amplitudes
         self._b = self._compute_amplitudes()
 
-        return self  
+        return self
 
 
 # And, we're done!
