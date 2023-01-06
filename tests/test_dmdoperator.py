@@ -5,7 +5,9 @@ from pytest import raises
 from pydmd.dmdoperator import DMDOperator
 from pydmd.utils import compute_tlsq
 
-from .utils import assert_allclose, data_backends
+from .utils import assert_allclose, setup_backends
+
+data_backends = setup_backends()
 
 
 def test_constructor():

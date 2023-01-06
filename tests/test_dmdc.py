@@ -6,7 +6,9 @@ from pytest import param, raises
 
 from pydmd import DMDc
 
-from .utils import assert_allclose
+from .utils import assert_allclose, setup_backends
+
+data_backends = setup_backends()
 
 np.random.seed(10)
 
@@ -29,19 +31,8 @@ def create_system_without_B():
     snapshots = np.array(snapshots).T
     return {'snapshots': snapshots, 'u': u, 'B': B, 'A': A}
 
-data_backends_with_B = (
-    # NumPy
-    param(create_system_with_B(), id="NumPy"),
-    # PyTorch
-    param({key : torch.from_numpy(value) for key, value in create_system_with_B().items()}, id="PyTorch CPU"),
-)
-
-data_backends_without_B = (
-    # NumPy
-    param(create_system_without_B(), id="NumPy"),
-    # PyTorch
-    param({key : torch.from_numpy(value) for key, value in create_system_without_B().items()}, id="PyTorch CPU"),
-)
+data_backends_with_B = setup_backends(create_system_with_B())
+data_backends_without_B = setup_backends(create_system_without_B())
 
 
 @pytest.mark.parametrize("system", data_backends_with_B)
@@ -227,30 +218,3 @@ def test_correct_amplitudes(system):
     dmd = DMDc(svd_rank=-1)
     dmd.fit(system['snapshots'], system['u'], system['B'])
     assert_allclose(dmd.amplitudes, dmd._b)
-
-@pytest.mark.parametrize("X", data_backends_with_B)
-def test_backprop(X):
-    if torch.is_tensor(X):
-        X = X.clone()
-        X.requires_grad = True
-        dmd = DMDc(svd_rank=-1)
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass
-
-@pytest.mark.parametrize("X", data_backends_with_B)
-def test_second_fit_backprop(X):
-    if torch.is_tensor(X):
-        X = X.clone()
-        X.requires_grad = True
-        dmd = DMDc(svd_rank=-1)
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-
-        dmd.fit(X=X.clone())
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass

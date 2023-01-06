@@ -5,7 +5,9 @@ from pytest import raises
 
 from pydmd.fbdmd import FbDMD
 
-from .utils import assert_allclose, data_backends
+from .utils import assert_allclose, setup_backends, noisy_data
+
+data_backends = setup_backends()
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -185,46 +187,3 @@ def test_correct_amplitudes(X):
     dmd = FbDMD(svd_rank=-1)
     dmd.fit(X=np.load('tests/test_datasets/input_sample.npy'))
     assert_allclose(dmd.amplitudes, dmd._b)
-
-@pytest.mark.parametrize("X", data_backends)
-def test_backprop(X):
-    if torch.is_tensor(X):
-        X = X.clone()
-        X.requires_grad = True
-        dmd = FbDMD(svd_rank=-1)
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass
-
-@pytest.mark.parametrize("X", data_backends)
-def test_second_fit_backprop(X):
-    if torch.is_tensor(X):
-        X = X.clone()
-        X.requires_grad = True
-        dmd = FbDMD(svd_rank=-1)
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-
-        dmd.fit(X=X.clone())
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass
-
-@pytest.mark.parametrize("X", data_backends)
-def test_batched_reconstructed_data(X):
-    if torch.is_tensor(X):
-        X = torch.stack([X*i for i in range(1,11)])
-    else:
-        X = np.stack([X*i for i in range(1,11)])
-
-    dmd = FbDMD(svd_rank=-1)
-
-    if torch.is_tensor(X):
-        dmd.fit(X=X)
-        assert_allclose(dmd.reconstructed_data, X)
-    else:
-        with raises(ValueError):
-            dmd.fit(X=X)

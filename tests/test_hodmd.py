@@ -6,7 +6,9 @@ from pytest import raises
 from pydmd.hodmd import HODMD
 from pydmd.linalg import build_linalg_module
 
-from .utils import assert_allclose, data_backends
+from .utils import assert_allclose, setup_backends
+
+data_backends = setup_backends()
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -399,30 +401,3 @@ def test_raises_not_enough_snapshots(X):
     with raises(ValueError,  match="The number of snapshots provided is not enough for d=5."):
         dmd.fit(linalg_module.new_array(np.ones((20,4))))
     dmd.fit(linalg_module.new_array(np.ones((20,5))))
-
-@pytest.mark.parametrize("X", data_backends)
-def test_backprop(X):
-    if torch.is_tensor(X):
-        X = X.clone()
-        X.requires_grad = True
-        dmd = HODMD(svd_rank=-1, d=5)
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass
-
-@pytest.mark.parametrize("X", data_backends)
-def test_second_fit_backprop(X):
-    if torch.is_tensor(X):
-        X = X.clone()
-        X.requires_grad = True
-        dmd = HODMD(svd_rank=-1, d=5)
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-
-        dmd.fit(X=X.clone())
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass

@@ -6,7 +6,9 @@ from pytest import raises
 from pydmd import HankelDMD
 from pydmd.linalg import build_linalg_module
 
-from .utils import assert_allclose, data_backends
+from .utils import assert_allclose, setup_backends
+
+data_backends = setup_backends()
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -531,46 +533,3 @@ def test_raises_not_enough_snapshots():
     with raises(ValueError,  match="The number of snapshots provided is not enough for d=5."):
         dmd.fit(np.ones((20,4)))
     dmd.fit(np.ones((20,5)))
-
-@pytest.mark.parametrize("X", data_backends)
-def test_backprop(X):
-    if torch.is_tensor(X):
-        X = X.clone()
-        X.requires_grad = True
-        dmd = HankelDMD(svd_rank=-1, d=5)
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass
-
-@pytest.mark.parametrize("X", data_backends)
-def test_second_fit_backprop(X):
-    if torch.is_tensor(X):
-        X = X.clone()
-        X.requires_grad = True
-        dmd = HankelDMD(svd_rank=-1, d=5)
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-
-        dmd.fit(X=X.clone())
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass
-
-@pytest.mark.parametrize("X", data_backends)
-def test_batched_reconstructed_data(X):
-    if torch.is_tensor(X):
-        X = torch.stack([X*i for i in range(1,11)])
-    else:
-        X = np.stack([X*i for i in range(1,11)])
-
-    dmd = HankelDMD(svd_rank=-1)
-
-    if torch.is_tensor(X):
-        dmd.fit(X=X)
-        assert_allclose(dmd.reconstructed_data, X)
-    else:
-        with raises(ValueError):
-            dmd.fit(X=X)

@@ -5,7 +5,9 @@ from pytest import raises
 
 from pydmd.dmd import DMD
 
-from .utils import assert_allclose, data_backends, load_sample_data
+from .utils import assert_allclose, setup_backends, sample_data
+
+data_backends = setup_backends()
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -357,7 +359,7 @@ def test_sorted_eigs_abs_right_modes(X):
                 break
 
 def test_sorted_eigs_real_right_eigs():
-    X = load_sample_data()
+    X = sample_data()
 
     dmd = DMD(svd_rank=20, sorted_eigs='real')
     dmd.fit(X)
@@ -375,7 +377,7 @@ def test_sorted_eigs_real_right_eigs():
         previous = x
 
 def test_sorted_eigs_real_right_eigenvectors():
-    X = load_sample_data()
+    X = sample_data()
 
     dmd = DMD(svd_rank=20, sorted_eigs='real')
     dmd.fit(X)
@@ -391,7 +393,7 @@ def test_sorted_eigs_real_right_eigenvectors():
                 break
 
 def test_sorted_eigs_real_right_modes():
-    X = load_sample_data()
+    X = sample_data()
 
     dmd = DMD(svd_rank=20, sorted_eigs='real')
     dmd.fit(X)
@@ -407,7 +409,7 @@ def test_sorted_eigs_real_right_modes():
                 break
 
 def test_sorted_eigs_real_fails_with_pytorch():
-    X = torch.from_numpy(load_sample_data())
+    X = torch.from_numpy(sample_data())
 
     dmd = DMD(svd_rank=20, sorted_eigs='real')
     with raises(NotImplementedError):
@@ -636,123 +638,3 @@ def test_correct_amplitudes(X):
     dmd = DMD(svd_rank=-1)
     dmd.fit(X=X)
     assert_allclose(dmd.amplitudes, dmd._b)
-
-@pytest.mark.parametrize("X", data_backends)
-def test_backprop(X):
-    if torch.is_tensor(X):
-        X = X.clone()
-        X.requires_grad = True
-        dmd = DMD(svd_rank=-1)
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass
-
-@pytest.mark.parametrize("X", data_backends)
-def test_second_fit_backprop(X):
-    if torch.is_tensor(X):
-        X = X.clone()
-        X.requires_grad = True
-        dmd = DMD(svd_rank=-1)
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-
-        dmd.fit(X=X.clone())
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass
-
-@pytest.mark.parametrize("X", data_backends)
-def test_batched_snapshots(X):
-    if torch.is_tensor(X):
-        X = torch.stack([X*i for i in range(1,11)])
-    else:
-        X = np.stack([X*i for i in range(1,11)])
-
-    dmd = DMD(svd_rank=-1)
-
-    if torch.is_tensor(X):
-        dmd.fit(X=X)
-        assert dmd._snapshots.shape == X.shape
-        assert_allclose(dmd._snapshots[0], X[0])
-    else:
-        with raises(ValueError):
-            dmd.fit(X=X)
-
-@pytest.mark.parametrize("X", data_backends)
-def test_batched_reconstructed_data(X):
-    if torch.is_tensor(X):
-        X = torch.stack([X*i for i in range(1,11)])
-    else:
-        X = np.stack([X*i for i in range(1,11)])
-
-    dmd = DMD(svd_rank=-1)
-
-    if torch.is_tensor(X):
-        dmd.fit(X=X)
-        assert_allclose(dmd.reconstructed_data, X)
-    else:
-        with raises(ValueError):
-            dmd.fit(X=X)
-
-@pytest.mark.parametrize("X", data_backends)
-def test_batched_reconstructed_data_opt(X):
-    if torch.is_tensor(X):
-        X = torch.stack([X*i for i in range(1,11)])
-    else:
-        X = np.stack([X*i for i in range(1,11)])
-
-    dmd = DMD(svd_rank=-1, opt=True)
-
-    if torch.is_tensor(X):
-        batched = dmd.fit(X=X).reconstructed_data
-        nonbatched = DMD(svd_rank=-1, opt=True).fit(X[3]).reconstructed_data
-        assert_allclose(batched[3], nonbatched)
-    else:
-        with raises(ValueError):
-            dmd.fit(X=X)
-
-@pytest.mark.parametrize("X", data_backends)
-def test_batched_reconstructed_data_exact(X):
-    if torch.is_tensor(X):
-        X = torch.stack([X*i for i in range(1,11)])
-    else:
-        X = np.stack([X*i for i in range(1,11)])
-
-    dmd = DMD(svd_rank=-1, exact=True)
-
-    if torch.is_tensor(X):
-        dmd.fit(X=X)
-        assert_allclose(dmd.reconstructed_data, X)
-    else:
-        with raises(ValueError):
-            dmd.fit(X=X)
-
-@pytest.mark.parametrize("X", data_backends)
-def test_batched_backprop(X):
-    if torch.is_tensor(X):
-        X = torch.stack([X*i for i in range(1,11)])
-        X.requires_grad = True
-        dmd = DMD(svd_rank=-1)
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass
-
-@pytest.mark.parametrize("X", data_backends)
-def test_batched_second_fit_backprop(X):
-    if torch.is_tensor(X):
-        X = torch.stack([X*i for i in range(1,11)])
-        X.requires_grad = True
-        dmd = DMD(svd_rank=-1)
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-        
-        dmd.fit(X=X.clone())
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass

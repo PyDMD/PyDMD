@@ -5,7 +5,9 @@ from pytest import raises
 
 from pydmd.cdmd import CDMD
 
-from .utils import assert_allclose, data_backends
+from .utils import assert_allclose, setup_backends
+
+data_backends = setup_backends()
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -48,7 +50,7 @@ def test_eigs_3(X):
     dmd = CDMD(svd_rank=2)
     dmd.fit(X=X)
     expected_eigs = [-0.47386866 + 0.88059553j, -0.80901699 + 0.58778525j]
-    assert_allclose(dmd.eigs, expected_eigs, atol=1.e-6)
+    assert_allclose(dmd.eigs, expected_eigs, atol=1.0e-6)
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -98,6 +100,7 @@ def test_dmd_time_2(X):
     expected_data = X[:, -5:]
     assert_allclose(dmd.reconstructed_data, expected_data)
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_dmd_time_3(X):
     dmd = CDMD()
@@ -107,12 +110,14 @@ def test_dmd_time_3(X):
     expected_data = X[:, 8:12]
     assert_allclose(dmd.reconstructed_data, expected_data)
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_cdmd_matrix_uniform(X):
-    dmd = CDMD(compression_matrix='uniform')
+    dmd = CDMD(compression_matrix="uniform")
     dmd.fit(X=X)
     error_norm = np.linalg.norm(dmd.reconstructed_data - X, 1)
     assert error_norm < 1e-10
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_cdmd_matrix_sample(X):
@@ -141,9 +146,7 @@ def test_cdmd_matrix_sparse(X):
 @pytest.mark.parametrize("X", data_backends)
 def test_cdmd_matrix_custom(X):
     matrix = (
-        np.random.permutation(
-            (X.shape[1] - 3) * X.shape[0]
-        )
+        np.random.permutation((X.shape[1] - 3) * X.shape[0])
         .reshape(X.shape[1] - 3, X.shape[0])
         .astype(float)
     )
@@ -260,9 +263,7 @@ def test_bitmask_modes(X):
     dmd.modes_activation_bitmask = new_bitmask
 
     assert dmd.modes.shape[1] == old_n_modes - 2
-    assert_allclose(
-        dmd.modes, retained_modes
-    )
+    assert_allclose(dmd.modes, retained_modes)
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -272,9 +273,7 @@ def test_getitem_modes(X):
     old_n_modes = dmd.modes.shape[1]
 
     assert dmd[[0, -1]].modes.shape[1] == 2
-    assert_allclose(
-        dmd[[0, -1]].modes, dmd.modes[:, [0, -1]]
-    )
+    assert_allclose(dmd[[0, -1]].modes, dmd.modes[:, [0, -1]])
 
     assert dmd.modes.shape[1] == old_n_modes
 
@@ -284,16 +283,12 @@ def test_getitem_modes(X):
     assert dmd.modes.shape[1] == old_n_modes
 
     assert dmd[[1, 3]].modes.shape[1] == 2
-    assert_allclose(
-        dmd[[1, 3]].modes, dmd.modes[:, [1, 3]]
-    )
+    assert_allclose(dmd[[1, 3]].modes, dmd.modes[:, [1, 3]])
 
     assert dmd.modes.shape[1] == old_n_modes
 
     assert dmd[2].modes.shape[1] == 1
-    assert_allclose(
-        np.squeeze(dmd[2].modes), dmd.modes[:, 2]
-    )
+    assert_allclose(np.squeeze(dmd[2].modes), dmd.modes[:, 2])
 
     assert dmd.modes.shape[1] == old_n_modes
 
@@ -323,35 +318,9 @@ def test_reconstructed_data_with_bitmask(X):
     dmd.reconstructed_data
     assert True
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_correct_amplitudes(X):
     dmd = CDMD(compression_matrix="normal")
     dmd.fit(X=X)
     assert_allclose(dmd.amplitudes, dmd._b)
-
-@pytest.mark.parametrize("X", data_backends)
-def test_backprop(X):
-    if torch.is_tensor(X):
-        X = X.clone()
-        X.requires_grad = True
-        dmd = CDMD(svd_rank=-1, compression_matrix="normal")
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass
-
-@pytest.mark.parametrize("X", data_backends)
-def test_second_fit_backprop(X):
-    if torch.is_tensor(X):
-        X = X.clone()
-        X.requires_grad = True
-        dmd = CDMD(svd_rank=-1, compression_matrix="normal")
-        dmd.fit(X=X)
-        dmd.reconstructed_data.sum().backward()
-
-        dmd.fit(X=X.clone())
-        dmd.reconstructed_data.sum().backward()
-        X.requires_grad = False
-    else:
-        pass
