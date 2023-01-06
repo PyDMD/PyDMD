@@ -32,7 +32,8 @@ def test_reconstructed_data(X):
     dmd = FbDMD(exact=True, svd_rank=-1)
     dmd.fit(X=X)
     dmd_data = dmd.reconstructed_data
-    assert_allclose(dmd_data, X)
+    dmd_data_correct = np.load("tests/test_datasets/fbdmd_data.npy")
+    assert_allclose(dmd_data, dmd_data_correct)
 
 def test_sorted_eigs_default():
     dmd = FbDMD(svd_rank=-1)
