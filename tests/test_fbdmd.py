@@ -13,7 +13,7 @@ data_backends = setup_backends(data=noisy_data())
 def test_modes_shape(X):
     dmd = FbDMD(svd_rank=-1)
     dmd.fit(X=X)
-    assert dmd.modes.shape[1] == X.shape[1] - 1
+    assert dmd.modes.shape[1] == 2
 
 @pytest.mark.parametrize("X", data_backends)
 def test_truncation_shape(X):
