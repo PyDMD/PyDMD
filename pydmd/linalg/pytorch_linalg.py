@@ -253,7 +253,9 @@ class LinalgPyTorch(LinalgBase):
     def sqrtm(cls, X):
         import torch
 
-        return torch.pow(X, 0.5)
+        if not torch.is_complex(X) and torch.any(X < 0).item():
+            X = torch.complex(X, torch.zeros_like(X))
+        return torch.sqrt(X)
 
     @classmethod
     def svd(cls, X, *args, **kwargs):

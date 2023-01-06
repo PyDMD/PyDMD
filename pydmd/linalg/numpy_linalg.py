@@ -158,7 +158,7 @@ class LinalgNumPy(LinalgBase):
 
     @classmethod
     def sqrtm(cls, X):
-        return np.power(X, 0.5)
+        return np.emath.sqrt(X)
 
     @classmethod
     def svd(cls, X, *args, **kwargs):
