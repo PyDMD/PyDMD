@@ -1,10 +1,12 @@
 from __future__ import division
-from past.utils import old_div
-from pydmd import DMDc
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
+from past.utils import old_div
 from pytest import raises
+
+from pydmd import DMDc
 
 
 def create_system_with_B():

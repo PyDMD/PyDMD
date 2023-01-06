@@ -544,7 +544,7 @@ def test_bitmask_modes():
     assert dmd.modes.shape[1] == old_n_modes - 2
     np.testing.assert_almost_equal(dmd.modes, retained_modes)
 
-def test_reconstructed_data():
+def test_reconstructed_data_with_bitmask():
     dmd = HankelDMD(svd_rank=-1, d=5)
     dmd.fit(X=sample_data)
 

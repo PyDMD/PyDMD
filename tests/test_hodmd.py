@@ -1,9 +1,11 @@
+import os
 from builtins import range
-from pytest import raises
-from pydmd.hodmd import HODMD
+
 import matplotlib.pyplot as plt
 import numpy as np
-import os
+from pytest import raises
+
+from pydmd.hodmd import HODMD
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -424,7 +426,7 @@ def test_bitmask_modes():
     assert dmd.modes.shape[1] == old_n_modes - 2
     np.testing.assert_almost_equal(dmd.modes, retained_modes)
 
-def test_reconstructed_data():
+def test_reconstructed_data_with_bitmask():
     dmd = HODMD(svd_rank=-1, d=5)
     dmd.fit(X=sample_data)
 
