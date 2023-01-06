@@ -1,8 +1,9 @@
-from pydmd.dmdbase import DMDBase
-from pydmd import DMD
 import matplotlib.pyplot as plt
 import numpy as np
 from pytest import raises
+
+from pydmd import DMD
+from pydmd.dmdbase import DMDBase
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where

@@ -1,10 +1,13 @@
 from __future__ import division
-from past.utils import old_div
-from pytest import raises
-from pydmd.mrdmd import MrDMD
-from pydmd import DMD, FbDMD
+
 import matplotlib.pyplot as plt
 import numpy as np
+from past.utils import old_div
+from pytest import raises
+
+from pydmd import DMD, FbDMD
+from pydmd.mrdmd import MrDMD
+
 
 def create_data(t_size=1600):
     x = np.linspace(-10, 10, 80)
@@ -302,6 +305,7 @@ def test_consistency():
 
 def test_consistency2():
     import sys
+
     import numpy
     numpy.set_printoptions(threshold=sys.maxsize)
 

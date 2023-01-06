@@ -1,9 +1,11 @@
+import os
 from builtins import range
-from pytest import raises
-from pydmd.optdmd import OptDMD
+
 import matplotlib.pyplot as plt
 import numpy as np
-import os
+from pytest import raises
+
+from pydmd.optdmd import OptDMD
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
