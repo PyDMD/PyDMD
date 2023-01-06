@@ -16,7 +16,7 @@ dmds = [
     # pytest.param(DMDc(svd_rank=-1), id="DMDc"),
     pytest.param(FbDMD(svd_rank=-1), id="FbDMD"),
     pytest.param(HankelDMD(svd_rank=-1, d=3), id="HankelDMD"),
-    pytest.param(HODMD(svd_rank=-1, d=3), id="HODMD"),
+    pytest.param(HODMD(svd_rank=-1, d=3, svd_rank_extra=-1), id="HODMD"),
 ]
 
 
