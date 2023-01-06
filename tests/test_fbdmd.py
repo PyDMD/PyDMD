@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 import pytest
 from pytest import raises
 
@@ -7,7 +6,7 @@ from pydmd.fbdmd import FbDMD
 
 from .utils import assert_allclose, setup_backends, noisy_data
 
-data_backends = setup_backends()
+data_backends = setup_backends(data=noisy_data())
 
 
 @pytest.mark.parametrize("X", data_backends)

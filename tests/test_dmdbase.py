@@ -5,7 +5,9 @@ from pytest import raises
 from pydmd import DMD
 from pydmd.dmdbase import DMDBase
 
-from .utils import data_backends
+from .utils import setup_backends
+
+data_backends = setup_backends()
 
 
 def test_svd_rank_default():

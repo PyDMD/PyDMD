@@ -8,8 +8,6 @@ from pydmd import DMDc
 
 from .utils import assert_allclose, setup_backends
 
-data_backends = setup_backends()
-
 np.random.seed(10)
 
 def create_system_with_B():

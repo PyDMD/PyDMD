@@ -2,6 +2,8 @@ import numpy as np
 import pytest
 import torch
 
+np.random.seed(10)
+
 
 def numpyfy(X):
     if torch.is_tensor(X):
@@ -41,10 +43,19 @@ def noisy_data():
 def setup_backends(data=None, filters=None):
     if data is None:
         data = sample_data()
-    data_backends = {
-        "NumPy": data,
-        "PyTorch CPU": torch.from_numpy(data),
-    }
+
+    if isinstance(data, dict):
+        data_backends = {
+            "NumPy": data,
+            "PyTorch CPU": {
+                key: torch.from_numpy(arr) for key, arr in data.items()
+            },
+        }
+    else:
+        data_backends = {
+            "NumPy": data,
+            "PyTorch CPU": torch.from_numpy(data)
+        }
 
     if filters is None:
         filters = set()
