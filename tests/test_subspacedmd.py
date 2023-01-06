@@ -1,6 +1,7 @@
+import numpy as np
+
 from pydmd import SubspaceDMD
 from pydmd.subspacedmd import SubspaceDMDOperator, reducedsvd
-import numpy as np
 
 
 def test_smoke():

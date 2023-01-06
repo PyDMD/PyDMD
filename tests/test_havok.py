@@ -1,7 +1,9 @@
-from pytest import raises
-from pydmd import HAVOK
-from scipy.integrate import ode
 import numpy as np
+from pytest import raises
+from scipy.integrate import ode
+
+from pydmd import HAVOK
+
 
 def lorenz_system(t, state, par):
     """

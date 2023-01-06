@@ -1,9 +1,11 @@
+import os
 from builtins import range
-from pytest import raises
-from pydmd.cdmd import CDMD
+
 import matplotlib.pyplot as plt
 import numpy as np
-import os
+from pytest import raises
+
+from pydmd.cdmd import CDMD
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -351,7 +353,7 @@ def test_getitem_raises():
     with raises(ValueError):
         dmd[1.0]
 
-def test_reconstructed_data():
+def test_reconstructed_data_with_bitmask():
     dmd = CDMD(compression_matrix='normal')
     dmd.fit(X=sample_data)
 

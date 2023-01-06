@@ -1,9 +1,11 @@
+import os
 from builtins import range
-from pydmd.dmd import DMD
+
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 from pytest import raises
+
+from pydmd.dmd import DMD
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -654,7 +656,7 @@ def test_second_fit():
     with raises(AssertionError):
         np.testing.assert_allclose(modes, modes2)
 
-def test_reconstructed_data():
+def test_reconstructed_data_with_bitmask():
     dmd = DMD(svd_rank=10)
     dmd.fit(X=sample_data)
 
