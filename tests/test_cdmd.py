@@ -1,6 +1,6 @@
 import numpy as np
-import torch
 import pytest
+import torch
 from pytest import raises
 
 from pydmd.cdmd import CDMD
@@ -312,7 +312,7 @@ def test_getitem_raises(X):
 
 
 @pytest.mark.parametrize("X", data_backends)
-def test_reconstructed_data(X):
+def test_reconstructed_data_with_bitmask(X):
     dmd = CDMD(compression_matrix="normal")
     dmd.fit(X=X)
 

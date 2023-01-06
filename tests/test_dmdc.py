@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import scipy
 import torch
-from pytest import raises, param
+from pytest import param, raises
 
 from pydmd import DMDc
 

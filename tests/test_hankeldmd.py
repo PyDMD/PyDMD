@@ -1,6 +1,6 @@
 import numpy as np
-import torch
 import pytest
+import torch
 from pytest import raises
 
 from pydmd import HankelDMD

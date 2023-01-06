@@ -1,6 +1,6 @@
 import numpy as np
-import torch
 import pytest
+import torch
 from pytest import raises
 
 from pydmd.hodmd import HODMD
@@ -338,7 +338,7 @@ def test_bitmask_modes(X):
     assert_allclose(dmd.modes, retained_modes)
 
 @pytest.mark.parametrize("X", data_backends)
-def test_reconstructed_data(X):
+def test_reconstructed_data_with_bitmask(X):
     dmd = HODMD(svd_rank=-1, d=5)
     dmd.fit(X=X)
 

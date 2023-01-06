@@ -238,7 +238,7 @@ def test_getitem_raises():
     with raises(ValueError):
         dmd[1.0]
 
-def test_reconstructed_data():
+def test_reconstructed_data_with_bitmask():
     dmd = RDMD()
     dmd.fit(X=sample_data)
 
