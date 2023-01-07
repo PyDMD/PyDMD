@@ -59,7 +59,7 @@ def compute_svd(X, svd_rank=0):
     if X.ndim > 2:
         if svd_rank == 0 or not isinstance(svd_rank, int):
             raise ValueError(
-                "Automatic SVD rank selection not available in batched DMD"
+                "Automatic SVD rank selection not available in tensorized DMD"
             )
 
     linalg_module = build_linalg_module(X)
@@ -128,6 +128,10 @@ matrix, or regularization methods."""
 
 
 def nan_average(arr, weights):
+    """
+    Cancels axis -2 by averaging all the samples on axis -3 using the given
+    weights.
+    """
     if weights.ndim != 1:
         raise ValueError("Expected 1D weights")
 
