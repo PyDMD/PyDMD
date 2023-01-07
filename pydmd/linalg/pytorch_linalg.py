@@ -220,6 +220,23 @@ class LinalgPyTorch(LinalgBase):
         import torch
 
         return torch.pow(X, power)
+    
+    @classmethod
+    def pseudo_hankel_matrix(cls, X, d):
+        import torch
+
+        if X.ndim == 2:
+            batched = False
+            X = X[None, None]
+        else:
+            batched = True
+            X = X[:, None]
+
+        space_size = X.shape[-2]
+        hankel = torch.nn.functional.unfold(
+            X.swapaxes(-1, -2), kernel_size=(d, space_size)
+        )
+        return hankel if batched else hankel[0]
 
     @classmethod
     def repeat(cls, X, repeats, axis):

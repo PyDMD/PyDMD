@@ -300,42 +300,6 @@ def test_hankeldmd_timesteps(X):
     assert len(dmd.dmd_timesteps) == 64
 
 @pytest.mark.parametrize("X", data_backends)
-def test_first_occurences(X):
-    x = np.linspace(0, 10, 64)
-
-    arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
-    arr = build_linalg_module(X).new_array(arr)
-
-    dmd = HankelDMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
-    assert dmd._hankel_first_occurrence(0) == 0
-    assert dmd._hankel_first_occurrence(1) == 0
-    assert dmd._hankel_first_occurrence(2) == 0
-    assert dmd._hankel_first_occurrence(3) == 1
-    assert dmd._hankel_first_occurrence(4) == 2
-    assert dmd._hankel_first_occurrence(5) == 3
-
-    dmd.dmd_time["tend"] = 100
-    assert dmd._hankel_first_occurrence(100) == 98
-
-    # change scale
-    dmd.dmd_time["t0"] = dmd.original_time["t0"] = x[0]
-    dmd.dmd_time["tend"] = dmd.original_time["tend"] = x[-1]
-    dmd.dmd_time["dt"] = dmd.original_time["dt"] = x[1] - x[0]
-
-    assert dmd._hankel_first_occurrence(x[0]) == 0
-    assert dmd._hankel_first_occurrence(x[1]) == 0
-    assert dmd._hankel_first_occurrence(x[2]) == 0
-    assert dmd._hankel_first_occurrence(x[3]) == 1
-    assert dmd._hankel_first_occurrence(x[-1] + dmd.dmd_time["dt"]) == 62
-
-    dmd.dmd_time["t0"] = x[len(x) // 2]
-    dmd.dmd_time["tend"] = x[-1] + dmd.dmd_time["dt"] * 20
-
-    a = dmd._hankel_first_occurrence(dmd.dmd_time["t0"])
-    b = len(x) // 2 - 2
-    assert dmd._hankel_first_occurrence(dmd.dmd_time["t0"]) == len(x) // 2 - 2
-
-@pytest.mark.parametrize("X", data_backends)
 def test_update_sub_dmd_time(X):
     dmd = HankelDMD()
     x = np.linspace(0, 10, 64)

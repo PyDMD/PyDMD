@@ -138,6 +138,12 @@ class LinalgNumPy(LinalgBase):
         return np.power(X, power)
 
     @classmethod
+    def pseudo_hankel_matrix(cls, X, d):
+        return np.vstack(
+            tuple(X[:, i : i + (X.shape[1] + 1 - d)] for i in range(d))
+        )
+
+    @classmethod
     def repeat(cls, X, repeats, axis):
         return np.repeat(X, repeats, axis=axis)
 

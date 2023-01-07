@@ -115,6 +115,37 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def pseudo_hankel_matrix(cls, X, d):
+        """
+        Arrange the snapshot in the matrix `X` into the (pseudo) Hankel
+        matrix. The attribute `d` controls the number of snapshot from `X` in
+        each snapshot of the Hankel matrix.
+
+        :Example:
+
+            >>> a = np.array([[1, 2, 3, 4, 5]])
+            >>> pseudo_hankel_matrix(a, 2)
+            array([[1, 2, 3, 4],
+                   [2, 3, 4, 5]])
+            >>> pseudo_hankel_matrix(a, 4)
+            array([[1, 2],
+                   [2, 3],
+                   [3, 4],
+                   [4, 5]])
+
+            >>> a = np.array([1,2,3,4,5,6]).reshape(2,3)
+            >>> a
+            array([[1, 2, 3],
+                   [4, 5, 6]])
+            >>> pseudo_hankel_matrix(a, 2)
+            array([[1, 2],
+                   [4, 5],
+                   [2, 3],
+                   [5, 6]])
+        """
+        raise NotImplementedError
+
+    @classmethod
     def repeat(cls, X, repeats, axis):
         raise NotImplementedError
 

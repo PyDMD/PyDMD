@@ -58,7 +58,9 @@ def compute_svd(X, svd_rank=0):
     """
     if X.ndim > 2:
         if svd_rank == 0 or not isinstance(svd_rank, int):
-            raise ValueError("Automatic SVD rank selection not available in batched DMD")
+            raise ValueError(
+                "Automatic SVD rank selection not available in batched DMD"
+            )
 
     linalg_module = build_linalg_module(X)
 
@@ -75,9 +77,9 @@ def compute_svd(X, svd_rank=0):
         rank = (s > tau).sum()
         if rank == 0:
             warnings.warn(
-                'SVD optimal rank is 0. The largest singular values are '
-                'indistinguishable from noise. Setting rank truncation to 1.',
-                RuntimeWarning
+                "SVD optimal rank is 0. The largest singular values are "
+                "indistinguishable from noise. Setting rank truncation to 1.",
+                RuntimeWarning,
             )
             rank = 1
     elif 0 < svd_rank < 1:
@@ -107,7 +109,11 @@ def prepare_snapshots(X):
         snapshots = snapshots.T
 
     cond_number = linalg_module.cond(snapshots)
-    if isinstance(cond_number, float) or hasattr(cond_number, "ndim") and cond_number.ndim == 0:
+    if (
+        isinstance(cond_number, float)
+        or hasattr(cond_number, "ndim")
+        and cond_number.ndim == 0
+    ):
         max_cond_number = float(cond_number)
     else:
         max_cond_number = max(cond_number)
@@ -119,3 +125,29 @@ matrix, or regularization methods."""
         )
 
     return snapshots
+
+
+def nan_average(arr, weights):
+    if weights.ndim != 1:
+        raise ValueError("Expected 1D weights")
+
+    linalg_module = build_linalg_module(arr)
+
+    if arr.ndim == 4:
+        arr0, arr1, _, arr3 = arr.shape
+    else:
+        arr0 = 0
+        arr1, _, arr3 = arr.shape
+    repeated_weights = linalg_module.repeat(weights[None], arr1, 0)
+    repeated_weights = linalg_module.repeat(
+        repeated_weights[..., None], arr3, 2
+    )
+    if arr.ndim == 4:
+        repeated_weights = linalg_module.repeat(repeated_weights[None], arr0, 0)
+
+    non_normalized_mean = linalg_module.nansum(arr * repeated_weights, axis=-2)
+
+    weights_sum = linalg_module.nansum(repeated_weights, axis=-2)
+    # avoid divide by zero
+    weights_sum[weights_sum == 0.0] = 1
+    return non_normalized_mean / weights_sum
