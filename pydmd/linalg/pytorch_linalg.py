@@ -150,6 +150,12 @@ class LinalgPyTorch(LinalgBase):
         return torch.median(X)
 
     @classmethod
+    def moveaxis(cls, X, source, destination):
+        import torch
+        
+        return torch.moveaxis(X, source, destination)
+
+    @classmethod
     def multiply_elementwise(cls, X, Y):
         import torch
 

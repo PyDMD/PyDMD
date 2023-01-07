@@ -83,6 +83,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def moveaxis(cls, X, source, destination):
+        raise NotImplementedError
+
+    @classmethod
     def multiply_elementwise(cls, X, Y):
         raise NotImplementedError
 

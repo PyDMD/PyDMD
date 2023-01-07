@@ -104,6 +104,10 @@ class LinalgNumPy(LinalgBase):
         return np.median(X)
 
     @classmethod
+    def moveaxis(cls, X, source, destination):
+        return np.moveaxis(X, source, destination)
+
+    @classmethod
     def multiply_elementwise(cls, X, Y):
         return np.multiply(X, Y)
 

@@ -157,33 +157,23 @@ class HankelDMD(DMDBase):
         space_dim = rec.shape[-2] // self.d
         time_instants = rec.shape[-1] + self.d - 1
 
+        rec_snapshots_shape = (time_instants, self.d, space_dim)
+        if rec.ndim == 3:
+            rec_snapshots_shape = (len(rec),) + rec_snapshots_shape
+
         linalg_module = build_linalg_module(rec)
-        # for each time instance, we collect all its appearences.  each
-        # snapshot appears at most d times (for instance, the first appears
-        # only once).
         reconstructed_snapshots = linalg_module.full(
-            (time_instants, self.d, space_dim), np.nan, dtype=rec.dtype
+            rec_snapshots_shape, np.nan, dtype=rec.dtype
         )
 
-        c_idxes = (
-            np.arange(self.d)[:, None]
-            .repeat(2, axis=1)[None]
-            .repeat(rec.shape[-1], axis=0)
-        )
-        c_idxes[..., 0] += np.arange(rec.shape[-1])[:, None]
+        time_idxes = np.arange(self.d)[None].repeat(rec.shape[-1], axis=0)
+        time_idxes += np.arange(rec.shape[-1])[:, None]
+        d_idxes = np.arange(self.d)[None].repeat(rec.shape[-1], axis=0)
 
-        splitted = cast_as_array(
-            linalg_module.split(rec.swapaxes(-1, -2), self.d, axis=-1)
-        )
-        if self._snapshots.ndim == 2:
-            reconstructed_snapshots[
-                c_idxes[..., 0], c_idxes[..., 1]
-            ] = splitted.swapaxes(0, 1)
-        else:
-            reconstructed_snapshots[
-                :, c_idxes[..., 0], c_idxes[..., 1]
-            ] = splitted.swapaxes(-2, -3)
-
+        splitted = cast_as_array(linalg_module.split(rec, self.d, axis=-2))
+        reconstructed_snapshots[
+            ..., time_idxes, d_idxes, :
+        ] = linalg_module.moveaxis(splitted, -1, -3)
         return (
             reconstructed_snapshots[timeindex]
             if timeindex
@@ -194,17 +184,11 @@ class HankelDMD(DMDBase):
         """Return The first snapshot that occurs in `reconstructions` for each
         snapshot available.
         """
-        first_nonmasked_idx_1 = np.arange(reconstructions.shape[-3])
-        first_nonmasked_idx_2 = first_nonmasked_idx_1.copy()
-        first_nonmasked_idx_2[self.d - 1 :] = self.d - 1
-        if self._snapshots.ndim == 2:
-            return reconstructions[
-                first_nonmasked_idx_1, first_nonmasked_idx_2
-            ].T
-        else:
-            return reconstructions[
-                :, first_nonmasked_idx_1, first_nonmasked_idx_2
-            ].swapaxes(-1, -2)
+        n_time = reconstructions.shape[-3]
+        time_idxes = np.arange(n_time)
+        d_idxes = np.arange(n_time)
+        d_idxes[self.d - 1 :] = self.d - 1
+        return reconstructions[..., time_idxes, d_idxes, :].swapaxes(-1, -2)
 
     @property
     def reconstructed_data(self):
@@ -305,7 +289,7 @@ class HankelDMD(DMDBase):
         self.reset()
 
         linalg_module = build_linalg_module(X)
-        
+
         snp = prepare_snapshots(X)
         n_samples = snp.shape[-1]
         if n_samples < self._d:
