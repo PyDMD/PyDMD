@@ -250,12 +250,11 @@ class LinalgPyTorch(LinalgBase):
         return torch.tensor_split(X, n_arrays, axis)
 
     @classmethod
-    def sqrtm(cls, X):
-        import torch
+    def matrix_sqrt(cls, X):
+        from .torch_matrix_sqrt import MatrixSquareRoot
 
-        if not torch.is_complex(X) and torch.any(X < 0).item():
-            X = torch.complex(X, torch.zeros_like(X))
-        return torch.sqrt(X)
+        logging.warning("Moving data to CPU to apply scipy.linalg.sqrtm")
+        return MatrixSquareRoot.apply(X)
 
     @classmethod
     def svd(cls, X, *args, **kwargs):

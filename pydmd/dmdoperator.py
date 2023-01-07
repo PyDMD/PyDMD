@@ -85,7 +85,7 @@ class DMDOperator:
             atilde_back = self._least_square_operator(bU, bs, bV, X)
             atilde_back_inv = linalg_module.inv(atilde_back)
             atilde_dotted = linalg_module.dot(atilde, atilde_back_inv)
-            atilde = linalg_module.sqrtm(atilde_dotted)
+            atilde = linalg_module.matrix_sqrt(atilde_dotted)
 
         if isinstance(self._rescale_mode, str) and self._rescale_mode == "auto":
             self._rescale_mode = s
@@ -201,10 +201,10 @@ class DMDOperator:
                 )
             scaling_factors = linalg_module.to(self.as_array, self._rescale_mode)
             factors_inv_sqrt = linalg_module.diag_matrix(
-                1 / linalg_module.sqrtm(scaling_factors)
+                1 / linalg_module.pow(scaling_factors, 0.5)
             )
             factors_sqrt = linalg_module.diag_matrix(
-                linalg_module.sqrtm(scaling_factors)
+                linalg_module.pow(scaling_factors, 0.5)
             )
 
             # if an index is 0, we get inf when taking the reciprocal
@@ -257,7 +257,7 @@ class DMDOperator:
         else:
             # compute W as shown in arXiv:1409.5496 (section 2.4)
             factors = linalg_module.to(self.eigenvectors, self._rescale_mode)
-            factors_sqrt = linalg_module.diag_matrix(linalg_module.sqrtm(factors))
+            factors_sqrt = linalg_module.diag_matrix(linalg_module.pow(factors, 0.5))
             W = linalg_module.dot(factors_sqrt, self.eigenvectors)
 
         # compute the eigenvectors of the high-dimensional operator
@@ -267,6 +267,8 @@ class DMDOperator:
                     Sigma**2 + self._tikhonov_regularization * self._norm_X
                 ) / Sigma
             YV = linalg_module.dot(Y, V)
+            if Y.ndim == 3:
+                Sigma = Sigma[:, None]
             high_dimensional_eigenvectors = linalg_module.dot((YV / Sigma), W)
         else:
             high_dimensional_eigenvectors = linalg_module.dot(U, W)

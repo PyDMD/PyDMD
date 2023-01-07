@@ -1,4 +1,5 @@
 import logging
+from scipy.linalg import sqrtm
 
 logging.basicConfig(
     format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -157,8 +158,8 @@ class LinalgNumPy(LinalgBase):
         return np.split(X, n_arrays, axis)
 
     @classmethod
-    def sqrtm(cls, X):
-        return np.emath.sqrt(X)
+    def matrix_sqrt(cls, X):
+        return sqrtm(X)
 
     @classmethod
     def svd(cls, X, *args, **kwargs):

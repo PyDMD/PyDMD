@@ -7,7 +7,6 @@ from __future__ import division
 
 import numpy as np
 import scipy.sparse
-from scipy.linalg import sqrtm
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
@@ -69,6 +68,7 @@ class CDMDOperator(DMDOperator):
         :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
         """
 
+        linalg_module = build_linalg_module(compressedX)
         U, s, V = compute_svd(compressedX, svd_rank=self._svd_rank)
 
         atilde = self._least_square_operator(U, s, V, compressedY)
@@ -77,7 +77,9 @@ class CDMDOperator(DMDOperator):
             # b stands for "backward"
             bU, bs, bV = compute_svd(compressedY, svd_rank=self._svd_rank)
             atilde_back = self._least_square_operator(bU, bs, bV, compressedX)
-            atilde = sqrtm(atilde.dot(np.linalg.inv(atilde_back)))
+            atilde_back_inv = linalg_module.inv(atilde_back)
+            atilde_dotted = linalg_module.dot(atilde, atilde_back_inv)
+            atilde = linalg_module.matrix_sqrt(atilde_dotted)
 
         self._Atilde = atilde
         self._compute_eigenquantities()

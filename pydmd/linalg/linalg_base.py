@@ -131,7 +131,7 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
-    def sqrtm(cls, X):
+    def matrix_sqrt(cls, X):
         raise NotImplementedError
 
     @classmethod
