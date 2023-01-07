@@ -16,8 +16,6 @@ dmds = [
     pytest.param(
         DMD(svd_rank=-1, opt=True, exact=True), id="DMD exact+opt=True"
     ),
-    # TODO
-    # pytest.param(DMDc(svd_rank=-1), id="DMDc"),
     pytest.param(FbDMD(svd_rank=-1), id="FbDMD"),
     pytest.param(HankelDMD(svd_rank=-1, d=3), id="HankelDMD"),
     pytest.param(HODMD(svd_rank=-1, d=3, svd_rank_extra=-1), id="HODMD"),
@@ -34,12 +32,14 @@ def test_tensorized_snapshots(dmd, X):
     assert dmd._snapshots.shape == X.shape
     assert_allclose(dmd._snapshots[0], X[0])
 
+
 @pytest.mark.parametrize("X", torch_backends)
 def test_tensorized_snapshots_hankeldmd(X):
     X = torch.stack([X * i for i in range(1, 11)])
     dmd = HankelDMD(svd_rank=-1, d=3)
     dmd.fit(X=X)
     assert dmd.snapshots.shape == (10, 3 * X.shape[-2], X.shape[-1] - 2)
+
 
 @pytest.mark.parametrize("X", torch_backends)
 def test_tensorized_snapshots_hodmd(X):
@@ -49,10 +49,44 @@ def test_tensorized_snapshots_hodmd(X):
     assert dmd.snapshots.shape[0] == 10
     assert dmd.snapshots.shape[-1] == X.shape[-1]
 
+
+@pytest.mark.parametrize(
+    "dmd",
+    [
+        pytest.param(CDMD(svd_rank=0), id="CDMD-0"),
+        pytest.param(CDMD(svd_rank=0.1), id="CDMD-0.1"),
+        pytest.param(DMD(svd_rank=0), id="DMD-0"),
+        pytest.param(DMD(svd_rank=0.2), id="DMD-0.1"),
+        pytest.param(FbDMD(svd_rank=0), id="FbDMD-0"),
+        pytest.param(FbDMD(svd_rank=0.1), id="FbDMD-0.1"),
+        pytest.param(HankelDMD(svd_rank=0, d=3), id="HankelDMD-0"),
+        pytest.param(HankelDMD(svd_rank=0.1, d=3), id="HankelDMD-0.1"),
+        pytest.param(HODMD(svd_rank=0, d=3, svd_rank_extra=-1), id="HODMD-0"),
+        pytest.param(
+            HODMD(svd_rank=0.1, d=3, svd_rank_extra=-1), id="HODMD-0.1"
+        ),
+        pytest.param(
+            HODMD(svd_rank=-1, d=3, svd_rank_extra=0), id="HODMD-extra-0"
+        ),
+        pytest.param(
+            HODMD(svd_rank=-1, d=3, svd_rank_extra=0.1), id="HODMD-extra-0.1"
+        ),
+    ],
+)
+@pytest.mark.parametrize("X", torch_backends)
+def test_tensorized_fit_rejects_auto_svd_rank(dmd, X):
+    X = torch.stack([X * i for i in range(1, 11)])
+    with pytest.raises(
+        ValueError,
+        match="Automatic SVD rank selection not available in tensorized DMD",
+    ):
+        dmd.fit(X=X)
+
+
 @pytest.mark.parametrize("dmd", dmds)
 @pytest.mark.parametrize("X", torch_backends)
 def test_tensorized_reconstructed_data(dmd, X):
-    if isinstance("dmd", FbDMD):
+    if isinstance(dmd, FbDMD):
         pytest.skip()
     X = torch.stack([X * i for i in range(1, 11)])
     dmd.fit(X=X)
