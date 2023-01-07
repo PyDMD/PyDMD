@@ -180,7 +180,7 @@ class CDMD(DMDBase):
         :rtype: numpy.ndarray
         """
 
-        C_shape = (self._snapshots.shape[1], self._snapshots.shape[0])
+        C_shape = (self._snapshots.shape[-1], self._snapshots.shape[-2])
         if isinstance(self.compression_matrix, np.ndarray):
             C = self.compression_matrix
         elif self.compression_matrix == 'uniform':
@@ -215,12 +215,12 @@ class CDMD(DMDBase):
 
         compressed_snapshots = self._compress_snapshots()
 
-        n_samples = compressed_snapshots.shape[1]
-        X = compressed_snapshots[:, :-1]
-        Y = compressed_snapshots[:, 1:]
+        n_samples = compressed_snapshots.shape[-1]
+        X = compressed_snapshots[..., :-1]
+        Y = compressed_snapshots[..., 1:]
 
         X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        self.operator.compute_operator(X, Y, self._snapshots[:, 1:])
+        self.operator.compute_operator(X, Y, self._snapshots[..., 1:])
 
         # Default timesteps
         self._set_initial_time_dictionary(
