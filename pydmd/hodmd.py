@@ -133,7 +133,7 @@ class HODMD(HankelDMD):
             self.U_extra, _, _ = compute_svd(org_snp, self.svd_rank_extra)
 
         linalg_module = build_linalg_module(org_snp)
-        snp = linalg_module.dot(self.U_extra.T, org_snp)
+        snp = linalg_module.dot(self.U_extra.swapaxes(-1, -2), org_snp)
 
         super().fit(snp)
         self._snapshots = org_snp
