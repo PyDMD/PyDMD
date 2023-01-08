@@ -101,18 +101,11 @@ class HODMD(HankelDMD):
             selected, in this case the output becomes a 2D matrix.
         :rtype: numpy.ndarray
         """
-        linalg_module = build_linalg_module(self.U_extra)
         snapshots = super().reconstructions_of_timeindex(timeindex)
-        if snapshots.ndim == 2:  # single time instant
-            snapshots = linalg_module.dot(self.U_extra, snapshots.T).T
-        elif snapshots.ndim == 3:  # all time instants
-            snapshots = linalg_module.new_array(
-                [linalg_module.dot(self.U_extra, snapshot.T).T for snapshot in snapshots]
-            )
-        else:
-            raise RuntimeError
+        snapshots = snapshots.swapaxes(-1, -2)
 
-        return snapshots
+        linalg_module = build_linalg_module(snapshots)
+        return linalg_module.dot(self.U_extra, snapshots).swapaxes(-1, -2)
 
     def fit(self, X):
         """

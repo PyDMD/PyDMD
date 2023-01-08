@@ -107,7 +107,6 @@ def test_dynamics_opt_2(X):
 def test_reconstructed_data(X):
     dmd = HODMD(d=2)
     dmd.fit(X=X)
-    dmd.reconstructions_of_timeindex(2)
     dmd_data = dmd.reconstructed_data
     assert_allclose(dmd_data, X)
 
