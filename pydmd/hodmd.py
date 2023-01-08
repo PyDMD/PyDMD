@@ -104,8 +104,12 @@ class HODMD(HankelDMD):
         snapshots = super().reconstructions_of_timeindex(timeindex)
         snapshots = snapshots.swapaxes(-1, -2)
 
+        Ue = self.U_extra
+        if Ue.ndim == 3:
+            Ue = Ue[:, None]
+
         linalg_module = build_linalg_module(snapshots)
-        return linalg_module.dot(self.U_extra, snapshots).swapaxes(-1, -2)
+        return linalg_module.dot(Ue, snapshots).swapaxes(-1, -2)
 
     def fit(self, X):
         """
