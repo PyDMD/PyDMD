@@ -156,9 +156,10 @@ class HankelDMD(DMDBase):
         rec = self._sub_dmd.reconstructed_data
         space_dim = rec.shape[-2] // self.d
         time_instants = rec.shape[-1] + self.d - 1
+        tensorized = rec.ndim == 3
 
         rec_snapshots_shape = (time_instants, self.d, space_dim)
-        if rec.ndim == 3:
+        if tensorized:
             rec_snapshots_shape = (len(rec),) + rec_snapshots_shape
 
         linalg_module = build_linalg_module(rec)
@@ -171,9 +172,14 @@ class HankelDMD(DMDBase):
         d_idxes = np.arange(self.d)[None].repeat(rec.shape[-1], axis=0)
 
         splitted = cast_as_array(linalg_module.split(rec, self.d, axis=-2))
-        reconstructed_snapshots[
-            ..., time_idxes, d_idxes, :
-        ] = linalg_module.moveaxis(splitted, -1, -3)
+        if tensorized:
+            # move batch axis to the first place
+            splitted = splitted.swapaxes(0, 1)
+            splitted = splitted.swapaxes(-1, -2).swapaxes(-2, -3)
+        else:
+            splitted = linalg_module.moveaxis(splitted, -1, -3)
+
+        reconstructed_snapshots[..., time_idxes, d_idxes, :] = splitted
         return (
             reconstructed_snapshots[timeindex]
             if timeindex
