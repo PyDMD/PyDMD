@@ -9,8 +9,8 @@ Nature Communications, 8, 2017.
 
 import numpy as np
 from scipy import signal
-from .hankeldmd import HankelDMD, DMDBase
-from .utils import compute_svd
+from .hankeldmd import HankelDMD
+from .utils import compute_svd, prepare_snapshots
 
 
 class HAVOK(HankelDMD):
@@ -161,7 +161,9 @@ class HAVOK(HankelDMD):
         """
         self.reset()
 
-        self._snapshots = self._col_major_2darray(x).squeeze()
+        self._snapshots = prepare_snapshots(x).squeeze()
+        if not isinstance(self._snapshots, np.ndarray):
+            raise ValueError("This DMD variant does not support PyTorch data")
 
         # Check that input data is a 1D time-series
         if self._snapshots.ndim > 1:
