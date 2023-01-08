@@ -1,9 +1,11 @@
 import pytest
 import torch
+from torch.autograd import gradcheck
 from pydmd import DMD, FbDMD, HankelDMD, HODMD, DMDc, CDMD
 import numpy as np
 
 from .utils import assert_allclose, setup_backends, noisy_data
+from .test_backprop import fit_reconstruct
 
 torch_backends = setup_backends(filters=("NumPy",))
 noisy_backends = setup_backends(data=noisy_data(), filters=("NumPy",))
@@ -127,4 +129,23 @@ def test_tensorized_second_fit_backprop(dmd, X):
 
     dmd.fit(X=X.clone())
     dmd.reconstructed_data.sum().backward()
+    X.requires_grad = False
+
+
+@pytest.mark.parametrize("dmd", dmds)
+@pytest.mark.parametrize("X", torch_backends)
+def test_tensorized_backprop_gradcheck(dmd, X):
+    X = torch.stack([X * i for i in range(1, 11)])
+    X.requires_grad = True
+    assert gradcheck(fit_reconstruct(dmd), X)
+    X.requires_grad = False
+
+
+@pytest.mark.parametrize("dmd", dmds)
+@pytest.mark.parametrize("X", torch_backends)
+def test_tensorized_second_fit_backprop_gradcheck(dmd, X):
+    X = torch.stack([X * i for i in range(1, 11)])
+    X.requires_grad = True
+    dmd.fit(X=X)
+    assert gradcheck(fit_reconstruct(dmd), X)
     X.requires_grad = False
