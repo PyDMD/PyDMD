@@ -1,14 +1,13 @@
 import numpy as np
 import pytest
-import torch
 from pytest import raises
 
 from pydmd import HankelDMD
-from pydmd.linalg import build_linalg_module
 
-from .utils import assert_allclose, setup_backends
+from .utils import assert_allclose, setup_backends, setup_linalg_module_backends
 
 data_backends = setup_backends()
+linalg_backends = setup_linalg_module_backends()
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -35,10 +34,9 @@ def test_Atilde_shape(X):
     dmd.fit(X=X)
     assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
 
-@pytest.mark.parametrize("X", data_backends)
-def test_d(X):
-    single_data = np.sin(np.linspace(0, 10, 100))
-    single_data = build_linalg_module(X).new_array(single_data)
+@pytest.mark.parametrize("linalg_module", linalg_backends)
+def test_d(linalg_module):
+    single_data = linalg_module.new_array(np.sin(np.linspace(0, 10, 100)))
     dmd = HankelDMD(svd_rank=-1, d=50, opt=True, exact=True)
     dmd.fit(single_data)
     assert_allclose(dmd.reconstructed_data.flatten(), single_data, atol=1.e-12)
@@ -194,11 +192,11 @@ def test_dmd_time_4(X):
         ]
     assert_allclose(dmd.dynamics, expected_data, atol=1.e-6)
 
-@pytest.mark.parametrize("X", data_backends)
-def test_dmd_time_5(X):
+@pytest.mark.parametrize("linalg_module", linalg_backends)
+def test_dmd_time_5(linalg_module):
     x = np.linspace(0, 10, 64)
     y = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
-    y = build_linalg_module(X).new_array(y)
+    y = linalg_module.new_array(y)
 
     dmd = HankelDMD(svd_rank=-1, exact=True, opt=True, d=30)
     dmd.fit(y)
@@ -289,23 +287,23 @@ def test_rec_method_weighted(X):
         )
     )
 
-@pytest.mark.parametrize("X", data_backends)
-def test_hankeldmd_timesteps(X):
+@pytest.mark.parametrize("linalg_module", linalg_backends)
+def test_hankeldmd_timesteps(linalg_module):
     x = np.linspace(0, 10, 64)
     
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
-    arr = build_linalg_module(X).new_array(arr)
+    arr = linalg_module.new_array(arr)
 
     dmd = HankelDMD(svd_rank=1, exact=True, opt=True, d=30).fit(arr)
     assert len(dmd.dmd_timesteps) == 64
 
-@pytest.mark.parametrize("X", data_backends)
-def test_update_sub_dmd_time(X):
+@pytest.mark.parametrize("linalg_module", linalg_backends)
+def test_update_sub_dmd_time(linalg_module):
     dmd = HankelDMD()
     x = np.linspace(0, 10, 64)
     
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
-    arr = build_linalg_module(X).new_array(arr)
+    arr = linalg_module.new_array(arr)
 
     dmd = HankelDMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
 
@@ -321,14 +319,14 @@ def test_update_sub_dmd_time(X):
         == dmd._sub_dmd.original_time["tend"] + 20
     )
 
-@pytest.mark.parametrize("X", data_backends)
-def test_hankel_2d(X):
+@pytest.mark.parametrize("linalg_module", linalg_backends)
+def test_hankel_2d(linalg_module):
     def fnc(x):
         return np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
 
     x = np.linspace(0, 10, 64)
     snapshots = np.vstack([fnc(x), -fnc(x)])
-    snapshots = build_linalg_module(X).new_array(snapshots)
+    snapshots = linalg_module.new_array(snapshots)
 
     dmd = HankelDMD(svd_rank=0, exact=True, opt=True, d=30).fit(snapshots)
 
@@ -445,8 +443,7 @@ def test_reconstructed_data_with_bitmask(X):
     new_bitmask[[0,-1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
-    dmd.reconstructed_data
-    assert True
+    assert dmd.reconstructed_data is not None
 
 @pytest.mark.parametrize("X", data_backends)
 def test_getitem_modes(X):

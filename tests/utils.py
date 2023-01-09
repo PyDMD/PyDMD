@@ -2,6 +2,8 @@ import numpy as np
 import pytest
 import torch
 
+from pydmd.linalg import build_linalg_module
+
 np.random.seed(10)
 
 
@@ -52,10 +54,7 @@ def setup_backends(data=None, filters=None):
             },
         }
     else:
-        data_backends = {
-            "NumPy": data,
-            "PyTorch CPU": torch.from_numpy(data)
-        }
+        data_backends = {"NumPy": data, "PyTorch CPU": torch.from_numpy(data)}
 
     if filters is None:
         filters = set()
@@ -63,4 +62,13 @@ def setup_backends(data=None, filters=None):
         pytest.param(arr, id=key)
         for key, arr in data_backends.items()
         if key not in filters
+    ]
+
+
+def setup_linalg_module_backends(filters=None):
+    # TODO: we expect things like `new_array` to go on GPU 
+    # automatically
+    return [
+        build_linalg_module(param.values[0])
+        for param in setup_backends(data=None, filters=filters)
     ]

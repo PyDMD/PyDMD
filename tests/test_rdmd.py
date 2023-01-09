@@ -246,8 +246,7 @@ def test_reconstructed_data_with_bitmask():
     new_bitmask[[0,-1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
-    dmd.reconstructed_data
-    assert True
+    assert dmd.reconstructed_data is not None
 
 def test_correct_amplitudes():
     dmd = RDMD()

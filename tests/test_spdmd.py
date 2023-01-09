@@ -247,8 +247,7 @@ def test_reconstructed_data():
     new_bitmask[[0,-1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
-    dmd.reconstructed_data
-    assert True
+    assert dmd.reconstructed_data is not None
 
 def test_getitem_modes():
     dmd = SpDMD(release_memory=True, svd_rank=-1)

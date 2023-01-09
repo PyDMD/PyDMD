@@ -7,6 +7,7 @@ from pydmd.fbdmd import FbDMD
 from .utils import assert_allclose, setup_backends, noisy_data
 
 data_backends = setup_backends(data=noisy_data())
+input_sample_backends = setup_backends(data=np.load('tests/test_datasets/input_sample.npy'))
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -144,10 +145,10 @@ def test_reconstructed_data_with_bitmask(X):
 
     assert dmd.reconstructed_data is not None
 
-@pytest.mark.parametrize("X", data_backends)
+@pytest.mark.parametrize("X", input_sample_backends)
 def test_getitem_modes(X):
     dmd = FbDMD(svd_rank=-1)
-    dmd.fit(X=np.load('tests/test_datasets/input_sample.npy'))
+    dmd.fit(X=X)
     old_n_modes = dmd.modes.shape[1]
 
     assert dmd[[0,-1]].modes.shape[1] == 2
@@ -170,10 +171,10 @@ def test_getitem_modes(X):
 
     assert dmd.modes.shape[1] == old_n_modes
 
-@pytest.mark.parametrize("X", data_backends)
+@pytest.mark.parametrize("X", input_sample_backends)
 def test_getitem_raises(X):
     dmd = FbDMD(svd_rank=-1)
-    dmd.fit(X=np.load('tests/test_datasets/input_sample.npy'))
+    dmd.fit(X=X)
 
     with raises(ValueError):
         dmd[[0,1,1,0,1]]
@@ -182,8 +183,8 @@ def test_getitem_raises(X):
     with raises(ValueError):
         dmd[1.0]
 
-@pytest.mark.parametrize("X", data_backends)
+@pytest.mark.parametrize("X", input_sample_backends)
 def test_correct_amplitudes(X):
     dmd = FbDMD(svd_rank=-1)
-    dmd.fit(X=np.load('tests/test_datasets/input_sample.npy'))
+    dmd.fit(X=X)
     assert_allclose(dmd.amplitudes, dmd._b)

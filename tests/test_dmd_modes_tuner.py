@@ -587,4 +587,3 @@ def test_modes_selector_all_dmd_types(dmd):
         dmd.fit(sample_data)
 
     ModesTuner(dmd, in_place=True).select('integral_contribution', n=3).stabilize(1-1.e-3)
-    assert True

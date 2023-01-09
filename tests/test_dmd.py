@@ -5,9 +5,10 @@ from pytest import raises
 
 from pydmd.dmd import DMD
 
-from .utils import assert_allclose, setup_backends, sample_data
+from .utils import assert_allclose, setup_backends, sample_data, setup_linalg_module_backends
 
 data_backends = setup_backends()
+linalg_backends = setup_linalg_module_backends()
 
 
 @pytest.mark.parametrize("X", data_backends)

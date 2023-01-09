@@ -239,7 +239,6 @@ def test_bitmask_eigs(X):
     dmd.fit(X=X)
 
     old_n_eigs = dmd.eigs.shape[0]
-    print(old_n_eigs)
     retained_eigs = np.delete(dmd.eigs, [0, -1])
 
     new_bitmask = np.full(dmd.amplitudes.shape[0], True, dtype=bool)
@@ -315,8 +314,7 @@ def test_reconstructed_data_with_bitmask(X):
     new_bitmask[[0, -1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
-    dmd.reconstructed_data
-    assert True
+    assert dmd.reconstructed_data is None
 
 
 @pytest.mark.parametrize("X", data_backends)

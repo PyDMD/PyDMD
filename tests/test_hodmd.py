@@ -1,14 +1,13 @@
 import numpy as np
 import pytest
-import torch
 from pytest import raises
 
 from pydmd.hodmd import HODMD
-from pydmd.linalg import build_linalg_module
 
-from .utils import assert_allclose, setup_backends
+from .utils import assert_allclose, setup_backends, setup_linalg_module_backends
 
 data_backends = setup_backends()
+linalg_backends = setup_linalg_module_backends()
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -35,10 +34,10 @@ def test_Atilde_shape(X):
     dmd.fit(X=X)
     assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
 
-@pytest.mark.parametrize("X", data_backends)
-def test_d(X):
+@pytest.mark.parametrize("linalg_module", linalg_backends)
+def test_d(linalg_module):
     single_data = np.sin(np.linspace(0, 10, 100))
-    single_data = build_linalg_module(X).new_array(single_data)
+    single_data = linalg_module.new_array(single_data)
     dmd = HODMD(svd_rank=-1, d=50, opt=True, exact=True, svd_rank_extra=-1)
     dmd.fit(single_data)
     assert_allclose(dmd.reconstructed_data.flatten(), single_data, atol=1.e-12)
@@ -160,11 +159,11 @@ def test_dmd_time_4(X):
                     [           0.0 + 0.0j]]
     assert_allclose(dmd.dynamics, expected_data, atol=1.e-6)
 
-@pytest.mark.parametrize("X", data_backends)
-def test_dmd_time_5(X):
+@pytest.mark.parametrize("linalg_module", linalg_backends)
+def test_dmd_time_5(linalg_module):
     x = np.linspace(0, 10, 64)
     y = np.cos(x)*np.sin(np.cos(x)) + np.cos(x*.2)
-    y = build_linalg_module(X).new_array(y)
+    y = linalg_module.new_array(y)
 
     dmd = HODMD(svd_rank=-1, exact=True, opt=True, d=30, svd_rank_extra=-1)
     dmd.fit(y)
@@ -243,11 +242,11 @@ def test_rec_method_weighted(X):
     wavg = np.average(np.array(dmd.reconstructions_of_timeindex(4)), axis=0, weights=[10,20])
     assert_allclose(dmd.reconstructed_data[:,4], wavg.T)
 
-@pytest.mark.parametrize("X", data_backends)
-def test_scalar_func_warning(X):
+@pytest.mark.parametrize("linalg_module", linalg_backends)
+def test_scalar_func_warning(linalg_module):
     x = np.linspace(0, 10, 64)
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
-    arr = build_linalg_module(X).new_array(arr)
+    arr = linalg_module.new_array(arr)
     # we check that this does not fail
     HODMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
 
@@ -393,10 +392,9 @@ def test_correct_amplitudes(X):
     dmd.fit(X=X)
     assert_allclose(dmd.amplitudes, dmd._sub_dmd._b)
 
-@pytest.mark.parametrize("X", data_backends)
-def test_raises_not_enough_snapshots(X):
+@pytest.mark.parametrize("linalg_module", linalg_backends)
+def test_raises_not_enough_snapshots(linalg_module):
     dmd = HODMD(svd_rank=-1, d=5)
-    linalg_module = build_linalg_module(X)
     with raises(ValueError,  match="The number of snapshots provided is not enough for d=5."):
         dmd.fit(linalg_module.new_array(np.ones((20,4))))
     dmd.fit(linalg_module.new_array(np.ones((20,5))))
