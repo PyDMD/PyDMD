@@ -1,19 +1,25 @@
 import numpy as np
 
 from pydmd import SubspaceDMD
-from pydmd.subspacedmd import SubspaceDMDOperator, reducedsvd
+from pydmd.subspacedmd import SubspaceDMDOperator
+import pytest
+
+from .utils import setup_backends
+
+data = np.random.rand(10, 100)
+data_backends = setup_backends(data=data)
 
 
-def test_smoke():
+@pytest.mark.parametrize("X", data_backends)
+def test_smoke(X):
     dmd = SubspaceDMD()
-    x = np.random.rand(200, 100)
-    assert dmd.fit(x) is not None
+    assert dmd.fit(X) is not None
 
 
-def test_modes_shape():
+@pytest.mark.parametrize("X", data_backends)
+def test_modes_shape(X):
     dmd = SubspaceDMD()
-    x = np.random.rand(200, 100)
-    assert dmd.fit(x).modes.shape[0] == 200
+    assert dmd.fit(X).modes.shape[0] == 10
 
 
 def test_fixed_parameters():
@@ -59,8 +65,8 @@ def test_operator():
     assert isinstance(dmd._Atilde, SubspaceDMDOperator)
 
 
-def test_time():
-    X = np.random.rand(10, 100)
+@pytest.mark.parametrize("X", data_backends)
+def test_time(X):
     dmd = SubspaceDMD().fit(X)
 
     assert dmd.dmd_time["t0"] == 0
@@ -68,8 +74,8 @@ def test_time():
     assert dmd.dmd_time["dt"] == 1
 
 
-def test_initial_time():
-    X = np.random.rand(10, 100)
+@pytest.mark.parametrize("X", data_backends)
+def test_initial_time(X):
     dmd = SubspaceDMD().fit(X)
 
     assert dmd.original_time["t0"] == 0
@@ -77,59 +83,37 @@ def test_initial_time():
     assert dmd.original_time["dt"] == 1
 
 
-def test_amplitudes():
-    X = np.random.rand(10, 100)
+@pytest.mark.parametrize("X", data_backends)
+def test_amplitudes(X):
     dmd = SubspaceDMD().fit(X)
 
     assert dmd.amplitudes is not None
 
 
-def test_modes():
-    X = np.random.rand(10, 100)
+@pytest.mark.parametrize("X", data_backends)
+def test_modes(X):
     dmd = SubspaceDMD().fit(X)
 
     assert dmd.modes is not None
     assert dmd.modes.shape[0] == 10
 
 
-def test_eigs():
-    X = np.random.rand(10, 100)
+@pytest.mark.parametrize("X", data_backends)
+def test_eigs(X):
     dmd = SubspaceDMD().fit(X)
 
     assert dmd.eigs is not None
 
 
-def test_snapshots():
-    X = np.random.rand(10, 100)
+@pytest.mark.parametrize("X", data_backends)
+def test_snapshots(X):
     dmd = SubspaceDMD().fit(X)
 
     assert dmd.snapshots.shape == (10, 100)
 
 
-def test_reducedsvd():
-    X = np.eye(4)
-    X = np.hstack((X, X))
-    X = np.vstack((X, np.zeros((5, X.shape[1]))))
-
-    U, s, V = reducedsvd(X)
-    assert U.shape[1] == 4
-    assert V.shape[1] == 4
-    assert len(s) == 4
-
-
-def test_reducedsvd_with_r():
-    X = np.eye(4)
-    X = np.hstack((X, X))
-    X = np.vstack((X, np.zeros((5, X.shape[1]))))
-
-    U, s, V = reducedsvd(X, 2)
-    assert U.shape[1] == 2
-    assert V.shape[1] == 2
-    assert len(s) == 2
-
-
-def test_svd_rank_positive():
-    X = np.random.rand(10, 100)
+@pytest.mark.parametrize("X", data_backends)
+def test_svd_rank_positive(X):
     dmd = SubspaceDMD(svd_rank=2).fit(X)
 
     assert len(dmd.eigs) == 2

@@ -11,23 +11,8 @@ import numpy as np
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-
-
-def reducedsvd(X, r=None):
-    """
-    Computes the reduced SVD of `X` taking only the first `r` modes.
-
-    :param np.ndarray X: Matrix to be used for SVD.
-    :param int r: Number of modes to be retained, if `None` the rank of `X` is
-        used instead.
-    :rtype: tuple
-    :return: Left singular vectors, singular values and right singular vectors.
-    """
-
-    U, s, V = np.linalg.svd(X, full_matrices=True)
-    if r is None:
-        r = np.linalg.matrix_rank(X)
-    return U[:, :r], s[:r], V.conj().T[:, :r]
+from .utils import compute_svd, prepare_snapshots
+from .linalg import build_linalg_module, is_array
 
 
 class SubspaceDMDOperator(DMDOperator):
@@ -60,6 +45,8 @@ class SubspaceDMDOperator(DMDOperator):
             tikhonov_regularization=None,
         )
 
+        if svd_rank is None:
+            self._svd_rank = 0
         self._Atilde = None
         self._modes = None
         self._Lambda = None
@@ -73,26 +60,26 @@ class SubspaceDMDOperator(DMDOperator):
         :param numpy.ndarray Yp: Matrix `Yp` as defined in the original paper.
         :param numpy.ndarray Yp: Matrix `Yf` as defined in the original paper.
         """
+        n = Yp.shape[-2] // 2
 
-        n = Yp.shape[0] // 2
+        _, _, Vp = compute_svd(Yp, svd_rank=self._svd_rank)
+        linalg_module = build_linalg_module(Yp)
 
-        _, _, Vp = reducedsvd(Yp)
-        O = Yf.dot(Vp).dot(Vp.T.conj())
+        YfVp = linalg_module.dot(Yf, Vp)
+        O = linalg_module.dot(YfVp, Vp.swapaxes(-1, -2).conj())
 
-        Uq, _, _ = reducedsvd(O)
+        Uq, _, _ = compute_svd(O, svd_rank=self._svd_rank)
 
-        r = min(np.linalg.matrix_rank(O), n)
-        if self._svd_rank > 0:
-            r = min(r, self._svd_rank)
+        r = min(Uq.shape[-1], n, abs(self._svd_rank))
+        Uq1 = Uq[..., :n, :r]
+        Uq2 = Uq[..., n:, :r]
 
-        Uq1, Uq2 = Uq[:n, :r], Uq[n:, :r]
-
-        U, S, V = reducedsvd(Uq1)
+        U, S, V = compute_svd(Uq1, svd_rank=self._svd_rank)
 
         self._Atilde = self._least_square_operator(U, S, V, Uq2)
         self._compute_eigenquantities()
 
-        M = Uq2.dot(V) * np.reciprocal(S)
+        M = linalg_module.dot(Uq2, V) / S
         self._compute_modes(M)
 
     def _compute_modes(self, M):
@@ -102,17 +89,29 @@ class SubspaceDMDOperator(DMDOperator):
 
         :param numpy.ndarray M: Matrix `M` as defined in the original paper.
         """
+        linalg_module = build_linalg_module(M)
 
         if self._rescale_mode is None:
             W = self.eigenvectors
-        else:
+        elif is_array(self._rescale_mode):
             # compute W as shown in arXiv:1409.5496 (section 2.4)
-            factors_sqrt = np.diag(np.power(self._rescale_mode, 0.5))
-            W = factors_sqrt.dot(self.eigenvectors)
+            if len(self._rescale_mode) != self.as_array.shape[0]:
+                raise ValueError("Scaling by an invalid number of coefficients")
+            scaling_factors = linalg_module.to(
+                self.as_array, self._rescale_mode
+            )
+            factors_sqrt = linalg_module.diag_matrix(
+                linalg_module.pow(scaling_factors, 0.5)
+            )
+            W = linalg_module.dot(factors_sqrt, self.eigenvectors)
+        else:
+            raise ValueError(
+                f"Invalid value for rescale_mode: {self._rescale_mode}."
+            )
 
         # compute the eigenvectors of the high-dimensional operator
-        high_dimensional_eigenvectors = M.dot(W) * np.reciprocal(
-            self.eigenvalues
+        high_dimensional_eigenvectors = (
+            linalg_module.dot(M, W) / self.eigenvalues
         )
 
         # eigenvalues are the same of lowrank
@@ -177,16 +176,17 @@ class SubspaceDMD(DMDBase):
         """
         self.reset()
 
-        self._snapshots = self._col_major_2darray(X)
+        self._snapshots = prepare_snapshots(X)
 
         n_samples = self._snapshots.shape[1]
-        Y0 = self._snapshots[:, :-3]
-        Y1 = self._snapshots[:, 1:-2]
-        Y2 = self._snapshots[:, 2:-1]
-        Y3 = self._snapshots[:, 3:]
+        Y0 = self._snapshots[..., :-3]
+        Y1 = self._snapshots[..., 1:-2]
+        Y2 = self._snapshots[..., 2:-1]
+        Y3 = self._snapshots[..., 3:]
 
-        Yp = np.vstack((Y0, Y1))
-        Yf = np.vstack((Y2, Y3))
+        linalg_module = build_linalg_module(X)
+        Yp = linalg_module.cat((Y0, Y1), axis=-2)
+        Yf = linalg_module.cat((Y2, Y3), axis=-2)
 
         self.operator.compute_operator(Yp, Yf)
 
