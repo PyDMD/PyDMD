@@ -20,7 +20,7 @@ def soft_thresholding_operator(v, k):
     :param np.ndarray v: The vector on which we apply the operator.
     :param float k: The threshold.
     :return np.ndarray: The result of the application of the soft-tresholding
-        operator on ´v´.
+        operator on `v`.
     """
     return np.multiply(
         np.multiply(np.divide(1 - k, np.abs(v)), v), np.abs(v) > k
