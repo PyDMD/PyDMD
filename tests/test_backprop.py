@@ -1,7 +1,7 @@
 import pytest
 from torch.autograd import gradcheck
 
-from pydmd import CDMD, DMD, HODMD, DMDc, FbDMD, HankelDMD
+from pydmd import CDMD, DMD, HODMD, DMDc, FbDMD, HankelDMD, SubspaceDMD
 
 from .utils import setup_backends, sample_data
 
@@ -15,6 +15,7 @@ dmds = [
     pytest.param(FbDMD(svd_rank=-1), id="FbDMD"),
     pytest.param(HankelDMD(svd_rank=-1, d=3), id="HankelDMD"),
     pytest.param(HODMD(svd_rank=-1, d=3, svd_rank_extra=-1), id="HODMD"),
+    pytest.param(SubspaceDMD(svd_rank=-1), id="SubspaceDMD"),
 ]
 
 
@@ -49,6 +50,7 @@ def test_second_fit_backprop(dmd, X):
     X.requires_grad = False
 
 
+@pytest.mark.gradcheck
 @pytest.mark.parametrize("dmd", dmds)
 @pytest.mark.parametrize("X", torch_backends)
 def test_backprop_gradcheck(dmd, X):
@@ -58,6 +60,7 @@ def test_backprop_gradcheck(dmd, X):
     X.requires_grad = False
 
 
+@pytest.mark.gradcheck
 @pytest.mark.parametrize("dmd", dmds)
 @pytest.mark.parametrize("X", torch_backends)
 def test_second_fit_backprop_gradcheck(dmd, X):

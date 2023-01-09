@@ -79,7 +79,7 @@ class SubspaceDMDOperator(DMDOperator):
         self._Atilde = self._least_square_operator(U, S, V, Uq2)
         self._compute_eigenquantities()
 
-        M = linalg_module.dot(Uq2, V) / S
+        M = linalg_module.dot(Uq2, V) / (S[:, None] if Yp.ndim == 3 else S)
         self._compute_modes(M)
 
     def _compute_modes(self, M):
@@ -110,8 +110,8 @@ class SubspaceDMDOperator(DMDOperator):
             )
 
         # compute the eigenvectors of the high-dimensional operator
-        high_dimensional_eigenvectors = (
-            linalg_module.dot(M, W) / self.eigenvalues
+        high_dimensional_eigenvectors = linalg_module.dot(M, W) / (
+            self.eigenvalues[:, None] if M.ndim == 3 else self.eigenvalues
         )
 
         # eigenvalues are the same of lowrank

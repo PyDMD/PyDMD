@@ -1,7 +1,7 @@
 import pytest
 import torch
 from torch.autograd import gradcheck
-from pydmd import DMD, FbDMD, HankelDMD, HODMD, DMDc, CDMD
+from pydmd import DMD, FbDMD, HankelDMD, HODMD, DMDc, CDMD, SubspaceDMD
 import numpy as np
 
 from .utils import assert_allclose, setup_backends, noisy_data
@@ -21,6 +21,7 @@ dmds = [
     pytest.param(FbDMD(svd_rank=-1), id="FbDMD"),
     pytest.param(HankelDMD(svd_rank=-1, d=3), id="HankelDMD"),
     pytest.param(HODMD(svd_rank=-1, d=3, svd_rank_extra=-1), id="HODMD"),
+    pytest.param(SubspaceDMD(svd_rank=-1), id="SubspaceDMD"),
 ]
 
 
@@ -88,7 +89,7 @@ def test_tensorized_fit_rejects_auto_svd_rank(dmd, X):
 @pytest.mark.parametrize("dmd", dmds)
 @pytest.mark.parametrize("X", torch_backends)
 def test_tensorized_reconstructed_data(dmd, X):
-    if isinstance(dmd, FbDMD):
+    if isinstance(dmd, (FbDMD, SubspaceDMD)):
         pytest.skip()
     X = torch.stack([X * i for i in range(1, 11)])
     dmd.fit(X=X)
@@ -132,6 +133,7 @@ def test_tensorized_second_fit_backprop(dmd, X):
     X.requires_grad = False
 
 
+@pytest.mark.gradcheck
 @pytest.mark.parametrize("dmd", dmds)
 @pytest.mark.parametrize("X", torch_backends)
 def test_tensorized_backprop_gradcheck(dmd, X):
@@ -141,6 +143,7 @@ def test_tensorized_backprop_gradcheck(dmd, X):
     X.requires_grad = False
 
 
+@pytest.mark.gradcheck
 @pytest.mark.parametrize("dmd", dmds)
 @pytest.mark.parametrize("X", torch_backends)
 def test_tensorized_second_fit_backprop_gradcheck(dmd, X):
