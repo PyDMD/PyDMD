@@ -59,7 +59,10 @@ class RDMD(CDMD):
         m = self._snapshots.shape[-1]
 
         # Compute the target rank
-        optimal_svd_rank = compute_optimal_svd_rank(self._snapshots)
+        if self._snapshots.ndim < 3:
+            optimal_svd_rank = compute_optimal_svd_rank(self._snapshots)
+        else:
+            optimal_svd_rank = min(self._snapshots.shape)
 
         # Generate random test matrix (with slight oversampling)
         linalg_module = build_linalg_module(self._snapshots)
