@@ -150,6 +150,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def random(cls, shape):
+        raise NotImplementedError
+
+    @classmethod
     def repeat(cls, X, repeats, axis):
         raise NotImplementedError
 

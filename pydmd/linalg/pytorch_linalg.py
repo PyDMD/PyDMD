@@ -245,6 +245,18 @@ class LinalgPyTorch(LinalgBase):
         return hankel if batched else hankel[0]
 
     @classmethod
+    def qr_reduced(cls, X):
+        import torch
+
+        return torch.linalg.qr(X, mode="reduced")
+
+    @classmethod
+    def random(cls, shape):
+        import torch
+
+        return torch.rand(shape)
+
+    @classmethod
     def repeat(cls, X, repeats, axis):
         import torch
 

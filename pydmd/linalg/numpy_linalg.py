@@ -148,6 +148,14 @@ class LinalgNumPy(LinalgBase):
         )
 
     @classmethod
+    def qr_reduced(cls, X):
+        return np.linalg.qr(X, mode="reduced")
+
+    @classmethod
+    def random(cls, shape):
+        return np.random.rand(*shape)
+
+    @classmethod
     def repeat(cls, X, repeats, axis):
         return np.repeat(X, repeats, axis=axis)
 
