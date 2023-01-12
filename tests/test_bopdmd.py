@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.integrate import ode
-from pydmd import BOPDMD
+from pydmd.bopdmd import BOPDMD
 
 def f(t, y):
     """
