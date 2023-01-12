@@ -17,9 +17,9 @@ from scipy.sparse import csr_matrix
 from scipy.linalg import qr
 import numpy as np
 
-from dmdbase import DMDBase
-from dmdoperator import DMDOperator
-from utils import compute_svd
+from .dmdbase import DMDBase
+from .dmdoperator import DMDOperator
+from .utils import compute_svd
 
 
 def compute_rank(X, svd_rank=0):
