@@ -62,7 +62,8 @@ def select_modes(
         dmd = deepcopy(dmd)
 
     selected_indexes = np.where(criteria(dmd))[0]
-
+    dmd.selected_indexes = selected_indexes
+    
     all_indexes = set(np.arange(len(dmd.eigs)))
     cut_indexes = np.array(list(all_indexes - set(selected_indexes)))
 

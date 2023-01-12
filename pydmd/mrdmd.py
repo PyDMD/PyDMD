@@ -392,6 +392,48 @@ Expected one item per level, got {} out of {} levels.""".format(
             [self.dmd_tree[level, leaf].eigs for leaf in leaves]
         )
 
+    def partial_vars(self, level, node=None):
+        """
+        Return the explained variance of the specific `level` and of the specific
+        `node`; if `node` is not specified, the method returns the variance
+        of the given `level` (all the nodes so total will be > 1 but useful for
+        computing average variance across nodes).
+
+        :param int level: the index of the level from where the variances are
+            extracted.
+        :param int node: the index of the node from where the variances are
+            extracted; if None, the time evolution is extracted from all the
+            nodes of the given level. Default is None.
+
+        :return: the selected eigs
+        :rtype: numpy.ndarray
+        """
+        leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
+        return np.concatenate(
+            [self.dmd_tree[level, leaf].var for leaf in leaves]
+        )
+
+    def partial_selected_indexes(self, level, node=None):
+        """
+        Return the selected indexes of the specific `level` and of the specific
+        `node` associated with the slow modes; if `node` is not specified, 
+        the method returns the selected indexes of the given `level` 
+        (all the nodes)
+
+        :param int level: the index of the level from where the selected indexes are
+            extracted.
+        :param int node: the index of the node from where the selected indexes are
+            extracted; if None, the time evolution is extracted from all the
+            nodes of the given level. Default is None.
+
+        :return: the selected eigs
+        :rtype: numpy.ndarray
+        """
+        leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
+        return np.concatenate(
+            [self.dmd_tree[level, leaf].selected_indexes for leaf in leaves]
+        )
+
     def partial_reconstructed_data(self, level, node=None):
         """
         Return the reconstructed data computed using the modes and the time
