@@ -1,8 +1,14 @@
+import logging
+
 import numpy as np
 from scipy.linalg import sqrtm
 import matplotlib.pyplot as plt
 
 from .utils import compute_svd
+
+logging.basicConfig(
+    format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+)
 
 
 class DMDOperator():
@@ -73,6 +79,10 @@ class DMDOperator():
             bU, bs, bV = compute_svd(Y, svd_rank=len(s))
             atilde_back = self._least_square_operator(bU, bs, bV, X)
             atilde = sqrtm(atilde.dot(np.linalg.inv(atilde_back)))
+            if hasattr(np, "complex256") and atilde.dtype == np.complex256:
+                atilde = atilde.astype(np.complex128)
+                msg = "Casting atilde from np.complex256 to np.complex128"
+                logging.info(msg)
 
         if self._rescale_mode == 'auto':
             self._rescale_mode = s
