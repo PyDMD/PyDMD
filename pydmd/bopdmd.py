@@ -32,24 +32,19 @@ class BOPDMDOperator(DMDOperator):
         tol, eps_stall, use_fulljac, verbose.
         (See BOPDMD documentation for full description for each option.)
     :type varpro_opts: list
-
     :param use_proj: Flag that determines the type of computation to perform.
         If True, fit input data projected onto the first svd_rank POD modes or
         columns of proj_basis if provided. If False, fit the full input data.
     :type use_proj: bool
-
     :param init_alpha: Initial guess for the continuous-time DMD eigenvalues.
     :type init_alpha: numpy.ndarray
-
     :param proj_basis: Orthogonal basis for projection, where each column of
         proj_basis contains a basis mode.
     :type proj_basis: numpy.ndarray
-
     :param num_trials: Number of BOP-DMD trials to perform. If num_trials is a
         positive integer, num_trials BOP-DMD trials are performed. Otherwise,
         standard optimized dmd is performed.
     :type num_trials: int
-
     :param trial_size: Size of the randomly selected subset of observations to
         use for each trial of bagged optimized dmd (BOP-DMD). If trial_size is
         a positive integer, trial_size many observations will be used per
@@ -58,7 +53,6 @@ class BOPDMDOperator(DMDOperator):
         number of data points observed. Note that any other type of input for
         trial_size will yield an error.
     :type trial_size: int or float
-
     :param eig_sort: Method used to sort eigenvalues (and modes accordingly)
         when performing BOP-DMD. Eigenvalues will be sorted by real part and
         then by imaginary part to break ties if eig_sort="real", by imaginary
@@ -98,10 +92,8 @@ class BOPDMDOperator(DMDOperator):
 
         :param alpha: Vector of time scalings in the exponent.
         :type alpha: numpy.ndarray
-
         :param t: Vector of time values.
         :type t: numpy.ndarray
-
         :return: Matrix A such that A[i, j] = exp(t_i * alpha_j).
         :rtype: numpy.ndarray
         """
@@ -114,13 +106,10 @@ class BOPDMDOperator(DMDOperator):
 
         :param alpha: Vector of time scalings in the exponent.
         :type alpha: numpy.ndarray
-
         :param t: Vector of time values.
         :type t: numpy.ndarray
-
         :param i: Desired derivative with respect to alpha.
         :type i: int
-
         :return: Derivatives of Phi(alpha, t) with respect to alpha[i].
         :rtype: scipy.sparse.csr_matrix
         """
@@ -142,10 +131,8 @@ class BOPDMDOperator(DMDOperator):
 
         :param X: Matrix to decompose.
         :type X: numpy.ndarray
-
         :param tolrank: Determines the rank of the returned SVD.
         :type tolrank: float
-
         :return: irank truncated SVD of X.
         :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
         """
@@ -169,10 +156,8 @@ class BOPDMDOperator(DMDOperator):
 
         :param H: Full data matrix to be sub-selected from.
         :type H: numpy.ndarray
-
         :param trial_size: Size of the sub-selection from H.
         :type trial_size: int or float
-
         :return: Matrix of sub-selected data snapshots, stored in each row,
             and a vector of each snapshots's row index location in H.
         :rtype: numpy.ndarray, numpy.ndarray
@@ -214,36 +199,27 @@ class BOPDMDOperator(DMDOperator):
     def _variable_projection(self, H, t, init_alpha, Phi, dPhi):
         """
         Variable projection routine for multivariate data.
-
-        Attempts to fit the columns of H as linear combinations of the
-        columns of Phi(alpha,t) such that H = Phi(alpha,t)B.
+        Attempts to fit the columns of H as linear combinations of the columns
+        of Phi(alpha,t) such that H = Phi(alpha,t)B. Note that M denotes the
+        number of data samples, N denotes the number of columns of Phi, IS
+        denotes the number of functions to fit, and IA denotes the length
+        of the alpha vector.
 
         :param H: (M, IS) matrix of data.
         :type H: numpy.ndarray
-
         :param t: (M,) vector of sample times.
         :type t: numpy.ndarray
-
         :param init_alpha: initial guess for alpha.
         :type init_alpha: numpy.ndarray
-
         :param Phi: (M, N) matrix-valued function Phi(alpha,t).
         :type Phi: function
-
         :param dPhi: (M, N) matrix-valued function dPhi(alpha,t,i) that
             contains the derivatives of Phi wrt the ith component of alpha.
         :type dPhi: function
-
         :return: Tuple of two numpy arrays representing...
             1. (N, IS) best-fit matrix B.
             2. (N,) best-fit vector alpha.
         :rtype: Tuple[numpy.ndarray, numpy.ndarray]
-
-        Notes:
-        M = number of samples
-        N = number of columns of Phi
-        IS = number of functions to fit
-        IA = dimension of alpha
 
         References:
         - Extensions and Uses of the Variable Projection Algorith for Solving
@@ -455,10 +431,8 @@ class BOPDMDOperator(DMDOperator):
 
         :param H: Matrix of data to fit.
         :type H: numpy.ndarray
-
         :param t: Vector of sample times.
         :type t: numpy.ndarray
-
         :return: The BOP-DMD amplitudes.
         :rtype: numpy.ndarray
         """
