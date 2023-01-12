@@ -22,6 +22,10 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install numpy scipy matplotlib pytest pytest-cov future ezyrb
+        
+    - name: Freeze!
+      run: |
+        python3 -m pip freeze
 
     - name: Test with pytest
       env:
