@@ -80,7 +80,7 @@ def test_gamma():
     assert SpDMD(gamma=2).gamma == 2
 
 def test_exact():
-    assert SpDMD().exact == True
+    assert SpDMD()._exact == True
 
 def test_abstol():
     assert SpDMD()._abs_tol == 1.0e-6

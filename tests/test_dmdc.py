@@ -75,7 +75,7 @@ def test_atilde_b_unknown():
     dmdc.fit(system['snapshots'], system['u'])
     expected_atilde = dmdc.basis.T.conj().dot(system['A']).dot(dmdc.basis)
     np.testing.assert_array_almost_equal(
-        dmdc.atilde, expected_atilde, decimal=1)
+        dmdc.operator.as_numpy_array, expected_atilde, decimal=1)
 
 def test_get_bitmask_default():
     system = create_system_with_B()

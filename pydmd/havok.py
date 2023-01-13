@@ -9,7 +9,9 @@ Nature Communications, 8, 2017.
 
 import numpy as np
 from scipy import signal
+
 from .hankeldmd import HankelDMD
+from .snapshots import Snapshots
 from .utils import compute_svd
 
 
@@ -40,6 +42,9 @@ class HAVOK(HankelDMD):
             tikhonov_regularization=tikhonov_regularization,
             d=d,
         )
+
+        self._svd_rank = svd_rank
+
         self._embeddings = None
         self._A = None
         self._B = None
@@ -159,17 +164,15 @@ class HAVOK(HankelDMD):
         Perform HAVOK analysis on 1-D time-series data x given the size of
         the time step dt separating the observations in x.
         """
-        self.reset()
+        self._reset()
 
-        self._snapshots, self._snapshots_shape = self._col_major_2darray(x)
-        self._snapshots = self._snapshots.squeeze()
-
-        # Check that input data is a 1D time-series
-        if self._snapshots.ndim > 1:
+        x = np.asarray(x)
+        if x.ndim != 1:
             raise ValueError("Input data must be a 1-D time series.")
+        self._snapshots_holder = Snapshots(x[None])
 
         # Get number of data points
-        n_samples = len(self._snapshots)
+        n_samples = self.snapshots.shape[-1]
 
         # Check that the input time-series contains enough observations
         if n_samples < self._d:
@@ -178,22 +181,22 @@ Expected at least d."""
             raise ValueError(msg.format(self._d))
 
         # Compute hankel matrix for the input data
-        hankel_matrix = self._pseudo_hankel_matrix(self._snapshots[None])
+        hankel_matrix = self._pseudo_hankel_matrix(self.snapshots)
 
         # Take SVD of the hankel matrix
         # Save the resulting U, s, and V for future reconstructions
         self._svd_modes, self._svd_amps, self._embeddings = compute_svd(
-            hankel_matrix, self.svd_rank
+            hankel_matrix, self._svd_rank
         )
 
         # Record the number of time-delay embeddings being used.
         # Throw an error if less than 2 embeddings are being used.
         self._r = len(self._svd_amps)
         if self._r < 2:
-            msg = """HAVOK model is attempting to use r = {} embeddings when r
-should be at least 2. Try increasing the number of delays d and/or providing a
-positive integer argument for svd_rank."""
-            raise RuntimeError(msg.format(self._r))
+            msg = f"""HAVOK model is attempting to use r = {self._r} embeddings
+when r should be at least 2. Try increasing the number of delays d and/or 
+providing a positive integer argument for svd_rank."""
+            raise RuntimeError(msg)
 
         # Perform DMD on the time-delay embeddings
         self._sub_dmd.fit(self._embeddings.T)

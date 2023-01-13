@@ -36,8 +36,7 @@ def test_default_constructor():
     assert dmd._original_time is None
     assert dmd._dmd_time is None
     assert dmd._b is None
-    assert dmd._snapshots is None
-    assert dmd._snapshots_shape is None
+    assert dmd._snapshots_holder is None
     assert dmd._modes_activation_bitmask_proxy is None
 
 
@@ -50,7 +49,7 @@ def test_constructor():
     )
 
     assert dmd._opt
-    assert dmd.svd_rank == 20
+    assert dmd.operator._svd_rank == 20
     assert dmd.operator._rescale_mode == "pippo"
     assert dmd.operator._sorted_eigs == "pluto"
 

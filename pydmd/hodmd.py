@@ -6,10 +6,12 @@ Reference:
 Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.
 """
 import warnings
+
 import numpy as np
 
 from .hankeldmd import HankelDMD
 from .utils import compute_svd
+from .snapshots import Snapshots
 
 
 class HODMD(HankelDMD):
@@ -79,7 +81,7 @@ class HODMD(HankelDMD):
             reconstruction_method=reconstruction_method,
         )
 
-        self.svd_rank_extra = svd_rank_extra  # TODO improve names
+        self._svd_rank_extra = svd_rank_extra  # TODO improve names
         self.U_extra = None
 
     def reconstructions_of_timeindex(self, timeindex=None):
@@ -120,21 +122,22 @@ class HODMD(HankelDMD):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        org_snp, snapshots_shape = self._col_major_2darray(X)
+        snapshots_holder = Snapshots(X)
+        snapshots = snapshots_holder.snapshots
 
-        if org_snp.shape[0] == 1:
-            self.U_extra, _, _ = compute_svd(org_snp, -1)
+        space_dim = snapshots.shape[0]
+        if space_dim == 1:
+            svd_rank_extra = -1
             warnings.warn((
-                "The parameter 'svd_rank_extra={}' has been ignored because "
-                "the given system is a scalar function").format(
-                    self.svd_rank_extra))
+                f"The parameter 'svd_rank_extra={self._svd_rank_extra}' has "
+                "been ignored because the given system is a scalar function"))
         else:
-            self.U_extra, _, _ = compute_svd(org_snp, self.svd_rank_extra)
+            svd_rank_extra = self._svd_rank_extra
+        self.U_extra, _, _ = compute_svd(snapshots, svd_rank_extra)
 
-        snp = self.U_extra.T.dot(org_snp)
+        snp = self.U_extra.T.dot(snapshots)
 
         super().fit(snp)
-        self._snapshots_shape = snapshots_shape
-        self._snapshots = org_snp
+        self._snapshots_holder = snapshots_holder
 
         return self
