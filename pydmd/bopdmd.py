@@ -141,7 +141,7 @@ class BOPDMDOperator(DMDOperator):
         irank = np.sum(s > tolrank * s[0])
         U = U[:, :irank]
         S = np.diag(s[:irank])
-        Vh = Vh[:irank, :]
+        Vh = Vh[:irank]
         return U, S, Vh
 
 
@@ -194,7 +194,7 @@ class BOPDMDOperator(DMDOperator):
         subset_inds = np.sort(
             np.random.choice(all_inds, size=batch_size, replace=False)
         )
-        return H[subset_inds, :], subset_inds
+        return H[subset_inds], subset_inds
 
 
     def _variable_projection(self, H, t, init_alpha, Phi, dPhi):
@@ -296,7 +296,7 @@ class BOPDMDOperator(DMDOperator):
                                         mode="economic", pivoting=True)
             ij_pvt = np.arange(IA)
             ij_pvt = ij_pvt[j_pvt]
-            rjac[:IA, :] = np.triu(djac_out[:IA, :])
+            rjac[:IA] = np.triu(djac_out[:IA])
             rhs_top = q_out.conj().T.dot(rhs_temp)
             scales_pvt = scales[j_pvt[:IA]]
             rhs = np.concatenate(
@@ -312,7 +312,7 @@ class BOPDMDOperator(DMDOperator):
                 outside of this function.
                 """
                 # Compute the step delta.
-                rjac[IA:, :] = _lambda * np.diag(scales_pvt)
+                rjac[IA:] = _lambda * np.diag(scales_pvt)
                 delta = np.linalg.lstsq(rjac, rhs, rcond=None)[0]
                 delta = delta[ij_pvt]
                 # Compute the updated alpha vector.
@@ -488,9 +488,9 @@ class BOPDMDOperator(DMDOperator):
             else:
                 raise ValueError("Provided eig_sort method is not supported.")
 
-            all_w[i, :, :] = w_i[:, sorted_inds]
-            all_e[i, :] = e_i[sorted_inds]
-            all_b[i, :] = b_i[sorted_inds]
+            all_w[i] = w_i[:, sorted_inds]
+            all_e[i] = e_i[sorted_inds]
+            all_b[i] = b_i[sorted_inds]
 
         # Compute and use the average optimized dmd results.
         self._modes = np.mean(all_w, axis=0)
@@ -913,7 +913,7 @@ class BOPDMD(DMDBase):
                     self.operator._amplitudes_std
                 )
                 # Compute forecast using average modes and eigs_k, b_k.
-                all_x[k, :, :] = np.linalg.multi_dot(
+                all_x[k] = np.linalg.multi_dot(
                     [self.modes, np.diag(b_k), np.exp(np.outer(eigs_k, t))]
                 )
 
