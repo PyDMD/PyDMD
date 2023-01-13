@@ -243,11 +243,11 @@ def plot_eigs_mrdmd(
         ]
 
         points = []
-        for level in dmd.dmd_tree.levels:
-            eigs = dmd.partial_eigs(level)
+        for l in dmd.dmd_tree.levels:
+            eigs = dmd.partial_eigs(l)
 
             points.append(
-                ax.plot(eigs.real, eigs.imag, ".", color=colors[level])[0]
+                ax.plot(eigs.real, eigs.imag, ".", color=colors[l])[0]
             )
     else:
         points = []
@@ -294,10 +294,10 @@ def plot_eigs_mrdmd(
 
     # legend
     if level:
-        labels = ["Eigenvalues - level {}".format(level)]
+        labels = [f"Eigenvalues - level {level}"]
     else:
         labels = [
-            "Eigenvalues - level {}".format(i)
+            f"Eigenvalues - level {i}"
             for i in range(dmd.max_level)
         ]
 
