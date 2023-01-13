@@ -1,6 +1,5 @@
 from __future__ import division
 
-import matplotlib.pyplot as plt
 import numpy as np
 from past.utils import old_div
 from pytest import raises
@@ -265,36 +264,6 @@ def test_wrong_bin():
     mrdmd.fit(X=sample_data)
     with raises(ValueError):
         mrdmd.partial_modes(level=level, node=2**level)
-
-def test_wrong_plot_eig1():
-    rank = 2
-    dmd = DMD(svd_rank=rank)
-    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
-    with raises(ValueError):
-        mrdmd.plot_eigs(
-            show_axes=True, show_unit_circle=True, figsize=(8, 8), level=7)
-
-def test_plot_eig1():
-    dmd = DMD()
-    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
-    mrdmd.plot_eigs(show_axes=True, show_unit_circle=True, figsize=(8, 8))
-    plt.close()
-
-def test_plot_eig2():
-    dmd = DMD()
-    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
-    mrdmd.plot_eigs(show_axes=True, show_unit_circle=False, title='Title')
-    plt.close()
-
-def test_plot_eig3():
-    dmd = DMD()
-    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
-    mrdmd.plot_eigs(show_axes=False, show_unit_circle=False, level=1, node=0)
-    plt.close()
 
 def test_consistency():
     level = 5

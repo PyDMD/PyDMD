@@ -49,29 +49,6 @@ def test_fit():
     with raises(NotImplementedError):
         dmd.fit(sample_data)
 
-def test_plot_eigs():
-    dmd = DMDBase()
-    with raises(ValueError):
-        dmd.plot_eigs(show_axes=True, show_unit_circle=True)
-
-def test_plot_eigs_narrowview_empty():
-    dmd = DMDBase()
-    # max/min throws an error if the array is empty (max used on empty
-    # array)
-    dmd.operator._eigenvalues = np.array([], dtype=complex)
-    with raises(ValueError):
-        dmd.plot_eigs(show_axes=False, narrow_view=True, dpi=200)
-
-def test_plot_modes_2D():
-    dmd = DMDBase()
-    with raises(ValueError):
-        dmd.plot_modes_2D()
-
-def test_plot_snaps_2D():
-    dmd = DMDBase()
-    with raises(ValueError):
-        dmd.plot_snapshots_2D()
-
 def test_advanced_snapshot_parameter2():
     dmd = DMDBase(opt=5)
     assert dmd._opt == 5
@@ -104,46 +81,6 @@ def test_sorted_eigs_default():
 def test_sorted_eigs_param():
     dmd = DMDBase(sorted_eigs='real')
     assert dmd.operator._sorted_eigs == 'real'
-
-def test_enforce_ratio_y():
-    dmd = DMDBase()
-    supx, infx, supy, infy = dmd._enforce_ratio(10, 20, 10, 0, 0)
-
-    dx = supx - infx
-    dy = supy - infy
-    np.testing.assert_almost_equal(max(dx,dy) / min(dx,dy), 10, decimal=6)
-
-def test_enforce_ratio_x():
-    dmd = DMDBase()
-    supx, infx, supy, infy = dmd._enforce_ratio(10, 0, 0, 20, 10)
-
-    dx = supx - infx
-    dy = supy - infy
-    np.testing.assert_almost_equal(max(dx,dy) / min(dx,dy), 10, decimal=6)
-
-
-def test_plot_limits_narrow():
-    dmd = DMDBase()
-    dmd.operator._eigenvalues = np.array([complex(1,2), complex(-1,-2)])
-    dmd.operator._modes = np.array(np.ones((10,2)))
-
-    tp = dmd._plot_limits(True)
-
-    assert len(tp) == 4
-
-    supx, infx, supy, infy = tp
-    assert supx == 1.05
-    assert infx == -1.05
-    assert supy == 2.05
-    assert infy == -2.05
-
-def test_plot_limits():
-    dmd = DMDBase()
-    dmd.operator._eigenvalues = np.array([complex(-2,2), complex(3,-3)])
-    dmd.operator._modes = np.array(np.ones((10,2)))
-
-    limit = dmd._plot_limits(False)
-    assert limit == 5
 
 def test_dmd_time_wrong_key():
     dmd = DMD(svd_rank=10)

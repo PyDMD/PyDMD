@@ -1,7 +1,5 @@
-import os
 from builtins import range
 
-import matplotlib.pyplot as plt
 import numpy as np
 from pytest import raises
 
@@ -175,89 +173,6 @@ def test_eigs_3():
     #                               [3.38410649e-83 + 3.75677740e-83j]])
     #     np.testing.assert_almost_equal(dmd.dynamics, expected_data, decimal=6)
     #
-    # def test_plot_eigs_1():
-    #     dmd = DMD()
-    #     dmd.fit(X=sample_data)
-    #     dmd.plot_eigs(show_axes=True, show_unit_circle=True)
-    #     plt.close()
-    #
-    # def test_plot_eigs_2():
-    #     dmd = DMD()
-    #     dmd.fit(X=sample_data)
-    #     dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    #     plt.close()
-    #
-    # def test_plot_modes_1():
-    #     dmd = DMD()
-    #     dmd.fit(X=sample_data)
-    #     with raises(ValueError):
-    #         dmd.plot_modes_2D()
-    #
-    # def test_plot_modes_2():
-    #     dmd = DMD(svd_rank=-1)
-    #     dmd.fit(X=sample_data)
-    #     dmd.plot_modes_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
-    #     plt.close()
-    #
-    # def test_plot_modes_3():
-    #     dmd = DMD()
-    #     snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    #     dmd.fit(X=snapshots)
-    #     dmd.plot_modes_2D()
-    #     plt.close()
-    #
-    # def test_plot_modes_4():
-    #     dmd = DMD()
-    #     snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    #     dmd.fit(X=snapshots)
-    #     dmd.plot_modes_2D(index_mode=1)
-    #     plt.close()
-    #
-    # def test_plot_modes_5():
-    #     dmd = DMD()
-    #     snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    #     dmd.fit(X=snapshots)
-    #     dmd.plot_modes_2D(index_mode=1, filename='tmp.png')
-    #     .addCleanup(os.remove, 'tmp.1.png')
-    #
-    # def test_plot_snapshots_1():
-    #     dmd = DMD()
-    #     dmd.fit(X=sample_data)
-    #     with raises(ValueError):
-    #         dmd.plot_snapshots_2D()
-    #
-    # def test_plot_snapshots_2():
-    #     dmd = DMD(svd_rank=-1)
-    #     dmd.fit(X=sample_data)
-    #     dmd.plot_snapshots_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
-    #     plt.close()
-    #
-    # def test_plot_snapshots_3():
-    #     dmd = DMD()
-    #     snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    #     dmd.fit(X=snapshots)
-    #     dmd.plot_snapshots_2D()
-    #     plt.close()
-    #
-    # def test_plot_snapshots_4():
-    #     dmd = DMD()
-    #     snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    #     dmd.fit(X=snapshots)
-    #     dmd.plot_snapshots_2D(index_snap=2)
-    #     plt.close()
-    #
-    # def test_plot_snapshots_5():
-    #     dmd = DMD()
-    #     snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    #     dmd.fit(X=snapshots)
-    #     dmd.plot_snapshots_2D(index_snap=2, filename='tmp.png')
-    #     .addCleanup(os.remove, 'tmp.2.png')
-    #
-    # def test_tdmd_plot():
-    #     dmd = DMD(tlsq_rank=3)
-    #     dmd.fit(X=sample_data)
-    #     dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    #     plt.close()
 
 def test_bitmask_not_implemented():
     with raises(RuntimeError):

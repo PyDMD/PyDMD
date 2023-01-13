@@ -83,11 +83,7 @@ def fit(self, X):
     n_samples = self.snapshots.shape[-1]
     X = self.snapshots[:, :-1]
     Y = self.snapshots[:, 1:]
-<<<<<<< HEAD
     X, Y = compute_tlsq(X, Y, self._tlsq_rank)
-=======
-    X, Y = compute_tlsq(X, Y, self.tlsq_rank)
->>>>>>> e490542 (update tutorial)
 
     # compute the DMD operator
     self._svd_modes, _, _ = self.operator.compute_operator(X,Y)

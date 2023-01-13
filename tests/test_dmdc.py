@@ -1,9 +1,7 @@
 from __future__ import division
 
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy
-from past.utils import old_div
 from pytest import raises
 
 from pydmd import DMDc
