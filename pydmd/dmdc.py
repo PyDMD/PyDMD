@@ -240,8 +240,8 @@ class DMDc(DMDBase):
         :rtype: numpy.ndarray
         """
         controlin = (
-            np.asarray(control_input)[None]
-            if control_input
+            np.asarray(control_input)
+            if control_input is not None
             else self._controlin
         )
 
@@ -257,9 +257,15 @@ class DMDc(DMDBase):
                                  np.linalg.pinv(self.modes)])
 
         data = [self.snapshots[:, 0]]
+        expected_shape = data[0].shape
 
         for i, u in enumerate(controlin.T):
-            data.append(A.dot(data[i]) + self._B.dot(u))
+            arr = A.dot(data[i]) + self._B.dot(u)
+            if arr.shape != expected_shape:
+                raise ValueError(
+                    f"Invalid shape: expected {expected_shape}, got {arr.shape}"
+                )
+            data.append(arr)
 
         data = np.array(data).T
         return data
