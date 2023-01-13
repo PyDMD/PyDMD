@@ -108,7 +108,7 @@ class BOPDMDOperator(DMDOperator):
         :type alpha: numpy.ndarray
         :param t: Vector of time values.
         :type t: numpy.ndarray
-        :param i: Desired derivative with respect to alpha.
+        :param i: Index in alpha of the derivative variable.
         :type i: int
         :return: Derivatives of Phi(alpha, t) with respect to alpha[i].
         :rtype: scipy.sparse.csr_matrix
@@ -117,9 +117,10 @@ class BOPDMDOperator(DMDOperator):
         n = len(alpha)
         if i < 0 or i > n - 1:
             raise ValueError("Invalid index i given to exp_function_deriv.")
-        A = np.zeros((m, n), dtype="complex")
-        A[:, i] = np.multiply(t, np.exp(alpha[i] * t))
-        return csr_matrix(A)
+        A = np.multiply(t, np.exp(alpha[i] * t))
+        return csr_matrix(
+            (A, (np.arange(m), np.full(m, fill_value=i))), shape=(m, n)
+        )
 
 
     def _compute_irank_svd(self, X, tolrank):
