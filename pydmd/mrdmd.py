@@ -8,7 +8,6 @@ Decomposition. SIAM Journal on Applied Dynamical Systems 15.2 (2016): 713-735.
 from copy import deepcopy
 from functools import partial
 
-import matplotlib.pyplot as plt
 import numpy as np
 from past.utils import old_div
 from scipy.linalg import block_diag

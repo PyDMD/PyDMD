@@ -220,6 +220,9 @@ def plot_eigs_mrdmd(
     :param int level: plot only the eigenvalues of specific level.
     :param int node: plot only the eigenvalues of specific node.
     """
+    if not isinstance(dmd, MrDMD):
+        raise ValueError(f"Expected MrDMD, found {type(dmd)}")
+
     if dmd.eigs is None:
         raise ValueError(
             "The eigenvalues have not been computed."

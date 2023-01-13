@@ -2,7 +2,6 @@ import logging
 
 import numpy as np
 from scipy.linalg import sqrtm
-import matplotlib.pyplot as plt
 
 from .utils import compute_svd
 

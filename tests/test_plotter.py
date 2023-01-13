@@ -4,13 +4,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pytest import raises
 
-from pydmd import DMD, DMDBase
-from pydmd.plotter import plot_eigs, plot_modes_2D, plot_snapshots_2D, _plot_limits, _enforce_ratio
+from pydmd import DMD, DMDBase, MrDMD
+from pydmd.plotter import plot_eigs, plot_modes_2D, plot_snapshots_2D, _plot_limits, _enforce_ratio, plot_eigs_mrdmd
 
 sample_data = np.load('tests/test_datasets/input_sample.npy')
 
 def test_enforce_ratio_y():
-    dmd = DMDBase()
     supx, infx, supy, infy = _enforce_ratio(10, 20, 10, 0, 0)
 
     dx = supx - infx
@@ -18,7 +17,6 @@ def test_enforce_ratio_y():
     np.testing.assert_almost_equal(max(dx,dy) / min(dx,dy), 10, decimal=6)
 
 def test_enforce_ratio_x():
-    dmd = DMDBase()
     supx, infx, supy, infy = _enforce_ratio(10, 0, 0, 20, 10)
 
     dx = supx - infx
@@ -160,4 +158,34 @@ def test_tdmd_plot():
     dmd = DMD(tlsq_rank=3)
     dmd.fit(X=sample_data)
     plot_eigs(dmd, show_axes=False, show_unit_circle=False)
+    plt.close()
+
+def test_mrdmd_wrong_plot_eig1():
+    rank = 2
+    dmd = DMD(svd_rank=rank)
+    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
+    mrdmd.fit(X=sample_data)
+    with raises(ValueError):
+        plot_eigs_mrdmd(
+            mrdmd, show_axes=True, show_unit_circle=True, figsize=(8, 8), level=7)
+
+def test_mrdmd_plot_eig1():
+    dmd = DMD()
+    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
+    mrdmd.fit(X=sample_data)
+    plot_eigs_mrdmd(mrdmd, show_axes=True, show_unit_circle=True, figsize=(8, 8))
+    plt.close()
+
+def test_mrdmd_plot_eig2():
+    dmd = DMD()
+    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
+    mrdmd.fit(X=sample_data)
+    plot_eigs_mrdmd(mrdmd, show_axes=True, show_unit_circle=False, title='Title')
+    plt.close()
+
+def test_mrdmd_plot_eig3():
+    dmd = DMD()
+    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
+    mrdmd.fit(X=sample_data)
+    plot_eigs_mrdmd(mrdmd, show_axes=False, show_unit_circle=False, level=1, node=0)
     plt.close()
