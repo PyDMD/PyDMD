@@ -205,7 +205,6 @@ class CDMD(DMDBase):
         :type X: numpy.ndarray or iterable
         """
         self._reset()
-        self._snapshots = self._col_major_2darray(X)
 
         self._snapshots_holder = Snapshots(X)
         compressed_snapshots = self._compress_snapshots()

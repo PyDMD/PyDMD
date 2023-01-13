@@ -3,6 +3,7 @@ from pytest import raises
 
 from pydmd import DMD
 from pydmd.dmdbase import DMDBase
+from pydmd.snapshots import Snapshots
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where

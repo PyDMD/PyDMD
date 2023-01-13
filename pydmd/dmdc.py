@@ -280,8 +280,6 @@ class DMDc(DMDBase):
         :type B: numpy.ndarray or iterable
         """
         self._reset()
-        self._snapshots = self._col_major_2darray(X)
-        self._controlin = self._col_major_2darray(I)
 
         self._snapshots_holder = Snapshots(X)
         self._controlin = np.atleast_2d(np.asarray(I))
