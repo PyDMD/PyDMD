@@ -526,91 +526,75 @@ class BOPDMD(DMDBase):
         to reach the 'energy' specified by `svd_rank`; if -1, the method does
         not compute truncation.
     :type svd_rank: int or float
-
     :param use_proj: Flag that determines the type of computation to perform.
         If True, fit input data projected onto the first svd_rank POD modes or
         columns of proj_basis if provided. If False, fit the full input data.
+        Default is True, fit projected data.
     :type use_proj: bool
-
     :param init_alpha: Initial guess for the continuous-time DMD eigenvalues.
         If not provided, one is computed via a trapezoidal rule approximation.
+        Default is None (alpha not provided).
     :type init_alpha: numpy.ndarray
-
     :param proj_basis: Orthogonal basis for projection, where each column of
         proj_basis contains a basis mode. If not provided, POD modes are used.
+        Default is None (basis not provided).
     :type proj_basis: numpy.ndarray
-
-
-    All variable projection options and their (default values):
-
     :param init_lambda: Initial value used for the regularization parameter in
-        the Levenberg method. (1.0)
+        the Levenberg method. Default is 1.0.
         Note: Larger lambda values make the method more like gradient descent.
     :type init_lambda: float
-
     :param maxlam: Maximum number of of steps used in the inner Levenberg loop,
-        i.e. the number of times you increase lambda before quitting. (52)
+        i.e. the number of times you increase lambda before quitting. Default
+        is 52.
     :type maxlam: int
-
     :param lamup: The factor by which you increase lambda when searching for an
-        appropriate step. (2.0)
+        appropriate step. Default is 2.0.
     :type lamup: float
-
     :param use_levmarq: Flag that determines whether you use the Levenberg
-        algorithm or the Levenberg-Marquardt algorithm.
-        (True, use Levenberg-Marquardt.)
+        algorithm or the Levenberg-Marquardt algorithm. Default is True,
+        use Levenberg-Marquardt.
     :type use_levmarq: bool
-
     :param maxiter: The maximum number of outer loop iterations to use before
-        quitting. (30)
+        quitting. Default is 30.
     :type maxiter: int
-
-    :param tol: The tolerance for the relative error in the residual. (1e-6)
+    :param tol: The tolerance for the relative error in the residual.
         i.e. the program will terminate if
             norm(y-Phi(alpha)*b,'fro')/norm(y,'fro') < tol
-        is achieved.
+        is achieved. Default is 1e-6.
     :type tol: float
-
-    :param eps_stall: The tolerance for detecting a stall. (1e-12)
+    :param eps_stall: The tolerance for detecting a stall.
         i.e. if
             error(iter-1)-error(iter) < eps_stall*err(iter-1)
-        the program halts.
+        the program halts. Default is 1e-12.
     :type eps_stall: float
-
     :param use_fulljac: Flag that determines whether or not to use the full
-        expression for the Jacobian or Kaufman's approximation.
-        (True, use full expression.)
+        expression for the Jacobian or Kaufman's approximation. Default is
+        True, use full expression.
     :type use_fulljac: bool
-
     :param verbose: Flag that determines whether or not to print warning
         messages that arise during the variable proection routine, and whether
         or not to print information regarding the method's iterative progress.
-        (False, don't print information.)
+        Default is False, don't print information.
     :type verbose: bool
-
-
-    All bagging, optimized dmd (BOP-DMD) parameters:
-
     :param num_trials: Number of BOP-DMD trials to perform. If num_trials is a
         positive integer, num_trials BOP-DMD trials are performed. Otherwise,
-        standard optimized dmd is performed.
+        standard optimized dmd is performed. Default is 0.
     :type num_trials: int
-
     :param trial_size: Size of the randomly selected subset of observations to
         use for each trial of bagged optimized dmd (BOP-DMD). If trial_size is
         a positive integer, trial_size many observations will be used per
         trial. If trial_size is a float between 0 and 1, int(trial_size * m)
         many observations will be used per trial, where m denotes the total
         number of data points observed. Note that any other type of input for
-        trial_size will throw an error.
+        trial_size will throw an error. Default is 0.2.
     :type trial_size: int or float
-
     :param eig_sort: Method used to sort eigenvalues (and modes accordingly)
         when performing BOP-DMD. Eigenvalues will be sorted by real part and
         then by imaginary part to break ties if eig_sort="real", by imaginary
         part and then by real part to break ties if eig_sort="imag", or by
         magnitude if eig_sort="abs". If eig_sort="auto", one of the previously
         mentioned sorting methods is chosen depending on eigenvalue variance.
+        Default is "auto".
     :type eig_sort: {"real", "imag", "abs", "auto"}
     """
     def __init__(self,
@@ -698,6 +682,9 @@ class BOPDMD(DMDBase):
         Uses projected trapezoidal rule to approximate the eigenvalues of A in
             z' = Az.
         The computed eigenvalues will serve as our initial guess for alpha.
+
+        :return: Approximated eigenvalues of the matrix A.
+        :rtype: numpy.ndarray
         """
         # Project the snapshot data onto the projection basis.
         ux = self._proj_basis.conj().T.dot(self._snapshots)
@@ -803,7 +790,6 @@ class BOPDMD(DMDBase):
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
-
         :param t: the input time vector.
         :type t: numpy.ndarray or iterable
         """
@@ -882,7 +868,6 @@ class BOPDMD(DMDBase):
 
         :param t: the input time vector.
         :type t: numpy.ndarray or iterable
-
         :return: system prediction at times given by vector t.
         :rtype: numpy.ndarray or numpy.ndarray, numpy.ndarray
         """
