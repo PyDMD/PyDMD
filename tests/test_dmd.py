@@ -50,7 +50,7 @@ def test_rank():
 def test_Atilde_shape():
     dmd = DMD(svd_rank=3)
     dmd.fit(X=sample_data)
-    assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+    assert dmd.operator.as_numpy_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
 
 def test_Atilde_values():
     dmd = DMD(svd_rank=2)
@@ -58,7 +58,7 @@ def test_Atilde_values():
     exact_atilde = np.array(
         [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
             [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]])
-    np.testing.assert_allclose(exact_atilde, dmd.atilde)
+    np.testing.assert_allclose(exact_atilde, dmd.operator.as_numpy_array)
 
 def test_eigs_1():
     dmd = DMD(svd_rank=-1)
@@ -550,7 +550,21 @@ def test_bitmask_modes():
     assert dmd.modes.shape[1] == old_n_modes - 2
     np.testing.assert_almost_equal(dmd.modes, retained_modes)
 
-def test_reconstructed_data():
+def test_second_fit():
+    dmd = DMD(svd_rank=-1)
+    dmd.fit(X=sample_data)
+    modes = dmd.modes
+    proxy1 = dmd._modes_activation_bitmask_proxy
+
+    dmd.fit(X=sample_data + 1)
+    modes2 = dmd.modes
+    proxy2 = dmd._modes_activation_bitmask_proxy
+
+    assert proxy1 != proxy2
+    with raises(AssertionError):
+        np.testing.assert_allclose(modes, modes2)
+
+def test_reconstructed_data_with_bitmask():
     dmd = DMD(svd_rank=10)
     dmd.fit(X=sample_data)
 
@@ -597,10 +611,6 @@ def test_getitem_raises():
     with raises(ValueError):
         dmd[1.0]
 
-# this is a test for the correctness of the amplitudes saved in the Proxy
-# between DMDBase and the modes activation bitmask. if this test fails
-# you probably need to call allocate_proxy once again after you compute
-# the final value of the amplitudes
 def test_correct_amplitudes():
     dmd = DMD(svd_rank=-1)
     dmd.fit(X=sample_data)

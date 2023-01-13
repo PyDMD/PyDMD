@@ -80,7 +80,7 @@ def test_gamma():
     assert SpDMD(gamma=2).gamma == 2
 
 def test_exact():
-    assert SpDMD().exact == True
+    assert SpDMD()._exact == True
 
 def test_abstol():
     assert SpDMD()._abs_tol == 1.0e-6
@@ -286,10 +286,6 @@ def test_getitem_raises():
     with raises(ValueError):
         dmd[1.0]
 
-# this is a test for the correctness of the amplitudes saved in the Proxy
-# between DMDBase and the modes activation bitmask. if this test fails
-# you probably need to call allocate_proxy once again after you compute
-# the final value of the amplitudes
 def test_correct_amplitudes():
     dmd = SpDMD(release_memory=True, svd_rank=-1)
     dmd.fit(X=data)

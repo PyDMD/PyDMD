@@ -1,4 +1,3 @@
-import os
 from builtins import range
 
 import numpy as np
@@ -56,7 +55,7 @@ def test_rank():
 def test_Atilde_shape():
     optdmd = OptDMD(svd_rank=3)
     optdmd.fit(X=sample_data)
-    assert optdmd.atilde.shape == (optdmd.svd_rank, optdmd.svd_rank)
+    assert optdmd.operator.as_numpy_array.shape == (optdmd.operator._svd_rank, optdmd.operator._svd_rank)
 
 def test_Atilde_values():
     optdmd = OptDMD(svd_rank=2)
@@ -64,7 +63,7 @@ def test_Atilde_values():
     exact_atilde = np.array(
         [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
             [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]])
-    np.testing.assert_allclose(np.linalg.eigvals(exact_atilde), np.linalg.eigvals(optdmd.atilde))
+    np.testing.assert_allclose(np.linalg.eigvals(exact_atilde), np.linalg.eigvals(optdmd.operator.as_numpy_array))
 
 def test_eigs_1():
     optdmd = OptDMD(svd_rank=-1)

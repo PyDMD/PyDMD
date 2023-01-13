@@ -45,7 +45,7 @@ def test_truncation_shape():
 def test_Atilde_shape():
     dmd = CDMD(svd_rank=3)
     dmd.fit(X=sample_data)
-    assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+    assert dmd.operator.as_numpy_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
 
 def test_eigs_1():
     dmd = CDMD(svd_rank=-1)
@@ -267,7 +267,7 @@ def test_getitem_raises():
     with raises(ValueError):
         dmd[1.0]
 
-def test_reconstructed_data():
+def test_reconstructed_data_with_bitmask():
     dmd = CDMD(compression_matrix='normal')
     dmd.fit(X=sample_data)
 
@@ -278,10 +278,6 @@ def test_reconstructed_data():
     dmd.reconstructed_data
     assert True
 
-# this is a test for the correctness of the amplitudes saved in the Proxy
-# between DMDBase and the modes activation bitmask. if this test fails
-# you probably need to call allocate_proxy once again after you compute
-# the final value of the amplitudes
 def test_correct_amplitudes():
     dmd = CDMD(compression_matrix='normal')
     dmd.fit(X=sample_data)

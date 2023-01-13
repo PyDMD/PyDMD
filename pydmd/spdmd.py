@@ -2,7 +2,6 @@
 
 import numpy as np
 from numpy.linalg import solve
-
 from scipy.sparse import (
     csc_matrix as sparse,
     vstack as spvstack,
@@ -119,8 +118,8 @@ class SpDMD(DMD):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        # we call method fit() of the superclass to set all the needed fields
         super().fit(X)
+
         P, q = self._optimal_dmd_matrices()
 
         self._P = sparse(P)
@@ -136,7 +135,7 @@ class SpDMD(DMD):
         self._b = self._optimal_amplitudes(zero_amplitudes)
         # re-allocate the Proxy to avoid problems due to the fact that we
         # re-computed the amplitudes
-        self.allocate_proxy()
+        self._allocate_modes_bitmask_proxy()
 
         # release memory
         if self._release_memory:

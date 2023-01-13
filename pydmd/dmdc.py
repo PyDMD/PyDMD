@@ -5,12 +5,13 @@ Reference:
 - Proctor, J.L., Brunton, S.L. and Kutz, J.N., 2016. Dynamic mode decomposition
 with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.
 """
-from past.utils import old_div
 import numpy as np
+from past.utils import old_div
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from .utils import compute_tlsq, compute_svd
+from .snapshots import Snapshots
+from .utils import compute_svd, compute_tlsq
 
 
 class DMDControlOperator(DMDOperator):
@@ -193,10 +194,11 @@ class DMDc(DMDBase):
         }
 
         self._opt = opt
+        self._exact = False
 
         self._B = None
+        self._snapshots_holder = None
         self._controlin = None
-        self._controlin_shape = None
         self._basis = None
 
         self._modes_activation_bitmask_proxy = None
@@ -237,12 +239,13 @@ class DMDc(DMDBase):
         :return: the matrix that contains the reconstructed snapshots.
         :rtype: numpy.ndarray
         """
-        if control_input is None:
-            controlin, controlin_shape = self._controlin, self._controlin_shape
-        else:
-            controlin, controlin_shape = self._col_major_2darray(control_input)
+        controlin = (
+            np.asarray(control_input)[None]
+            if control_input
+            else self._controlin
+        )
 
-        if controlin.shape[1] != self.dynamics.shape[1] - 1:
+        if controlin.shape[-1] != self.dynamics.shape[-1] - 1:
             raise RuntimeError(
                 'The number of control inputs and the number of snapshots to '
                 'reconstruct has to be the same'
@@ -253,7 +256,7 @@ class DMDc(DMDBase):
         A = np.linalg.multi_dot([self.modes, np.diag(eigs),
                                  np.linalg.pinv(self.modes)])
 
-        data = [self._snapshots[:, 0]]
+        data = [self.snapshots[:, 0]]
 
         for i, u in enumerate(controlin.T):
             data.append(A.dot(data[i]) + self._B.dot(u))
@@ -276,12 +279,16 @@ class DMDc(DMDBase):
             influences the system evolution.
         :type B: numpy.ndarray or iterable
         """
+        self._reset()
         self._snapshots = self._col_major_2darray(X)
         self._controlin = self._col_major_2darray(I)
 
-        n_samples = self._snapshots.shape[1]
-        X = self._snapshots[:, :-1]
-        Y = self._snapshots[:, 1:]
+        self._snapshots_holder = Snapshots(X)
+        self._controlin = np.atleast_2d(np.asarray(I))
+
+        n_samples = self.snapshots.shape[1]
+        X = self.snapshots[:, :-1]
+        Y = self.snapshots[:, 1:]
 
         self._set_initial_time_dictionary(
             {"t0": 0, "tend": n_samples - 1, "dt": 1}

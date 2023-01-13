@@ -1,13 +1,12 @@
-from builtins import range
-import numpy as np
 import os
+from builtins import range
 
+import matplotlib.pyplot as plt
+import numpy as np
 from pytest import raises
 
 from pydmd.dmdoperator import DMDOperator
 from pydmd.utils import compute_tlsq
-
-import matplotlib.pyplot as plt
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where

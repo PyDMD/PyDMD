@@ -8,6 +8,7 @@ Systems, 18, 2019.
 """
 
 import numpy as np
+
 from .cdmd import CDMD
 
 
@@ -94,28 +95,28 @@ class RDMD(CDMD):
         :rtype: numpy.ndarray
         """
         # Perform the Randomized QB Decomposition
-        m = self._snapshots.shape[1]
+        m = self.snapshots.shape[-1]
 
         # Compute the target rank
-        self._svd_rank = compute_rank(self._snapshots, self._svd_rank)
+        self._svd_rank = compute_rank(self.snapshots, self._svd_rank)
 
         # Generate random test matrix (with slight oversampling)
         Omega = np.random.randn(m, self._svd_rank + self._oversampling)
 
         # Compute sampling matrix
-        Y = self._snapshots.dot(Omega)
+        Y = self.snapshots.dot(Omega)
 
         # Perform power iterations
         for _ in range(self._power_iters):
             Q = np.linalg.qr(Y)[0]
-            Z = np.linalg.qr(self._snapshots.conj().T.dot(Q))[0]
-            Y = self._snapshots.dot(Z)
+            Z = np.linalg.qr(self.snapshots.conj().T.dot(Q))[0]
+            Y = self.snapshots.dot(Z)
 
         # Orthonormalize the sampling matrix
         Q = np.linalg.qr(Y)[0]
 
         # Project the snapshot matrix onto the smaller space
-        B = Q.conj().T.dot(self._snapshots)
+        B = Q.conj().T.dot(self.snapshots)
 
         # Save the compression matrix
         self._compression_matrix = Q.conj().T

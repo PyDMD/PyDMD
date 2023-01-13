@@ -3,10 +3,9 @@ Base module for the DMD: `fit` method must be implemented in inherited classes
 """
 from __future__ import division
 
-from builtins import object
-import warnings
 import pickle
 from copy import copy, deepcopy
+from os.path import splitext
 
 import numpy as np
 from past.utils import old_div
@@ -34,21 +33,19 @@ class ActivationBitmaskProxy:
     last available moment before losing the information provided by the ``old''
     bitmask.
 
-    :param modes: A matrix containing the original DMD modes.
-    :type modes: np.ndarray
-    :param eigs: An array containing the original DMD eigenvalues.
-    :type eigs: np.ndarray
-    :param amplitudes: An array containing the original DMD amplitudes.
+    :param dmd_operator: DMD operator to be proxied.
+    :type dmd_operator: DMDOperator
+    :param amplitudes: DMD amplitudes.
     :type amplitudes: np.ndarray
     """
 
-    def __init__(self, modes, eigs, amplitudes):
-        self._original_modes = modes
-        self._original_eigs = eigs
-        self._original_amplitudes = amplitudes
+    def __init__(self, dmd_operator, amplitudes):
+        self._original_modes = dmd_operator.modes
+        self._original_eigs = np.atleast_1d(dmd_operator.eigenvalues)
+        self._original_amplitudes = np.atleast_1d(amplitudes)
 
         self.old_bitmask = None
-        self.change_bitmask(np.full(len(eigs), True))
+        self.change_bitmask(np.full(len(dmd_operator.eigenvalues), True))
 
     def change_bitmask(self, value):
         """
@@ -109,7 +106,7 @@ class ActivationBitmaskProxy:
         return self._amplitudes
 
 
-class DMDBase(object):
+class DMDBase:
     """
     Dynamic Mode Decomposition base class.
 
@@ -195,35 +192,12 @@ class DMDBase(object):
         self._original_time = None
         self._dmd_time = None
         self._opt = opt
+        self._exact = exact
 
         self._b = None  # amplitudes
-        self._snapshots = None
+        self._snapshots_holder = None
 
         self._modes_activation_bitmask_proxy = None
-
-    @property
-    def opt(self):
-        return self._opt
-
-    @property
-    def tlsq_rank(self):
-        return self._tlsq_rank
-
-    @property
-    def svd_rank(self):
-        return self.operator._svd_rank
-
-    @property
-    def rescale_mode(self):
-        return self.operator._rescale_mode
-
-    @property
-    def exact(self):
-        return self.operator._exact
-
-    @property
-    def forward_backward(self):
-        return self.operator._forward_backward
 
     @property
     def dmd_timesteps(self):
@@ -253,14 +227,6 @@ class DMDBase(object):
             self.original_time["dt"],
         )
 
-    def allocate_proxy(self):
-        # if this is not true, this call is probably a sub-call of some
-        # get-access to self.modes (most likely in compute_amplitudes())
-        if hasattr(self, "_b") and self._b is not None:
-            self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(
-                self.operator.modes, self.operator.eigenvalues, self._b
-            )
-
     @property
     def modes(self):
         """
@@ -271,22 +237,12 @@ class DMDBase(object):
         """
         if self.fitted:
             if not self._modes_activation_bitmask_proxy:
-                self.allocate_proxy()
+                self._allocate_modes_bitmask_proxy()
                 # if the value is still None, it means that we cannot create
                 # the proxy at the moment
                 if not self._modes_activation_bitmask_proxy:
                     return self.operator.modes
             return self._modes_activation_bitmask_proxy.modes
-
-    @property
-    def atilde(self):
-        """
-        Get the reduced Koopman operator A, called A tilde.
-
-        :return: the reduced Koopman operator A.
-        :rtype: numpy.ndarray
-        """
-        return self.operator.as_numpy_array
 
     @property
     def operator(self):
@@ -308,35 +264,12 @@ class DMDBase(object):
         """
         if self.fitted:
             if not self._modes_activation_bitmask_proxy:
-                self.allocate_proxy()
+                self._allocate_modes_bitmask_proxy()
                 # if the value is still None, it means that we cannot create
                 # the proxy at the moment
                 if not self._modes_activation_bitmask_proxy:
                     return self.operator.eigenvalues
             return self._modes_activation_bitmask_proxy.eigs
-
-    def _translate_eigs_exponent(self, tpow):
-        """
-        Transforms the exponent of the eigenvalues in the dynamics formula
-        according to the selected value of `self.opt` (check the documentation
-        for `opt` in :func:`__init__ <dmdbase.DMDBase.__init__>`).
-
-        :param tpow: the exponent(s) of Sigma in the original DMD formula.
-        :type tpow: int or np.ndarray
-        :return: the exponent(s) adjusted according to `self.opt`
-        :rtype: int or np.ndarray
-        """
-
-        if isinstance(self.opt, bool):
-            amplitudes_snapshot_index = 0
-        else:
-            amplitudes_snapshot_index = self.opt
-
-        if amplitudes_snapshot_index < 0:
-            # we take care of negative indexes: -n becomes T - n
-            return tpow - (self.snapshots.shape[1] + amplitudes_snapshot_index)
-        else:
-            return tpow - amplitudes_snapshot_index
 
     @property
     def dynamics(self):
@@ -371,6 +304,29 @@ class DMDBase(object):
 
         return np.power(temp, tpow) * self.amplitudes[:, None]
 
+    def _translate_eigs_exponent(self, tpow):
+        """
+        Transforms the exponent of the eigenvalues in the dynamics formula
+        according to the selected value of `self._opt` (check the documentation
+        for `opt` in :func:`__init__ <dmdbase.DMDBase.__init__>`).
+
+        :param tpow: the exponent(s) of Sigma in the original DMD formula.
+        :type tpow: int or np.ndarray
+        :return: the exponent(s) adjusted according to `self._opt`
+        :rtype: int or np.ndarray
+        """
+
+        if isinstance(self._opt, bool):
+            amplitudes_snapshot_index = 0
+        else:
+            amplitudes_snapshot_index = self._opt
+
+        if amplitudes_snapshot_index < 0:
+            # we take care of negative indexes: -n becomes T - n
+            return tpow - (self.snapshots.shape[1] + amplitudes_snapshot_index)
+        else:
+            return tpow - amplitudes_snapshot_index
+
     @property
     def reconstructed_data(self):
         """
@@ -384,12 +340,26 @@ class DMDBase(object):
     @property
     def snapshots(self):
         """
-        Get the original input data.
+        Get the input data (space flattened).
 
-        :return: the matrix that contains the original snapshots.
+        :return: the matrix that contains the flattened snapshots.
         :rtype: numpy.ndarray
         """
-        return self._snapshots
+        if self._snapshots_holder:
+            return self._snapshots_holder.snapshots
+        return None
+
+    @property
+    def snapshots_shape(self):
+        """
+        Get the original input snapshot shape.
+
+        :return: input snapshots shape.
+        :rtype: tuple
+        """
+        if self._snapshots_holder:
+            return self._snapshots_holder.snapshots_shape
+        return None
 
     @property
     def frequency(self):
@@ -423,7 +393,7 @@ class DMDBase(object):
         """
         if self.fitted:
             if not self._modes_activation_bitmask_proxy:
-                self.allocate_proxy()
+                self._allocate_modes_bitmask_proxy()
             return self._modes_activation_bitmask_proxy.amplitudes
 
     @property
@@ -472,7 +442,7 @@ class DMDBase(object):
             raise RuntimeError("This DMD instance has not been fitted yet.")
 
         if not self._modes_activation_bitmask_proxy:
-            self.allocate_proxy()
+            self._allocate_modes_bitmask_proxy()
 
         bitmask = self._modes_activation_bitmask_proxy.old_bitmask
         # make sure that the array is immutable
@@ -500,6 +470,18 @@ class DMDBase(object):
             )
 
         self._modes_activation_bitmask_proxy.change_bitmask(value)
+
+    def _allocate_modes_bitmask_proxy(self):
+        """
+        Utility method which allocates the activation bitmask proxy using the
+        quantities that are currently available in this DMD instance. Fails
+        quietly if the amplitudes are not set.
+        """
+        if hasattr(self, "_b") and self._b is not None:
+            self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(
+                self.operator,
+                self._b
+            )
 
     def __getitem__(self, key):
         """
@@ -544,7 +526,7 @@ class DMDBase(object):
         mask[key] = True
 
         shallow_copy = copy(self)
-        shallow_copy.allocate_proxy()
+        shallow_copy._allocate_modes_bitmask_proxy()
         shallow_copy.modes_activation_bitmask = mask
 
         return shallow_copy
@@ -634,11 +616,17 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
 
         Not implemented, it has to be implemented in subclasses.
         """
-        raise NotImplementedError(
-            "Subclass must implement abstract method {}.fit".format(
-                self.__class__.__name__
-            )
-        )
+        name = self.__class__.__name__
+        msg = f"Subclass must implement abstract method {name}.fit"
+        raise NotImplementedError(msg)
+
+    def _reset(self):
+        """
+        Reset this instance. Should be called in :func:`fit`.
+        """
+        self._modes_activation_bitmask_proxy = None
+        self._b = None
+        self._snapshots_holder = None
 
     def save(self, fname):
         """
@@ -671,49 +659,7 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         >>> print(dmd.reconstructed_data)
         """
         with open(fname, "rb") as output:
-            dmd = pickle.load(output)
-
-        return dmd
-
-    @staticmethod
-    def _col_major_2darray(X):
-        """
-        Private method that takes as input the snapshots and stores them into a
-        2D matrix, by column. If the input data is already formatted as 2D
-        array, the method saves it, otherwise it also saves the original
-        snapshots shape and reshapes the snapshots.
-
-        :param X: the input snapshots.
-        :type X: int or numpy.ndarray
-        :return: the 2D matrix that contains the flatten snapshots, the shape
-            of original snapshots.
-        :rtype: numpy.ndarray, tuple
-        """
-        # If the data is already 2D ndarray
-        if isinstance(X, np.ndarray) and X.ndim == 2:
-            snapshots = X
-            snapshots_shape = None
-        else:
-            input_shapes = [np.asarray(x).shape for x in X]
-
-            if len(set(input_shapes)) != 1:
-                raise ValueError("Snapshots have not the same dimension.")
-
-            snapshots_shape = input_shapes[0]
-            snapshots = np.transpose([np.asarray(x).flatten() for x in X])
-
-        # check condition number of the data passed in
-        cond_number = np.linalg.cond(snapshots)
-        if cond_number > 10e4:
-            warnings.warn(
-                "Input data matrix X has condition number {}. "
-                """Consider preprocessing data, passing in augmented data
-matrix, or regularization methods.""".format(
-                    cond_number
-                )
-            )
-
-        return snapshots
+            return pickle.load(output)
 
     def _optimal_dmd_matrices(self):
         # compute the vandermonde matrix
@@ -724,13 +670,13 @@ matrix, or regularization methods.""".format(
             np.conj(np.dot(vander, vander.conj().T)),
         )
 
-        if self.exact:
+        if self._exact:
             q = np.conj(np.diag(np.linalg.multi_dot([vander,
-                                                     self._snapshots.conj().T,
+                                                     self.snapshots.conj().T,
                                                      self.modes])))
         else:
-            U, s, V = compute_svd(self._snapshots[:, :-1],
-                                  self.svd_rank)
+            _, s, V = compute_svd(self.snapshots[:, :-1],
+                                  self.modes.shape[-1])
 
             q = np.conj(np.diag(
                 np.linalg.multi_dot([vander[:, :-1],
@@ -742,13 +688,13 @@ matrix, or regularization methods.""".format(
 
     def _compute_amplitudes(self):
         """
-        Compute the amplitude coefficients. If `self.opt` is False the
+        Compute the amplitude coefficients. If `self._opt` is False the
         amplitudes are computed by minimizing the error between the modes and
-        the first snapshot; if `self.opt` is True the amplitudes are computed
+        the first snapshot; if `self._opt` is True the amplitudes are computed
         by minimizing the error between the modes and all the snapshots, at the
         expense of bigger computational cost.
 
-        This method uses the class variables self._snapshots (for the
+        This method uses the class variables self.snapshots (for the
         snapshots), self.modes and self.eigs.
 
         :return: the amplitudes array
@@ -758,18 +704,18 @@ matrix, or regularization methods.""".format(
         Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
         https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document
         """
-        if isinstance(self.opt, bool) and self.opt:
+        if isinstance(self._opt, bool) and self._opt:
             # b optimal
             a = np.linalg.solve(*self._optimal_dmd_matrices())
         else:
-            if isinstance(self.opt, bool):
+            if isinstance(self._opt, bool):
                 amplitudes_snapshot_index = 0
             else:
-                amplitudes_snapshot_index = self.opt
+                amplitudes_snapshot_index = self._opt
 
             a = np.linalg.lstsq(
                 self.modes,
-                self._snapshots.T[amplitudes_snapshot_index],
+                self.snapshots.T[amplitudes_snapshot_index],
                 rcond=None,
             )[0]
 

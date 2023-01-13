@@ -6,6 +6,7 @@ import numpy as np
 from scipy.linalg import pinv
 
 from .dmdbase import DMDBase
+from .snapshots import Snapshots
 from .utils import compute_tlsq
 
 
@@ -52,13 +53,16 @@ class DMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
+        self._reset()
         self._snapshots = self._col_major_2darray(X)
 
-        n_samples = self._snapshots.shape[1]
-        X = self._snapshots[:, :-1]
-        Y = self._snapshots[:, 1:]
+        self._snapshots_holder = Snapshots(X)
 
-        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
+        n_samples = self.snapshots.shape[1]
+        X = self.snapshots[:, :-1]
+        Y = self.snapshots[:, 1:]
+
+        X, Y = compute_tlsq(X, Y, self._tlsq_rank)
         self._svd_modes, _, _ = self.operator.compute_operator(X, Y)
 
         # Default timesteps

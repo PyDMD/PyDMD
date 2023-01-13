@@ -5,17 +5,17 @@ Reference:
 - Kutz, J. Nathan, Xing Fu, and Steven L. Brunton. Multiresolution Dynamic Mode
 Decomposition. SIAM Journal on Applied Dynamical Systems 15.2 (2016): 713-735.
 """
-from __future__ import division
-from functools import partial
-from builtins import range
-from past.utils import old_div
-import numpy as np
-import matplotlib.pyplot as plt
 from copy import deepcopy
+from functools import partial
+
+import matplotlib.pyplot as plt
+import numpy as np
+from past.utils import old_div
 from scipy.linalg import block_diag
 
+from .dmd_modes_tuner import select_modes
 from .dmdbase import DMDBase
-from .dmd_modes_tuner import ModesSelectors, select_modes
+from .snapshots import Snapshots
 
 
 class BinaryTree:
@@ -460,11 +460,13 @@ Expected one item per level, got {} out of {} levels.""".format(
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self._snapshots = self._col_major_2darray(X)
+        self._reset()
+
+        self._snapshots_holder = Snapshots(X)
 
         # Redefine max level if it is too big.
         lvl_threshold = (
-            int(np.log(self._snapshots.shape[1] / 4.0) / np.log(2.0)) + 1
+            int(np.log(self.snapshots.shape[1] / 4.0) / np.log(2.0)) + 1
         )
         if self.max_level > lvl_threshold:
             self.max_level = lvl_threshold
@@ -477,7 +479,7 @@ Expected one item per level, got {} out of {} levels.""".format(
         def slow_modes(dmd, rho):
             return np.abs(np.log(dmd.eigs)) < rho * 2 * np.pi
 
-        X = self._snapshots.copy()
+        X = self.snapshots.copy()
         for level in self.dmd_tree.levels:
             n_leaf = 2 ** level
             Xs = np.array_split(X, n_leaf, axis=1)
@@ -500,7 +502,7 @@ Expected one item per level, got {} out of {} levels.""".format(
             X -= newX
 
         self._set_initial_time_dictionary(
-            dict(t0=0, tend=self._snapshots.shape[1], dt=1)
+            dict(t0=0, tend=self.snapshots.shape[1], dt=1)
         )
 
         return self

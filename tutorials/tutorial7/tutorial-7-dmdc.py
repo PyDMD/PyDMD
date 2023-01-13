@@ -167,10 +167,10 @@ for eig in dmdc.eigs:
     print('Eigenvalue {}: distance from unit circle {}'.format(eig, np.abs(1-np.linalg.norm(eig))))
 
 
-# We seek a confirmation about this fact by computing the eigenvalues of the operator `A` which we used when we constructed the system, and we compare them with the eigenvalues of `dmd.atilde` which holds the approximation of `A` built by DMD with control.
+# We seek a confirmation about this fact by computing the eigenvalues of the operator `A` which we used when we constructed the system, and we compare them with the eigenvalues of `dmd.operator.as_numpy_array` which holds the approximation of `A` built by DMD with control.
 
 # In[15]:
 
 
-print('Eigenvalues of A:', np.linalg.eigvals(A), '; eigenvalues of A_tilde: ', np.linalg.eigvals(dmdc.atilde))
+print('Eigenvalues of A:', np.linalg.eigvals(A), '; eigenvalues of A_tilde: ', np.linalg.eigvals(dmdc.operator.as_numpy_array))
 

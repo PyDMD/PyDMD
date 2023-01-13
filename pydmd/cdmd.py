@@ -4,14 +4,15 @@ As a reference consult this work by Erichson, Brunton and Kutz:
 https://doi.org/10.1007/s11554-016-0655-2
 """
 from __future__ import division
+
 import numpy as np
 import scipy.sparse
 from scipy.linalg import sqrtm
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-
-from .utils import compute_tlsq, compute_svd
+from .snapshots import Snapshots
+from .utils import compute_svd, compute_tlsq
 
 
 class CDMDOperator(DMDOperator):
@@ -177,7 +178,7 @@ class CDMD(DMDBase):
         :rtype: numpy.ndarray
         """
 
-        C_shape = (self._snapshots.shape[1], self._snapshots.shape[0])
+        C_shape = (self.snapshots.shape[1], self.snapshots.shape[0])
         if isinstance(self.compression_matrix, np.ndarray):
             C = self.compression_matrix
         elif self.compression_matrix == 'uniform':
@@ -188,11 +189,11 @@ class CDMD(DMDBase):
             C = np.random.normal(0, 1, size=(C_shape))
         elif self.compression_matrix == 'sample':
             C = np.zeros(C_shape)
-            C[np.arange(self._snapshots.shape[1]),
-              np.random.choice(*self._snapshots.shape, replace=False)] = 1.
+            C[np.arange(self.snapshots.shape[1]),
+              np.random.choice(*self.snapshots.shape, replace=False)] = 1.
 
         # compress the matrix
-        Y = C.dot(self._snapshots)
+        Y = C.dot(self.snapshots)
 
         return Y
 
@@ -203,16 +204,18 @@ class CDMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
+        self._reset()
         self._snapshots = self._col_major_2darray(X)
 
+        self._snapshots_holder = Snapshots(X)
         compressed_snapshots = self._compress_snapshots()
 
         n_samples = compressed_snapshots.shape[1]
         X = compressed_snapshots[:, :-1]
         Y = compressed_snapshots[:, 1:]
 
-        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        self.operator.compute_operator(X, Y, self._snapshots[:, 1:])
+        X, Y = compute_tlsq(X, Y, self._tlsq_rank)
+        self.operator.compute_operator(X, Y, self.snapshots[:, 1:])
 
         # Default timesteps
         self._set_initial_time_dictionary(

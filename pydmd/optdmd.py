@@ -8,12 +8,13 @@ to dmd.
     solution in polynomial time. arXiv:1610.02962. 2016.
 
 """
-from scipy.linalg import eig
 import numpy as np
+from scipy.linalg import eig
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from .utils import compute_tlsq, compute_svd
+from .utils import compute_svd, compute_tlsq
+from .snapshots import Snapshots
 
 
 def pinv_diag(x):
@@ -175,7 +176,8 @@ class OptDMD(DMDBase):
         self._svds = None
         self._input_space = None
         self._output_space = None
-        self._input_snapshots, self._output_snapshots = None, None
+        self._input_holder = None
+        self._output_holder = None
 
     @property
     def factorization(self):
@@ -203,17 +205,21 @@ class OptDMD(DMDBase):
             is None.
         :type Y: numpy.ndarray or iterable
         """
+        self._reset()
 
         if Y is None:
-            self._snapshots = self._col_major_2darray(X)
+            self._snapshots_holder = Snapshots(X)
 
-            Y = X[:, 1:]  # y = x[k+1]
-            X = X[:, :-1]  # x = x[k]
+            X = self.snapshots[:, :-1]  # x = x[k]
+            Y = self.snapshots[:, 1:]  # y = x[k+1]
         else:
-            self._input_snapshots = self._col_major_2darray(X)
-            self._output_snapshots = self._col_major_2darray(Y)
+            self._input_holder = Snapshots(X)
+            X = self._input_holder.snapshots
 
-        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
+            self._output_holder = Snapshots(Y)
+            Y = self._output_holder.snapshots
+
+        X, Y = compute_tlsq(X, Y, self._tlsq_rank)
         Uz, Q = self.operator.compute_operator(X, Y)
 
         if self.factorization == "svd":

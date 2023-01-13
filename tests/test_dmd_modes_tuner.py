@@ -1,17 +1,24 @@
-from pytest import raises
-import numpy as np
 from copy import deepcopy
 
-from pydmd import DMD, CDMD, DMD, DMDBase, DMDc, FbDMD, HankelDMD, HODMD, MrDMD, OptDMD, ParametricDMD, SpDMD
-from pydmd.dmd_modes_tuner import select_modes, stabilize_modes, ModesSelectors, ModesTuner, selectors
-from ezyrb import POD, RBF
+import numpy as np
 import pytest
+from ezyrb import POD, RBF
+from pytest import raises, param
+
+from pydmd import (CDMD, DMD, HODMD, DMDBase, DMDc, FbDMD, HankelDMD, MrDMD,
+                   OptDMD, ParametricDMD, SpDMD)
+from pydmd.dmd_modes_tuner import (ModesSelectors, ModesTuner, select_modes,
+                                   selectors, stabilize_modes)
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
 # f1 = lambda x,t: sech(x+3)*(1.*np.exp(1j*2.3*t))
 # f2 = lambda x,t: (sech(x)*np.tanh(x))*(2.*np.exp(1j*2.8*t))
 sample_data = np.load('tests/test_datasets/input_sample.npy')
+
+class FakeDMDOperator:
+    def __init__(self):
+        self.as_numpy_array = np.ones(10)
 
 def test_select_modes():
     def stable_modes(dmd_object):
@@ -43,9 +50,6 @@ def test_select_modes_nullified_indexes():
     assert dmd.amplitudes.shape == dmdc[noncut_indexes].amplitudes.shape
 
 def test_select_modes_index():
-    class FakeDMDOperator:
-        pass
-
     fake_dmd_operator = FakeDMDOperator()
     fake_dmd = DMD()
 
@@ -70,9 +74,6 @@ def test_select_modes_index():
     assert len(fake_dmd.amplitudes) == 3
 
 def test_select_modes_index_and_deepcopy():
-    class FakeDMDOperator:
-        pass
-
     fake_dmd_operator = FakeDMDOperator()
     fake_dmd = DMD()
 
@@ -184,9 +185,6 @@ def test_integral_contribution_reconstruction():
     np.testing.assert_array_almost_equal(exp, dmd.reconstructed_data)
 
 def test_stabilize_modes():
-    class FakeDMDOperator:
-        pass
-
     dmd = DMD()
     fake_dmd_operator = FakeDMDOperator()
 
@@ -211,9 +209,6 @@ def test_stabilize_modes():
         np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
 def test_stabilize_modes_index():
-    class FakeDMDOperator:
-        pass
-
     dmd = DMD()
     fake_dmd_operator = FakeDMDOperator()
 
@@ -241,9 +236,6 @@ def test_stabilize_modes_index():
     np.testing.assert_almost_equal(indexes, [1,2,3])
 
 def test_stabilize_modes_index_deepcopy():
-    class FakeDMDOperator:
-        pass
-
     dmd = DMD()
     fake_dmd_operator = FakeDMDOperator()
 
@@ -391,9 +383,6 @@ def test_modes_tuner_select_raises():
         ModesTuner(fake_dmd).select(2)
 
 def test_modes_tuner_select():
-    class FakeDMDOperator:
-        pass
-
     fake_dmd_operator = FakeDMDOperator()
     fake_dmd = DMD()
 
@@ -419,9 +408,6 @@ def test_modes_tuner_select():
     assert dmd.modes.shape[1] == 3
 
 def test_modes_tuner_stabilize():
-    class FakeDMDOperator:
-        pass
-
     dmd = DMD()
     fake_dmd_operator = FakeDMDOperator()
 
@@ -449,9 +435,6 @@ def test_modes_tuner_stabilize():
         np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
 def test_modes_tuner_stabilize_multiple():
-    class FakeDMDOperator:
-        pass
-
     def cook_fake_dmd():
         dmd = DMD()
         fake_dmd_operator = FakeDMDOperator()
@@ -489,9 +472,6 @@ def test_modes_tuner_stabilize_multiple():
             np.array([1, 2*abs(complex(0.8,0.5)), 3, 4*abs(complex(1,1.e-2)), 5, 6]))
 
 def test_modes_tuner_subset():
-    class FakeDMDOperator:
-        pass
-
     def cook_fake_dmd():
         dmd = DMD()
         fake_dmd_operator = FakeDMDOperator()
@@ -523,9 +503,6 @@ def test_modes_tuner_subset():
     assert mtuner.subset([0,2]).get()[1] == mtuner._dmds[2]
 
 def test_modes_tuner_stabilize_multiple_subset():
-    class FakeDMDOperator:
-        pass
-
     def cook_fake_dmd():
         dmd = DMD()
         fake_dmd_operator = FakeDMDOperator()
@@ -585,8 +562,17 @@ def test_modes_tuner_selectors():
     assert selectors['stable_modes'] == ModesSelectors.stable_modes
     assert selectors['integral_contribution'] == ModesSelectors.integral_contribution
 
-@pytest.mark.parametrize("dmd", [CDMD(svd_rank=-1), DMD(svd_rank=-1), DMDc(svd_rank=-1), FbDMD(svd_rank=-1),
-    HankelDMD(svd_rank=-1, d=3), HODMD(svd_rank=-1, d=3)])
+@pytest.mark.parametrize(
+    "dmd",
+    [
+        param(CDMD(svd_rank=-1), id="CDMD"),
+        param(DMD(svd_rank=-1), id="DMD"),
+        param(DMDc(svd_rank=-1), id="DMDc"),
+        param(FbDMD(svd_rank=-1), id="FbDMD"),
+        param(HankelDMD(svd_rank=-1, d=3), id="HankelDMD"),
+        param(HODMD(svd_rank=-1, d=3), id="HODMD"),
+    ],
+)
 def test_modes_selector_all_dmd_types(dmd):
     print('--------------------------- {} ---------------------------'.format(type(dmd)))
     if isinstance(dmd, ParametricDMD):

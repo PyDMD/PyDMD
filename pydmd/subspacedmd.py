@@ -11,6 +11,7 @@ import numpy as np
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
+from .snapshots import Snapshots
 
 
 def reducedsvd(X, r=None):
@@ -158,7 +159,7 @@ class SubspaceDMD(DMDBase):
         self._opt = opt
 
         self._b = None
-        self._snapshots = None
+        self._snapshots_holder = None
 
         self._modes_activation_bitmask_proxy = None
 
@@ -170,18 +171,20 @@ class SubspaceDMD(DMDBase):
 
     def fit(self, X):
         """
-        Compute the SubspaceDynamic Modes Decomposition to the input data.
+        Compute the Subspace Dynamic Modes Decomposition to the input data.
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self._snapshots = self._col_major_2darray(X)
+        self._reset()
 
-        n_samples = self._snapshots.shape[1]
-        Y0 = self._snapshots[:, :-3]
-        Y1 = self._snapshots[:, 1:-2]
-        Y2 = self._snapshots[:, 2:-1]
-        Y3 = self._snapshots[:, 3:]
+        self._snapshots_holder = Snapshots(X)
+
+        n_samples = self.snapshots.shape[1]
+        Y0 = self.snapshots[:, :-3]
+        Y1 = self.snapshots[:, 1:-2]
+        Y2 = self.snapshots[:, 2:-1]
+        Y3 = self.snapshots[:, 3:]
 
         Yp = np.vstack((Y0, Y1))
         Yf = np.vstack((Y2, Y3))
