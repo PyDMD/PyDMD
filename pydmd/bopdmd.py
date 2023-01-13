@@ -165,7 +165,7 @@ class BOPDMDOperator(DMDOperator):
         """
         # Ensure that H is a 2D numpy.ndarray.
         if not isinstance(H, np.ndarray) or H.ndim != 2:
-            msg = "Input data to the bag function must be a 2D numpy.ndarray."
+            msg = "H must be a 2D np.ndarray."
             raise ValueError(msg)
 
         if 0 < trial_size < 1:
@@ -175,18 +175,18 @@ class BOPDMDOperator(DMDOperator):
             batch_size = trial_size
 
         else:
-            msg = "Invalid trial_size parameter. trial_size must be either "
-            msg += "a positive integer or a float between 0 and 1."
+            msg = "Invalid trial_size parameter. trial_size must be either " \
+                  "a positive integer or a float between 0 and 1."
             raise ValueError(msg)
 
         # Throw an error if the batch size is too large or too small.
         if batch_size > H.shape[0]:
-            msg = "Error bagging the input data. Please ensure that the "
-            msg += "trial_size parameter is small enough for bagging."
+            msg = "Error bagging the input data. Please ensure that the " \
+                  "trial_size parameter is small enough for bagging."
             raise ValueError(msg)
         elif batch_size == 0:
-            msg = "Error bagging the input data. Please ensure that the "
-            msg += "trial_size parameter is large enough for bagging."
+            msg = "Error bagging the input data. Please ensure that the " \
+                  "trial_size parameter is large enough for bagging."
             raise ValueError(msg)
 
         # Obtain and return subset of the data.
@@ -349,8 +349,8 @@ class BOPDMDOperator(DMDOperator):
                 # Terminate if no appropriate step length was found.
                 if error_0 >= error:
                     if verbose:
-                        msg = "Failed to find appropriate step length at "
-                        msg += "iteration {}. Current error {}."
+                        msg = "Failed to find appropriate step length at " \
+                              "iteration {}. Current error {}."
                         warnings.warn(msg.format(itr, error))
                     return B, alpha
 
@@ -371,9 +371,9 @@ class BOPDMDOperator(DMDOperator):
                 all_error[itr-1] - all_error[itr] < eps_stall*all_error[itr-1]
             ):
                 if verbose:
-                    msg = "Stall detected: error reduced by less than {} "
-                    msg += "times the error at the previous step. "
-                    msg += "Iteration {}. Current error {}."
+                    msg = "Stall detected: error reduced by less than {} " \
+                          "times the error at the previous step. " \
+                          "Iteration {}. Current error {}."
                     warnings.warn(msg.format(eps_stall, itr, error))
                 return B, alpha
 
@@ -381,8 +381,8 @@ class BOPDMDOperator(DMDOperator):
 
         # Failed to meet tolerance in maxiter steps.
         if verbose:
-            msg = "Failed to reach tolerance after maxiter = {} iterations. "
-            msg += "Current error {}."
+            msg = "Failed to reach tolerance after maxiter = {} iterations. " \
+                  "Current error {}."
             warnings.warn(msg.format(maxiter, error))
 
         return B, alpha
@@ -683,13 +683,13 @@ class BOPDMD(DMDBase):
                 raise ValueError("Invalid variable projection option given.")
 
             if opt_value < opt_min:
-                msg = "Option {} with value {} is less than {}, "
-                msg += "which is not recommended."
+                msg = "Option {} with value {} is less than {}, " \
+                      "which is not recommended."
                 warnings.warn(msg.format(opt_name, opt_value, opt_min))
 
             elif opt_value > opt_max:
-                msg = "Option {} with value {} is greater than {}, "
-                msg += "which is not recommended."
+                msg = "Option {} with value {} is greater than {}, " \
+                      "which is not recommended."
                 warnings.warn(msg.format(opt_name, opt_value, opt_max))
 
 
@@ -733,16 +733,16 @@ class BOPDMD(DMDBase):
     @property
     def init_alpha(self):
         if self._init_alpha is None:
-            msg = "fit() hasn't been called "
-            msg += "and no initial value for alpha has been given."
+            msg = "fit() hasn't been called " \
+                  "and no initial value for alpha has been given."
             raise RuntimeError(msg)
         return self._init_alpha
 
     @property
     def proj_basis(self):
         if self._proj_basis is None:
-            msg = "fit() hasn't been called "
-            msg += "and no projection basis has been given."
+            msg = "fit() hasn't been called " \
+                  "and no projection basis has been given."
             raise RuntimeError(msg)
         return self._proj_basis
 
@@ -818,8 +818,8 @@ class BOPDMD(DMDBase):
         # Check that the number of snapshots in the data matrix X matches the
         # number of time points in the time vector t.
         if self._snapshots.shape[1] != len(self._time):
-            msg = "The number of columns in the data matrix X must match the "
-            msg += "number of time points in the time vector t."
+            msg = "The number of columns in the data matrix X must match " \
+                  "the number of time points in the time vector t."
             raise ValueError(msg)
 
         # Compute the rank of the fit.
