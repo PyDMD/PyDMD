@@ -358,6 +358,9 @@ def plot_modes_2D(
             "You have to perform the fit method."
         )
 
+    if snapshots_shape is None:
+        snapshots_shape = dmd.snapshots_shape
+
     if x is None and y is None:
         if snapshots_shape is None:
             raise ValueError(
@@ -469,6 +472,9 @@ def plot_snapshots_2D(
     """
     if dmd.snapshots is None:
         raise ValueError("Input snapshots not found.")
+
+    if snapshots_shape is None:
+        snapshots_shape = dmd.snapshots_shape
 
     if x is None and y is None:
         if snapshots_shape is None:
