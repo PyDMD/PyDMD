@@ -21,6 +21,7 @@ from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .utils import compute_svd
 from .rdmd import compute_rank
+from .snapshots import Snapshots
 
 
 class BOPDMDOperator(DMDOperator):
@@ -572,7 +573,7 @@ class BOPDMD(DMDBase):
         True, use full expression.
     :type use_fulljac: bool
     :param verbose: Flag that determines whether or not to print warning
-        messages that arise during the variable proection routine, and whether
+        messages that arise during the variable projection routine, and whether
         or not to print information regarding the method's iterative progress.
         Default is False, don't print information.
     :type verbose: bool
@@ -637,6 +638,7 @@ class BOPDMD(DMDBase):
         self._trial_size = trial_size
         self._eig_sort = eig_sort
 
+        self._snapshots_holder = None
         self._time = None
         self._Atilde = None
         self._modes_activation_bitmask_proxy = None
@@ -687,7 +689,7 @@ class BOPDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         # Project the snapshot data onto the projection basis.
-        ux = self._proj_basis.conj().T.dot(self._snapshots)
+        ux = self._proj_basis.conj().T.dot(self.snapshots)
         ux1 = ux[:, :-1]
         ux2 = ux[:, 1:]
 
@@ -764,7 +766,6 @@ class BOPDMD(DMDBase):
     def dynamics(self):
         """
         Get the time evolution of each mode.
-
         :return: matrix that contains all the time evolution, stored by row.
         :rtype: numpy.ndarray
         """
@@ -794,7 +795,7 @@ class BOPDMD(DMDBase):
         :type t: numpy.ndarray or iterable
         """
         # Process the input data and convert to numpy.ndarrays.
-        self._snapshots = self._col_major_2darray(X)[0]
+        self._snapshots_holder = Snapshots(X)
         self._time = np.array(t).squeeze()
 
         # Check that input time vector is one-dimensional.
@@ -803,20 +804,20 @@ class BOPDMD(DMDBase):
 
         # Check that the number of snapshots in the data matrix X matches the
         # number of time points in the time vector t.
-        if self._snapshots.shape[1] != len(self._time):
+        if self.snapshots.shape[1] != len(self._time):
             msg = "The number of columns in the data matrix X must match " \
                   "the number of time points in the time vector t."
             raise ValueError(msg)
 
         # Compute the rank of the fit.
-        self._svd_rank = compute_rank(self._snapshots, self._svd_rank)
+        self._svd_rank = compute_rank(self.snapshots, self._svd_rank)
 
         # Set/check the projection basis.
         if self._proj_basis is None and self._use_proj:
-            self._proj_basis = compute_svd(self._snapshots, self._svd_rank)[0]
+            self._proj_basis = compute_svd(self.snapshots, self._svd_rank)[0]
 
         elif self._proj_basis is None and not self._use_proj:
-            self._proj_basis = compute_svd(self._snapshots, -1)[0]
+            self._proj_basis = compute_svd(self.snapshots, -1)[0]
 
         elif (not isinstance(self._proj_basis, np.ndarray)
               or self._proj_basis.ndim != 2):
@@ -852,9 +853,9 @@ class BOPDMD(DMDBase):
 
         # Define the snapshots that will be used for fitting.
         if self._use_proj:
-            snp = self._proj_basis.conj().T.dot(self._snapshots)
+            snp = self._proj_basis.conj().T.dot(self.snapshots)
         else:
-            snp = self._snapshots
+            snp = self.snapshots
 
         # Fit the data.
         self._b = self.operator.compute_operator(snp.T, self._time)
