@@ -35,6 +35,8 @@ class Snapshots:
         if self._snapshots.shape[-1] == 1:
             raise ValueError("Received only one time snapshot.")
 
+        Snapshots._check_condition_number(self._snapshots)
+
         logging.info(
             "Snapshots: %s, snapshot shape: %s",
             self._snapshots.shape,
