@@ -168,16 +168,18 @@ class SubspaceDMD(DMDBase):
             sorted_eigs=sorted_eigs,
         )
 
-    def fit(self, X):
+    def fit(self, X, batch=False):
         """
         Compute the Subspace Dynamic Modes Decomposition to the input data.
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
+        :param batch: If `True`, the first dimension is dedicated to batching.
+        :type batch: bool
         """
         self._reset()
 
-        self._snapshots_holder = Snapshots(X)
+        self._snapshots_holder = Snapshots(X, batch=batch)
 
         n_samples = self.snapshots.shape[1]
         Y0 = self.snapshots[..., :-3]

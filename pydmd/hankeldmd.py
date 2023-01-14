@@ -287,18 +287,20 @@ class HankelDMD(DMDBase):
         shallow_copy._sub_dmd = sub_dmd_copy
         return DMDBase.__getitem__(shallow_copy, key)
 
-    def fit(self, X):
+    def fit(self, X, batch=False):
         """
         Compute the Dynamic Modes Decomposition to the input data.
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
+        :param batch: If `True`, the first dimension is dedicated to batching.
+        :type batch: bool
         """
         self._reset()
 
         linalg_module = build_linalg_module(X)
 
-        self._snapshots_holder = Snapshots(X)
+        self._snapshots_holder = Snapshots(X, batch=batch)
         n_samples = self.snapshots.shape[-1]
         if n_samples < self._d:
             raise ValueError(
@@ -306,7 +308,7 @@ class HankelDMD(DMDBase):
             )
 
         ho_snapshots = linalg_module.pseudo_hankel_matrix(self.snapshots, self._d)
-        self._sub_dmd.fit(ho_snapshots)
+        self._sub_dmd.fit(ho_snapshots, batch=batch)
 
         # Default timesteps
         self._set_initial_time_dictionary(

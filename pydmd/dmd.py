@@ -46,16 +46,18 @@ class DMD(DMDBase):
     :type tikhonov_regularization: int or float
     """
 
-    def fit(self, X):
+    def fit(self, X, batch=False):
         """
         Compute the Dynamic Modes Decomposition to the input data.
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
+        :param batch: If `True`, the first dimension is dedicated to batching.
+        :type batch: bool
         """
         self._reset()
 
-        self._snapshots_holder = Snapshots(X)
+        self._snapshots_holder = Snapshots(X, batch=batch)
 
         n_samples = self.snapshots.shape[-1]
         X = self.snapshots[..., :-1]

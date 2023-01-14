@@ -3,6 +3,7 @@ Module for snapshots normalization.
 """
 import warnings
 import logging
+from math import prod
 
 import numpy as np
 
@@ -21,13 +22,15 @@ class Snapshots:
     matrix becomes 2D (time changes along the last axis).
 
     :param numpy.array | list(numpy.array) X: Training snapshots.
+    :param batch: If `True`, the first dimension is dedicated to batching.
+    :type batch: bool
     """
 
-    def __init__(self, X):
+    def __init__(self, X, batch=False):
         (
             self._snapshots,
             self._snapshots_shape,
-        ) = Snapshots._unroll_space_dimensions(X)
+        ) = Snapshots._unroll_space_dimensions(X, batch)
 
         if self._snapshots.shape[-1] == 1:
             raise ValueError("Received only one time snapshot.")
@@ -39,18 +42,36 @@ class Snapshots:
         )
 
     @staticmethod
-    def _unroll_space_dimensions(X):
+    def _unroll_space_dimensions(X, batch):
         if hasattr(X, "ndim"):
             if X.ndim == 1:
                 raise ValueError(
                     "Expected at least a 2D matrix (space x time)."
                 )
 
+            if batch and X.ndim < 3:
+                raise ValueError(
+                    "Expected at least a 3D matrix for batched DMD."
+                )
+
+            n_batches, *space, time = X.shape
+            if not batch:
+                space = [n_batches] + space
+                n_batches = 1
+
             linalg_module = build_linalg_module(X)
-            snapshots = linalg_module.reshape(X, (len(X), -1))
+            snapshots = linalg_module.reshape(X, (n_batches, prod(space), time))
+            if not batch:
+                snapshots = snapshots[0]
 
             return snapshots, X.shape[1:]
         else:
+            if batch:
+                raise ValueError(
+                    "Batched DMD requires the input data to be "
+                    "passed as a 3D PyTorch tensor."
+                )
+
             snapshots = cast_as_array(X)
             if snapshots.ndim == 1:
                 raise ValueError(

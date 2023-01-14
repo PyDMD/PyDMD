@@ -22,7 +22,8 @@ dmds = [
 
 def fit_reconstruct(dmd):
     def func(X):
-        return dmd.fit(X).reconstructed_data
+        batch = X.ndim == 3
+        return dmd.fit(X, batch=batch).reconstructed_data
 
     return func
 

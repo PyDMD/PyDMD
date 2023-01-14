@@ -29,29 +29,10 @@ dmds = [
 @pytest.mark.parametrize("dmd", dmds)
 @pytest.mark.parametrize("X", torch_backends)
 def test_tensorized_snapshots(dmd, X):
-    if isinstance(dmd, (HankelDMD, HODMD)):
-        pytest.skip()
     X = torch.stack([X * i for i in range(1, 11)])
-    dmd.fit(X=X)
+    dmd.fit(X=X, batch=True)
     assert dmd.snapshots.shape == X.shape
     assert_allclose(dmd.snapshots[0], X[0])
-
-
-@pytest.mark.parametrize("X", torch_backends)
-def test_tensorized_snapshots_hankeldmd(X):
-    X = torch.stack([X * i for i in range(1, 11)])
-    dmd = HankelDMD(svd_rank=-1, d=3)
-    dmd.fit(X=X)
-    assert dmd.snapshots.shape == (10, 3 * X.shape[-2], X.shape[-1] - 2)
-
-
-@pytest.mark.parametrize("X", torch_backends)
-def test_tensorized_snapshots_hodmd(X):
-    X = torch.stack([X * i for i in range(1, 11)])
-    dmd = HODMD(svd_rank=-1, svd_rank_extra=-1, d=3)
-    dmd.fit(X=X)
-    assert dmd.snapshots.shape[0] == 10
-    assert dmd.snapshots.shape[-1] == X.shape[-1]
 
 
 @pytest.mark.parametrize(
@@ -84,7 +65,7 @@ def test_tensorized_fit_rejects_auto_svd_rank(dmd, X):
         ValueError,
         match="Automatic SVD rank selection not available in tensorized DMD",
     ):
-        dmd.fit(X=X)
+        dmd.fit(X=X, batch=True)
 
 
 @pytest.mark.parametrize("dmd", dmds)
@@ -93,7 +74,7 @@ def test_tensorized_reconstructed_data(dmd, X):
     if isinstance(dmd, (FbDMD, SubspaceDMD)):
         pytest.skip()
     X = torch.stack([X * i for i in range(1, 11)])
-    dmd.fit(X=X)
+    dmd.fit(X=X, batch=True)
     assert_allclose(dmd.reconstructed_data, X)
 
 
@@ -101,7 +82,7 @@ def test_tensorized_reconstructed_data(dmd, X):
 def test_tensorized_reconstructed_data_fbdmd(X):
     X = torch.stack([X * i for i in range(1, 11)])
     dmd = FbDMD(exact=True, svd_rank=-1)
-    dmd.fit(X=X)
+    dmd.fit(X=X, batch=True)
     dmd_data_correct = np.stack(
         [
             np.load("tests/test_datasets/fbdmd_data.npy") * i
@@ -116,7 +97,7 @@ def test_tensorized_reconstructed_data_fbdmd(X):
 def test_tensorized_backprop(dmd, X):
     X = torch.stack([X * i for i in range(1, 11)])
     X.requires_grad = True
-    dmd.fit(X=X)
+    dmd.fit(X=X, batch=True)
     dmd.reconstructed_data.sum().backward()
     X.requires_grad = False
 
@@ -126,10 +107,10 @@ def test_tensorized_backprop(dmd, X):
 def test_tensorized_second_fit_backprop(dmd, X):
     X = torch.stack([X * i for i in range(1, 11)])
     X.requires_grad = True
-    dmd.fit(X=X)
+    dmd.fit(X=X, batch=True)
     dmd.reconstructed_data.sum().backward()
 
-    dmd.fit(X=X.clone())
+    dmd.fit(X=X.clone(), batch=True)
     dmd.reconstructed_data.sum().backward()
     X.requires_grad = False
 

@@ -112,14 +112,16 @@ class HODMD(HankelDMD):
         linalg_module = build_linalg_module(snapshots)
         return linalg_module.dot(Ue, snapshots).swapaxes(-1, -2)
 
-    def fit(self, X):
+    def fit(self, X, batch=False):
         """
         Compute the Dynamic Modes Decomposition to the input data.
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
+        :param batch: If `True`, the first dimension is dedicated to batching.
+        :type batch: bool
         """
-        snapshots_holder = Snapshots(X)
+        snapshots_holder = Snapshots(X, batch=batch)
         snapshots = snapshots_holder.snapshots
 
         space_dim = snapshots.shape[-2]
@@ -135,7 +137,7 @@ class HODMD(HankelDMD):
         linalg_module = build_linalg_module(snapshots)
         snp = linalg_module.dot(self.U_extra.swapaxes(-1, -2), snapshots)
 
-        super().fit(snp)
+        super().fit(snp, batch=batch)
         self._snapshots_holder = snapshots_holder
 
         return self
