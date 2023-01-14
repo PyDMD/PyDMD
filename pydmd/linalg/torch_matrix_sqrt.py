@@ -21,7 +21,7 @@ class MatrixSquareRoot(Function):
         if m.ndim == 2:
             m = m[None]
         elif m.ndim != 3:
-            raise ValueError(f"Unsupported n. of dimensions {m.ndim}")
+            raise ValueError(f"Unsupported number of axes: {m.ndim}")
 
         sqrtm = np.stack(tuple(scipy.linalg.sqrtm(mi) for mi in m))
         if hasattr(np, "complex256") and sqrtm.dtype == np.complex256:
