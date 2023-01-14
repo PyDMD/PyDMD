@@ -22,7 +22,7 @@ jobs:
     - name: Install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
-        python3 -m pip install numpy scipy matplotlib pytest pytest-cov future ezyrb
+        python3 -m pip install numpy scipy matplotlib pytest pytest-cov future ezyrb jupyter
         
     - id: files
       uses: jitterbit/get-changed-files@v1
