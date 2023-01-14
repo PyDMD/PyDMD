@@ -1,5 +1,4 @@
 import logging
-import numbers
 
 import numpy as np
 import scipy
