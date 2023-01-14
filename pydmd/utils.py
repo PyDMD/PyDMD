@@ -31,7 +31,7 @@ def compute_tlsq(X, Y, tlsq_rank):
     linalg_module = build_linalg_module(X)
     concatenated = linalg_module.cat((X, Y), axis=-2)
     _, _, V = linalg_module.svd(concatenated)
-    VV = linalg_module.dot(V[..., :tlsq_rank].conj().T, V[..., :tlsq_rank])
+    VV = linalg_module.dot(V[:tlsq_rank].conj().T, V[:tlsq_rank])
     return linalg_module.dot(X, VV), linalg_module.dot(Y, VV)
 
 
