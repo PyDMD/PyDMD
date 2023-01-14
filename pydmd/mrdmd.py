@@ -5,17 +5,16 @@ Reference:
 - Kutz, J. Nathan, Xing Fu, and Steven L. Brunton. Multiresolution Dynamic Mode
 Decomposition. SIAM Journal on Applied Dynamical Systems 15.2 (2016): 713-735.
 """
-from __future__ import division
-from functools import partial
-from builtins import range
-from past.utils import old_div
-import numpy as np
-import matplotlib.pyplot as plt
 from copy import deepcopy
+from functools import partial
+
+import numpy as np
+from past.utils import old_div
 from scipy.linalg import block_diag
 
+from .dmd_modes_tuner import select_modes
 from .dmdbase import DMDBase
-from .dmd_modes_tuner import ModesSelectors, select_modes
+from .snapshots import Snapshots
 
 
 class BinaryTree:
@@ -460,13 +459,13 @@ Expected one item per level, got {} out of {} levels.""".format(
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self.reset()
+        self._reset()
 
-        self._snapshots = self._col_major_2darray(X)
+        self._snapshots_holder = Snapshots(X)
 
         # Redefine max level if it is too big.
         lvl_threshold = (
-            int(np.log(self._snapshots.shape[1] / 4.0) / np.log(2.0)) + 1
+            int(np.log(self.snapshots.shape[1] / 4.0) / np.log(2.0)) + 1
         )
         if self.max_level > lvl_threshold:
             self.max_level = lvl_threshold
@@ -479,7 +478,7 @@ Expected one item per level, got {} out of {} levels.""".format(
         def slow_modes(dmd, rho):
             return np.abs(np.log(dmd.eigs)) < rho * 2 * np.pi
 
-        X = self._snapshots.copy()
+        X = self.snapshots.copy()
         for level in self.dmd_tree.levels:
             n_leaf = 2 ** level
             Xs = np.array_split(X, n_leaf, axis=1)
@@ -502,116 +501,7 @@ Expected one item per level, got {} out of {} levels.""".format(
             X -= newX
 
         self._set_initial_time_dictionary(
-            dict(t0=0, tend=self._snapshots.shape[1], dt=1)
+            dict(t0=0, tend=self.snapshots.shape[1], dt=1)
         )
 
         return self
-
-    def plot_eigs(
-        self,
-        show_axes=True,
-        show_unit_circle=True,
-        figsize=(8, 8),
-        title="",
-        level=None,
-        node=None,
-    ):
-        """
-        Plot the eigenvalues.
-
-        :param bool show_axes: if True, the axes will be showed in the plot.
-                Default is True.
-        :param bool show_unit_circle: if True, the circle with unitary radius
-                and center in the origin will be showed. Default is True.
-        :param tuple(int,int) figsize: tuple in inches of the figure.
-        :param str title: title of the plot.
-        :param int level: plot only the eigenvalues of specific level.
-        :param int node: plot only the eigenvalues of specific node.
-        """
-        if self.eigs is None:
-            raise ValueError(
-                "The eigenvalues have not been computed."
-                "You have to perform the fit method."
-            )
-
-        if level:
-            peigs = self.partial_eigs(level=level, node=node)
-        else:
-            peigs = self.eigs
-
-        plt.figure(figsize=figsize)
-        plt.title(title)
-        plt.gcf()
-        ax = plt.gca()
-
-        if not level:
-            cmap = plt.get_cmap("viridis")
-            colors = [
-                cmap(i) for i in np.linspace(0, 1, len(self.dmd_tree.levels))
-            ]
-
-            points = []
-            for level in self.dmd_tree.levels:
-                eigs = self.partial_eigs(level)
-
-                points.append(
-                    ax.plot(eigs.real, eigs.imag, ".", color=colors[level])[0]
-                )
-        else:
-            points = []
-            points.append(
-                ax.plot(peigs.real, peigs.imag, "bo", label="Eigenvalues")[0]
-            )
-
-        # set limits for axis
-        limit = np.max(np.ceil(np.absolute(peigs)))
-        ax.set_xlim((-limit, limit))
-        ax.set_ylim((-limit, limit))
-
-        plt.ylabel("Imaginary part")
-        plt.xlabel("Real part")
-
-        if show_unit_circle:
-            unit_circle = plt.Circle(
-                (0.0, 0.0), 1.0, color="green", fill=False, linestyle="--"
-            )
-            ax.add_artist(unit_circle)
-
-        # Dashed grid
-        gridlines = ax.get_xgridlines() + ax.get_ygridlines()
-        for line in gridlines:
-            line.set_linestyle("-.")
-        ax.grid(True)
-
-        ax.set_aspect("equal")
-
-        # x and y axes
-        if show_axes:
-            ax.annotate(
-                "",
-                xy=(np.max([limit * 0.8, 1.0]), 0.0),
-                xytext=(np.min([-limit * 0.8, -1.0]), 0.0),
-                arrowprops=dict(arrowstyle="->"),
-            )
-            ax.annotate(
-                "",
-                xy=(0.0, np.max([limit * 0.8, 1.0])),
-                xytext=(0.0, np.min([-limit * 0.8, -1.0])),
-                arrowprops=dict(arrowstyle="->"),
-            )
-
-        # legend
-        if level:
-            labels = ["Eigenvalues - level {}".format(level)]
-        else:
-            labels = [
-                "Eigenvalues - level {}".format(i)
-                for i in range(self.max_level)
-            ]
-
-        if show_unit_circle:
-            points += [unit_circle]
-            labels += ["Unit circle"]
-
-        ax.add_artist(plt.legend(points, labels, loc="best"))
-        plt.show()

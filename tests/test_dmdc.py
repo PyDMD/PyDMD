@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
 import scipy
-import torch
-from pytest import param, raises
+from pytest import raises
 
 from pydmd import DMDc
 
@@ -75,7 +74,7 @@ def test_atilde_b_unknown(system):
     dmdc = DMDc(svd_rank=-1, opt=True)
     dmdc.fit(system['snapshots'], system['u'])
     expected_atilde = np.array(dmdc.basis.T.conj()).dot(np.array(system['A'])).dot(np.array(dmdc.basis))
-    assert_allclose(dmdc.atilde, expected_atilde, atol=1.e-1)
+    assert_allclose(dmdc.operator.as_array, expected_atilde, atol=1.e-1)
 
 @pytest.mark.parametrize("system", data_backends_with_B)
 def test_get_bitmask_default(system):

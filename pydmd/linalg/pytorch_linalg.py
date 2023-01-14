@@ -261,6 +261,10 @@ class LinalgPyTorch(LinalgBase):
         import torch
 
         return torch.repeat_interleave(X, repeats, dim=axis)
+    
+    @classmethod
+    def reshape(cls, X, shape):
+        return X.view(*shape)
 
     @classmethod
     def searchsorted(cls, X, val, *args, **kwargs):

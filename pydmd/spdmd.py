@@ -2,7 +2,6 @@
 
 import numpy as np
 from numpy.linalg import solve
-
 from scipy.sparse import (
     csc_matrix as sparse,
     vstack as spvstack,
@@ -136,7 +135,7 @@ class SpDMD(DMD):
         self._b = self._optimal_amplitudes(zero_amplitudes)
         # re-allocate the Proxy to avoid problems due to the fact that we
         # re-computed the amplitudes
-        self.allocate_modes_bitmask_proxy()
+        self._allocate_modes_bitmask_proxy()
 
         # release memory
         if self._release_memory:

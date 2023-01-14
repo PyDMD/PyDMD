@@ -9,7 +9,8 @@ import warnings
 
 from .hankeldmd import HankelDMD
 from .linalg import build_linalg_module
-from .utils import compute_svd, prepare_snapshots
+from .utils import compute_svd
+from .snapshots import Snapshots
 
 
 class HODMD(HankelDMD):
@@ -79,7 +80,7 @@ class HODMD(HankelDMD):
             reconstruction_method=reconstruction_method,
         )
 
-        self.svd_rank_extra = svd_rank_extra  # TODO improve names
+        self._svd_rank_extra = svd_rank_extra  # TODO improve names
         self.U_extra = None
 
     def reconstructions_of_timeindex(self, timeindex=None):
@@ -118,21 +119,23 @@ class HODMD(HankelDMD):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        org_snp = prepare_snapshots(X)
+        snapshots_holder = Snapshots(X)
+        snapshots = snapshots_holder.snapshots
 
-        if org_snp.shape[0] == 1:
-            self.U_extra, _, _ = compute_svd(org_snp, -1)
+        space_dim = snapshots.shape[-2]
+        if space_dim == 1:
+            svd_rank_extra = -1
             warnings.warn((
-                "The parameter 'svd_rank_extra={}' has been ignored because "
-                "the given system is a scalar function").format(
-                    self.svd_rank_extra))
+                f"The parameter 'svd_rank_extra={self._svd_rank_extra}' has "
+                "been ignored because the given system is a scalar function"))
         else:
-            self.U_extra, _, _ = compute_svd(org_snp, self.svd_rank_extra)
+            svd_rank_extra = self._svd_rank_extra
+        self.U_extra, _, _ = compute_svd(snapshots, svd_rank_extra)
 
-        linalg_module = build_linalg_module(org_snp)
-        snp = linalg_module.dot(self.U_extra.swapaxes(-1, -2), org_snp)
+        linalg_module = build_linalg_module(snapshots)
+        snp = linalg_module.dot(self.U_extra.swapaxes(-1, -2), snapshots)
 
         super().fit(snp)
-        self._snapshots = org_snp
+        self._snapshots_holder = snapshots_holder
 
         return self

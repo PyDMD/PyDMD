@@ -6,6 +6,9 @@ N. Benjamin Erichson, Lionel Mathelin, J. Nathan Kutz, Steven L. Brunton.
 Randomized dynamic mode decomposition. SIAM Journal on Applied Dynamical
 Systems, 18, 2019.
 """
+
+import numpy as np
+
 from .cdmd import CDMD
 from .utils import compute_optimal_svd_rank
 from .linalg import build_linalg_module
@@ -56,33 +59,33 @@ class RDMD(CDMD):
         :rtype: numpy.ndarray
         """
         # Perform the Randomized QB Decomposition
-        m = self._snapshots.shape[-1]
+        m = self.snapshots.shape[-1]
 
         # Compute the target rank
-        if self._snapshots.ndim < 3:
-            optimal_svd_rank = compute_optimal_svd_rank(self._snapshots)
+        if self.snapshots.ndim < 3:
+            optimal_svd_rank = compute_optimal_svd_rank(self.snapshots)
         else:
-            optimal_svd_rank = min(self._snapshots.shape)
+            optimal_svd_rank = min(self.snapshots.shape)
 
         # Generate random test matrix (with slight oversampling)
-        linalg_module = build_linalg_module(self._snapshots)
+        linalg_module = build_linalg_module(self.snapshots)
         Omega = linalg_module.random((m, optimal_svd_rank + self._oversampling))
 
         # Compute sampling matrix
-        Y = linalg_module.dot(self._snapshots, Omega)
+        Y = linalg_module.dot(self.snapshots, Omega)
 
         # Perform power iterations
         for _ in range(self._power_iters):
             Q = linalg_module.qr_reduced(Y)[0]
-            snapQ = linalg_module.dot(self._snapshots.conj().swapaxes(-1, -2), Q)
+            snapQ = linalg_module.dot(self.snapshots.conj().swapaxes(-1, -2), Q)
             Z = linalg_module.qr_reduced(snapQ)[0]
-            Y = linalg_module.dot(self._snapshots, Z)
+            Y = linalg_module.dot(self.snapshots, Z)
 
         # Orthonormalize the sampling matrix
         Q = linalg_module.qr_reduced(Y)[0]
 
         # Project the snapshot matrix onto the smaller space
-        B = linalg_module.dot(Q.conj().swapaxes(-1, -2), self._snapshots)
+        B = linalg_module.dot(Q.conj().swapaxes(-1, -2), self.snapshots)
 
         # Save the compression matrix
         self._compression_matrix = Q.conj().swapaxes(-1, -2)

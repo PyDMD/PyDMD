@@ -32,16 +32,16 @@ def test_rank(X):
 def test_Atilde_shape(X):
     dmd = HODMD(svd_rank=3)
     dmd.fit(X=X)
-    assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+    assert dmd.operator.as_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
 
 @pytest.mark.parametrize("linalg_module", linalg_backends)
 def test_d(linalg_module):
-    single_data = np.sin(np.linspace(0, 10, 100))
-    single_data = linalg_module.new_array(single_data)
+    single_data = linalg_module.new_array(np.sin(np.linspace(0, 10, 100))[None])
     dmd = HODMD(svd_rank=-1, d=50, opt=True, exact=True, svd_rank_extra=-1)
     dmd.fit(single_data)
-    assert_allclose(dmd.reconstructed_data.flatten(), single_data, atol=1.e-12)
-    assert dmd.d == 50
+
+    assert dmd.reconstructed_data.shape == single_data.shape
+    assert_allclose(dmd.reconstructed_data, single_data, atol=1.e-12)
 
 @pytest.mark.parametrize("X", data_backends)
 def test_Atilde_values(X):
@@ -49,7 +49,7 @@ def test_Atilde_values(X):
     dmd.fit(X=X)
     exact_atilde = [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
                     [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]]
-    assert_allclose(exact_atilde, dmd.atilde)
+    assert_allclose(exact_atilde, dmd.operator.as_array)
 
 @pytest.mark.parametrize("X", data_backends)
 def test_eigs_1(X):
@@ -161,16 +161,16 @@ def test_dmd_time_4(X):
 
 @pytest.mark.parametrize("linalg_module", linalg_backends)
 def test_dmd_time_5(linalg_module):
-    x = np.linspace(0, 10, 64)
+    x = np.linspace(0, 10, 64)[None]
     y = np.cos(x)*np.sin(np.cos(x)) + np.cos(x*.2)
     y = linalg_module.new_array(y)
 
     dmd = HODMD(svd_rank=-1, exact=True, opt=True, d=30, svd_rank_extra=-1)
     dmd.fit(y)
 
-    dmd.original_time['dt'] = dmd.dmd_time['dt'] = x[1] - x[0]
-    dmd.original_time['t0'] = dmd.dmd_time['t0'] = x[0]
-    dmd.original_time['tend'] = dmd.dmd_time['tend'] = x[-1]
+    dmd.original_time['dt'] = dmd.dmd_time['dt'] = x[0, 1] - x[0, 0]
+    dmd.original_time['t0'] = dmd.dmd_time['t0'] = x[0, 0]
+    dmd.original_time['tend'] = dmd.dmd_time['tend'] = x[0, -1]
 
     # assert that the shape of the output is correct
     assert dmd.reconstructed_data.shape == (1,64)
@@ -244,7 +244,7 @@ def test_rec_method_weighted(X):
 
 @pytest.mark.parametrize("linalg_module", linalg_backends)
 def test_scalar_func_warning(linalg_module):
-    x = np.linspace(0, 10, 64)
+    x = np.linspace(0, 10, 64)[None]
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
     arr = linalg_module.new_array(arr)
     # we check that this does not fail
@@ -396,5 +396,7 @@ def test_correct_amplitudes(X):
 def test_raises_not_enough_snapshots(linalg_module):
     dmd = HODMD(svd_rank=-1, d=5)
     with raises(ValueError,  match="The number of snapshots provided is not enough for d=5."):
-        dmd.fit(linalg_module.new_array(np.ones((20,4))))
-    dmd.fit(linalg_module.new_array(np.ones((20,5))))
+        dmd.fit(np.ones((20,4)))
+    with raises(ValueError,  match="Received only one time snapshot."):
+        dmd.fit(np.ones((20,5)))
+    dmd.fit(np.ones((20,6)))

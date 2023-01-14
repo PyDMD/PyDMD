@@ -6,7 +6,8 @@ import numpy as np
 
 from .dmdbase import DMDBase
 from .linalg import assert_same_linalg_type, build_linalg_module
-from .utils import compute_tlsq, prepare_snapshots
+from .snapshots import Snapshots
+from .utils import compute_tlsq
 
 
 class DMD(DMDBase):
@@ -52,15 +53,15 @@ class DMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self.reset()
+        self._reset()
 
-        self._snapshots = prepare_snapshots(X)
+        self._snapshots_holder = Snapshots(X)
 
-        n_samples = self._snapshots.shape[-1]
-        X = self._snapshots[..., :-1]
-        Y = self._snapshots[..., 1:]
+        n_samples = self.snapshots.shape[-1]
+        X = self.snapshots[..., :-1]
+        Y = self.snapshots[..., 1:]
 
-        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
+        X, Y = compute_tlsq(X, Y, self._tlsq_rank)
         self._svd_modes, _, _ = self.operator.compute_operator(X, Y)
 
         # Default timesteps

@@ -6,41 +6,42 @@ from pydmd import DMD
 from pydmd.dmdbase import DMDBase
 
 from .utils import setup_backends
+from pydmd.snapshots import Snapshots
 
 data_backends = setup_backends()
 
 
 def test_svd_rank_default():
     dmd = DMDBase()
-    assert dmd.svd_rank == 0
+    assert dmd.operator._svd_rank == 0
 
 def test_svd_rank():
     dmd = DMDBase(svd_rank=3)
-    assert dmd.svd_rank == 3
+    assert dmd.operator._svd_rank == 3
 
 def test_tlsq_rank_default():
     dmd = DMDBase()
-    assert dmd.tlsq_rank == 0
+    assert dmd._tlsq_rank == 0
 
 def test_tlsq_rank():
     dmd = DMDBase(tlsq_rank=2)
-    assert dmd.tlsq_rank == 2
+    assert dmd._tlsq_rank == 2
 
 def test_exact_default():
     dmd = DMDBase()
-    assert dmd.exact == False
+    assert dmd.operator._exact == False
 
 def test_exact():
     dmd = DMDBase(exact=True)
-    assert dmd.exact == True
+    assert dmd.operator._exact == True
 
 def test_opt_default():
     dmd = DMDBase()
-    assert dmd.opt == False
+    assert dmd._opt == False
 
 def test_opt():
     dmd = DMDBase(opt=True)
-    assert dmd.opt == True
+    assert dmd._opt == True
 
 @pytest.mark.parametrize("X", data_backends)
 def test_fit(X):
@@ -50,7 +51,7 @@ def test_fit(X):
 
 def test_advanced_snapshot_parameter2():
     dmd = DMDBase(opt=5)
-    assert dmd.opt == 5
+    assert dmd._opt == 5
 
 def test_translate_tpow_positive():
     dmd = DMDBase(opt=4)
@@ -61,7 +62,7 @@ def test_translate_tpow_positive():
 @pytest.mark.parametrize("X", data_backends)
 def test_translate_tpow_negative(X):
     dmd = DMDBase(opt=-1)
-    dmd._snapshots = X
+    dmd._snapshots_holder = Snapshots(X)
 
     assert dmd._translate_eigs_exponent(10) == 10 - (X.shape[1] - 1)
     assert dmd._translate_eigs_exponent(0) == 1 - X.shape[1]
@@ -69,7 +70,7 @@ def test_translate_tpow_negative(X):
 @pytest.mark.parametrize("X", data_backends)
 def test_translate_tpow_vector(X):
     dmd = DMDBase(opt=-1)
-    dmd._snapshots = X
+    dmd._snapshots_holder = Snapshots(X)
 
     tpow = np.ndarray([0,1,2,3,5,6,7,11])
     for idx,x in enumerate(dmd._translate_eigs_exponent(tpow)):

@@ -7,13 +7,15 @@ computation of spectral properties of the Koopman operator. SIAM Journal on
 Applied Dynamical Systems, 2017, 16.4: 2096-2126.
 """
 from copy import copy
+from numbers import Number
 
 import numpy as np
 
 from .dmd import DMD
 from .dmdbase import DMDBase
 from .linalg import build_linalg_module, cast_as_array
-from .utils import prepare_snapshots, nan_average
+from .utils import nan_average
+from .snapshots import Snapshots
 
 
 class HankelDMD(DMDBase):
@@ -245,7 +247,7 @@ class HankelDMD(DMDBase):
 
     @property
     def svd_rank(self):
-        return self._sub_dmd.svd_rank
+        return self._sub_dmd._svd_rank
 
     @property
     def modes_activation_bitmask(self):
@@ -279,7 +281,7 @@ class HankelDMD(DMDBase):
         """
 
         sub_dmd_copy = copy(self._sub_dmd)
-        sub_dmd_copy.allocate_modes_bitmask_proxy()
+        sub_dmd_copy._allocate_modes_bitmask_proxy()
 
         shallow_copy = copy(self)
         shallow_copy._sub_dmd = sub_dmd_copy
@@ -292,19 +294,19 @@ class HankelDMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self.reset()
+        self._reset()
 
         linalg_module = build_linalg_module(X)
 
-        snp = prepare_snapshots(X)
-        n_samples = snp.shape[-1]
+        self._snapshots_holder = Snapshots(X)
+        n_samples = self.snapshots.shape[-1]
         if n_samples < self._d:
             raise ValueError(
                 f"The number of snapshots provided is not enough for d={self._d}."
             )
 
-        self._snapshots = linalg_module.pseudo_hankel_matrix(snp, self._d)
-        self._sub_dmd.fit(self._snapshots)
+        ho_snapshots = linalg_module.pseudo_hankel_matrix(self.snapshots, self._d)
+        self._sub_dmd.fit(ho_snapshots)
 
         # Default timesteps
         self._set_initial_time_dictionary(

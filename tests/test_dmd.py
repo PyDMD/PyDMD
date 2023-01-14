@@ -33,7 +33,7 @@ def test_rank(X):
 def test_Atilde_shape(X):
     dmd = DMD(svd_rank=3)
     dmd.fit(X=X)
-    assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+    assert dmd.operator.as_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
 
 @pytest.mark.parametrize("X", data_backends)
 def test_Atilde_values(X):
@@ -41,7 +41,7 @@ def test_Atilde_values(X):
     dmd.fit(X=X)
     exact_atilde = [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
                     [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]]
-    assert_allclose(exact_atilde, dmd.atilde)
+    assert_allclose(exact_atilde, dmd.operator.as_array)
 
 @pytest.mark.parametrize("X", data_backends)
 def test_eigs_1(X):

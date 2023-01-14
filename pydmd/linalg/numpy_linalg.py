@@ -65,6 +65,8 @@ class LinalgNumPy(LinalgBase):
 
     @classmethod
     def dot(cls, X, Y):
+        if X.ndim == 2 and Y.ndim == 3:
+            return np.matmul(X, Y)
         return X.dot(Y)
 
     @classmethod
@@ -160,6 +162,10 @@ class LinalgNumPy(LinalgBase):
         return np.repeat(X, repeats, axis=axis)
 
     @classmethod
+    def reshape(cls, X, shape):
+        return X.reshape(shape)
+
+    @classmethod
     def searchsorted(cls, X, val, *args, **kwargs):
         return np.searchsorted(X, val)
 
@@ -177,7 +183,12 @@ class LinalgNumPy(LinalgBase):
 
     @classmethod
     def matrix_sqrt(cls, X):
-        return sqrtm(X)
+        X2 = sqrtm(X)
+        if hasattr(np, "complex256") and X2.dtype == np.complex256:
+            X2 = X2.astype(np.complex128)
+            msg = "Casting atilde from np.complex256 to np.complex128"
+            logging.info(msg)
+        return X2
 
     @classmethod
     def svd(cls, X, *args, **kwargs):

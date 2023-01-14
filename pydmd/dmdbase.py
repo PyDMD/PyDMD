@@ -4,7 +4,6 @@ Base module for the DMD: `fit` method must be implemented in inherited classes
 from __future__ import division
 
 import pickle
-from builtins import object
 from copy import copy, deepcopy
 
 import numpy as np
@@ -108,7 +107,7 @@ class ActivationBitmaskProxy:
         return self._amplitudes
 
 
-class DMDBase(object):
+class DMDBase:
     """
     Dynamic Mode Decomposition base class.
 
@@ -194,35 +193,12 @@ class DMDBase(object):
         self._original_time = None
         self._dmd_time = None
         self._opt = opt
+        self._exact = exact
 
         self._b = None  # amplitudes
-        self._snapshots = None
+        self._snapshots_holder = None
 
         self._modes_activation_bitmask_proxy = None
-
-    @property
-    def opt(self):
-        return self._opt
-
-    @property
-    def tlsq_rank(self):
-        return self._tlsq_rank
-
-    @property
-    def svd_rank(self):
-        return self.operator._svd_rank
-
-    @property
-    def rescale_mode(self):
-        return self.operator._rescale_mode
-
-    @property
-    def exact(self):
-        return self.operator._exact
-
-    @property
-    def forward_backward(self):
-        return self.operator._forward_backward
 
     @property
     def dmd_timesteps(self):
@@ -237,7 +213,7 @@ class DMDBase(object):
             self.dmd_time["t0"],
             self.dmd_time["tend"] + self.dmd_time["dt"],
             self.dmd_time["dt"],
-            device=linalg_module.device(self._snapshots)
+            device=linalg_module.device(self.snapshots)
         )
 
     @property
@@ -253,25 +229,8 @@ class DMDBase(object):
             self.original_time["t0"],
             self.original_time["tend"] + self.original_time["dt"],
             self.original_time["dt"],
-            device=linalg_module.device(self._snapshots)
+            device=linalg_module.device(self.snapshots)
         )
-
-    def allocate_modes_bitmask_proxy(self):
-        # if this is not true, this call is probably a sub-call of some
-        # get-access to self.modes (most likely in compute_amplitudes())
-        if hasattr(self, "_b") and self._b is not None:
-            self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(
-                self.operator,
-                self._b
-            )
-
-    def reset(self):
-        """
-        Reset this instance. Should be called in :func:`fit`.
-        """
-        self._modes_activation_bitmask_proxy = None
-        self._snapshots = None
-        self._b = None
 
     @property
     def modes(self):
@@ -283,22 +242,12 @@ class DMDBase(object):
         """
         if self.fitted:
             if not self._modes_activation_bitmask_proxy:
-                self.allocate_modes_bitmask_proxy()
+                self._allocate_modes_bitmask_proxy()
                 # if the value is still None, it means that we cannot create
                 # the proxy at the moment
                 if not self._modes_activation_bitmask_proxy:
                     return self.operator.modes
             return self._modes_activation_bitmask_proxy.modes
-
-    @property
-    def atilde(self):
-        """
-        Get the reduced Koopman operator A, called A tilde.
-
-        :return: the reduced Koopman operator A.
-        :rtype: numpy.ndarray
-        """
-        return self.operator.as_array
 
     @property
     def operator(self):
@@ -320,35 +269,12 @@ class DMDBase(object):
         """
         if self.fitted:
             if not self._modes_activation_bitmask_proxy:
-                self.allocate_modes_bitmask_proxy()
+                self._allocate_modes_bitmask_proxy()
                 # if the value is still None, it means that we cannot create
                 # the proxy at the moment
                 if not self._modes_activation_bitmask_proxy:
                     return self.operator.eigenvalues
             return self._modes_activation_bitmask_proxy.eigs
-
-    def _translate_eigs_exponent(self, tpow):
-        """
-        Transforms the exponent of the eigenvalues in the dynamics formula
-        according to the selected value of `self.opt` (check the documentation
-        for `opt` in :func:`__init__ <dmdbase.DMDBase.__init__>`).
-
-        :param tpow: the exponent(s) of Sigma in the original DMD formula.
-        :type tpow: int or np.ndarray
-        :return: the exponent(s) adjusted according to `self.opt`
-        :rtype: int or np.ndarray
-        """
-
-        if isinstance(self.opt, bool):
-            amplitudes_snapshot_index = 0
-        else:
-            amplitudes_snapshot_index = self.opt
-
-        if amplitudes_snapshot_index < 0:
-            # we take care of negative indexes: -n becomes T - n
-            return tpow - (self.snapshots.shape[-1] + amplitudes_snapshot_index)
-        else:
-            return tpow - amplitudes_snapshot_index
 
     @property
     def dynamics(self):
@@ -384,6 +310,29 @@ class DMDBase(object):
 
         return linalg_module.pow(temp, tpow) * self.amplitudes[..., None]
 
+    def _translate_eigs_exponent(self, tpow):
+        """
+        Transforms the exponent of the eigenvalues in the dynamics formula
+        according to the selected value of `self._opt` (check the documentation
+        for `opt` in :func:`__init__ <dmdbase.DMDBase.__init__>`).
+
+        :param tpow: the exponent(s) of Sigma in the original DMD formula.
+        :type tpow: int or np.ndarray
+        :return: the exponent(s) adjusted according to `self._opt`
+        :rtype: int or np.ndarray
+        """
+
+        if isinstance(self._opt, bool):
+            amplitudes_snapshot_index = 0
+        else:
+            amplitudes_snapshot_index = self._opt
+
+        if amplitudes_snapshot_index < 0:
+            # we take care of negative indexes: -n becomes T - n
+            return tpow - (self.snapshots.shape[1] + amplitudes_snapshot_index)
+        else:
+            return tpow - amplitudes_snapshot_index
+
     @property
     def reconstructed_data(self):
         """
@@ -398,12 +347,26 @@ class DMDBase(object):
     @property
     def snapshots(self):
         """
-        Get the original input data.
+        Get the input data (space flattened).
 
-        :return: the matrix that contains the original snapshots.
+        :return: the matrix that contains the flattened snapshots.
         :rtype: numpy.ndarray
         """
-        return self._snapshots
+        if self._snapshots_holder:
+            return self._snapshots_holder.snapshots
+        return None
+
+    @property
+    def snapshots_shape(self):
+        """
+        Get the original input snapshot shape.
+
+        :return: input snapshots shape.
+        :rtype: tuple
+        """
+        if self._snapshots_holder:
+            return self._snapshots_holder.snapshots_shape
+        return None
 
     @property
     def frequency(self):
@@ -439,7 +402,7 @@ class DMDBase(object):
         """
         if self.fitted:
             if not self._modes_activation_bitmask_proxy:
-                self.allocate_modes_bitmask_proxy()
+                self._allocate_modes_bitmask_proxy()
             return self._modes_activation_bitmask_proxy.amplitudes
 
     @property
@@ -488,7 +451,7 @@ class DMDBase(object):
             raise RuntimeError("This DMD instance has not been fitted yet.")
 
         if not self._modes_activation_bitmask_proxy:
-            self.allocate_modes_bitmask_proxy()
+            self._allocate_modes_bitmask_proxy()
 
         bitmask = self._modes_activation_bitmask_proxy.old_bitmask
         # make sure that the array is immutable
@@ -515,6 +478,18 @@ class DMDBase(object):
             )
 
         self._modes_activation_bitmask_proxy.change_bitmask(value)
+
+    def _allocate_modes_bitmask_proxy(self):
+        """
+        Utility method which allocates the activation bitmask proxy using the
+        quantities that are currently available in this DMD instance. Fails
+        quietly if the amplitudes are not set.
+        """
+        if hasattr(self, "_b") and self._b is not None:
+            self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(
+                self.operator,
+                self._b
+            )
 
     def __getitem__(self, key):
         """
@@ -559,7 +534,7 @@ class DMDBase(object):
         mask[key] = True
 
         shallow_copy = copy(self)
-        shallow_copy.allocate_modes_bitmask_proxy()
+        shallow_copy._allocate_modes_bitmask_proxy()
         shallow_copy.modes_activation_bitmask = mask
 
         return shallow_copy
@@ -653,6 +628,14 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         msg = f"Subclass must implement abstract method {name}.fit"
         raise NotImplementedError(msg)
 
+    def _reset(self):
+        """
+        Reset this instance. Should be called in :func:`fit`.
+        """
+        self._modes_activation_bitmask_proxy = None
+        self._b = None
+        self._snapshots_holder = None
+
     def save(self, fname):
         """
         Save the object to `fname` using the pickle module.
@@ -684,9 +667,7 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         >>> print(dmd.reconstructed_data)
         """
         with open(fname, "rb") as output:
-            dmd = pickle.load(output)
-
-        return dmd
+            return pickle.load(output)
 
     def _optimal_dmd_matrices(self):
         # compute the vandermonde matrix
@@ -697,12 +678,12 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         b = linalg_module.dot(vander, vander.conj().swapaxes(-1, -2)).conj()
         P = linalg_module.multiply_elementwise(a, b)
 
-        if self.exact:
-            vs = linalg_module.dot(vander, self._snapshots.conj().swapaxes(-1, -2))
+        if self._exact:
+            vs = linalg_module.dot(vander, self.snapshots.conj().swapaxes(-1, -2))
             vsm = linalg_module.dot(vs, self.modes)
             q = linalg_module.extract_diagonal(vsm).conj()
         else:
-            _, s, V = compute_svd(self._snapshots[..., :-1], self.svd_rank)
+            _, s, V = compute_svd(self.snapshots[..., :-1], self.modes.shape[-1])
 
             s_conj = linalg_module.diag_matrix(s).conj()
             s_conj, V, vander = linalg_module.to(self.operator.eigenvectors, s_conj, V, vander)
@@ -715,13 +696,13 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
 
     def _compute_amplitudes(self):
         """
-        Compute the amplitude coefficients. If `self.opt` is False the
+        Compute the amplitude coefficients. If `self._opt` is False the
         amplitudes are computed by minimizing the error between the modes and
-        the first snapshot; if `self.opt` is True the amplitudes are computed
+        the first snapshot; if `self._opt` is True the amplitudes are computed
         by minimizing the error between the modes and all the snapshots, at the
         expense of bigger computational cost.
 
-        This method uses the class variables self._snapshots (for the
+        This method uses the class variables self.snapshots (for the
         snapshots), self.modes and self.eigs.
 
         :return: the amplitudes array
@@ -732,16 +713,16 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document
         """
         linalg_module = build_linalg_module(self.modes)
-        if isinstance(self.opt, bool) and self.opt:
+        if isinstance(self._opt, bool) and self._opt:
             A, b = self._optimal_dmd_matrices()
             a = linalg_module.solve(A, b)
         else:
-            if isinstance(self.opt, bool):
+            if isinstance(self._opt, bool):
                 amplitudes_snapshot_index = 0
             else:
-                amplitudes_snapshot_index = self.opt
+                amplitudes_snapshot_index = self._opt
 
-            selected_snapshots = self._snapshots[..., amplitudes_snapshot_index]
+            selected_snapshots = self.snapshots[..., amplitudes_snapshot_index]
             a = linalg_module.lstsq(
                 self.modes,
                 linalg_module.to(self.modes, selected_snapshots),

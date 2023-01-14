@@ -11,7 +11,8 @@ import scipy.sparse
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .linalg import build_linalg_module
-from .utils import compute_svd, compute_tlsq, prepare_snapshots
+from .utils import compute_svd, compute_tlsq
+from .snapshots import Snapshots
 
 
 class CDMDOperator(DMDOperator):
@@ -180,7 +181,7 @@ class CDMD(DMDBase):
         :rtype: numpy.ndarray
         """
 
-        C_shape = (self._snapshots.shape[-1], self._snapshots.shape[-2])
+        C_shape = (self.snapshots.shape[-1], self.snapshots.shape[-2])
         if isinstance(self.compression_matrix, np.ndarray):
             C = self.compression_matrix
         elif self.compression_matrix == 'uniform':
@@ -191,14 +192,14 @@ class CDMD(DMDBase):
             C = np.random.normal(0, 1, size=(C_shape))
         elif self.compression_matrix == 'sample':
             C = np.zeros(C_shape)
-            C[np.arange(self._snapshots.shape[1]),
-              np.random.choice(*self._snapshots.shape, replace=False)] = 1.
+            C[np.arange(self.snapshots.shape[1]),
+              np.random.choice(*self.snapshots.shape, replace=False)] = 1.
 
-        linalg_module = build_linalg_module(self._snapshots)
-        C = linalg_module.to(self._snapshots, C)
+        linalg_module = build_linalg_module(self.snapshots)
+        C = linalg_module.to(self.snapshots, C)
 
         # compress the matrix
-        Y = linalg_module.dot(C, self._snapshots)
+        Y = linalg_module.dot(C, self.snapshots)
 
         return Y
 
@@ -209,18 +210,17 @@ class CDMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self.reset()
+        self._reset()
 
-        self._snapshots = prepare_snapshots(X)
-
+        self._snapshots_holder = Snapshots(X)
         compressed_snapshots = self._compress_snapshots()
 
         n_samples = compressed_snapshots.shape[-1]
         X = compressed_snapshots[..., :-1]
         Y = compressed_snapshots[..., 1:]
 
-        X, Y = compute_tlsq(X, Y, self.tlsq_rank)
-        self.operator.compute_operator(X, Y, self._snapshots[..., 1:])
+        X, Y = compute_tlsq(X, Y, self._tlsq_rank)
+        self.operator.compute_operator(X, Y, self.snapshots[..., 1:])
 
         # Default timesteps
         self._set_initial_time_dictionary(

@@ -33,8 +33,8 @@ def test_tensorized_snapshots(dmd, X):
         pytest.skip()
     X = torch.stack([X * i for i in range(1, 11)])
     dmd.fit(X=X)
-    assert dmd._snapshots.shape == X.shape
-    assert_allclose(dmd._snapshots[0], X[0])
+    assert dmd.snapshots.shape == X.shape
+    assert_allclose(dmd.snapshots[0], X[0])
 
 
 @pytest.mark.parametrize("X", torch_backends)

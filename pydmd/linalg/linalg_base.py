@@ -158,6 +158,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def reshape(cls, X, shape):
+        raise NotImplementedError
+
+    @classmethod
     def searchsorted(cls, X, val, *args, **kwargs):
         raise NotImplementedError
 

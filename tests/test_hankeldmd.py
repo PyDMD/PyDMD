@@ -32,14 +32,14 @@ def test_rank(X):
 def test_Atilde_shape(X):
     dmd = HankelDMD(svd_rank=3)
     dmd.fit(X=X)
-    assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+    assert dmd.operator.as_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
 
 @pytest.mark.parametrize("linalg_module", linalg_backends)
 def test_d(linalg_module):
-    single_data = linalg_module.new_array(np.sin(np.linspace(0, 10, 100)))
+    single_data = linalg_module.new_array(np.sin(np.linspace(0, 10, 100)[None]))
     dmd = HankelDMD(svd_rank=-1, d=50, opt=True, exact=True)
     dmd.fit(single_data)
-    assert_allclose(dmd.reconstructed_data.flatten(), single_data, atol=1.e-12)
+    assert_allclose(dmd.reconstructed_data, single_data, atol=1.e-12)
     assert dmd.d == 50
 
 @pytest.mark.parametrize("X", data_backends)
@@ -50,7 +50,7 @@ def test_Atilde_values(X):
             [-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
             [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j],
     ]
-    assert_allclose(exact_atilde, dmd.atilde)
+    assert_allclose(exact_atilde, dmd.operator.as_array)
 
 @pytest.mark.parametrize("X", data_backends)
 def test_eigs_1(X):
@@ -194,16 +194,16 @@ def test_dmd_time_4(X):
 
 @pytest.mark.parametrize("linalg_module", linalg_backends)
 def test_dmd_time_5(linalg_module):
-    x = np.linspace(0, 10, 64)
+    x = np.linspace(0, 10, 64)[None]
     y = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
     y = linalg_module.new_array(y)
 
     dmd = HankelDMD(svd_rank=-1, exact=True, opt=True, d=30)
     dmd.fit(y)
 
-    dmd.original_time["dt"] = dmd.dmd_time["dt"] = x[1] - x[0]
-    dmd.original_time["t0"] = dmd.dmd_time["t0"] = x[0]
-    dmd.original_time["tend"] = dmd.dmd_time["tend"] = x[-1]
+    dmd.original_time["dt"] = dmd.dmd_time["dt"] = x[0, 1] - x[0, 0]
+    dmd.original_time["t0"] = dmd.dmd_time["t0"] = x[0, 0]
+    dmd.original_time["tend"] = dmd.dmd_time["tend"] = x[0, -1]
 
     assert dmd.reconstructed_data.shape == (1, 64)
 
@@ -289,7 +289,7 @@ def test_rec_method_weighted(X):
 
 @pytest.mark.parametrize("linalg_module", linalg_backends)
 def test_hankeldmd_timesteps(linalg_module):
-    x = np.linspace(0, 10, 64)
+    x = np.linspace(0, 10, 64)[None]
     
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
     arr = linalg_module.new_array(arr)
@@ -299,12 +299,12 @@ def test_hankeldmd_timesteps(linalg_module):
 
 @pytest.mark.parametrize("linalg_module", linalg_backends)
 def test_update_sub_dmd_time(linalg_module):
-    dmd = HankelDMD()
-    x = np.linspace(0, 10, 64)
+    x = np.linspace(0, 10, 64)[None]
     
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
     arr = linalg_module.new_array(arr)
 
+    dmd = HankelDMD()
     dmd = HankelDMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
 
     dmd.dmd_time["tend"] += dmd.dmd_time["dt"] * 20
@@ -493,4 +493,6 @@ def test_raises_not_enough_snapshots():
     dmd = HankelDMD(svd_rank=-1, d=5)
     with raises(ValueError,  match="The number of snapshots provided is not enough for d=5."):
         dmd.fit(np.ones((20,4)))
-    dmd.fit(np.ones((20,5)))
+    with raises(ValueError,  match="Received only one time snapshot."):
+        dmd.fit(np.ones((20,5)))
+    dmd.fit(np.ones((20,6)))

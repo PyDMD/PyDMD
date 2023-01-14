@@ -1,7 +1,14 @@
+import logging
+import numbers
+
+import numpy as np
+import scipy
 import torch
 from torch.autograd import Function
-import scipy
-import numpy as np
+
+logging.basicConfig(
+    format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+)
 
 
 class MatrixSquareRoot(Function):
@@ -13,12 +20,19 @@ class MatrixSquareRoot(Function):
     def forward(ctx, input):
         m = input.detach().cpu().numpy()
         if m.ndim == 2:
-            sqrtm = torch.from_numpy(scipy.linalg.sqrtm(m)).to(input.device)
-        elif m.ndim == 3:
-            sqrtm = np.stack(tuple(scipy.linalg.sqrtm(mi) for mi in m))
-            sqrtm = torch.from_numpy(sqrtm).to(input.device)
-        else:
+            m = m[None]
+        elif m.ndim != 3:
             raise ValueError(f"Unsupported n. of dimensions {m.ndim}")
+
+        sqrtm = np.stack(tuple(scipy.linalg.sqrtm(mi) for mi in m))
+        if hasattr(np, "complex256") and sqrtm.dtype == np.complex256:
+            sqrtm = sqrtm.astype(np.complex128)
+            msg = "Casting atilde from np.complex256 to np.complex128"
+            logging.info(msg)
+
+        sqrtm = torch.from_numpy(sqrtm).to(input.device)
+        if input.ndim == 2:
+            sqrtm = sqrtm[0]
 
         ctx.save_for_backward(sqrtm)
         return sqrtm

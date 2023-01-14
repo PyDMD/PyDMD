@@ -1,6 +1,8 @@
 import numpy as np
-from pytest import raises
 import pytest
+from pytest import raises
+
+from pydmd.rdmd import RDMD
 
 from pydmd.rdmd import RDMD
 
@@ -25,7 +27,7 @@ def test_truncation_shape(X):
 def test_Atilde_shape(X):
     dmd = RDMD(svd_rank=3)
     dmd.fit(X=X)
-    assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+    assert dmd.operator.as_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
 
 @pytest.mark.parametrize("X", data_backends)
 def test_eigs_1(X):

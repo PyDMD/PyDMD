@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
-import torch
 from pytest import raises
+
+from pydmd.cdmd import CDMD
 
 from pydmd.cdmd import CDMD
 
@@ -28,7 +29,7 @@ def test_truncation_shape(X):
 def test_Atilde_shape(X):
     dmd = CDMD(svd_rank=3)
     dmd.fit(X=X)
-    assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+    assert dmd.operator.as_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -314,7 +315,7 @@ def test_reconstructed_data_with_bitmask(X):
     new_bitmask[[0, -1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
-    assert dmd.reconstructed_data is None
+    assert dmd.reconstructed_data is not None
 
 
 @pytest.mark.parametrize("X", data_backends)

@@ -11,8 +11,9 @@ import numpy as np
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from .utils import compute_svd, prepare_snapshots
+from .utils import compute_svd
 from .linalg import build_linalg_module, is_array
+from .snapshots import Snapshots
 
 
 class SubspaceDMDOperator(DMDOperator):
@@ -157,7 +158,7 @@ class SubspaceDMD(DMDBase):
         self._opt = opt
 
         self._b = None
-        self._snapshots = None
+        self._snapshots_holder = None
 
         self._modes_activation_bitmask_proxy = None
 
@@ -174,15 +175,15 @@ class SubspaceDMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self.reset()
+        self._reset()
 
-        self._snapshots = prepare_snapshots(X)
+        self._snapshots_holder = Snapshots(X)
 
-        n_samples = self._snapshots.shape[1]
-        Y0 = self._snapshots[..., :-3]
-        Y1 = self._snapshots[..., 1:-2]
-        Y2 = self._snapshots[..., 2:-1]
-        Y3 = self._snapshots[..., 3:]
+        n_samples = self.snapshots.shape[1]
+        Y0 = self.snapshots[..., :-3]
+        Y1 = self.snapshots[..., 1:-2]
+        Y2 = self.snapshots[..., 2:-1]
+        Y3 = self.snapshots[..., 3:]
 
         linalg_module = build_linalg_module(X)
         Yp = linalg_module.cat((Y0, Y1), axis=-2)

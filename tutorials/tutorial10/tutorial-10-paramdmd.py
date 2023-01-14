@@ -19,11 +19,14 @@
 # + The classes `POD` and `RBF` from `ezyrb`, which respectively are used to reduce the dimensionality before the interpolation and to perform the actual interpolation (see the reference for more details);
 # + `NumPy` and `Matplotlib`.
 
-# In[1]:
+# In[ ]:
 
 
 import warnings
 warnings.filterwarnings('ignore')
+
+import sys
+get_ipython().system('{sys.executable} -m pip install ezyrb')
 
 from pydmd import ParametricDMD, DMD, HankelDMD
 from ezyrb import POD, RBF

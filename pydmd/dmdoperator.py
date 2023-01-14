@@ -1,7 +1,13 @@
+import logging
+
 import numpy as np
 
 from .linalg import build_linalg_module, is_array
 from .utils import compute_svd
+
+logging.basicConfig(
+    format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+)
 
 
 class DMDOperator:

@@ -18,7 +18,7 @@ sample_data = np.load('tests/test_datasets/input_sample.npy')
 
 class FakeDMDOperator:
     def __init__(self):
-        self.as_numpy_array = np.ones(10)
+        self.as_array = np.ones(10)
 
 def test_select_modes():
     def stable_modes(dmd_object):

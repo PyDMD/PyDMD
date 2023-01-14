@@ -11,7 +11,8 @@ from past.utils import old_div
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .linalg import assert_same_linalg_type, build_linalg_module, cast_as_array
-from .utils import compute_svd, compute_tlsq, prepare_snapshots
+from .snapshots import Snapshots
+from .utils import compute_svd, compute_tlsq
 
 
 class DMDControlOperator(DMDOperator):
@@ -197,10 +198,11 @@ class DMDc(DMDBase):
         }
 
         self._opt = opt
+        self._exact = False
 
         self._B = None
+        self._snapshots_holder = None
         self._controlin = None
-        self._controlin_shape = None
         self._basis = None
 
         self._modes_activation_bitmask_proxy = None
@@ -245,9 +247,9 @@ class DMDc(DMDBase):
             controlin = self._controlin
         else:
             assert_same_linalg_type(self.modes, control_input)
-            controlin, _ = prepare_snapshots(control_input)
+            controlin, _ = np.asarray(control_input)
 
-        if controlin.shape[1] != self.dynamics.shape[1] - 1:
+        if controlin.shape[-1] != self.dynamics.shape[-1] - 1:
             raise RuntimeError(
                 'The number of control inputs and the number of snapshots to '
                 'reconstruct has to be the same'
@@ -259,10 +261,16 @@ class DMDc(DMDBase):
         A = linalg_module.multi_dot((self.modes, linalg_module.diag_matrix(eigs),
                                  linalg_module.pinv(self.modes)))
 
-        data = [self._snapshots[:, 0]]
+        data = [self.snapshots[:, 0]]
+        expected_shape = data[0].shape
 
         for i, u in enumerate(controlin.T):
-            data.append(linalg_module.dot(A, data[i]) + linalg_module.dot(self._B, u))
+            arr = linalg_module.dot(A, data[i]) + linalg_module.dot(self._B, u)
+            if arr.shape != expected_shape:
+                raise ValueError(
+                    f"Invalid shape: expected {expected_shape}, got {arr.shape}"
+                )
+            data.append(arr)
 
         return cast_as_array(data).T
 
@@ -281,16 +289,16 @@ class DMDc(DMDBase):
             influences the system evolution.
         :type B: numpy.ndarray or iterable
         """
-        self.reset()
-        self._snapshots = prepare_snapshots(X)
-        
-        linalg_module = build_linalg_module(X)
-        I = linalg_module.to(X, I)
-        self._controlin = prepare_snapshots(I)
+        self._reset()
+        self._snapshots_holder = Snapshots(X)
 
-        n_samples = self._snapshots.shape[1]
-        X = self._snapshots[:, :-1]
-        Y = self._snapshots[:, 1:]
+        linalg_module = build_linalg_module(X)
+        I = np.atleast_2d(np.asarray(I))
+        self._controlin = linalg_module.to(X, I)
+
+        n_samples = self.snapshots.shape[1]
+        X = self.snapshots[:, :-1]
+        Y = self.snapshots[:, 1:]
 
         self._set_initial_time_dictionary(
             {"t0": 0, "tend": n_samples - 1, "dt": 1}

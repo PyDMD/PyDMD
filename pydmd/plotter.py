@@ -6,6 +6,7 @@ from os.path import splitext
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from pydmd import MrDMD
 
 mpl.rcParams["figure.max_open_warning"] = 0
 
@@ -92,6 +93,9 @@ def plot_eigs(
         ``plt.figure``.
     :param str filename: if specified, the plot is saved at `filename`.
     """
+    if isinstance(dmd, MrDMD):
+        raise ValueError("You should use plot_eigs_mrdmd instead")
+
     if dmd.eigs is None:
         raise ValueError(
             "The eigenvalues have not been computed."
@@ -195,6 +199,120 @@ def plot_eigs(
         plt.show()
 
 
+def plot_eigs_mrdmd(
+    dmd,
+    show_axes=True,
+    show_unit_circle=True,
+    figsize=(8, 8),
+    title="",
+    level=None,
+    node=None,
+):
+    """
+    Plot the eigenvalues.
+
+    :param bool show_axes: if True, the axes will be showed in the plot.
+            Default is True.
+    :param bool show_unit_circle: if True, the circle with unitary radius
+            and center in the origin will be showed. Default is True.
+    :param tuple(int,int) figsize: tuple in inches of the figure.
+    :param str title: title of the plot.
+    :param int level: plot only the eigenvalues of specific level.
+    :param int node: plot only the eigenvalues of specific node.
+    """
+    if not isinstance(dmd, MrDMD):
+        raise ValueError(f"Expected MrDMD, found {type(dmd)}")
+
+    if dmd.eigs is None:
+        raise ValueError(
+            "The eigenvalues have not been computed."
+            "You have to perform the fit method."
+        )
+
+    if level:
+        peigs = dmd.partial_eigs(level=level, node=node)
+    else:
+        peigs = dmd.eigs
+
+    plt.figure(figsize=figsize)
+    plt.title(title)
+    plt.gcf()
+    ax = plt.gca()
+
+    if not level:
+        cmap = plt.get_cmap("viridis")
+        colors = [
+            cmap(i) for i in np.linspace(0, 1, len(dmd.dmd_tree.levels))
+        ]
+
+        points = []
+        for l in dmd.dmd_tree.levels:
+            eigs = dmd.partial_eigs(l)
+
+            points.append(
+                ax.plot(eigs.real, eigs.imag, ".", color=colors[l])[0]
+            )
+    else:
+        points = []
+        points.append(
+            ax.plot(peigs.real, peigs.imag, "bo", label="Eigenvalues")[0]
+        )
+
+    # set limits for axis
+    limit = np.max(np.ceil(np.absolute(peigs)))
+    ax.set_xlim((-limit, limit))
+    ax.set_ylim((-limit, limit))
+
+    plt.ylabel("Imaginary part")
+    plt.xlabel("Real part")
+
+    if show_unit_circle:
+        unit_circle = plt.Circle(
+            (0.0, 0.0), 1.0, color="green", fill=False, linestyle="--"
+        )
+        ax.add_artist(unit_circle)
+
+    # Dashed grid
+    gridlines = ax.get_xgridlines() + ax.get_ygridlines()
+    for line in gridlines:
+        line.set_linestyle("-.")
+    ax.grid(True)
+
+    ax.set_aspect("equal")
+
+    # x and y axes
+    if show_axes:
+        ax.annotate(
+            "",
+            xy=(np.max([limit * 0.8, 1.0]), 0.0),
+            xytext=(np.min([-limit * 0.8, -1.0]), 0.0),
+            arrowprops=dict(arrowstyle="->"),
+        )
+        ax.annotate(
+            "",
+            xy=(0.0, np.max([limit * 0.8, 1.0])),
+            xytext=(0.0, np.min([-limit * 0.8, -1.0])),
+            arrowprops=dict(arrowstyle="->"),
+        )
+
+    # legend
+    if level:
+        labels = [f"Eigenvalues - level {level}"]
+    else:
+        labels = [
+            f"Eigenvalues - level {i}"
+            for i in range(dmd.max_level)
+        ]
+
+    if show_unit_circle:
+        points += [unit_circle]
+        labels += ["Unit circle"]
+
+    ax.add_artist(plt.legend(points, labels, loc="best"))
+    plt.show()
+
+
+
 def plot_modes_2D(
     dmd,
     snapshots_shape=None,
@@ -239,6 +357,9 @@ def plot_modes_2D(
             "The modes have not been computed."
             "You have to perform the fit method."
         )
+
+    if snapshots_shape is None:
+        snapshots_shape = dmd.snapshots_shape
 
     if x is None and y is None:
         if snapshots_shape is None:
@@ -351,6 +472,9 @@ def plot_snapshots_2D(
     """
     if dmd.snapshots is None:
         raise ValueError("Input snapshots not found.")
+
+    if snapshots_shape is None:
+        snapshots_shape = dmd.snapshots_shape
 
     if x is None and y is None:
         if snapshots_shape is None:
