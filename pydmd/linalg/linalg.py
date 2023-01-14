@@ -3,17 +3,11 @@ import functools
 from .linalg_base import LinalgBase
 from .numpy_linalg import LinalgNumPy
 from .pytorch_linalg import LinalgPyTorch
-from .scipysparse_linalg import LinalgSciPySparse
 
 
 __linalg_module_mapper = {
     "numpy": LinalgNumPy,
     "torch": LinalgPyTorch,
-    # TODO
-    "scipy.sparse._coo": LinalgBase,
-    "scipy.sparse._csr": LinalgBase,
-    "scipy.sparse.coo": LinalgBase,
-    "scipy.sparse.csr": LinalgBase,
 }
 
 
@@ -47,7 +41,6 @@ def is_array(X):
         return X.__class__.__name__ == "Tensor"
     elif module == "numpy":
         return X.__class__.__name__ == "ndarray"
-    # TODO SciPy.sparse
     return False
 
 
