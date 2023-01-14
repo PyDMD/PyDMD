@@ -23,10 +23,12 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install numpy scipy matplotlib pytest pytest-cov future ezyrb
-
-    - id: Convert tutorials
+        
+    - id: files
       uses: jitterbit/get-changed-files@v1
-    - run: |
+
+    - name: Convert tutorials
+      run: |
         for file in ${{ steps.files.outputs.all }}; do
           if [[ $file == *.ipynb ]]; then
             jupyter nbconvert --execute $file --to python --output $(echo ${file%?????}).py
@@ -35,7 +37,7 @@ jobs:
         done
       
     - name: Push changes
-    - run: |
+      run: |
         git config user.name "github-actions[bot]"
         git config user.email 41898282+github-actions[bot]@users.noreply.github.com
         git add .
