@@ -153,6 +153,7 @@ class CDMD(DMDBase):
 
         self._tlsq_rank = tlsq_rank
         self._opt = opt
+        self._exact = True
         self._compression_matrix = compression_matrix
 
         self._Atilde = CDMDOperator(svd_rank=svd_rank,
