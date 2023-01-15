@@ -22,6 +22,7 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install numpy scipy matplotlib pytest pytest-cov future ezyrb
+        python3 -m pip install jupyter
 
     - name: Test with pytest
       env:
@@ -33,3 +34,8 @@ jobs:
         chmod +x CodacyCoverageReporter.sh
         ./CodacyCoverageReporter.sh report -r cobertura.xml  -t $CODACY_API_TOKEN
         
+    - name: Test tutorials
+      run: |
+        for dir in $(ls tutorials); do
+          jupyter nbconvert --to notebook --execute tutorials/${dir}/*.ipynb
+        done
