@@ -28,11 +28,6 @@ class BOPDMDOperator(DMDOperator):
     """
     BOP-DMD operator.
 
-    :param varpro_opts: List containing all variable projection options.
-        In order, contains init_lambda, maxlam, lamup, use_levmarq, maxiter,
-        tol, eps_stall, use_fulljac, verbose.
-        (See BOPDMD documentation for full description for each option.)
-    :type varpro_opts: list
     :param use_proj: Flag that determines the type of computation to perform.
         If True, fit input data projected onto the first svd_rank POD modes or
         columns of proj_basis if provided. If False, fit the full input data.
@@ -61,18 +56,80 @@ class BOPDMDOperator(DMDOperator):
         magnitude if eig_sort="abs". If eig_sort="auto", one of the previously
         mentioned sorting methods is chosen depending on eigenvalue variance.
     :type eig_sort: {"real", "imag", "abs", "auto"}
+    :param init_lambda: Initial value used for the regularization parameter in
+        the Levenberg method. Default is 1.0.
+        Note: Larger lambda values make the method more like gradient descent.
+    :type init_lambda: float
+    :param maxlam: Maximum number of of steps used in the inner Levenberg loop,
+        i.e. the number of times you increase lambda before quitting. Default
+        is 52.
+    :type maxlam: int
+    :param lamup: The factor by which you increase lambda when searching for an
+        appropriate step. Default is 2.0.
+    :type lamup: float
+    :param use_levmarq: Flag that determines whether you use the Levenberg
+        algorithm or the Levenberg-Marquardt algorithm. Default is True,
+        use Levenberg-Marquardt.
+    :type use_levmarq: bool
+    :param maxiter: The maximum number of outer loop iterations to use before
+        quitting. Default is 30.
+    :type maxiter: int
+    :param tol: The tolerance for the relative error in the residual.
+        i.e. the program will terminate if
+            norm(y-Phi(alpha)*b,'fro')/norm(y,'fro') < tol
+        is achieved. Default is 1e-6.
+    :type tol: float
+    :param eps_stall: The tolerance for detecting a stall.
+        i.e. if
+            error(iter-1)-error(iter) < eps_stall*err(iter-1)
+        the program halts. Default is 1e-12.
+    :type eps_stall: float
+    :param use_fulljac: Flag that determines whether or not to use the full
+        expression for the Jacobian or Kaufman's approximation. Default is
+        True, use full expression.
+    :type use_fulljac: bool
+    :param verbose: Flag that determines whether or not to print warning
+        messages that arise during the variable projection routine, and whether
+        or not to print information regarding the method's iterative progress.
+        Default is False, don't print information.
+    :type verbose: bool
     """
     def __init__(
-        self, varpro_opts, use_proj, init_alpha,
-        proj_basis, num_trials, trial_size, eig_sort
+        self,
+        use_proj,
+        init_alpha,
+        proj_basis,
+        num_trials,
+        trial_size,
+        eig_sort,
+        init_lambda=1.0,
+        maxlam=52,
+        lamup=2.0,
+        use_levmarq=True,
+        maxiter=30,
+        tol=1e-6,
+        eps_stall=1e-12,
+        use_fulljac=True,
+        verbose=False
     ):
-        self._varpro_opts = varpro_opts
         self._use_proj = use_proj
         self._init_alpha = init_alpha
         self._proj_basis = proj_basis
         self._num_trials = num_trials
         self._trial_size = trial_size
         self._eig_sort = eig_sort
+        self._varpro_opts = (
+            init_lambda,
+            maxlam,
+            lamup,
+            use_levmarq,
+            maxiter,
+            tol,
+            eps_stall,
+            use_fulljac,
+            verbose
+        )
+        self._varpro_opts_warn()
 
 
     @property
@@ -85,6 +142,41 @@ class BOPDMDOperator(DMDOperator):
         if not hasattr(self, "_A"):
             raise ValueError("You need to call fit before")
         return self._A
+
+
+    def _varpro_opts_warn(self):
+        """
+        Checks the validity of the parameter values in _varpro_opts.
+        Throws an error if any parameter value has an invalid type and
+        generates a warning if any value lies outside of the recommended range.
+        """
+        # Generate dictionary of recommended value range for each parameter.
+        rec_ranges = OrderedDict()
+        rec_ranges["init_lambda"] = [0.0, 1e+16]
+        rec_ranges["maxlam"] = [0, 200]
+        rec_ranges["lamup"] = [1.0, 1e+16]
+        rec_ranges["use_levmarq"] = [-np.inf, np.inf]
+        rec_ranges["maxiter"] = [0, 1e+12]
+        rec_ranges["tol"] = [0.0, 1e+16]
+        rec_ranges["eps_stall"] = [-np.inf, 1.0]
+        rec_ranges["use_fulljac"] = [-np.inf, np.inf]
+        rec_ranges["verbose"] = [-np.inf, np.inf]
+
+        for opt_value, (opt_name, (opt_min, opt_max)) in zip(
+            self._varpro_opts, rec_ranges.items()
+        ):
+            if not isinstance(opt_value, (int, float, bool)):
+                raise ValueError("Invalid variable projection option given.")
+
+            if opt_value < opt_min:
+                msg = "Option {} with value {} is less than {}, " \
+                      "which is not recommended."
+                warnings.warn(msg.format(opt_name, opt_value, opt_min))
+
+            elif opt_value > opt_max:
+                msg = "Option {} with value {} is greater than {}, " \
+                      "which is not recommended."
+                warnings.warn(msg.format(opt_name, opt_value, opt_max))
 
 
     def _exp_function(self, alpha, t):
@@ -540,43 +632,6 @@ class BOPDMD(DMDBase):
         proj_basis contains a basis mode. If not provided, POD modes are used.
         Default is None (basis not provided).
     :type proj_basis: numpy.ndarray
-    :param init_lambda: Initial value used for the regularization parameter in
-        the Levenberg method. Default is 1.0.
-        Note: Larger lambda values make the method more like gradient descent.
-    :type init_lambda: float
-    :param maxlam: Maximum number of of steps used in the inner Levenberg loop,
-        i.e. the number of times you increase lambda before quitting. Default
-        is 52.
-    :type maxlam: int
-    :param lamup: The factor by which you increase lambda when searching for an
-        appropriate step. Default is 2.0.
-    :type lamup: float
-    :param use_levmarq: Flag that determines whether you use the Levenberg
-        algorithm or the Levenberg-Marquardt algorithm. Default is True,
-        use Levenberg-Marquardt.
-    :type use_levmarq: bool
-    :param maxiter: The maximum number of outer loop iterations to use before
-        quitting. Default is 30.
-    :type maxiter: int
-    :param tol: The tolerance for the relative error in the residual.
-        i.e. the program will terminate if
-            norm(y-Phi(alpha)*b,'fro')/norm(y,'fro') < tol
-        is achieved. Default is 1e-6.
-    :type tol: float
-    :param eps_stall: The tolerance for detecting a stall.
-        i.e. if
-            error(iter-1)-error(iter) < eps_stall*err(iter-1)
-        the program halts. Default is 1e-12.
-    :type eps_stall: float
-    :param use_fulljac: Flag that determines whether or not to use the full
-        expression for the Jacobian or Kaufman's approximation. Default is
-        True, use full expression.
-    :type use_fulljac: bool
-    :param verbose: Flag that determines whether or not to print warning
-        messages that arise during the variable projection routine, and whether
-        or not to print information regarding the method's iterative progress.
-        Default is False, don't print information.
-    :type verbose: bool
     :param num_trials: Number of BOP-DMD trials to perform. If num_trials is a
         positive integer, num_trials BOP-DMD trials are performed. Otherwise,
         standard optimized dmd is performed. Default is 0.
@@ -597,86 +652,42 @@ class BOPDMD(DMDBase):
         mentioned sorting methods is chosen depending on eigenvalue variance.
         Default is "auto".
     :type eig_sort: {"real", "imag", "abs", "auto"}
+    :param varpro_opts: Dictionary containing the desired parameter values for
+        variable projection. The following parameters may be specified:
+        init_lambda, maxlam, lamup, use_levmarq, maxiter, tol, eps_stall,
+        use_fulljac, verbose. Default values will be used for any parameters
+        not specified in varpro_opts. See BOPDMDOperator documentation for
+        default values and descriptions for each parameter.
+    :type varpro_opts: dict
     """
     def __init__(self,
         svd_rank=0,
         use_proj=True,
         init_alpha=None,
         proj_basis=None,
-        init_lambda=1.0,
-        maxlam=52,
-        lamup=2.0,
-        use_levmarq=True,
-        maxiter=30,
-        tol=1e-6,
-        eps_stall=1e-12,
-        use_fulljac=True,
-        verbose=False,
         num_trials=0,
         trial_size=0.2,
-        eig_sort="auto"
+        eig_sort="auto",
+        varpro_opts=None
     ):
         self._svd_rank = svd_rank
         self._use_proj = use_proj
         self._init_alpha = init_alpha
         self._proj_basis = proj_basis
-
-        self._varpro_opts = (
-            init_lambda,
-            maxlam,
-            lamup,
-            use_levmarq,
-            maxiter,
-            tol,
-            eps_stall,
-            use_fulljac,
-            verbose
-        )
-        self._varpro_opts_warn()
-
         self._num_trials = num_trials
         self._trial_size = trial_size
         self._eig_sort = eig_sort
+
+        if varpro_opts is None:
+            self._varpro_opts = dict()
+        elif not isinstance(varpro_opts, dict):
+            raise ValueError("varpro_opts must be a dict.")
+        self._varpro_opts = varpro_opts
 
         self._snapshots_holder = None
         self._time = None
         self._Atilde = None
         self._modes_activation_bitmask_proxy = None
-
-
-    def _varpro_opts_warn(self):
-        """
-        Checks the validity of the parameter values in _varpro_opts.
-        Throws an error if any parameter value has an invalid type and
-        generates a warning if any value lies outside of the recommended range.
-        """
-        # Generate dictionary of recommended value range for each parameter.
-        rec_ranges = OrderedDict()
-        rec_ranges["init_lambda"] = [0.0, 1e+16]
-        rec_ranges["maxlam"] = [0, 200]
-        rec_ranges["lamup"] = [1.0, 1e+16]
-        rec_ranges["use_levmarq"] = [-np.inf, np.inf]
-        rec_ranges["maxiter"] = [0, 1e+12]
-        rec_ranges["tol"] = [0.0, 1e+16]
-        rec_ranges["eps_stall"] = [-np.inf, 1.0]
-        rec_ranges["use_fulljac"] = [-np.inf, np.inf]
-        rec_ranges["verbose"] = [-np.inf, np.inf]
-
-        for opt_value, (opt_name, (opt_min, opt_max)) in zip(
-            self._varpro_opts, rec_ranges.items()
-        ):
-            if not isinstance(opt_value, (int, float, bool)):
-                raise ValueError("Invalid variable projection option given.")
-
-            if opt_value < opt_min:
-                msg = "Option {} with value {} is less than {}, " \
-                      "which is not recommended."
-                warnings.warn(msg.format(opt_name, opt_value, opt_min))
-
-            elif opt_value > opt_max:
-                msg = "Option {} with value {} is greater than {}, " \
-                      "which is not recommended."
-                warnings.warn(msg.format(opt_name, opt_value, opt_max))
 
 
     def _initialize_alpha(self):
@@ -855,13 +866,13 @@ class BOPDMD(DMDBase):
         # Build the BOP-DMD operator now that the initial alpha and
         # the projection basis have been defined.
         self._Atilde = BOPDMDOperator(
-            self._varpro_opts,
             self._use_proj,
             self._init_alpha,
             self._proj_basis,
             self._num_trials,
             self._trial_size,
-            self._eig_sort
+            self._eig_sort,
+            **self._varpro_opts
         )
 
         # Define the snapshots that will be used for fitting.
