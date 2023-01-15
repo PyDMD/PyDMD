@@ -24,6 +24,11 @@ jobs:
         python3 -m pip install --upgrade pip
         python3 -m pip install .[test]
         python3 -m pip install jupyter
+
+    - name: Configure git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
         
     - id: files
       uses: jitterbit/get-changed-files@v1
@@ -33,16 +38,19 @@ jobs:
         for file in ${{ steps.files.outputs.all }}; do
           if [[ $file == *.ipynb ]]; then
             filename=$(basename $file)
-            jupyter nbconvert --execute $file --to python --output $(echo ${filename%?????}).py
-            jupyter nbconvert --execute $file --to html --output $(echo ${filename%?????}).html
+
+            pyfilename=$(echo ${filename%?????})py
+            jupyter nbconvert --execute $file --to python --output $pyfilename
+            git add $(dirname $file)/${pyfilename}
+
+            htmlfilename=$(echo ${filename%?????})html
+            jupyter nbconvert --execute $file --to html --output $htmlfilename
+            git add $(dirname $file)/${htmlfilename}
           fi
         done
       
     - name: Push changes
       run: |
-        git config user.name "github-actions[bot]"
-        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-        git add .
         git commit -m "update tutorials ($GITHUB_SHA)"
         git push
         
