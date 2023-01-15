@@ -133,9 +133,21 @@ class BOPDMDOperator(DMDOperator):
 
 
     @property
+    def varpro_opts(self):
+        """
+        Get the variable projection options.
+
+        :return: the variable projection options.
+        :rtype: tuple
+        """
+        return self._varpro_opts
+
+
+    @property
     def A(self):
         """
         Get the full Koopman operator A.
+
         :return: the full Koopman operator A.
         :rtype: numpy.ndarray
         """
@@ -172,7 +184,6 @@ class BOPDMDOperator(DMDOperator):
                 msg = "Option {} with value {} is less than {}, " \
                       "which is not recommended."
                 warnings.warn(msg.format(opt_name, opt_value, opt_min))
-
             elif opt_value > opt_max:
                 msg = "Option {} with value {} is greater than {}, " \
                       "which is not recommended."
@@ -263,10 +274,8 @@ class BOPDMDOperator(DMDOperator):
 
         if 0 < trial_size < 1:
             batch_size = int(trial_size * H.shape[0])
-
         elif trial_size >= 1 and isinstance(trial_size, int):
             batch_size = trial_size
-
         else:
             msg = "Invalid trial_size parameter. trial_size must be either " \
                   "a positive integer or a float between 0 and 1."
@@ -277,7 +286,8 @@ class BOPDMDOperator(DMDOperator):
             msg = "Error bagging the input data. Please ensure that the " \
                   "trial_size parameter is small enough for bagging."
             raise ValueError(msg)
-        elif batch_size == 0:
+
+        if batch_size == 0:
             msg = "Error bagging the input data. Please ensure that the " \
                   "trial_size parameter is large enough for bagging."
             raise ValueError(msg)
@@ -556,7 +566,7 @@ class BOPDMDOperator(DMDOperator):
                 H_i, t[subset_inds], e_0
             )
 
-            # Sort the results according to eigenvalue.
+            # Set the sorting style if _eig_sort is "auto".
             if self._eig_sort == "auto":
                 real_var = np.var(e_i.real)
                 imag_var = np.var(e_i.imag)
@@ -569,13 +579,11 @@ class BOPDMDOperator(DMDOperator):
                 else:
                     self._eig_sort = "abs"
 
+            # Sort the results according to eigenvalue.
             if self._eig_sort == "real":
                 sorted_inds = np.argsort(e_i)
-
             elif self._eig_sort == "imag":
-                e_i_real_imag_swapped = e_i.imag + (1j * e_i.real)
-                sorted_inds = np.argsort(e_i_real_imag_swapped)
-
+                sorted_inds = np.argsort(e_i.imag + (1j * e_i.real))
             elif self._eig_sort == "abs":
                 sorted_inds = np.argsort(np.abs(e_i))
             else:
@@ -801,10 +809,13 @@ class BOPDMD(DMDBase):
         Prints a formatted information string that displays all chosen
         variable projection parameter values.
         """
+        if self._Atilde is None:
+            raise ValueError("You need to call fit before")
+
         opt_names = ["init_lambda", "maxlam", "lamup", "use_levmarq",
             "maxiter","tol", "eps_stall", "use_fulljac", "verbose"]
         print("VARIABLE PROJECTION OPTIONS:")
-        for name, value in zip(opt_names, self._varpro_opts):
+        for name, value in zip(opt_names, self.operator.varpro_opts):
             print(name + ":\t" + str(value))
 
 
@@ -839,28 +850,21 @@ class BOPDMD(DMDBase):
         # Set/check the projection basis.
         if self._proj_basis is None and self._use_proj:
             self._proj_basis = compute_svd(self.snapshots, self._svd_rank)[0]
-
         elif self._proj_basis is None and not self._use_proj:
             self._proj_basis = compute_svd(self.snapshots, -1)[0]
-
         elif (not isinstance(self._proj_basis, np.ndarray)
-              or self._proj_basis.ndim != 2):
-            raise ValueError("proj_basis must be a 2D numpy.ndarray.")
-
-        elif self._proj_basis.shape[1] != self._svd_rank:
-            msg = "proj_basis must contain {} columns."
+              or self._proj_basis.ndim != 2
+              or self._proj_basis.shape[1] != self._svd_rank):
+            msg = "proj_basis must be a 2D np.ndarray with {} columns."
             raise ValueError(msg.format(self._svd_rank))
 
         # Set/check the initial guess for the continuous-time DMD eigenvalues.
         if self._init_alpha is None:
             self._init_alpha = self._initialize_alpha()
-
         elif (not isinstance(self._init_alpha, np.ndarray)
-              or self._init_alpha.ndim > 1):
-            raise ValueError("init_alpha must be a 1D numpy.ndarray.")
-
-        elif len(self._init_alpha) != self._svd_rank:
-            msg = "init_alpha must contain {} entries."
+              or self._init_alpha.ndim > 1
+              or len(self._init_alpha) != self._svd_rank):
+            msg = "init_alpha must be a 1D np.ndarray with {} entries."
             raise ValueError(msg.format(self._svd_rank))
 
         # Build the BOP-DMD operator now that the initial alpha and
