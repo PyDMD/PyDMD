@@ -754,9 +754,20 @@ class BOPDMD(DMDBase):
         return self._time
 
     @property
+    def atilde(self):
+        """
+        Get the reduced Koopman operator A, called Atilde.
+
+        :return: the reduced Koopman operator A.
+        :rtype: numpy.ndarray
+        """
+        return self.operator.as_numpy_array
+
+    @property
     def A(self):
         """
         Get the full Koopman operator A.
+
         :return: the full Koopman operator A.
         :rtype: numpy.ndarray
         """
@@ -766,6 +777,7 @@ class BOPDMD(DMDBase):
     def dynamics(self):
         """
         Get the time evolution of each mode.
+
         :return: matrix that contains all the time evolution, stored by row.
         :rtype: numpy.ndarray
         """
@@ -795,6 +807,7 @@ class BOPDMD(DMDBase):
         :type t: numpy.ndarray or iterable
         """
         # Process the input data and convert to numpy.ndarrays.
+        self._reset()
         self._snapshots_holder = Snapshots(X)
         self._time = np.array(t).squeeze()
 
