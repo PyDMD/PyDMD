@@ -32,8 +32,9 @@ jobs:
       run: |
         for file in ${{ steps.files.outputs.all }}; do
           if [[ $file == *.ipynb ]]; then
-            jupyter nbconvert --execute $file --to python --output $(echo ${file%?????}).py
-            jupyter nbconvert --execute $file --to html --output $(echo ${file%?????}).html
+            filename=$(basename $file)
+            jupyter nbconvert --execute $file --to python --output $(echo ${filename%?????}).py
+            jupyter nbconvert --execute $file --to html --output $(echo ${filename%?????}).html
           fi
         done
       
