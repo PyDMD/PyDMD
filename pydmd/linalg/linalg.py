@@ -11,6 +11,10 @@ __linalg_module_mapper = {
 }
 
 
+def _extract_module_name(X):
+    return X.__class__.__module__
+
+
 def build_linalg_module(obj):
     if not is_array(obj):
         raise ValueError(
@@ -19,12 +23,7 @@ def build_linalg_module(obj):
             )
         )
     # don't use isinstance to avoid import statements which might not resolve
-    module = obj.__class__.__module__
-    return __linalg_module_mapper[module]
-
-
-def _extract_module_name(X):
-    return X.__class__.__module__
+    return __linalg_module_mapper[_extract_module_name(obj)]
 
 
 def assert_same_linalg_type(X, *args):
@@ -36,7 +35,7 @@ def assert_same_linalg_type(X, *args):
 
 
 def is_array(X):
-    module = X.__class__.__module__
+    module = _extract_module_name(X)
     if module == "torch":
         return X.__class__.__name__ == "Tensor"
     elif module == "numpy":
@@ -73,3 +72,8 @@ def generic_linalg(func):
         return func(build_linalg_module(obj), *args, **kwargs)
 
     return wrapper
+
+
+def no_torch(X):
+    if _extract_module_name(X) == "torch":
+        raise ValueError("PyTorch not supported with this DMD variant")

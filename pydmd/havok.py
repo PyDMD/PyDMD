@@ -13,7 +13,7 @@ from scipy import signal
 from .hankeldmd import HankelDMD
 from .snapshots import Snapshots
 from .utils import compute_svd
-from .linalg import build_linalg_module
+from .linalg import no_torch, build_linalg_module
 
 
 class HAVOK(HankelDMD):
@@ -166,6 +166,7 @@ class HAVOK(HankelDMD):
         the time step dt separating the observations in x.
         """
         self._reset()
+        no_torch(x)
 
         x = np.asarray(x)
         if x.ndim != 1:

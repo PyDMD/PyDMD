@@ -1,6 +1,7 @@
 import numpy as np
 from pytest import raises
 from scipy.integrate import odeint
+import torch
 
 from pydmd import HAVOK
 
@@ -125,3 +126,8 @@ def test_reconstruction():
     error = lorenz_x - havok.reconstructed_data.real
     error_norm = np.linalg.norm(error) / np.linalg.norm(lorenz_x)
     assert error_norm < 0.6
+
+def test_rejects_torch():
+    havok = HAVOK(svd_rank=15, d=100)
+    with raises(ValueError, match="PyTorch not supported with this DMD variant"):
+        havok.fit(torch.ones(1000), dt)
