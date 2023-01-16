@@ -19,7 +19,7 @@ REQUIRED = [
 
 EXTRAS = {
     'docs': ['Sphinx==1.4', 'sphinx_rtd_theme'],
-    'test': ['pytest', 'pytest-cov', 'ezyrb>=1.3.0.post2301'],
+    'test': ['pytest', 'pytest-cov', 'ezyrb>=v1.2.1.post2205'],
 }
 
 LDESCRIPTION = (
