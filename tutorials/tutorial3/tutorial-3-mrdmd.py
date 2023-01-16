@@ -15,9 +15,10 @@
 
 get_ipython().run_line_magic('matplotlib', 'inline')
 import matplotlib.pyplot as plt
-from pydmd import MrDMD, DMD
+from pydmd import MrDMD, DMD, DMDc
 from pydmd.plotter import plot_eigs_mrdmd
 import numpy as np
+import logging
 
 
 # The code below generates a spatio-temporal example dataset. The data can be thought of as 80 locations or signals (the x-axis) being sampled 1600 times at a constant rate in time (the t-axis). It contains many features at varying time scales, like oscillating sines and cosines, one-time events, and random noise. 
