@@ -1,7 +1,7 @@
 import pytest
 from torch.autograd import gradcheck
 
-from pydmd import CDMD, DMD, HODMD, DMDc, FbDMD, HankelDMD, SubspaceDMD, RDMD
+from pydmd import CDMD, DMD, HODMD, DMDc, FbDMD, HankelDMD, SubspaceDMD, RDMD, MrDMD
 
 from .utils import setup_backends, sample_data
 
@@ -17,6 +17,9 @@ dmds = [
     pytest.param(HODMD(svd_rank=-1, d=3, svd_rank_extra=-1), id="HODMD"),
     pytest.param(SubspaceDMD(svd_rank=-1), id="SubspaceDMD"),
     pytest.param(RDMD(svd_rank=-1), id="RDMD"),
+    pytest.param(
+        MrDMD(DMD(svd_rank=-1), max_level=5, max_cycles=2), id="MrDMD"
+    )
 ]
 
 

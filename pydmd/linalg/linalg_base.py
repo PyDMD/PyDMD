@@ -11,6 +11,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def array_split(cls, input, indices_or_sections, dim=0):
+        raise NotImplementedError
+
+    @classmethod
     def atleast_1d(cls, X):
         raise NotImplementedError
 
@@ -20,6 +24,10 @@ class LinalgBase:
 
     @classmethod
     def argsort(cls, X, *args, **kwargs):
+        raise NotImplementedError
+
+    @classmethod
+    def block_diag(cls, *arrs):
         raise NotImplementedError
 
     @classmethod

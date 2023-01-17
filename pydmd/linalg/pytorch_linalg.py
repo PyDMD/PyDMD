@@ -31,6 +31,12 @@ class LinalgPyTorch(LinalgBase):
         return torch.arange(*args, **kwargs)
 
     @classmethod
+    def array_split(cls, input, indices_or_sections, axis=0):
+        import torch
+
+        return torch.tensor_split(input, indices_or_sections, dim=axis)
+
+    @classmethod
     def atleast_1d(cls, X):
         import torch
 
@@ -49,6 +55,12 @@ class LinalgPyTorch(LinalgBase):
         if not torch.is_complex(X):
             return torch.argsort(X, *args, **kwargs)
         raise NotImplementedError("This feature is not supported in PyTorch")
+
+    @classmethod
+    def block_diag(cls, *arrs):
+        import torch
+
+        return torch.block_diag(*arrs)
 
     @classmethod
     def cat(cls, Xs, axis):
@@ -152,7 +164,7 @@ class LinalgPyTorch(LinalgBase):
     @classmethod
     def moveaxis(cls, X, source, destination):
         import torch
-        
+
         return torch.moveaxis(X, source, destination)
 
     @classmethod
@@ -226,7 +238,7 @@ class LinalgPyTorch(LinalgBase):
         import torch
 
         return torch.pow(X, power)
-    
+
     @classmethod
     def pseudo_hankel_matrix(cls, X, d):
         import torch
@@ -261,7 +273,7 @@ class LinalgPyTorch(LinalgBase):
         import torch
 
         return torch.repeat_interleave(X, repeats, dim=axis)
-    
+
     @classmethod
     def reshape(cls, X, shape):
         return X.view(*shape)

@@ -1,11 +1,11 @@
-from __future__ import division
-
 import numpy as np
+import pytest
 from past.utils import old_div
 from pytest import raises
 
-from pydmd import DMD, FbDMD
-from pydmd.mrdmd import MrDMD
+from pydmd import DMD, FbDMD, MrDMD
+
+from .utils import assert_allclose, setup_backends
 
 
 def create_data(t_size=1600):
@@ -36,52 +36,58 @@ def create_data(t_size=1600):
     return D.T
 
 
-sample_data = create_data()
+data_backends = setup_backends(create_data())
 
-def test_max_level_threshold():
+@pytest.mark.parametrize("X", data_backends)
+def test_max_level_threshold(X):
     level = 10
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
-    mrdmd.fit(X=sample_data)
-    lvl_threshold = int(np.log(sample_data.shape[1]/4.)/np.log(2.)) + 1
+    mrdmd.fit(X=X)
+    lvl_threshold = int(np.log(X.shape[1]/4.)/np.log(2.)) + 1
     assert lvl_threshold == mrdmd.max_level
 
-def test_partial_time_interval():
+@pytest.mark.parametrize("X", data_backends)
+def test_partial_time_interval(X):
     level = 4
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     ans = {'t0': 1200, 'tend': 1400.0, 'delta': 200.0}
     assert mrdmd.partial_time_interval(3, 6) == ans
 
-def test_partial_time_interval2():
+@pytest.mark.parametrize("X", data_backends)
+def test_partial_time_interval2(X):
     level = 4
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     with raises(ValueError):
         mrdmd.partial_time_interval(5, 0)
 
-def test_partial_time_interval3():
+@pytest.mark.parametrize("X", data_backends)
+def test_partial_time_interval3(X):
     level = 4
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     with raises(ValueError):
         mrdmd.partial_time_interval(3, 8)
 
-def test_time_window_bins():
+@pytest.mark.parametrize("X", data_backends)
+def test_time_window_bins(X):
     level = 4
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     assert len(mrdmd.time_window_bins(0, 1600)) == 2**5-1
 
-def test_time_window_bins2():
+@pytest.mark.parametrize("X", data_backends)
+def test_time_window_bins2(X):
     level = 3
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     expected_bins = np.array([
         [0, 0],
         [1, 0],
@@ -89,214 +95,225 @@ def test_time_window_bins2():
         [2, 1],
         [3, 1],
         [3, 2]])
-    np.testing.assert_array_equal(mrdmd.time_window_bins(200, 600), expected_bins)
+    assert_allclose(mrdmd.time_window_bins(200, 600), expected_bins)
 
-
-def test_time_window_eigs():
+@pytest.mark.parametrize("X", data_backends)
+def test_time_window_eigs(X):
     level = 2
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=1)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     exp =  sum([len(dmd.eigs) for dmd in mrdmd])
     assert len(mrdmd.time_window_eigs(0, 1600)) == exp
 
-def test_time_window_frequency():
+@pytest.mark.parametrize("X", data_backends)
+def test_time_window_frequency(X):
     level = 2
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=1)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     exp =  sum([len(dmd.frequency) for dmd in mrdmd])
     assert len(mrdmd.time_window_frequency(0, 1600)) == exp
 
-def test_time_window_growth_rate():
+@pytest.mark.parametrize("X", data_backends)
+def test_time_window_growth_rate(X):
     level = 2
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=1)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     exp =  sum([len(dmd.growth_rate) for dmd in mrdmd])
     assert len(mrdmd.time_window_growth_rate(0, 1600)) == exp
 
-def test_time_window_amplitudes():
+@pytest.mark.parametrize("X", data_backends)
+def test_time_window_amplitudes(X):
     level = 2
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=1)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     exp =  sum([len(dmd.amplitudes) for dmd in mrdmd])
     assert len(mrdmd.time_window_amplitudes(0, 1600)) == exp
 
-def test_shape_modes():
+@pytest.mark.parametrize("X", data_backends)
+def test_shape_modes(X):
     level = 2
     dmd = DMD(svd_rank=1)
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=1)
-    mrdmd.fit(X=sample_data)
-    assert mrdmd.modes.shape == (sample_data.shape[0], 2**(level+1) - 1)
+    mrdmd.fit(X=X)
+    assert mrdmd.modes.shape == (X.shape[0], 2**(level+1) - 1)
 
-def test_shape_dynamics():
+@pytest.mark.parametrize("X", data_backends)
+def test_shape_dynamics(X):
     level = 2
     dmd = DMD(svd_rank=1)
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=1)
-    mrdmd.fit(X=sample_data)
-    assert mrdmd.dynamics.shape == (2**(level+1) - 1, sample_data.shape[1])
+    mrdmd.fit(X=X)
+    assert mrdmd.dynamics.shape == (2**(level+1) - 1, X.shape[1])
 
-def test_reconstructed_data():
+@pytest.mark.parametrize("X", data_backends)
+def test_reconstructed_data(X):
     dmd = DMD(svd_rank=1)
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     dmd_data = mrdmd.reconstructed_data
     norm_err = (old_div(
-        np.linalg.norm(sample_data - dmd_data),
-        np.linalg.norm(sample_data)))
+        np.linalg.norm(X - dmd_data),
+        np.linalg.norm(X)))
     assert norm_err < 1
 
-def test_partial_modes1():
-    max_level = 5
+@pytest.mark.parametrize("X", data_backends)
+def test_partial_modes1(X):
     level = 2
     rank = 2
     dmd = DMD(svd_rank=rank)
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     pmodes = mrdmd.partial_modes(level)
-    assert pmodes.shape == (sample_data.shape[0], 2**level * rank)
+    assert pmodes.shape == (X.shape[0], 2**level * rank)
 
-def test_partial_modes2():
-    max_level = 5
+@pytest.mark.parametrize("X", data_backends)
+def test_partial_modes2(X):
     level = 2
     rank = 2
     dmd = DMD(svd_rank=rank)
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     pmodes = mrdmd.partial_modes(level, 3)
-    assert pmodes.shape == (sample_data.shape[0], rank)
+    assert pmodes.shape == (X.shape[0], rank)
 
-def test_partial_dynamics1():
-    max_level = 5
+@pytest.mark.parametrize("X", data_backends)
+def test_partial_dynamics1(X):
     level = 2
     rank = 2
     dmd = DMD(svd_rank=rank)
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     pdynamics = mrdmd.partial_dynamics(level)
-    assert pdynamics.shape == (2**level * rank, sample_data.shape[1])
+    assert pdynamics.shape == (2**level * rank, X.shape[1])
 
-def test_partial_dynamics2():
-    max_level = 5
+@pytest.mark.parametrize("X", data_backends)
+def test_partial_dynamics2(X):
     level = 2
     rank = 2
     dmd = DMD(svd_rank=rank)
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     pdynamics = mrdmd.partial_dynamics(level, 3)
-    assert pdynamics.shape == (rank, sample_data.shape[1] // 2**level)
+    assert pdynamics.shape == (rank, X.shape[1] // 2**level)
 
-def test_eigs2():
-    max_level = 5
-    level = 2
+@pytest.mark.parametrize("X", data_backends)
+def test_eigs2(X):
     rank = -1
     dmd = DMD(svd_rank=rank)
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     assert mrdmd.eigs.ndim == 1
 
-def test_partial_eigs1():
+@pytest.mark.parametrize("X", data_backends)
+def test_partial_eigs1(X):
     max_level = 5
     level = 2
     rank = 2
     dmd = DMD(svd_rank=rank)
     mrdmd = MrDMD(dmd, max_level=max_level, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     peigs = mrdmd.partial_eigs(level)
     assert peigs.shape == (rank * 2**level, )
 
-def test_partial_eigs2():
-    max_level = 5
+@pytest.mark.parametrize("X", data_backends)
+def test_partial_eigs2(X):
     level = 2
     rank = 2
     dmd = DMD(svd_rank=rank)
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     peigs = mrdmd.partial_eigs(level, 3)
     assert peigs.shape == (rank, )
 
-def test_partial_reconstructed1():
-    max_level = 5
+@pytest.mark.parametrize("X", data_backends)
+def test_partial_reconstructed1(X):
     level = 2
     rank = 2
     dmd = DMD(svd_rank=rank)
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     pdata = mrdmd.partial_reconstructed_data(level)
-    assert pdata.shape == sample_data.shape
+    assert pdata.shape == X.shape
 
-def test_partial_reconstructed2():
-    max_level = 5
+@pytest.mark.parametrize("X", data_backends)
+def test_partial_reconstructed2(X):
     level = 2
     rank = 2
     dmd = DMD(svd_rank=rank)
-    mrdmd = MrDMD(dmd, max_level=max_level, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd = MrDMD(dmd, max_level=5, max_cycles=2)
+    mrdmd.fit(X=X)
     pdata = mrdmd.partial_reconstructed_data(level, 3)
-    assert pdata.shape == (sample_data.shape[0], sample_data.shape[1] // 2**level)
+    assert pdata.shape == (X.shape[0], X.shape[1] // 2**level)
 
-def test_wrong_partial_reconstructed():
+@pytest.mark.parametrize("X", data_backends)
+def test_wrong_partial_reconstructed(X):
     max_level = 5
-    level = 2
     rank = 2
     dmd = DMD(svd_rank=rank)
     mrdmd = MrDMD(dmd, max_level=max_level, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     with raises(ValueError):
-        pdata = mrdmd.partial_reconstructed_data(max_level+1, 2)
+        mrdmd.partial_reconstructed_data(max_level+1, 2)
 
-def test_wrong_level():
+@pytest.mark.parametrize("X", data_backends)
+def test_wrong_level(X):
     max_level = 5
     rank = 2
     dmd = DMD(svd_rank=rank)
     mrdmd = MrDMD(dmd, max_level=max_level, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd.fit(X=X)
     with raises(ValueError):
         mrdmd.partial_modes(max_level + 1)
 
-def test_wrong_bin():
-    max_level = 5
+@pytest.mark.parametrize("X", data_backends)
+def test_wrong_bin(X):
     level = 2
     dmd = DMD()
-    mrdmd = MrDMD(dmd, max_level=max_level, max_cycles=2)
-    mrdmd.fit(X=sample_data)
+    mrdmd = MrDMD(dmd, max_level=5, max_cycles=2)
+    mrdmd.fit(X=X)
     with raises(ValueError):
         mrdmd.partial_modes(level=level, node=2**level)
 
-def test_consistency():
+@pytest.mark.parametrize("X", data_backends)
+def test_consistency(X):
     level = 5
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=level, max_cycles=1)
-    mrdmd.fit(X=sample_data)
-    np.testing.assert_array_almost_equal(mrdmd.reconstructed_data, mrdmd.modes @ mrdmd.dynamics)
+    mrdmd.fit(X=X)
+    assert_allclose(mrdmd.reconstructed_data, mrdmd.modes @ mrdmd.dynamics)
 
-def test_consistency2():
+@pytest.mark.parametrize("X", data_backends)
+def test_consistency2(X):
     import sys
 
     import numpy
     numpy.set_printoptions(threshold=sys.maxsize)
 
     mrdmd = MrDMD(DMD(), max_level=5, max_cycles=1)
-    mrdmd.fit(X=create_data(t_size=1400))
+    mrdmd.fit(X=X)
 
-    np.testing.assert_array_almost_equal(mrdmd.reconstructed_data, mrdmd.modes @ mrdmd.dynamics)
+    assert_allclose(mrdmd.reconstructed_data, mrdmd.modes @ mrdmd.dynamics)
 
-def test_bitmask_not_implemented():
+@pytest.mark.parametrize("X", data_backends)
+def test_bitmask_not_implemented(X):
     with raises(RuntimeError):
         mrdmd = MrDMD(DMD(), max_level=5, max_cycles=1)
-        mrdmd.fit(X=sample_data)
+        mrdmd.fit(X=X)
         mrdmd.modes_activation_bitmask
     with raises(RuntimeError):
         mrdmd = MrDMD(DMD(), max_level=5, max_cycles=1)
-        mrdmd.fit(X=sample_data)
+        mrdmd.fit(X=X)
         mrdmd.modes_activation_bitmask = None
 
-def test_getitem_not_implemented():
+@pytest.mark.parametrize("X", data_backends)
+def test_getitem_not_implemented(X):
     with raises(RuntimeError):
         mrdmd = MrDMD(DMD(), max_level=5, max_cycles=1)
-        mrdmd.fit(X=sample_data)
+        mrdmd.fit(X=X)
         mrdmd[1:3]
 
 def test_one_dmd():
@@ -353,20 +370,24 @@ def test_func_dmd():
             assert isinstance(dmd, FbDMD)
             assert dmd.operator._svd_rank == level * leaf
 
-def test_quantitative_list_dmd():
+@pytest.mark.parametrize("X", data_backends)
+def test_quantitative_list_dmd(X):
     l = [DMD(svd_rank=4) for i in range(4)]
-    m1 = MrDMD(dmd=l, max_level=3).fit(X=sample_data).reconstructed_data
-    m2 = MrDMD(DMD(svd_rank=4), max_level=3).fit(X=sample_data).reconstructed_data
-    np.testing.assert_almost_equal(m1, m2)
+    m1 = MrDMD(dmd=l, max_level=3).fit(X=X).reconstructed_data
+    m2 = MrDMD(DMD(svd_rank=4), max_level=3).fit(X=X).reconstructed_data
+    assert_allclose(m1, m2)
 
-def test_quantitative_tuple_dmd():
+@pytest.mark.parametrize("X", data_backends)
+def test_quantitative_tuple_dmd(X):
     l = tuple(DMD(svd_rank=4) for i in range(4))
-    m1 = MrDMD(dmd=l, max_level=3).fit(X=sample_data).reconstructed_data
-    m2 = MrDMD(DMD(svd_rank=4), max_level=3).fit(X=sample_data).reconstructed_data
-    np.testing.assert_almost_equal(m1, m2)
+    m1 = MrDMD(dmd=l, max_level=3).fit(X=X).reconstructed_data
+    m2 = MrDMD(DMD(svd_rank=4), max_level=3).fit(X=X).reconstructed_data
+    assert_allclose(m1, m2)
 
-def test_quantitative_func_dmd():
-    def f(level, leaf):
+@pytest.mark.parametrize("X", data_backends)
+def test_quantitative_func_dmd(X):
+    def f(*args):
         return FbDMD(svd_rank=4)
-    m1 = MrDMD(dmd=f, max_level=4).fit(sample_data).reconstructed_data
-    m2 = MrDMD(dmd=FbDMD(svd_rank=4), max_level=4).fit(sample_data).reconstructed_data
+    m1 = MrDMD(dmd=f, max_level=4).fit(X).reconstructed_data
+    m2 = MrDMD(dmd=FbDMD(svd_rank=4), max_level=4).fit(X).reconstructed_data
+    assert_allclose(m1, m2)

@@ -1,5 +1,5 @@
 import logging
-from scipy.linalg import sqrtm
+from scipy.linalg import sqrtm, block_diag
 
 logging.basicConfig(
     format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -42,6 +42,16 @@ class LinalgNumPy(LinalgBase):
     @classmethod
     def argsort(cls, X, *args, **kwargs):
         return np.argsort(X, *args, **kwargs)
+
+    @classmethod
+    def array_split(cls, input, indices_or_sections, axis=0):
+        return np.array_split(
+            input, indices_or_sections=indices_or_sections, axis=axis
+        )
+
+    @classmethod
+    def block_diag(cls, *arrs):
+        return block_diag(*arrs)
 
     @classmethod
     def cat(cls, Xs, axis):
@@ -196,11 +206,8 @@ class LinalgNumPy(LinalgBase):
 
     @classmethod
     def to(cls, reference, *args):
-        # in general it's not critical to convert X to NumPy because the
-        # operation is already handled quietly by all the frameworks
-        # TODO implement properly if this generates problems
-        logging.debug("to(reference, *args) ignored quietly")
-
+        args = tuple(arg.astype(reference.dtype) for arg in args)
+        
         if len(args) == 1:
             return args[0]
         return args
