@@ -3,22 +3,15 @@ Base module for the DMD: `fit` method must be implemented in inherited classes
 """
 from __future__ import division
 
-from builtins import object
-from builtins import range
-from os.path import splitext
-import warnings
 import pickle
 from copy import copy, deepcopy
+from os.path import splitext
 
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 from past.utils import old_div
 
 from .dmdoperator import DMDOperator
 from .utils import compute_svd
-
-mpl.rcParams["figure.max_open_warning"] = 0
 
 
 class ActivationBitmaskProxy:
@@ -113,7 +106,7 @@ class ActivationBitmaskProxy:
         return self._amplitudes
 
 
-class DMDBase(object):
+class DMDBase:
     """
     Dynamic Mode Decomposition base class.
 
@@ -199,36 +192,12 @@ class DMDBase(object):
         self._original_time = None
         self._dmd_time = None
         self._opt = opt
+        self._exact = exact
 
         self._b = None  # amplitudes
-        self._snapshots = None
-        self._snapshots_shape = None
+        self._snapshots_holder = None
 
         self._modes_activation_bitmask_proxy = None
-
-    @property
-    def opt(self):
-        return self._opt
-
-    @property
-    def tlsq_rank(self):
-        return self._tlsq_rank
-
-    @property
-    def svd_rank(self):
-        return self.operator._svd_rank
-
-    @property
-    def rescale_mode(self):
-        return self.operator._rescale_mode
-
-    @property
-    def exact(self):
-        return self.operator._exact
-
-    @property
-    def forward_backward(self):
-        return self.operator._forward_backward
 
     @property
     def dmd_timesteps(self):
@@ -258,26 +227,6 @@ class DMDBase(object):
             self.original_time["dt"],
         )
 
-    def allocate_modes_bitmask_proxy(self):
-        """
-        Utility method which allocates the activation bitmask proxy using the
-        quantities that are currently available in this DMD instance. Fails
-        quietly if the amplitudes are not set.
-        """
-        if hasattr(self, "_b") and self._b is not None:
-            self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(
-                self.operator,
-                self._b
-            )
-
-    def reset(self):
-        """
-        Reset this instance. Should be called in :func:`fit`.
-        """
-        self._modes_activation_bitmask_proxy = None
-        self._snapshots = None
-        self._b = None
-
     @property
     def modes(self):
         """
@@ -288,22 +237,12 @@ class DMDBase(object):
         """
         if self.fitted:
             if not self._modes_activation_bitmask_proxy:
-                self.allocate_modes_bitmask_proxy()
+                self._allocate_modes_bitmask_proxy()
                 # if the value is still None, it means that we cannot create
                 # the proxy at the moment
                 if not self._modes_activation_bitmask_proxy:
                     return self.operator.modes
             return self._modes_activation_bitmask_proxy.modes
-
-    @property
-    def atilde(self):
-        """
-        Get the reduced Koopman operator A, called A tilde.
-
-        :return: the reduced Koopman operator A.
-        :rtype: numpy.ndarray
-        """
-        return self.operator.as_numpy_array
 
     @property
     def operator(self):
@@ -325,35 +264,12 @@ class DMDBase(object):
         """
         if self.fitted:
             if not self._modes_activation_bitmask_proxy:
-                self.allocate_modes_bitmask_proxy()
+                self._allocate_modes_bitmask_proxy()
                 # if the value is still None, it means that we cannot create
                 # the proxy at the moment
                 if not self._modes_activation_bitmask_proxy:
                     return self.operator.eigenvalues
             return self._modes_activation_bitmask_proxy.eigs
-
-    def _translate_eigs_exponent(self, tpow):
-        """
-        Transforms the exponent of the eigenvalues in the dynamics formula
-        according to the selected value of `self.opt` (check the documentation
-        for `opt` in :func:`__init__ <dmdbase.DMDBase.__init__>`).
-
-        :param tpow: the exponent(s) of Sigma in the original DMD formula.
-        :type tpow: int or np.ndarray
-        :return: the exponent(s) adjusted according to `self.opt`
-        :rtype: int or np.ndarray
-        """
-
-        if isinstance(self.opt, bool):
-            amplitudes_snapshot_index = 0
-        else:
-            amplitudes_snapshot_index = self.opt
-
-        if amplitudes_snapshot_index < 0:
-            # we take care of negative indexes: -n becomes T - n
-            return tpow - (self.snapshots.shape[1] + amplitudes_snapshot_index)
-        else:
-            return tpow - amplitudes_snapshot_index
 
     @property
     def dynamics(self):
@@ -388,6 +304,29 @@ class DMDBase(object):
 
         return np.power(temp, tpow) * self.amplitudes[:, None]
 
+    def _translate_eigs_exponent(self, tpow):
+        """
+        Transforms the exponent of the eigenvalues in the dynamics formula
+        according to the selected value of `self._opt` (check the documentation
+        for `opt` in :func:`__init__ <dmdbase.DMDBase.__init__>`).
+
+        :param tpow: the exponent(s) of Sigma in the original DMD formula.
+        :type tpow: int or np.ndarray
+        :return: the exponent(s) adjusted according to `self._opt`
+        :rtype: int or np.ndarray
+        """
+
+        if isinstance(self._opt, bool):
+            amplitudes_snapshot_index = 0
+        else:
+            amplitudes_snapshot_index = self._opt
+
+        if amplitudes_snapshot_index < 0:
+            # we take care of negative indexes: -n becomes T - n
+            return tpow - (self.snapshots.shape[1] + amplitudes_snapshot_index)
+        else:
+            return tpow - amplitudes_snapshot_index
+
     @property
     def reconstructed_data(self):
         """
@@ -401,12 +340,26 @@ class DMDBase(object):
     @property
     def snapshots(self):
         """
-        Get the original input data.
+        Get the input data (space flattened).
 
-        :return: the matrix that contains the original snapshots.
+        :return: the matrix that contains the flattened snapshots.
         :rtype: numpy.ndarray
         """
-        return self._snapshots
+        if self._snapshots_holder:
+            return self._snapshots_holder.snapshots
+        return None
+
+    @property
+    def snapshots_shape(self):
+        """
+        Get the original input snapshot shape.
+
+        :return: input snapshots shape.
+        :rtype: tuple
+        """
+        if self._snapshots_holder:
+            return self._snapshots_holder.snapshots_shape
+        return None
 
     @property
     def frequency(self):
@@ -440,7 +393,7 @@ class DMDBase(object):
         """
         if self.fitted:
             if not self._modes_activation_bitmask_proxy:
-                self.allocate_modes_bitmask_proxy()
+                self._allocate_modes_bitmask_proxy()
             return self._modes_activation_bitmask_proxy.amplitudes
 
     @property
@@ -489,7 +442,7 @@ class DMDBase(object):
             raise RuntimeError("This DMD instance has not been fitted yet.")
 
         if not self._modes_activation_bitmask_proxy:
-            self.allocate_modes_bitmask_proxy()
+            self._allocate_modes_bitmask_proxy()
 
         bitmask = self._modes_activation_bitmask_proxy.old_bitmask
         # make sure that the array is immutable
@@ -517,6 +470,18 @@ class DMDBase(object):
             )
 
         self._modes_activation_bitmask_proxy.change_bitmask(value)
+
+    def _allocate_modes_bitmask_proxy(self):
+        """
+        Utility method which allocates the activation bitmask proxy using the
+        quantities that are currently available in this DMD instance. Fails
+        quietly if the amplitudes are not set.
+        """
+        if hasattr(self, "_b") and self._b is not None:
+            self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(
+                self.operator,
+                self._b
+            )
 
     def __getitem__(self, key):
         """
@@ -561,7 +526,7 @@ class DMDBase(object):
         mask[key] = True
 
         shallow_copy = copy(self)
-        shallow_copy.allocate_modes_bitmask_proxy()
+        shallow_copy._allocate_modes_bitmask_proxy()
         shallow_copy.modes_activation_bitmask = mask
 
         return shallow_copy
@@ -655,6 +620,14 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         msg = f"Subclass must implement abstract method {name}.fit"
         raise NotImplementedError(msg)
 
+    def _reset(self):
+        """
+        Reset this instance. Should be called in :func:`fit`.
+        """
+        self._modes_activation_bitmask_proxy = None
+        self._b = None
+        self._snapshots_holder = None
+
     def save(self, fname):
         """
         Save the object to `fname` using the pickle module.
@@ -686,49 +659,7 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         >>> print(dmd.reconstructed_data)
         """
         with open(fname, "rb") as output:
-            dmd = pickle.load(output)
-
-        return dmd
-
-    @staticmethod
-    def _col_major_2darray(X):
-        """
-        Private method that takes as input the snapshots and stores them into a
-        2D matrix, by column. If the input data is already formatted as 2D
-        array, the method saves it, otherwise it also saves the original
-        snapshots shape and reshapes the snapshots.
-
-        :param X: the input snapshots.
-        :type X: int or numpy.ndarray
-        :return: the 2D matrix that contains the flatten snapshots, the shape
-            of original snapshots.
-        :rtype: numpy.ndarray, tuple
-        """
-        # If the data is already 2D ndarray
-        if isinstance(X, np.ndarray) and X.ndim == 2:
-            snapshots = X
-            snapshots_shape = None
-        else:
-            input_shapes = [np.asarray(x).shape for x in X]
-
-            if len(set(input_shapes)) != 1:
-                raise ValueError("Snapshots have not the same dimension.")
-
-            snapshots_shape = input_shapes[0]
-            snapshots = np.transpose([np.asarray(x).flatten() for x in X])
-
-        # check condition number of the data passed in
-        cond_number = np.linalg.cond(snapshots)
-        if cond_number > 10e4:
-            warnings.warn(
-                "Input data matrix X has condition number {}. "
-                """Consider preprocessing data, passing in augmented data
-matrix, or regularization methods.""".format(
-                    cond_number
-                )
-            )
-
-        return snapshots, snapshots_shape
+            return pickle.load(output)
 
     def _optimal_dmd_matrices(self):
         # compute the vandermonde matrix
@@ -739,13 +670,13 @@ matrix, or regularization methods.""".format(
             np.conj(np.dot(vander, vander.conj().T)),
         )
 
-        if self.exact:
+        if self._exact:
             q = np.conj(np.diag(np.linalg.multi_dot([vander,
-                                                     self._snapshots.conj().T,
+                                                     self.snapshots.conj().T,
                                                      self.modes])))
         else:
-            U, s, V = compute_svd(self._snapshots[:, :-1],
-                                  self.svd_rank)
+            _, s, V = compute_svd(self.snapshots[:, :-1],
+                                  self.modes.shape[-1])
 
             q = np.conj(np.diag(
                 np.linalg.multi_dot([vander[:, :-1],
@@ -757,13 +688,13 @@ matrix, or regularization methods.""".format(
 
     def _compute_amplitudes(self):
         """
-        Compute the amplitude coefficients. If `self.opt` is False the
+        Compute the amplitude coefficients. If `self._opt` is False the
         amplitudes are computed by minimizing the error between the modes and
-        the first snapshot; if `self.opt` is True the amplitudes are computed
+        the first snapshot; if `self._opt` is True the amplitudes are computed
         by minimizing the error between the modes and all the snapshots, at the
         expense of bigger computational cost.
 
-        This method uses the class variables self._snapshots (for the
+        This method uses the class variables self.snapshots (for the
         snapshots), self.modes and self.eigs.
 
         :return: the amplitudes array
@@ -773,404 +704,22 @@ matrix, or regularization methods.""".format(
         Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
         https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document
         """
-        if isinstance(self.opt, bool) and self.opt:
+        if isinstance(self._opt, bool) and self._opt:
             # b optimal
             a = np.linalg.solve(*self._optimal_dmd_matrices())
         else:
-            if isinstance(self.opt, bool):
+            if isinstance(self._opt, bool):
                 amplitudes_snapshot_index = 0
             else:
-                amplitudes_snapshot_index = self.opt
+                amplitudes_snapshot_index = self._opt
 
             a = np.linalg.lstsq(
                 self.modes,
-                self._snapshots.T[amplitudes_snapshot_index],
+                self.snapshots.T[amplitudes_snapshot_index],
                 rcond=None,
             )[0]
 
         return a
-
-    def _enforce_ratio(self, goal_ratio, supx, infx, supy, infy):
-        """
-        Computes the right value of `supx,infx,supy,infy` to obtain the desired
-        ratio in :func:`plot_eigs`. Ratio is defined as
-        ::
-            dx = supx - infx
-            dy = supy - infy
-            max(dx,dy) / min(dx,dy)
-
-        :param float goal_ratio: the desired ratio.
-        :param float supx: the old value of `supx`, to be adjusted.
-        :param float infx: the old value of `infx`, to be adjusted.
-        :param float supy: the old value of `supy`, to be adjusted.
-        :param float infy: the old value of `infy`, to be adjusted.
-        :return tuple: a tuple which contains the updated values of
-            `supx,infx,supy,infy` in this order.
-        """
-
-        dx = supx - infx
-        if dx == 0:
-            dx = 1.0e-16
-        dy = supy - infy
-        if dy == 0:
-            dy = 1.0e-16
-        ratio = max(dx, dy) / min(dx, dy)
-
-        if ratio >= goal_ratio:
-            if dx < dy:
-                goal_size = dy / goal_ratio
-
-                supx += (goal_size - dx) / 2
-                infx -= (goal_size - dx) / 2
-            elif dy < dx:
-                goal_size = dx / goal_ratio
-
-                supy += (goal_size - dy) / 2
-                infy -= (goal_size - dy) / 2
-
-        return (supx, infx, supy, infy)
-
-    def _plot_limits(self, narrow_view):
-        if narrow_view:
-            supx = max(self.eigs.real) + 0.05
-            infx = min(self.eigs.real) - 0.05
-
-            supy = max(self.eigs.imag) + 0.05
-            infy = min(self.eigs.imag) - 0.05
-
-            return self._enforce_ratio(8, supx, infx, supy, infy)
-        else:
-            return np.max(np.ceil(np.absolute(self.eigs)))
-
-    def plot_eigs(
-        self,
-        show_axes=True,
-        show_unit_circle=True,
-        figsize=(8, 8),
-        title="",
-        narrow_view=False,
-        dpi=None,
-        filename=None,
-    ):
-        """
-        Plot the eigenvalues.
-        :param bool show_axes: if True, the axes will be showed in the plot.
-            Default is True.
-        :param bool show_unit_circle: if True, the circle with unitary radius
-            and center in the origin will be showed. Default is True.
-        :param tuple(int,int) figsize: tuple in inches defining the figure
-            size. Default is (8, 8).
-        :param str title: title of the plot.
-        :param narrow_view bool: if True, the plot will show only the smallest
-            rectangular area which contains all the eigenvalues, with a padding
-            of 0.05. Not compatible with `show_axes=True`. Default is False.
-        :param dpi int: If not None, the given value is passed to
-            ``plt.figure``.
-        :param str filename: if specified, the plot is saved at `filename`.
-        """
-        if self.eigs is None:
-            raise ValueError(
-                "The eigenvalues have not been computed."
-                "You have to call the fit() method."
-            )
-
-        if dpi is not None:
-            plt.figure(figsize=figsize, dpi=dpi)
-        else:
-            plt.figure(figsize=figsize)
-
-        plt.title(title)
-        plt.gcf()
-        ax = plt.gca()
-
-        (points,) = ax.plot(
-            self.eigs.real, self.eigs.imag, "bo", label="Eigenvalues"
-        )
-
-        if narrow_view:
-            supx, infx, supy, infy = self._plot_limits(narrow_view)
-
-            # set limits for axis
-            ax.set_xlim((infx, supx))
-            ax.set_ylim((infy, supy))
-
-            # x and y axes
-            if show_axes:
-                endx = np.min([supx, 1.0])
-                ax.annotate(
-                    "",
-                    xy=(endx, 0.0),
-                    xytext=(np.max([infx, -1.0]), 0.0),
-                    arrowprops=dict(arrowstyle=("->" if endx == 1.0 else "-")),
-                )
-
-                endy = np.min([supy, 1.0])
-                ax.annotate(
-                    "",
-                    xy=(0.0, endy),
-                    xytext=(0.0, np.max([infy, -1.0])),
-                    arrowprops=dict(arrowstyle=("->" if endy == 1.0 else "-")),
-                )
-        else:
-            # set limits for axis
-            limit = self._plot_limits(narrow_view)
-
-            ax.set_xlim((-limit, limit))
-            ax.set_ylim((-limit, limit))
-
-            # x and y axes
-            if show_axes:
-                ax.annotate(
-                    "",
-                    xy=(np.max([limit * 0.8, 1.0]), 0.0),
-                    xytext=(np.min([-limit * 0.8, -1.0]), 0.0),
-                    arrowprops=dict(arrowstyle="->"),
-                )
-                ax.annotate(
-                    "",
-                    xy=(0.0, np.max([limit * 0.8, 1.0])),
-                    xytext=(0.0, np.min([-limit * 0.8, -1.0])),
-                    arrowprops=dict(arrowstyle="->"),
-                )
-
-        plt.ylabel("Imaginary part")
-        plt.xlabel("Real part")
-
-        if show_unit_circle:
-            unit_circle = plt.Circle(
-                (0.0, 0.0),
-                1.0,
-                color="green",
-                fill=False,
-                label="Unit circle",
-                linestyle="--",
-            )
-            ax.add_artist(unit_circle)
-
-        # Dashed grid
-        gridlines = ax.get_xgridlines() + ax.get_ygridlines()
-        for line in gridlines:
-            line.set_linestyle("-.")
-        ax.grid(True)
-
-        # legend
-        if show_unit_circle:
-            ax.add_artist(
-                plt.legend(
-                    [points, unit_circle],
-                    ["Eigenvalues", "Unit circle"],
-                    loc="best",
-                )
-            )
-        else:
-            ax.add_artist(plt.legend([points], ["Eigenvalues"], loc="best"))
-
-        ax.set_aspect("equal")
-
-        if filename:
-            plt.savefig(filename)
-        else:
-            plt.show()
-
-    def plot_modes_2D(
-        self,
-        index_mode=None,
-        filename=None,
-        x=None,
-        y=None,
-        order="C",
-        figsize=(8, 8),
-    ):
-        """
-        Plot the DMD Modes.
-
-        :param index_mode: the index of the modes to plot. By default, all
-            the modes are plotted.
-        :type index_mode: int or sequence(int)
-        :param str filename: if specified, the plot is saved at `filename`.
-        :param numpy.ndarray x: domain abscissa.
-        :param numpy.ndarray y: domain ordinate
-        :param order: read the elements of snapshots using this index order,
-            and place the elements into the reshaped array using this index
-            order.  It has to be the same used to store the snapshot. 'C' means
-            to read/ write the elements using C-like index order, with the last
-            axis index changing fastest, back to the first axis index changing
-            slowest.  'F' means to read / write the elements using Fortran-like
-            index order, with the first index changing fastest, and the last
-            index changing slowest.  Note that the 'C' and 'F' options take no
-            account of the memory layout of the underlying array, and only
-            refer to the order of indexing.  'A' means to read / write the
-            elements in Fortran-like index order if a is Fortran contiguous in
-            memory, C-like order otherwise.
-        :type order: {'C', 'F', 'A'}, default 'C'.
-        :param tuple(int,int) figsize: tuple in inches defining the figure
-            size. Default is (8, 8).
-        """
-        if self.modes is None:
-            raise ValueError(
-                "The modes have not been computed."
-                "You have to perform the fit method."
-            )
-
-        if x is None and y is None:
-            if self._snapshots_shape is None:
-                raise ValueError(
-                    "No information about the original shape of the snapshots."
-                )
-
-            if len(self._snapshots_shape) != 2:
-                raise ValueError(
-                    "The dimension of the input snapshots is not 2D."
-                )
-
-        # If domain dimensions have not been passed as argument,
-        # use the snapshots dimensions
-        if x is None and y is None:
-            x = np.arange(self._snapshots_shape[0])
-            y = np.arange(self._snapshots_shape[1])
-
-        xgrid, ygrid = np.meshgrid(x, y)
-
-        if index_mode is None:
-            index_mode = list(range(self.modes.shape[1]))
-        elif isinstance(index_mode, int):
-            index_mode = [index_mode]
-
-        if filename:
-            basename, ext = splitext(filename)
-
-        for idx in index_mode:
-            fig = plt.figure(figsize=figsize)
-            fig.suptitle("DMD Mode {}".format(idx))
-
-            real_ax = fig.add_subplot(1, 2, 1)
-            imag_ax = fig.add_subplot(1, 2, 2)
-
-            mode = self.modes.T[idx].reshape(xgrid.shape, order=order)
-
-            real = real_ax.pcolor(
-                xgrid,
-                ygrid,
-                mode.real,
-                cmap="jet",
-                vmin=mode.real.min(),
-                vmax=mode.real.max(),
-            )
-            imag = imag_ax.pcolor(
-                xgrid,
-                ygrid,
-                mode.imag,
-                vmin=mode.imag.min(),
-                vmax=mode.imag.max(),
-            )
-
-            fig.colorbar(real, ax=real_ax)
-            fig.colorbar(imag, ax=imag_ax)
-
-            real_ax.set_aspect("auto")
-            imag_ax.set_aspect("auto")
-
-            real_ax.set_title("Real")
-            imag_ax.set_title("Imag")
-
-            # padding between elements
-            plt.tight_layout(pad=2.0)
-
-            if filename:
-                plt.savefig("{0}.{1}{2}".format(basename, idx, ext))
-                plt.close(fig)
-
-        if not filename:
-            plt.show()
-
-    def plot_snapshots_2D(
-        self,
-        index_snap=None,
-        filename=None,
-        x=None,
-        y=None,
-        order="C",
-        figsize=(8, 8),
-    ):
-        """
-        Plot the snapshots.
-
-        :param index_snap: the index of the snapshots to plot. By default, all
-            the snapshots are plotted.
-        :type index_snap: int or sequence(int)
-        :param str filename: if specified, the plot is saved at `filename`.
-        :param numpy.ndarray x: domain abscissa.
-        :param numpy.ndarray y: domain ordinate
-        :param order: read the elements of snapshots using this index order,
-            and place the elements into the reshaped array using this index
-            order.  It has to be the same used to store the snapshot. 'C' means
-            to read/ write the elements using C-like index order, with the last
-            axis index changing fastest, back to the first axis index changing
-            slowest.  'F' means to read / write the elements using Fortran-like
-            index order, with the first index changing fastest, and the last
-            index changing slowest.  Note that the 'C' and 'F' options take no
-            account of the memory layout of the underlying array, and only
-            refer to the order of indexing.  'A' means to read / write the
-            elements in Fortran-like index order if a is Fortran contiguous in
-            memory, C-like order otherwise.
-        :type order: {'C', 'F', 'A'}, default 'C'.
-        :param tuple(int,int) figsize: tuple in inches defining the figure
-            size. Default is (8, 8).
-        """
-        if self._snapshots is None:
-            raise ValueError("Input snapshots not found.")
-
-        if x is None and y is None:
-            if self._snapshots_shape is None:
-                raise ValueError(
-                    "No information about the original shape of the snapshots."
-                )
-
-            if len(self._snapshots_shape) != 2:
-                raise ValueError(
-                    "The dimension of the input snapshots is not 2D."
-                )
-
-        # If domain dimensions have not been passed as argument,
-        # use the snapshots dimensions
-        if x is None and y is None:
-            x = np.arange(self._snapshots_shape[0])
-            y = np.arange(self._snapshots_shape[1])
-
-        xgrid, ygrid = np.meshgrid(x, y)
-
-        if index_snap is None:
-            index_snap = list(range(self._snapshots.shape[1]))
-        elif isinstance(index_snap, int):
-            index_snap = [index_snap]
-
-        if filename:
-            basename, ext = splitext(filename)
-
-        for idx in index_snap:
-            fig = plt.figure(figsize=figsize)
-            fig.suptitle("Snapshot {}".format(idx))
-
-            snapshot = self._snapshots.T[idx].real.reshape(
-                xgrid.shape, order=order
-            )
-
-            contour = plt.pcolor(
-                xgrid,
-                ygrid,
-                snapshot,
-                vmin=snapshot.min(),
-                vmax=snapshot.max(),
-            )
-
-            fig.colorbar(contour)
-
-            if filename:
-                plt.savefig("{0}.{1}{2}".format(basename, idx, ext))
-                plt.close(fig)
-
-        if not filename:
-            plt.show()
 
 
 class DMDTimeDict(dict):

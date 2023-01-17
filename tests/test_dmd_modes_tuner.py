@@ -1,11 +1,14 @@
-from pytest import raises
-import numpy as np
 from copy import deepcopy
 
-from pydmd import DMD, CDMD, DMD, DMDBase, DMDc, FbDMD, HankelDMD, HODMD, MrDMD, OptDMD, ParametricDMD, SpDMD
-from pydmd.dmd_modes_tuner import select_modes, stabilize_modes, ModesSelectors, ModesTuner, selectors
-from ezyrb import POD, RBF
+import numpy as np
 import pytest
+from ezyrb import POD, RBF
+from pytest import raises, param
+
+from pydmd import (CDMD, DMD, HODMD, DMDBase, DMDc, FbDMD, HankelDMD, MrDMD,
+                   OptDMD, ParametricDMD, SpDMD)
+from pydmd.dmd_modes_tuner import (ModesSelectors, ModesTuner, select_modes,
+                                   selectors, stabilize_modes)
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -559,8 +562,17 @@ def test_modes_tuner_selectors():
     assert selectors['stable_modes'] == ModesSelectors.stable_modes
     assert selectors['integral_contribution'] == ModesSelectors.integral_contribution
 
-@pytest.mark.parametrize("dmd", [CDMD(svd_rank=-1), DMD(svd_rank=-1), DMDc(svd_rank=-1), FbDMD(svd_rank=-1),
-    HankelDMD(svd_rank=-1, d=3), HODMD(svd_rank=-1, d=3)])
+@pytest.mark.parametrize(
+    "dmd",
+    [
+        param(CDMD(svd_rank=-1), id="CDMD"),
+        param(DMD(svd_rank=-1), id="DMD"),
+        param(DMDc(svd_rank=-1), id="DMDc"),
+        param(FbDMD(svd_rank=-1), id="FbDMD"),
+        param(HankelDMD(svd_rank=-1, d=3), id="HankelDMD"),
+        param(HODMD(svd_rank=-1, d=3), id="HODMD"),
+    ],
+)
 def test_modes_selector_all_dmd_types(dmd):
     print('--------------------------- {} ---------------------------'.format(type(dmd)))
     if isinstance(dmd, ParametricDMD):

@@ -14,12 +14,12 @@ VERSION = meta['__version__']
 KEYWORDS = 'dynamic-mode-decomposition dmd mrdmd fbdmd cdmd'
 
 REQUIRED = [
-    'future', 'numpy', 'scipy',	'matplotlib', 'ezyrb'
+    'future', 'numpy', 'scipy',	'matplotlib'
 ]
 
 EXTRAS = {
     'docs': ['Sphinx==1.4', 'sphinx_rtd_theme'],
-    'test': ['pytest', 'pytest-cov'],
+    'test': ['pytest', 'pytest-cov', 'ezyrb'],
 }
 
 LDESCRIPTION = (

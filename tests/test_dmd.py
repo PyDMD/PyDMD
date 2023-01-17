@@ -1,9 +1,9 @@
 from builtins import range
-from pydmd.dmd import DMD
-import matplotlib.pyplot as plt
+
 import numpy as np
-import os
 from pytest import raises
+
+from pydmd.dmd import DMD
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -50,7 +50,7 @@ def test_rank():
 def test_Atilde_shape():
     dmd = DMD(svd_rank=3)
     dmd.fit(X=sample_data)
-    assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+    assert dmd.operator.as_numpy_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
 
 def test_Atilde_values():
     dmd = DMD(svd_rank=2)
@@ -58,7 +58,7 @@ def test_Atilde_values():
     exact_atilde = np.array(
         [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
             [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]])
-    np.testing.assert_allclose(exact_atilde, dmd.atilde)
+    np.testing.assert_allclose(exact_atilde, dmd.operator.as_numpy_array)
 
 def test_eigs_1():
     dmd = DMD(svd_rank=-1)
@@ -174,96 +174,6 @@ def test_dmd_time_4():
                                 [-5.69109796e+00 - 2.74068833e+00j],
                                 [3.38410649e-83 + 3.75677740e-83j]])
     np.testing.assert_almost_equal(dmd.dynamics, expected_data, decimal=6)
-
-def test_plot_eigs_1():
-    dmd = DMD()
-    dmd.fit(X=sample_data)
-    dmd.plot_eigs(show_axes=True, show_unit_circle=True)
-    plt.close()
-
-def test_plot_eigs_2():
-    dmd = DMD()
-    dmd.fit(X=sample_data)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    plt.close()
-
-def test_plot_eigs_3():
-    dmd = DMD()
-    dmd.fit(X=sample_data)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=True, filename='eigs.png')
-    os.remove('eigs.png')
-
-def test_plot_modes_1():
-    dmd = DMD()
-    dmd.fit(X=sample_data)
-    with raises(ValueError):
-        dmd.plot_modes_2D()
-
-def test_plot_modes_2():
-    dmd = DMD(svd_rank=-1)
-    dmd.fit(X=sample_data)
-    dmd.plot_modes_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
-    plt.close()
-
-def test_plot_modes_3():
-    dmd = DMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D()
-    plt.close()
-
-def test_plot_modes_4():
-    dmd = DMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D(index_mode=1)
-    plt.close()
-
-def test_plot_modes_5():
-    dmd = DMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D(index_mode=1, filename='tmp.png')
-    os.remove('tmp.1.png')
-
-def test_plot_snapshots_1():
-    dmd = DMD()
-    dmd.fit(X=sample_data)
-    with raises(ValueError):
-        dmd.plot_snapshots_2D()
-
-def test_plot_snapshots_2():
-    dmd = DMD(svd_rank=-1)
-    dmd.fit(X=sample_data)
-    dmd.plot_snapshots_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
-    plt.close()
-
-def test_plot_snapshots_3():
-    dmd = DMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D()
-    plt.close()
-
-def test_plot_snapshots_4():
-    dmd = DMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D(index_snap=2)
-    plt.close()
-
-def test_plot_snapshots_5():
-    dmd = DMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D(index_snap=2, filename='tmp.png')
-    os.remove('tmp.2.png')
-
-def test_tdmd_plot():
-    dmd = DMD(tlsq_rank=3)
-    dmd.fit(X=sample_data)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    plt.close()
 
 # we check that modes are the same vector multiplied by a coefficient
 # when we rescale
@@ -654,7 +564,7 @@ def test_second_fit():
     with raises(AssertionError):
         np.testing.assert_allclose(modes, modes2)
 
-def test_reconstructed_data():
+def test_reconstructed_data_with_bitmask():
     dmd = DMD(svd_rank=10)
     dmd.fit(X=sample_data)
 

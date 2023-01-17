@@ -18,6 +18,7 @@ import numpy as np
 import scipy
 
 from pydmd import DMDc
+from pydmd.plotter import plot_eigs
 
 
 # Now, we create our dataset: since we want to add the control, the evolution of the complex system can be formally summarized as:
@@ -42,7 +43,7 @@ def create_system(n, m):
 
 # We got 10 snapshots of the evolving system.
 
-# In[14]:
+# In[3]:
 
 
 s = create_system(25, 10)
@@ -151,7 +152,7 @@ dmdc = DMDc(svd_rank=-1).fit(snapshots, I, np.diag(B.flatten()))
 from pydmd import DMD
 dmd = DMD(svd_rank=-1)
 dmd.fit(snapshots)
-dmd.plot_eigs(show_axes=True, show_unit_circle=True, figsize=(5, 5), filename='eigs_ex1.pdf')
+plot_eigs(dmd, show_axes=True, show_unit_circle=True, figsize=(5, 5), filename='eigs_ex1.pdf')
 
 
 # As we can see the eigenvalues are all inside the unit sphere, therefore the corresponding dynamics are all stable. 
@@ -161,7 +162,7 @@ dmd.plot_eigs(show_axes=True, show_unit_circle=True, figsize=(5, 5), filename='e
 # In[12]:
 
 
-dmdc.plot_eigs(show_axes=True, show_unit_circle=True, figsize=(5, 5))
+plot_eigs(dmdc, show_axes=True, show_unit_circle=True, figsize=(5, 5))
 
 for eig in dmdc.eigs:
     print('Eigenvalue {}: distance from unit circle {}'.format(eig, np.abs(1-np.linalg.norm(eig))))
@@ -169,8 +170,9 @@ for eig in dmdc.eigs:
 
 # We seek a confirmation about this fact by computing the eigenvalues of the operator `A` which we used when we constructed the system, and we compare them with the eigenvalues of `dmd.atilde` which holds the approximation of `A` built by DMD with control.
 
-# In[15]:
+# In[14]:
 
 
-print('Eigenvalues of A:', np.linalg.eigvals(A), '; eigenvalues of A_tilde: ', np.linalg.eigvals(dmdc.atilde))
+print('Eigenvalues of A:', np.linalg.eigvals(A), '; eigenvalues of A_tilde: ', 
+      np.linalg.eigvals(dmdc.operator.as_numpy_array))
 

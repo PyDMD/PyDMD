@@ -1,8 +1,13 @@
+import logging
+
 import numpy as np
 from scipy.linalg import sqrtm
-import matplotlib.pyplot as plt
 
 from .utils import compute_svd
+
+logging.basicConfig(
+    format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+)
 
 
 class DMDOperator():
@@ -73,6 +78,10 @@ class DMDOperator():
             bU, bs, bV = compute_svd(Y, svd_rank=len(s))
             atilde_back = self._least_square_operator(bU, bs, bV, X)
             atilde = sqrtm(atilde.dot(np.linalg.inv(atilde_back)))
+            if hasattr(np, "complex256") and atilde.dtype == np.complex256:
+                atilde = atilde.astype(np.complex128)
+                msg = "Casting atilde from np.complex256 to np.complex128"
+                logging.info(msg)
 
         if self._rescale_mode == 'auto':
             self._rescale_mode = s
@@ -248,24 +257,3 @@ class DMDOperator():
 
         self._modes = high_dimensional_eigenvectors
         self._Lambda = high_dimensional_eigenvalues
-
-    def plot_operator(self):
-        """
-        Plot the low-rank Atilde operator
-        """
-
-        matrix = self.as_numpy_array
-        cmatrix = matrix.real
-        rmatrix = matrix.imag
-
-        if np.linalg.norm(cmatrix) > 1.e-12:
-            _, axes = plt.subplots(nrows=1, ncols=2)
-
-            axes[0].set_title('Real')
-            axes[0].matshow(rmatrix, cmap='jet')
-            axes[1].set_title('Complex')
-            axes[1].matshow(cmatrix, cmap='jet')
-        else:
-            plt.title('Real')
-            plt.matshow(rmatrix)
-        plt.show()

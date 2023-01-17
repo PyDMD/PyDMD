@@ -1,10 +1,12 @@
+import os
+
+import numpy as np
+from ezyrb import POD, RBF
 from pytest import raises
+
 from pydmd import DMD, ParametricDMD
 from pydmd.dmdbase import DMDTimeDict
 from pydmd.paramdmd import back_roll_shape, roll_shape
-from ezyrb import POD, RBF
-import numpy as np
-import os
 
 testdir = 'tests/test_datasets/param_dmd/'
 

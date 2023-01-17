@@ -1,10 +1,10 @@
 from __future__ import division
-from past.utils import old_div
-from pydmd import DMDc
-import matplotlib.pyplot as plt
+
 import numpy as np
 import scipy
 from pytest import raises
+
+from pydmd import DMDc
 
 
 def create_system_with_B():
@@ -73,7 +73,7 @@ def test_atilde_b_unknown():
     dmdc.fit(system['snapshots'], system['u'])
     expected_atilde = dmdc.basis.T.conj().dot(system['A']).dot(dmdc.basis)
     np.testing.assert_array_almost_equal(
-        dmdc.atilde, expected_atilde, decimal=1)
+        dmdc.operator.as_numpy_array, expected_atilde, decimal=1)
 
 def test_get_bitmask_default():
     system = create_system_with_B()
