@@ -14,7 +14,7 @@ from pydmd.plotter import (
     plot_snapshots_2D,
 )
 
-from .test_mrdmd import sample_data as mrdmd_sample_data
+from .test_mrdmd import create_data as create_mrdmd_data
 
 sample_data = np.load("tests/test_datasets/input_sample.npy")
 
@@ -199,7 +199,7 @@ def test_mrdmd_wrong_plot_eig1():
     rank = 2
     dmd = DMD(svd_rank=rank)
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=mrdmd_sample_data)
+    mrdmd.fit(X=create_mrdmd_data())
     with raises(ValueError):
         plot_eigs_mrdmd(
             mrdmd,
@@ -213,7 +213,7 @@ def test_mrdmd_wrong_plot_eig1():
 def test_mrdmd_plot_eig1():
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=mrdmd_sample_data)
+    mrdmd.fit(X=create_mrdmd_data())
     plot_eigs_mrdmd(
         mrdmd, show_axes=True, show_unit_circle=True, figsize=(8, 8)
     )
@@ -223,7 +223,7 @@ def test_mrdmd_plot_eig1():
 def test_mrdmd_plot_eig2():
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=mrdmd_sample_data)
+    mrdmd.fit(X=create_mrdmd_data())
     plot_eigs_mrdmd(
         mrdmd, show_axes=True, show_unit_circle=False, title="Title"
     )
@@ -233,7 +233,7 @@ def test_mrdmd_plot_eig2():
 def test_mrdmd_plot_eig3():
     dmd = DMD()
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=mrdmd_sample_data)
+    mrdmd.fit(X=create_mrdmd_data())
     plot_eigs_mrdmd(
         mrdmd, show_axes=False, show_unit_circle=False, level=1, node=0
     )
