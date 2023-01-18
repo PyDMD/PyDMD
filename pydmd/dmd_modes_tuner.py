@@ -13,7 +13,6 @@ def select_modes(
     criteria,
     in_place=True,
     return_indexes=False,
-    nullify_amplitudes=False,
 ):
     """
     Select the DMD modes by using the given `criteria`.
@@ -45,10 +44,6 @@ def select_modes(
     :param bool return_indexes: If `True`, this function returns the indexes
         corresponding to DMD modes cut using the given `criteria` (default
         `False`).
-    :param bool nullify_amplitudes: If `True`, the amplitudes associated with
-        DMD modes to be removed are set to 0, therefore the number of DMD
-        modes remains constant. If `False` (default) DMD modes are actually
-        removed, therefore the number of DMD modes in the instance decreases.
     :returns: If `return_indexes` is `True`, the returned value is a tuple
         whose items are:
 

@@ -91,8 +91,6 @@ class Snapshots:
     def _check_condition_number(X):
         linalg_module = build_linalg_module(X)
         cond_number = linalg_module.cond(X)
-        if X.ndim == 2:
-            cond_number = np.array((cond_number,))
             
         if (cond_number > 10e4).sum() > 0:
             warnings.warn(
