@@ -60,13 +60,6 @@ class ActivationBitmaskProxy:
             `bool` whose size is the same of the number of DMD modes.
         :type value: np.ndarray
         """
-
-        # apply changes made on the proxied values to the original values
-        if self.old_bitmask is not None:
-            self._original_modes[..., self.old_bitmask] = self.modes
-            self._original_eigs[..., self.old_bitmask] = self.eigs
-            self._original_amplitudes[..., self.old_bitmask] = self.amplitudes
-
         self._modes = self._original_modes[..., value]
         self._eigs = self._original_eigs[..., value]
         self._amplitudes = self._original_amplitudes[..., value]
