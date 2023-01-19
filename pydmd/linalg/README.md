@@ -55,6 +55,12 @@ The benefit of tensorized training are:
 - Coinciseness.
 This new mode is available only with PyTorch tensors.
 
+## Whishlist
++ [] Try harder with `SPDMD`;
++ [] Figure out what to do with `multi_dot`;
++ [] Tutorials (sparsity and DLDMD)
++ [] JAX
+
 ## Developers guide
 
 ### Things to keep in mind
