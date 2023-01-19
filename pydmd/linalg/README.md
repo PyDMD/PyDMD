@@ -53,6 +53,7 @@ The benefit of tensorized training are:
 - Performance boost;
 - The DMD instance retains information on all the slices of `X`;
 - Coinciseness.
+- 
 This new mode is available only with PyTorch tensors.
 
 ## Whishlist
