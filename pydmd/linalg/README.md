@@ -9,7 +9,7 @@ argument.
 
 ## Supported DMD variants
 | DMD variant | `pydmd.linalg`     | Backpropagation    | Tensorized         | Notes                                                  |
-|-------------|--------------------|--------------------|--------------------|--------------------------------------------------------|
+|:------------|:------------------:|:------------------:|:------------------:|:-------------------------------------------------------|
 | CDMD        | :white_check_mark: | :x:                | :white_check_mark: |                                                        |
 | DMD         | :white_check_mark: | :white_check_mark: | :white_check_mark: |                                                        |
 | DMDc        | :white_check_mark: | :x:                | :white_check_mark: |                                                        |
