@@ -222,10 +222,10 @@ class LinalgPyTorch(LinalgBase):
         )
 
     @classmethod
-    def norm(cls, X, *args, **kwargs):
+    def matrix_norm(cls, X, *args, **kwargs):
         import torch
 
-        return torch.linalg.norm(X, *args, **kwargs)
+        return torch.linalg.matrix_norm(X, *args, **kwargs)
 
     @classmethod
     def pinv(cls, X):

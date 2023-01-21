@@ -80,10 +80,10 @@ class DMDOperator:
 
         VV = linalg_module.dot(V, V.conj().swapaxes(-1, -2))
         identity = linalg_module.to(VV, np.identity(VV.shape[-1]))
-        self._phase_space_prediction = linalg_module.dot(Y, identity - VV)
+        self._dmd_phase_space_error = linalg_module.matrix_norm(linalg_module.dot(Y, identity - VV))
 
         if self._tikhonov_regularization is not None:
-            self._norm_X = linalg_module.norm(X)
+            self._norm_X = linalg_module.matrix_norm(X)
         atilde = self._least_square_operator(U, s, V, Y)
 
         if self._forward_backward:
@@ -146,10 +146,10 @@ class DMDOperator:
         return self._Lambda
 
     @property
-    def phase_space_prediction(self):
-        if not hasattr(self, "_phase_space_prediction"):
+    def dmd_phase_space_error(self):
+        if not hasattr(self, "_dmd_phase_space_error"):
             raise ValueError("You need to call fit before")
-        return self._phase_space_prediction
+        return self._dmd_phase_space_error
 
     @property
     def as_array(self):

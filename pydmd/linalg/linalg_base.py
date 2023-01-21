@@ -115,7 +115,7 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
-    def norm(cls, Xs, *args, **kwargs):
+    def matrix_norm(cls, Xs, *args, **kwargs):
         raise NotImplementedError
 
     @classmethod

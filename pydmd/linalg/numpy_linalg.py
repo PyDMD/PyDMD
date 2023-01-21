@@ -140,7 +140,7 @@ class LinalgNumPy(LinalgBase):
         return np.array(X)
 
     @classmethod
-    def norm(cls, X, *args, **kwargs):
+    def matrix_norm(cls, X, *args, **kwargs):
         return np.linalg.norm(X, *args, **kwargs)
 
     @classmethod
