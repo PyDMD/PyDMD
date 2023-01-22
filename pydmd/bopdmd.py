@@ -619,10 +619,10 @@ class BOPDMDOperator(DMDOperator):
 
 class BOPDMD(DMDBase):
     """
-    Optimized Dynamic Mode Decomposition.
+    Bagging, Optimized Dynamic Mode Decomposition.
 
     :param svd_rank: The rank for the truncation; If 0, the method computes the
-        optimal rank and uses it for truncation; if positive interger, the
+        optimal rank and uses it for truncation; if positive integer, the
         method uses the argument for the truncation; if float between 0 and 1,
         the rank is the number of the biggest singular values that are needed
         to reach the 'energy' specified by `svd_rank`; if -1, the method does
@@ -691,7 +691,8 @@ class BOPDMD(DMDBase):
             self._varpro_opts_dict = dict()
         elif not isinstance(varpro_opts_dict, dict):
             raise ValueError("varpro_opts_dict must be a dict.")
-        self._varpro_opts_dict = varpro_opts_dict
+        else:
+            self._varpro_opts_dict = varpro_opts_dict
 
         self._snapshots_holder = None
         self._time = None
