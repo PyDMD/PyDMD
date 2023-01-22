@@ -51,10 +51,11 @@ class BOPDMDOperator(DMDOperator):
     :type trial_size: int or float
     :param eig_sort: Method used to sort eigenvalues (and modes accordingly)
         when performing BOP-DMD. Eigenvalues will be sorted by real part and
-        then by imaginary part to break ties if eig_sort="real", by imaginary
-        part and then by real part to break ties if eig_sort="imag", or by
-        magnitude if eig_sort="abs". If eig_sort="auto", one of the previously
-        mentioned sorting methods is chosen depending on eigenvalue variance.
+        then by imaginary part to break ties if `eig_sort="real"`, by imaginary
+        part and then by real part to break ties if `eig_sort="imag"`, or by
+        magnitude if `eig_sort="abs"`. If `eig_sort="auto"`, one of the
+        previously-mentioned sorting methods is chosen depending on eigenvalue
+        variance.
     :type eig_sort: {"real", "imag", "abs", "auto"}
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
@@ -436,7 +437,6 @@ class BOPDMDOperator(DMDOperator):
                 # Rescale lambda based on the improvement ratio.
                 _lambda *= max(1/3, 1 - (2*improvement_ratio - 1) ** 3)
                 alpha, B, residual, error = alpha_0, B_0, residual_0, error_0
-
             else:
                 # Increase lambda until something works.
                 for _ in range(maxlam):
@@ -651,22 +651,23 @@ class BOPDMD(DMDBase):
         trial. If trial_size is a float between 0 and 1, int(trial_size * m)
         many observations will be used per trial, where m denotes the total
         number of data points observed. Note that any other type of input for
-        trial_size will throw an error. Default is 0.2.
+        trial_size will yield an error. Default is 0.2.
     :type trial_size: int or float
     :param eig_sort: Method used to sort eigenvalues (and modes accordingly)
         when performing BOP-DMD. Eigenvalues will be sorted by real part and
-        then by imaginary part to break ties if eig_sort="real", by imaginary
-        part and then by real part to break ties if eig_sort="imag", or by
-        magnitude if eig_sort="abs". If eig_sort="auto", one of the previously
-        mentioned sorting methods is chosen depending on eigenvalue variance.
-        Default is "auto".
+        then by imaginary part to break ties if `eig_sort="real"`, by imaginary
+        part and then by real part to break ties if `eig_sort="imag"`, or by
+        magnitude if `eig_sort="abs"`. If `eig_sort="auto"`, one of the
+        previously-mentioned sorting methods is chosen depending on eigenvalue
+        variance. Default is "auto".
     :type eig_sort: {"real", "imag", "abs", "auto"}
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
-        init_lambda, maxlam, lamup, use_levmarq, maxiter, tol, eps_stall,
-        use_fulljac, verbose. Default values will be used for any parameters
-        not specified in varpro_opts_dict. See BOPDMDOperator documentation for
-        default values and descriptions for each parameter.
+        `init_lambda`, `maxlam`, `lamup`, `use_levmarq`, `maxiter`, `tol`,
+        `eps_stall`, `use_fulljac`, `verbose`. Default values will be used for
+        any parameters not specified in `varpro_opts_dict`.
+        See `BOPDMDOperator` documentation for default values and descriptions
+        for each parameter.
     :type varpro_opts_dict: dict
     """
     def __init__(self,
@@ -688,7 +689,7 @@ class BOPDMD(DMDBase):
         self._eig_sort = eig_sort
 
         if varpro_opts_dict is None:
-            self._varpro_opts_dict = dict()
+            self._varpro_opts_dict = {}
         elif not isinstance(varpro_opts_dict, dict):
             raise ValueError("varpro_opts_dict must be a dict.")
         else:
