@@ -583,7 +583,8 @@ class BOPDMDOperator(DMDOperator):
             if self._eig_sort == "real":
                 sorted_inds = np.argsort(e_i)
             elif self._eig_sort == "imag":
-                sorted_inds = np.argsort(e_i.imag + (1j * e_i.real))
+                e_i_real_imag_swapped = e_i.imag + (1j * e_i.real)
+                sorted_inds = np.argsort(e_i_real_imag_swapped)
             elif self._eig_sort == "abs":
                 sorted_inds = np.argsort(np.abs(e_i))
             else:
@@ -660,13 +661,13 @@ class BOPDMD(DMDBase):
         mentioned sorting methods is chosen depending on eigenvalue variance.
         Default is "auto".
     :type eig_sort: {"real", "imag", "abs", "auto"}
-    :param varpro_opts: Dictionary containing the desired parameter values for
-        variable projection. The following parameters may be specified:
+    :param varpro_opts_dict: Dictionary containing the desired parameter values
+        for variable projection. The following parameters may be specified:
         init_lambda, maxlam, lamup, use_levmarq, maxiter, tol, eps_stall,
         use_fulljac, verbose. Default values will be used for any parameters
-        not specified in varpro_opts. See BOPDMDOperator documentation for
+        not specified in varpro_opts_dict. See BOPDMDOperator documentation for
         default values and descriptions for each parameter.
-    :type varpro_opts: dict
+    :type varpro_opts_dict: dict
     """
     def __init__(self,
         svd_rank=0,
@@ -676,7 +677,7 @@ class BOPDMD(DMDBase):
         num_trials=0,
         trial_size=0.2,
         eig_sort="auto",
-        varpro_opts=None
+        varpro_opts_dict=None
     ):
         self._svd_rank = svd_rank
         self._use_proj = use_proj
@@ -686,49 +687,16 @@ class BOPDMD(DMDBase):
         self._trial_size = trial_size
         self._eig_sort = eig_sort
 
-        if varpro_opts is None:
-            self._varpro_opts = dict()
-        elif not isinstance(varpro_opts, dict):
-            raise ValueError("varpro_opts must be a dict.")
-        self._varpro_opts = varpro_opts
+        if varpro_opts_dict is None:
+            self._varpro_opts_dict = dict()
+        elif not isinstance(varpro_opts_dict, dict):
+            raise ValueError("varpro_opts_dict must be a dict.")
+        self._varpro_opts_dict = varpro_opts_dict
 
         self._snapshots_holder = None
         self._time = None
         self._Atilde = None
         self._modes_activation_bitmask_proxy = None
-
-
-    def _initialize_alpha(self):
-        """
-        Uses projected trapezoidal rule to approximate the eigenvalues of A in
-            z' = Az.
-        The computed eigenvalues will serve as our initial guess for alpha.
-
-        :return: Approximated eigenvalues of the matrix A.
-        :rtype: numpy.ndarray
-        """
-        # Project the snapshot data onto the projection basis.
-        ux = self._proj_basis.conj().T.dot(self.snapshots)
-        ux1 = ux[:, :-1]
-        ux2 = ux[:, 1:]
-
-        # Define the diagonal matrix T as the following.
-        t1 = self._time[:-1]
-        t2 = self._time[1:]
-        T = np.diag(t2 - t1)
-
-        # Define the matrices Y and Z as the following and compute the
-        # rank-truncated SVD of Y.
-        Y = (ux1 + ux2) / 2
-        Z = (ux2 - ux1).dot(np.linalg.inv(T))
-        U, s, V = compute_svd(Y, self._svd_rank)
-        S = np.diag(s)
-
-        # Compute the matrix Atilde and return its eigenvalues.
-        Atilde = np.linalg.multi_dot([U.conj().T, Z, V, np.linalg.inv(S)])
-
-        return np.linalg.eig(Atilde)[0]
-
 
     @property
     def svd_rank(self):
@@ -819,6 +787,38 @@ class BOPDMD(DMDBase):
             print(name + ":\t" + str(value))
 
 
+    def _initialize_alpha(self):
+        """
+        Uses projected trapezoidal rule to approximate the eigenvalues of A in
+            z' = Az.
+        The computed eigenvalues will serve as our initial guess for alpha.
+
+        :return: Approximated eigenvalues of the matrix A.
+        :rtype: numpy.ndarray
+        """
+        # Project the snapshot data onto the projection basis.
+        ux = self._proj_basis.conj().T.dot(self.snapshots)
+        ux1 = ux[:, :-1]
+        ux2 = ux[:, 1:]
+
+        # Define the diagonal matrix T as the following.
+        t1 = self._time[:-1]
+        t2 = self._time[1:]
+        T = np.diag(t2 - t1)
+
+        # Define the matrices Y and Z as the following and compute the
+        # rank-truncated SVD of Y.
+        Y = (ux1 + ux2) / 2
+        Z = (ux2 - ux1).dot(np.linalg.inv(T))
+        U, s, V = compute_svd(Y, self._svd_rank)
+        S = np.diag(s)
+
+        # Compute the matrix Atilde and return its eigenvalues.
+        Atilde = np.linalg.multi_dot([U.conj().T, Z, V, np.linalg.inv(S)])
+
+        return np.linalg.eig(Atilde)[0]
+
+
     def fit(self, X, t):
         """
         Compute the Optimized Dynamic Mode Decomposition.
@@ -876,7 +876,7 @@ class BOPDMD(DMDBase):
             self._num_trials,
             self._trial_size,
             self._eig_sort,
-            **self._varpro_opts
+            **self._varpro_opts_dict
         )
 
         # Define the snapshots that will be used for fitting.
