@@ -1,10 +1,12 @@
 from __future__ import division
+
+import numpy as np
 from past.utils import old_div
 from pytest import raises
-from pydmd.mrdmd import MrDMD
+
 from pydmd import DMD, FbDMD
-import matplotlib.pyplot as plt
-import numpy as np
+from pydmd.mrdmd import MrDMD
+
 
 def create_data(t_size=1600):
     x = np.linspace(-10, 10, 80)
@@ -263,36 +265,6 @@ def test_wrong_bin():
     with raises(ValueError):
         mrdmd.partial_modes(level=level, node=2**level)
 
-def test_wrong_plot_eig1():
-    rank = 2
-    dmd = DMD(svd_rank=rank)
-    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
-    with raises(ValueError):
-        mrdmd.plot_eigs(
-            show_axes=True, show_unit_circle=True, figsize=(8, 8), level=7)
-
-def test_plot_eig1():
-    dmd = DMD()
-    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
-    mrdmd.plot_eigs(show_axes=True, show_unit_circle=True, figsize=(8, 8))
-    plt.close()
-
-def test_plot_eig2():
-    dmd = DMD()
-    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
-    mrdmd.plot_eigs(show_axes=True, show_unit_circle=False, title='Title')
-    plt.close()
-
-def test_plot_eig3():
-    dmd = DMD()
-    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
-    mrdmd.fit(X=sample_data)
-    mrdmd.plot_eigs(show_axes=False, show_unit_circle=False, level=1, node=0)
-    plt.close()
-
 def test_consistency():
     level = 5
     dmd = DMD()
@@ -302,6 +274,7 @@ def test_consistency():
 
 def test_consistency2():
     import sys
+
     import numpy
     numpy.set_printoptions(threshold=sys.maxsize)
 
@@ -334,7 +307,7 @@ def test_one_dmd():
         for leaf in range(leaves):
             dmd = m.dmd_tree[level, leaf]
             assert isinstance(dmd, DMD)
-            assert dmd.svd_rank == 4
+            assert dmd.operator._svd_rank == 4
 
 def test_list_dmd():
     l = [DMD(svd_rank=5-i) for i in range(4)]
@@ -345,7 +318,7 @@ def test_list_dmd():
         for leaf in range(leaves):
             dmd = m.dmd_tree[level, leaf]
             assert isinstance(dmd, DMD)
-            assert dmd.svd_rank == 5 - level
+            assert dmd.operator._svd_rank == 5 - level
 
 def test_tuple_dmd():
     l = tuple(DMD(svd_rank=5-i) for i in range(4))
@@ -356,7 +329,7 @@ def test_tuple_dmd():
         for leaf in range(leaves):
             dmd = m.dmd_tree[level, leaf]
             assert isinstance(dmd, DMD)
-            assert dmd.svd_rank == 5 - level
+            assert dmd.operator._svd_rank == 5 - level
 
 def test_list_wrong_size_dmd():
     l = [DMD(svd_rank=5-i) for i in range(4)]
@@ -378,7 +351,7 @@ def test_func_dmd():
         for leaf in range(leaves):
             dmd = m.dmd_tree[level, leaf]
             assert isinstance(dmd, FbDMD)
-            assert dmd.svd_rank == level * leaf
+            assert dmd.operator._svd_rank == level * leaf
 
 def test_quantitative_list_dmd():
     l = [DMD(svd_rank=4) for i in range(4)]

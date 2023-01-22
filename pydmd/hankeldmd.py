@@ -7,12 +7,14 @@ computation of spectral properties of the Koopman operator. SIAM Journal on
 Applied Dynamical Systems, 2017, 16.4: 2096-2126.
 """
 from copy import copy
+from numbers import Number
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view as swv
 
-from .dmdbase import DMDBase
 from .dmd import DMD
+from .dmdbase import DMDBase
+from .snapshots import Snapshots
 
 
 class HankelDMD(DMDBase):
@@ -124,6 +126,7 @@ class HankelDMD(DMDBase):
             Hankel pseudo matrix.
         :rtype: int
         """
+        assert isinstance(time, Number) or np.asarray(time).ndim == 1
         return max(
             0,
             (time - self.original_time["t0"]) // self.dmd_time["dt"]
@@ -335,7 +338,7 @@ class HankelDMD(DMDBase):
         """
 
         sub_dmd_copy = copy(self._sub_dmd)
-        sub_dmd_copy.allocate_modes_bitmask_proxy()
+        sub_dmd_copy._allocate_modes_bitmask_proxy()
 
         shallow_copy = copy(self)
         shallow_copy._sub_dmd = sub_dmd_copy
@@ -348,21 +351,20 @@ class HankelDMD(DMDBase):
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         """
-        self.reset()
+        self._reset()
 
-        if isinstance(X, np.ndarray) and X.ndim == 2:
-            n_samples = X.shape[1]
-        else:
-            n_samples = len(X)
+        self._snapshots_holder = Snapshots(X)
 
+        n_samples = self.snapshots.shape[-1]
         if n_samples < self._d:
             msg = """The number of snapshots provided is not enough for d={}.
 Expected at least d."""
             raise ValueError(msg.format(self._d))
 
-        snp, self._snapshots_shape = self._col_major_2darray(X)
-        self._snapshots = self._pseudo_hankel_matrix(snp)
-        self._sub_dmd.fit(self._snapshots)
+        ho_snapshots = Snapshots(
+            self._pseudo_hankel_matrix(self.snapshots)
+        ).snapshots
+        self._sub_dmd.fit(ho_snapshots)
 
         # Default timesteps
         self._set_initial_time_dictionary(

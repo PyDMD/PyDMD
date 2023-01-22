@@ -1,8 +1,9 @@
 from builtins import range
-from pydmd.fbdmd import FbDMD
-import matplotlib.pyplot as plt
+
 import numpy as np
 from pytest import raises
+
+from pydmd.fbdmd import FbDMD
 
 
 def create_noisy_data():
@@ -68,18 +69,6 @@ def test_reconstructed_data():
     dmd_data = dmd.reconstructed_data
     dmd_data_correct = np.load('tests/test_datasets/fbdmd_data.npy')
     assert np.allclose(dmd_data, dmd_data_correct)
-
-def test_plot_eigs_1():
-    dmd = FbDMD(svd_rank=-1)
-    dmd.fit(X=sample_data)
-    dmd.plot_eigs(show_axes=True, show_unit_circle=True)
-    plt.close()
-
-def test_plot_eigs_2():
-    dmd = FbDMD(svd_rank=-1)
-    dmd.fit(X=sample_data)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    plt.close()
 
 def test_sorted_eigs_default():
     dmd = FbDMD(svd_rank=-1)
@@ -169,7 +158,7 @@ def test_bitmask_modes():
     assert dmd.modes.shape[1] == old_n_modes - 2
     np.testing.assert_almost_equal(dmd.modes, retained_modes)
 
-def test_reconstructed_data():
+def test_reconstructed_data_with_bitmask():
     dmd = FbDMD(svd_rank=-1)
     dmd.fit(X=sample_data)
 

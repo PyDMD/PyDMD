@@ -1,7 +1,9 @@
-from pytest import raises
-from pydmd import HAVOK
-from scipy.integrate import ode
 import numpy as np
+from pytest import raises
+from scipy.integrate import ode
+
+from pydmd import HAVOK
+
 
 def lorenz_system(t, state, par):
     """
@@ -121,7 +123,7 @@ def test_r():
     # If given a positive integer svd truncation, r should equal svd_rank
     havok = HAVOK(svd_rank=3)
     havok.fit(lorenz_x, dt)
-    assert havok.r == havok.svd_rank
+    assert havok.r == havok.operator._svd_rank
 
 def test_reconstruction():
     """

@@ -1,9 +1,9 @@
 from builtins import range
-from pytest import raises
-from pydmd import HankelDMD
-import matplotlib.pyplot as plt
+
 import numpy as np
-import os
+from pytest import raises
+
+from pydmd import HankelDMD
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -50,14 +50,14 @@ def test_rank():
 def test_Atilde_shape():
     dmd = HankelDMD(svd_rank=3)
     dmd.fit(X=sample_data)
-    assert dmd.atilde.shape == (dmd.svd_rank, dmd.svd_rank)
+    assert dmd.operator.as_numpy_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
 
 def test_d():
-    single_data = np.sin(np.linspace(0, 10, 100))
+    single_data = np.sin(np.linspace(0, 10, 100))[None]
     dmd = HankelDMD(svd_rank=0, d=50, opt=True)
     dmd.fit(single_data)
     np.testing.assert_array_almost_equal(
-        dmd.reconstructed_data.flatten().real,
+        dmd.reconstructed_data.real,
         single_data,
         decimal=1) # TODO poor accuracy using projected modes
     dmd = HankelDMD(svd_rank=-1, d=50, opt=True, exact=True)
@@ -73,7 +73,7 @@ def test_Atilde_values():
             [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j],
         ]
     )
-    np.testing.assert_allclose(exact_atilde, dmd.atilde)
+    np.testing.assert_allclose(exact_atilde, dmd.operator.as_numpy_array)
 
 def test_eigs_1():
     dmd = HankelDMD(svd_rank=-1)
@@ -210,101 +210,17 @@ def test_dmd_time_4():
     np.testing.assert_almost_equal(dmd.dynamics, expected_data, decimal=6)
 
 def test_dmd_time_5():
-    x = np.linspace(0, 10, 64)
+    x = np.linspace(0, 10, 64)[None]
     y = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
 
     dmd = HankelDMD(svd_rank=-1, exact=True, opt=True, d=30)
     dmd.fit(y)
 
-    dmd.original_time["dt"] = dmd.dmd_time["dt"] = x[1] - x[0]
-    dmd.original_time["t0"] = dmd.dmd_time["t0"] = x[0]
-    dmd.original_time["tend"] = dmd.dmd_time["tend"] = x[-1]
+    dmd.original_time["dt"] = dmd.dmd_time["dt"] = x[0, 1] - x[0, 0]
+    dmd.original_time["t0"] = dmd.dmd_time["t0"] = x[0, 0]
+    dmd.original_time["tend"] = dmd.dmd_time["tend"] = x[0, -1]
 
     assert dmd.reconstructed_data.shape == (1, 64)
-
-def test_plot_eigs_1():
-    dmd = HankelDMD()
-    dmd.fit(X=sample_data)
-    dmd.plot_eigs(show_axes=True, show_unit_circle=True)
-    plt.close()
-
-def test_plot_eigs_2():
-    dmd = HankelDMD()
-    dmd.fit(X=sample_data)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    plt.close()
-
-def test_plot_modes_1():
-    dmd = HankelDMD()
-    dmd.fit(X=sample_data)
-    with raises(ValueError):
-        dmd.plot_modes_2D()
-
-def test_plot_modes_2():
-    dmd = HankelDMD(svd_rank=-1)
-    dmd.fit(X=sample_data)
-    dmd.plot_modes_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
-    plt.close()
-
-def test_plot_modes_3():
-    dmd = HankelDMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D()
-    plt.close()
-
-def test_plot_modes_4():
-    dmd = HankelDMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D(index_mode=1)
-    plt.close()
-
-def test_plot_modes_5():
-    dmd = HankelDMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_modes_2D(index_mode=1, filename="tmp.png")
-    os.remove("tmp.1.png")
-
-def test_plot_snapshots_1():
-    dmd = HankelDMD()
-    dmd.fit(X=sample_data)
-    with raises(ValueError):
-        dmd.plot_snapshots_2D()
-
-def test_plot_snapshots_2():
-    dmd = HankelDMD(svd_rank=-1)
-    dmd.fit(X=sample_data)
-    dmd.plot_snapshots_2D((1, 2, 5), x=np.arange(20), y=np.arange(20))
-    plt.close()
-
-def test_plot_snapshots_3():
-    dmd = HankelDMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D()
-    plt.close()
-
-def test_plot_snapshots_4():
-    dmd = HankelDMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D(index_snap=2)
-    plt.close()
-
-def test_plot_snapshots_5():
-    dmd = HankelDMD()
-    snapshots = [snap.reshape(20, 20) for snap in sample_data.T]
-    dmd.fit(X=snapshots)
-    dmd.plot_snapshots_2D(index_snap=2, filename="tmp.png")
-    os.remove("tmp.2.png")
-
-def test_tdmd_plot():
-    dmd = HankelDMD(tlsq_rank=3)
-    dmd.fit(X=sample_data)
-    dmd.plot_eigs(show_axes=False, show_unit_circle=False)
-    plt.close()
 
 def test_sorted_eigs_default():
     dmd = HankelDMD()
@@ -386,13 +302,13 @@ def test_rec_method_weighted():
     ).all()
 
 def test_hankeldmd_timesteps():
-    x = np.linspace(0, 10, 64)
+    x = np.linspace(0, 10, 64)[None]
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
     dmd = HankelDMD(svd_rank=1, exact=True, opt=True, d=30).fit(arr)
     assert len(dmd.dmd_timesteps) == 64
 
 def test_first_occurences():
-    x = np.linspace(0, 10, 64)
+    x = np.linspace(0, 10, 64)[None]
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
     dmd = HankelDMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
     assert dmd._hankel_first_occurrence(0) == 0
@@ -406,26 +322,24 @@ def test_first_occurences():
     assert dmd._hankel_first_occurrence(100) == 98
 
     # change scale
-    dmd.dmd_time["t0"] = dmd.original_time["t0"] = x[0]
-    dmd.dmd_time["tend"] = dmd.original_time["tend"] = x[-1]
-    dmd.dmd_time["dt"] = dmd.original_time["dt"] = x[1] - x[0]
+    dmd.dmd_time["t0"] = dmd.original_time["t0"] = x[0, 0]
+    dmd.dmd_time["tend"] = dmd.original_time["tend"] = x[0, -1]
+    dmd.dmd_time["dt"] = dmd.original_time["dt"] = x[0, 1] - x[0, 0]
 
-    assert dmd._hankel_first_occurrence(x[0]) == 0
-    assert dmd._hankel_first_occurrence(x[1]) == 0
-    assert dmd._hankel_first_occurrence(x[2]) == 0
-    assert dmd._hankel_first_occurrence(x[3]) == 1
-    assert dmd._hankel_first_occurrence(x[-1] + dmd.dmd_time["dt"]) == 62
+    assert dmd._hankel_first_occurrence(x[0, 0]) == 0
+    assert dmd._hankel_first_occurrence(x[0, 1]) == 0
+    assert dmd._hankel_first_occurrence(x[0, 2]) == 0
+    assert dmd._hankel_first_occurrence(x[0, 3]) == 1
+    assert dmd._hankel_first_occurrence(x[0, -1] + dmd.dmd_time["dt"]) == 62
 
-    dmd.dmd_time["t0"] = x[len(x) // 2]
-    dmd.dmd_time["tend"] = x[-1] + dmd.dmd_time["dt"] * 20
+    dmd.dmd_time["t0"] = x[0, x.shape[-1] // 2]
+    dmd.dmd_time["tend"] = x[0, -1] + dmd.dmd_time["dt"] * 20
 
-    a = dmd._hankel_first_occurrence(dmd.dmd_time["t0"])
-    b = len(x) // 2 - 2
-    assert dmd._hankel_first_occurrence(dmd.dmd_time["t0"]) == len(x) // 2 - 2
+    assert dmd._hankel_first_occurrence(dmd.dmd_time["t0"]) == x.shape[-1] // 2 - 2
 
 def test_update_sub_dmd_time():
     dmd = HankelDMD()
-    x = np.linspace(0, 10, 64)
+    x = np.linspace(0, 10, 64)[None]
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
     dmd = HankelDMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
 
@@ -544,7 +458,7 @@ def test_bitmask_modes():
     assert dmd.modes.shape[1] == old_n_modes - 2
     np.testing.assert_almost_equal(dmd.modes, retained_modes)
 
-def test_reconstructed_data():
+def test_reconstructed_data_with_bitmask():
     dmd = HankelDMD(svd_rank=-1, d=5)
     dmd.fit(X=sample_data)
 
@@ -600,4 +514,6 @@ def test_raises_not_enough_snapshots():
     dmd = HankelDMD(svd_rank=-1, d=5)
     with raises(ValueError,  match="The number of snapshots provided is not enough for d=5.\nExpected at least d."):
         dmd.fit(np.ones((20,4)))
-    dmd.fit(np.ones((20,5)))
+    with raises(ValueError,  match="Received only one time snapshot."):
+        dmd.fit(np.ones((20,5)))
+    dmd.fit(np.ones((20,6)))

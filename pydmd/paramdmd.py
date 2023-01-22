@@ -2,7 +2,9 @@
 Module for the parametric Dynamic Mode Decomposition.
 """
 import pickle
+
 import numpy as np
+
 
 # roll by one position the shape of X. if X.shape == (a,b,c), the returned
 # NumPy array's shape is (b,c,a)
