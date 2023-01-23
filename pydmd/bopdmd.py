@@ -702,14 +702,26 @@ class BOPDMD(DMDBase):
 
     @property
     def svd_rank(self):
+        """
+        :return: the rank used for the svd truncation.
+        :rtype: int or float
+        """
         return self._svd_rank
 
     @property
     def use_proj(self):
+        """
+        :return: flag that determines whether to fit projected or full data.
+        :rtype: bool
+        """
         return self._use_proj
 
     @property
     def init_alpha(self):
+        """
+        :return: initial guess used for the continuous-time DMD eigenvalues.
+        :rtype: numpy.ndarray
+        """
         if self._init_alpha is None:
             msg = "fit() hasn't been called " \
                   "and no initial value for alpha has been given."
@@ -718,6 +730,10 @@ class BOPDMD(DMDBase):
 
     @property
     def proj_basis(self):
+        """
+        :return: the projection basis used, with modes stored by column.
+        :rtype: numpy.ndarray
+        """
         if self._proj_basis is None:
             msg = "fit() hasn't been called " \
                   "and no projection basis has been given."
@@ -726,15 +742,25 @@ class BOPDMD(DMDBase):
 
     @property
     def num_trials(self):
+        """
+        :return: the number of BOP-DMD trials to perform.
+        :rtype: int
+        """
         return self._num_trials
 
     @property
     def trial_size(self):
+        """
+        :return: size of the data subsets used during each BOP-DMD trial.
+        :rtype: int or float
+        """
         return self._trial_size
 
     @property
     def time(self):
         """
+        Get the vector that contains the time points of the fitted snapshots.
+
         :return: the vector that contains the original time points.
         :rtype: numpy.ndarray
         """
@@ -785,8 +811,12 @@ class BOPDMD(DMDBase):
         opt_names = ["init_lambda", "maxlam", "lamup", "use_levmarq",
             "maxiter","tol", "eps_stall", "use_fulljac", "verbose"]
         print("VARIABLE PROJECTION OPTIONS:")
+        print("============================")
         for name, value in zip(opt_names, self.operator.varpro_opts):
-            print(name + ":\t" + str(value))
+            if len(name) < 7:
+                print(name + ":\t\t" + str(value))
+            else:
+                print(name + ":\t" + str(value))
 
 
     def _initialize_alpha(self):
