@@ -34,6 +34,7 @@ jobs:
         path: ./tutorials/tutorial12/SegTrackv2
         key: SegTrackv2-key
 
+    # This is needed for tutorial12
     - name: Download SegTrackv2
       if: steps.cache-segtrackv2.outputs.cache-hit != 'true'
       run: |
