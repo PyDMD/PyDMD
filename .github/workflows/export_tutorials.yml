@@ -1,0 +1,86 @@
+name: "Export tutorials"
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'tutorials/**/*.ipynb'
+
+jobs:
+  export_tutorials:
+    runs-on: ubuntu-latest
+        
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4.5.0
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install .[test]
+        python3 -m pip install .
+        # Dependencies for tutorials
+        python3 -m pip install jupyter pandas ezyrb opencv-python ffmpeg-python
+
+    - uses: actions/cache@v2
+      id: cache-segtrackv2
+      with:
+        path: ./tutorials/tutorial12/SegTrackv2
+        key: SegTrackv2-key
+
+    # This is needed for tutorial12
+    - name: Download SegTrackv2
+      if: steps.cache-segtrackv2.outputs.cache-hit != 'true'
+      run: |
+        curl https://web.engr.oregonstate.edu/~lif/SegTrack2/SegTrackv2.zip --output SegTrackv2.zip
+        unzip -qq SegTrackv2.zip
+        mv SegTrackv2 tutorials/tutorial12
+
+    - name: Setup FFmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v2
+        
+    - id: files
+      uses: jitterbit/get-changed-files@v1
+
+    - name: Configure git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+    - name: Convert tutorials
+      run: |
+        for file in ${{ steps.files.outputs.all }}; do
+          if [[ $file == *tutorial-5* ]]; then
+            echo "Skipped $file"
+          elif [[ $file == *.ipynb ]]; then
+            filename=$(basename $file)
+
+            pyfilename=$(echo ${filename%?????})py
+            jupyter nbconvert --execute $file --to python --output $pyfilename
+
+            htmlfilename=$(echo ${filename%?????} | sed -e 's/-//g')html
+            jupyter nbconvert --execute $file --to html --output $htmlfilename --output-dir=docs/source/_tutorials
+          fi
+        done
+    
+    - uses: benjlevesque/short-sha@v2.1
+      id: short-sha
+
+    - name: Remove unwanted files
+      run: |
+        rm -rf build/
+        rm -rf tutorials/tutorial12/SegTrackv2/
+        
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v4
+      with:
+        labels: maintenance
+        title: Export tutorial changed in ${{ steps.short-sha.outputs.sha }}
+        branch: export-tutorial-${{ steps.short-sha.outputs.sha }}
+        commit-message: export tutorials changed in ${{ steps.short-sha.outputs.sha }}
+        delete-branch: true

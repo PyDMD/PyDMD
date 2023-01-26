@@ -1,0 +1,62 @@
+name: "Testing tutorials"
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  test_tutorials:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4.5.0
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: setup.py
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install .[test]
+        # Dependencies for tutorials
+        pip install jupyter pandas opencv-python ffmpeg-python
+
+    - uses: actions/cache@v2
+      id: cache-segtrackv2
+      with:
+        path: ./tutorials/tutorial12/SegTrackv2
+        key: SegTrackv2-key
+
+    # This is needed for tutorial12
+    - name: Download SegTrackv2
+      if: steps.cache-segtrackv2.outputs.cache-hit != 'true'
+      run: |
+        curl https://web.engr.oregonstate.edu/~lif/SegTrack2/SegTrackv2.zip --output SegTrackv2.zip
+        unzip -qq SegTrackv2.zip
+        mv SegTrackv2 tutorials/tutorial12
+
+    - name: Setup FFmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v2
+        
+    - name: Test tutorials
+      run: |
+        cd tutorials/
+        for dir in $(ls -d tutorial*/); do
+          if [[ $dir != tutorial5* ]]
+            then
+            jupyter nbconvert --to notebook --execute ${dir}*.ipynb
+          fi
+        done
