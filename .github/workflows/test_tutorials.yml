@@ -10,23 +10,29 @@ on:
 
 jobs:
   test_tutorials:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
         
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up Python
       uses: actions/setup-python@v4.5.0
       with:
-        python-version: 3.8
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: setup.py
 
     - name: Install dependencies
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install .[test]
-        python3 -m pip install .
+        pip install --upgrade pip
+        pip install .[test]
         # Dependencies for tutorials
-        python3 -m pip install jupyter pandas ezyrb opencv-python ffmpeg-python
+        pip install jupyter pandas opencv-python ffmpeg-python
 
     - uses: actions/cache@v2
       id: cache-segtrackv2
@@ -51,6 +57,6 @@ jobs:
         for dir in $(ls -d tutorial*/); do
           if [[ $dir != tutorial5* ]]
             then
-            python3 -m jupyter nbconvert --to notebook --execute ${dir}*.ipynb
+            jupyter nbconvert --to notebook --execute ${dir}*.ipynb
           fi
         done
