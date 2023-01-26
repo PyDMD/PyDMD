@@ -3,11 +3,16 @@ Module for snapshots normalization.
 """
 import warnings
 import logging
-from math import prod
-
-import numpy as np
+from functools import reduce
+import operator
 
 from pydmd.linalg import build_linalg_module, cast_as_array
+
+def _prod(iter):
+    """
+    Equivalent to math.prod, compatible with Python 3.7
+    """
+    return reduce(operator.mul, iter, 1)
 
 
 class Snapshots:
@@ -62,7 +67,7 @@ class Snapshots:
                 n_batches = 1
 
             linalg_module = build_linalg_module(X)
-            snapshots = linalg_module.reshape(X, (n_batches, prod(space), time))
+            snapshots = linalg_module.reshape(X, (n_batches, _prod(space), time))
             if not batch:
                 snapshots = snapshots[0]
 
