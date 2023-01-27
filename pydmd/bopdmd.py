@@ -132,6 +132,13 @@ class BOPDMDOperator(DMDOperator):
         )
         self._varpro_opts_warn()
 
+        self._modes = None
+        self._eigenvalues = None
+        self._eigenvalues_std = None
+        self._amplitudes_std = None
+        self._Atilde = None
+        self._A = None
+
 
     @property
     def varpro_opts(self):
@@ -152,9 +159,31 @@ class BOPDMDOperator(DMDOperator):
         :return: the full Koopman operator A.
         :rtype: numpy.ndarray
         """
-        if not hasattr(self, "_A"):
+        if self._A is None:
             raise ValueError("You need to call fit before")
         return self._A
+
+
+    @property
+    def amplitudes_std(self):
+        """
+        Get the amplitudes standard deviation.
+
+        :return: amplitudes standard deviation.
+        :rtype: numpy.ndarray
+        """
+        return self._amplitudes_std
+
+
+    @property
+    def eigenvalues_std(self):
+        """
+        Get the eigenvalues standard deviation.
+
+        :return: eigenvalues standard deviation.
+        :rtype: numpy.ndarray
+        """
+        return self._eigenvalues_std
 
 
     def _varpro_opts_warn(self):
@@ -610,7 +639,6 @@ class BOPDMDOperator(DMDOperator):
         )
 
         # Compute and save the standard deviation of the optimized dmd results.
-        self._modes_std = np.std(all_w, axis=0)
         self._eigenvalues_std = np.std(all_e, axis=0)
         self._amplitudes_std = np.std(all_b, axis=0)
 
@@ -940,7 +968,7 @@ class BOPDMD(DMDBase):
             raise ValueError("Input time vector t must be one-dimensional.")
 
         # If variance information has been recorded, use it.
-        if hasattr(self.operator, "_eigenvalues_std"):
+        if self.operator.eigenvalues_std is not None:
 
             # Compute num_trials many forecasts.
             all_x = np.empty(
@@ -952,11 +980,11 @@ class BOPDMD(DMDBase):
                 # Draw eigenvalues and amplitudes from random distribution.
                 eigs_k = self.eigs + np.multiply(
                     np.random.randn(*self.eigs.shape),
-                    self.operator._eigenvalues_std
+                    self.operator.eigenvalues_std
                 )
                 b_k = self.amplitudes + np.multiply(
                     np.random.randn(*self.amplitudes.shape),
-                    self.operator._amplitudes_std
+                    self.operator.amplitudes_std
                 )
                 # Compute forecast using average modes and eigs_k, b_k.
                 all_x[k] = np.linalg.multi_dot(
