@@ -54,14 +54,22 @@ class RDMD(CDMD):
     """
     Randomized Dynamic Mode Decomposition
 
-    :param int oversampling: Number of additional samples to use when
-        computing the random test matrix.
-        Note that oversampling = {5,10} is often sufficient.
-    :param int power_iters: Number of power iterations to perform.
-        Note that power_iters = {1,2} leads to considerable improvements.
+    :param rand_mat: The random test matrix that will be used when executing
+        the Randomized QB Decomposition. If not provided, the `svd_rank` and
+        `oversampling` parameters will be used to compute the random matrix.
+    :type rand_mat: numpy.ndarray
+    :param oversampling: Number of additional samples (beyond the desired rank)
+        to use when computing the random test matrix. Note that values {5,10}
+        tend to be sufficient.
+    :type oversampling: int
+    :param power_iters: Number of power iterations to perform when executing
+        the Randomized QB Decomposition. Note that values {1,2} often lead to
+        considerable improvements.
+    :type power_iters: int
     """
     def __init__(
         self,
+        rand_mat=None,
         oversampling=10,
         power_iters=2,
         svd_rank=0,
@@ -85,40 +93,39 @@ class RDMD(CDMD):
         self._svd_rank = svd_rank
         self._oversampling = oversampling
         self._power_iters = power_iters
+        self._rand_mat = rand_mat
 
     def _compress_snapshots(self):
         """
         Private method that compresses the snapshot matrix X by projecting X
         onto a near-optimal orthonormal basis for the range of X computed via
         the Randomized QB Decomposition.
+
         :return: the compressed snapshots
         :rtype: numpy.ndarray
         """
-        # Perform the Randomized QB Decomposition
-        m = self.snapshots.shape[-1]
+        # Define the random test matrix if not provided.
+        if self._rand_mat is None:
+            m = self.snapshots.shape[-1]
+            r = compute_rank(self.snapshots, self._svd_rank)
+            self._rand_mat = np.random.randn(m, r + self._oversampling)
 
-        # Compute the target rank
-        self._svd_rank = compute_rank(self.snapshots, self._svd_rank)
+        # Compute sampling matrix.
+        Y = self.snapshots.dot(self._rand_mat)
 
-        # Generate random test matrix (with slight oversampling)
-        Omega = np.random.randn(m, self._svd_rank + self._oversampling)
-
-        # Compute sampling matrix
-        Y = self.snapshots.dot(Omega)
-
-        # Perform power iterations
+        # Perform power iterations.
         for _ in range(self._power_iters):
             Q = np.linalg.qr(Y)[0]
             Z = np.linalg.qr(self.snapshots.conj().T.dot(Q))[0]
             Y = self.snapshots.dot(Z)
 
-        # Orthonormalize the sampling matrix
+        # Orthonormalize the sampling matrix.
         Q = np.linalg.qr(Y)[0]
 
-        # Project the snapshot matrix onto the smaller space
+        # Project the snapshot matrix onto the smaller space.
         B = Q.conj().T.dot(self.snapshots)
 
-        # Save the compression matrix
+        # Save the compression matrix.
         self._compression_matrix = Q.conj().T
 
         return B
