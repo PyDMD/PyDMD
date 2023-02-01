@@ -577,7 +577,8 @@ def diagnostics(
         eigenvalue, mode, dynamics associations. The first three colors are
         used to highlight the singular values and eigenvalues associated with
         the plotted modes and dynamics, while the fourth color is used to
-        denote all other singular values and eigenvalues.
+        denote all other singular values and eigenvalues. Default colors are
+        ["r","b","g","gray"].
     :type mode_colors: list(str,str,str,str)
     """
     if dmd.modes is None:
