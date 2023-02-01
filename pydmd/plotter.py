@@ -535,7 +535,7 @@ def diagnostics(
     filename=None,
     order="C",
     figsize=(12,8),
-    mode_colors=["r","b","g","gray"],
+    mode_colors=None,
 ):
     """
     Generate a 3x3 summarizing plot that contains the following components:
@@ -605,6 +605,9 @@ def diagnostics(
         index_modes = list(range(3))
     elif (not isinstance(index_modes, list) or len(index_modes) > 3):
         raise ValueError("index_modes must be a list of length at most 3.")
+
+    if mode_colors is None:
+        mode_colors = ["r","b","g","gray"]
 
     # Order the DMD eigenvalues, modes, and dynamics according to amplitude.
     mode_order = np.argsort(-np.abs(dmd.amplitudes))
