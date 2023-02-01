@@ -45,8 +45,8 @@ class Snapshots:
                 raise ValueError(
                     "Expected at least a 2D matrix (space x time)."
                 )
-            snapshots = X.reshape((len(X), -1))
-            shapes = set((X.shape[1:],))
+            snapshots = X.reshape((-1, X.shape[-1]))
+            shapes = set((X.shape[:-1],))
         else:
             shapes, arrays = zip(
                 *[(xarr.shape, xarr.flatten()) for xarr in map(np.asarray, X)]
@@ -57,9 +57,11 @@ class Snapshots:
                 raise ValueError(
                     f"Snapshots must have the same size, found {len(shapes)}."
                 )
+            if len(next(iter(shapes))) == 0:
+                raise ValueError("Expected at least a 2D matrix")
 
             # move the time to the last axis
-            snapshots = np.moveaxis(np.array(arrays), 0, -1)
+            snapshots = np.moveaxis(np.stack(arrays), 0, -1)
 
         return snapshots, shapes.pop()
 
@@ -72,12 +74,6 @@ class Snapshots:
                 """Consider preprocessing data, passing in augmented data
 matrix, or regularization methods."""
             )
-
-    def transpose(self):
-        """
-        Compute a new set of snapshots by permuting space and time.
-        """
-        return Snapshots(self.snapshots.T)
 
     @property
     def snapshots(self):
