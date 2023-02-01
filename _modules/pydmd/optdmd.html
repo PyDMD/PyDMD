@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.optdmd &mdash; PyDMD 0.4.0.post2301 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.optdmd &mdash; PyDMD 0.4.0.post2302 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2301
+                0.4.0.post2302
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -79,12 +79,13 @@
 <span class="sd">    solution in polynomial time. arXiv:1610.02962. 2016.</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">eig</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">eig</span>
 
 <span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
 <span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_tlsq</span><span class="p">,</span> <span class="n">compute_svd</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span><span class="p">,</span> <span class="n">compute_tlsq</span>
+<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
 
 
 <span class="k">def</span> <span class="nf">pinv_diag</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -246,8 +247,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_svds</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_input_space</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_output_space</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_input_snapshots</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_snapshots_shape</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_output_snapshots</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_snapshots_shape</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_input_holder</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_holder</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">factorization</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -275,23 +276,21 @@
 <span class="sd">            is None.</span>
 <span class="sd">        :type Y: numpy.ndarray or iterable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">Y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
-            <span class="n">Y</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>  <span class="c1"># y = x[k+1]</span>
-            <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># x = x[k]</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># x = x[k]</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>  <span class="c1"># y = x[k+1]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_input_snapshots</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_input_snapshots_shape</span><span class="p">,</span>
-            <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-            <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_output_snapshots</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_output_snapshots_shape</span><span class="p">,</span>
-            <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_input_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_holder</span><span class="o">.</span><span class="n">snapshots</span>
 
-        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">compute_tlsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tlsq_rank</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_output_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_holder</span><span class="o">.</span><span class="n">snapshots</span>
+
+        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">compute_tlsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tlsq_rank</span><span class="p">)</span>
         <span class="n">Uz</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">compute_operator</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">factorization</span> <span class="o">==</span> <span class="s2">&quot;svd&quot;</span><span class="p">:</span>
@@ -378,7 +377,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2023.
+      <span class="lastupdated">Last updated on Feb 01, 2023.
       </span></p>
   </div>
 

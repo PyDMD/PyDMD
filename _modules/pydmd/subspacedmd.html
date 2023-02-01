@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.subspacedmd &mdash; PyDMD 0.4.0.post2301 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.subspacedmd &mdash; PyDMD 0.4.0.post2302 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2301
+                0.4.0.post2302
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -82,6 +82,7 @@
 
 <span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
 <span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
+<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
 
 
 <span class="k">def</span> <span class="nf">reducedsvd</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -229,8 +230,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_opt</span> <span class="o">=</span> <span class="n">opt</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -242,18 +242,20 @@
 
 <div class="viewcode-block" id="SubspaceDMD.fit"><a class="viewcode-back" href="../../subspacedmd.html#pydmd.subspacedmd.SubspaceDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute the SubspaceDynamic Modes Decomposition to the input data.</span>
+<span class="sd">        Compute the Subspace Dynamic Modes Decomposition to the input data.</span>
 
 <span class="sd">        :param X: the input snapshots.</span>
 <span class="sd">        :type X: numpy.ndarray or iterable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
 
-        <span class="n">n_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">Y0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
-        <span class="n">Y1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
-        <span class="n">Y2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">Y3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">Y0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">Y1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">Y2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">Y3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:]</span>
 
         <span class="n">Yp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">Y0</span><span class="p">,</span> <span class="n">Y1</span><span class="p">))</span>
         <span class="n">Yf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">Y2</span><span class="p">,</span> <span class="n">Y3</span><span class="p">))</span>
@@ -278,7 +280,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2023.
+      <span class="lastupdated">Last updated on Feb 01, 2023.
       </span></p>
   </div>
 

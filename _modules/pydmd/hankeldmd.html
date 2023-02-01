@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.hankeldmd &mdash; PyDMD 0.4.0.post2301 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.hankeldmd &mdash; PyDMD 0.4.0.post2302 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2301
+                0.4.0.post2302
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -78,12 +78,14 @@
 <span class="sd">Applied Dynamical Systems, 2017, 16.4: 2096-2126.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy.lib.stride_tricks</span> <span class="kn">import</span> <span class="n">sliding_window_view</span> <span class="k">as</span> <span class="n">swv</span>
 
-<span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
 <span class="kn">from</span> <span class="nn">.dmd</span> <span class="kn">import</span> <span class="n">DMD</span>
+<span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
+<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
 
 
 <div class="viewcode-block" id="HankelDMD"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD">[docs]</a><span class="k">class</span> <span class="nc">HankelDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
@@ -195,6 +197,7 @@
 <span class="sd">            Hankel pseudo matrix.</span>
 <span class="sd">        :rtype: int</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">Number</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="nb">max</span><span class="p">(</span>
             <span class="mi">0</span><span class="p">,</span>
             <span class="p">(</span><span class="n">time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">])</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
@@ -406,7 +409,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">sub_dmd_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="p">)</span>
-        <span class="n">sub_dmd_copy</span><span class="o">.</span><span class="n">allocate_proxy</span><span class="p">()</span>
+        <span class="n">sub_dmd_copy</span><span class="o">.</span><span class="n">_allocate_modes_bitmask_proxy</span><span class="p">()</span>
 
         <span class="n">shallow_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">shallow_copy</span><span class="o">.</span><span class="n">_sub_dmd</span> <span class="o">=</span> <span class="n">sub_dmd_copy</span>
@@ -419,20 +422,20 @@
 <span class="sd">        :param X: the input snapshots.</span>
 <span class="sd">        :type X: numpy.ndarray or iterable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">X</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">n_samples</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">n_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">n_samples</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;The number of snapshots provided is not enough for d=</span><span class="si">{}</span><span class="s2">.</span>
 <span class="s2">Expected at least d.&quot;&quot;&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="p">))</span>
 
-        <span class="n">snp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pseudo_hankel_matrix</span><span class="p">(</span><span class="n">snp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">)</span>
+        <span class="n">ho_snapshots</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pseudo_hankel_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">snapshots</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">ho_snapshots</span><span class="p">)</span>
 
         <span class="c1"># Default timesteps</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_initial_time_dictionary</span><span class="p">(</span>
@@ -450,7 +453,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2023.
+      <span class="lastupdated">Last updated on Feb 01, 2023.
       </span></p>
   </div>
 

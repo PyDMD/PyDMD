@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Randomized DMD &mdash; PyDMD 0.4.0.post2301 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Randomized DMD &mdash; PyDMD 0.4.0.post2302 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2301
+                0.4.0.post2302
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -97,17 +97,21 @@ Randomized dynamic mode decomposition. SIAM Journal on Applied Dynamical
 Systems, 18, 2019.</p>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-name descname">RDMD</code><span class="sig-paren">(</span><em class="sig-param">oversampling=10</em>, <em class="sig-param">power_iters=2</em>, <em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">sorted_eigs=False</em>, <em class="sig-param">tikhonov_regularization=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/rdmd.html#RDMD"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="sig-name descname">RDMD</code><span class="sig-paren">(</span><em class="sig-param">rand_mat=None</em>, <em class="sig-param">oversampling=10</em>, <em class="sig-param">power_iters=2</em>, <em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">sorted_eigs=False</em>, <em class="sig-param">tikhonov_regularization=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/rdmd.html#RDMD"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.cdmd.CDMD</span></code></p>
 <p>Randomized Dynamic Mode Decomposition</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>oversampling</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of additional samples to use when
-computing the random test matrix.
-Note that oversampling = {5,10} is often sufficient.</p></li>
-<li><p><strong>power_iters</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of power iterations to perform.
-Note that power_iters = {1,2} leads to considerable improvements.</p></li>
+<li><p><strong>rand_mat</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – The random test matrix that will be used when executing
+the Randomized QB Decomposition. If not provided, the <cite>svd_rank</cite> and
+<cite>oversampling</cite> parameters will be used to compute the random matrix.</p></li>
+<li><p><strong>oversampling</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of additional samples (beyond the desired rank)
+to use when computing the random test matrix. Note that values {5,10}
+tend to be sufficient.</p></li>
+<li><p><strong>power_iters</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of power iterations to perform when executing
+the Randomized QB Decomposition. Note that values {1,2} often lead to
+considerable improvements.</p></li>
 </ul>
 </dd>
 </dl>
@@ -116,9 +120,15 @@ Note that power_iters = {1,2} leads to considerable improvements.</p></li>
 <code class="sig-name descname">_compress_snapshots</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/rdmd.html#RDMD._compress_snapshots"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Private method that compresses the snapshot matrix X by projecting X
 onto a near-optimal orthonormal basis for the range of X computed via
-the Randomized QB Decomposition.
-:return: the compressed snapshots
-:rtype: numpy.ndarray</p>
+the Randomized QB Decomposition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the compressed snapshots</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -137,7 +147,7 @@ the Randomized QB Decomposition.
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2023.
+      <span class="lastupdated">Last updated on Feb 01, 2023.
       </span></p>
   </div>
 

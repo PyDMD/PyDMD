@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.dmdc &mdash; PyDMD 0.4.0.post2301 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.dmdc &mdash; PyDMD 0.4.0.post2302 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2301
+                0.4.0.post2302
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -76,12 +76,13 @@
 <span class="sd">- Proctor, J.L., Brunton, S.L. and Kutz, J.N., 2016. Dynamic mode decomposition</span>
 <span class="sd">with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">past.utils</span> <span class="kn">import</span> <span class="n">old_div</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">past.utils</span> <span class="kn">import</span> <span class="n">old_div</span>
 
 <span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
 <span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_tlsq</span><span class="p">,</span> <span class="n">compute_svd</span>
+<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span><span class="p">,</span> <span class="n">compute_tlsq</span>
 
 
 <span class="k">class</span> <span class="nc">DMDControlOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
@@ -264,11 +265,11 @@
         <span class="p">}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_opt</span> <span class="o">=</span> <span class="n">opt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exact</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_B</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_controlin_shape</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span> <span class="o">=</span> <span class="kc">None</span>
@@ -309,12 +310,13 @@
 <span class="sd">        :return: the matrix that contains the reconstructed snapshots.</span>
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">control_input</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">controlin</span><span class="p">,</span> <span class="n">controlin_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_controlin_shape</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">controlin</span><span class="p">,</span> <span class="n">controlin_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">control_input</span><span class="p">)</span>
+        <span class="n">controlin</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">control_input</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">control_input</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span>
+        <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">controlin</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">controlin</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="s1">&#39;The number of control inputs and the number of snapshots to &#39;</span>
                 <span class="s1">&#39;reconstruct has to be the same&#39;</span>
@@ -325,10 +327,16 @@
         <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">eigs</span><span class="p">),</span>
                                  <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">)])</span>
 
-        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]]</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]]</span>
+        <span class="n">expected_shape</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">controlin</span><span class="o">.</span><span class="n">T</span><span class="p">):</span>
-            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_B</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_B</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">expected_shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Invalid shape: expected </span><span class="si">{expected_shape}</span><span class="s2">, got </span><span class="si">{arr.shape}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
 
         <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
         <span class="k">return</span> <span class="n">data</span></div>
@@ -348,12 +356,14 @@
 <span class="sd">            influences the system evolution.</span>
 <span class="sd">        :type B: numpy.ndarray or iterable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_controlin_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
 
-        <span class="n">n_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_controlin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">I</span><span class="p">))</span>
+
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_initial_time_dictionary</span><span class="p">(</span>
             <span class="p">{</span><span class="s2">&quot;t0&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;tend&quot;</span><span class="p">:</span> <span class="n">n_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
@@ -383,7 +393,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2023.
+      <span class="lastupdated">Last updated on Feb 01, 2023.
       </span></p>
   </div>
 

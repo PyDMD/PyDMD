@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.spdmd &mdash; PyDMD 0.4.0.post2301 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.spdmd &mdash; PyDMD 0.4.0.post2302 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2301
+                0.4.0.post2302
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -73,7 +73,6 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">solve</span>
-
 <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">csc_matrix</span> <span class="k">as</span> <span class="n">sparse</span><span class="p">,</span>
     <span class="n">vstack</span> <span class="k">as</span> <span class="n">spvstack</span><span class="p">,</span>
@@ -190,8 +189,8 @@
 <span class="sd">        :param X: the input snapshots.</span>
 <span class="sd">        :type X: numpy.ndarray or iterable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># we call method fit() of the superclass to set all the needed fields</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
         <span class="n">P</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimal_dmd_matrices</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_P</span> <span class="o">=</span> <span class="n">sparse</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
@@ -207,7 +206,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimal_amplitudes</span><span class="p">(</span><span class="n">zero_amplitudes</span><span class="p">)</span>
         <span class="c1"># re-allocate the Proxy to avoid problems due to the fact that we</span>
         <span class="c1"># re-computed the amplitudes</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">allocate_proxy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_allocate_modes_bitmask_proxy</span><span class="p">()</span>
 
         <span class="c1"># release memory</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_release_memory</span><span class="p">:</span>
@@ -396,7 +395,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2023.
+      <span class="lastupdated">Last updated on Feb 01, 2023.
       </span></p>
   </div>
 

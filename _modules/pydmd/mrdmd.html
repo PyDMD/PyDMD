@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.mrdmd &mdash; PyDMD 0.4.0.post2301 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.mrdmd &mdash; PyDMD 0.4.0.post2302 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2301
+                0.4.0.post2302
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -76,17 +76,16 @@
 <span class="sd">- Kutz, J. Nathan, Xing Fu, and Steven L. Brunton. Multiresolution Dynamic Mode</span>
 <span class="sd">Decomposition. SIAM Journal on Applied Dynamical Systems 15.2 (2016): 713-735.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">range</span>
-<span class="kn">from</span> <span class="nn">past.utils</span> <span class="kn">import</span> <span class="n">old_div</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">past.utils</span> <span class="kn">import</span> <span class="n">old_div</span>
 <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">block_diag</span>
 
+<span class="kn">from</span> <span class="nn">.dmd_modes_tuner</span> <span class="kn">import</span> <span class="n">select_modes</span>
 <span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
-<span class="kn">from</span> <span class="nn">.dmd_modes_tuner</span> <span class="kn">import</span> <span class="n">ModesSelectors</span><span class="p">,</span> <span class="n">select_modes</span>
+<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
 
 
 <span class="k">class</span> <span class="nc">BinaryTree</span><span class="p">:</span>
@@ -531,11 +530,13 @@
 <span class="sd">        :param X: the input snapshots.</span>
 <span class="sd">        :type X: numpy.ndarray or iterable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
         <span class="c1"># Redefine max level if it is too big.</span>
         <span class="n">lvl_threshold</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mf">4.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mf">4.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">&gt;</span> <span class="n">lvl_threshold</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">=</span> <span class="n">lvl_threshold</span>
@@ -548,7 +549,7 @@
         <span class="k">def</span> <span class="nf">slow_modes</span><span class="p">(</span><span class="n">dmd</span><span class="p">,</span> <span class="n">rho</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">rho</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
 
-        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">levels</span><span class="p">:</span>
             <span class="n">n_leaf</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">level</span>
             <span class="n">Xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">n_leaf</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -571,119 +572,10 @@
             <span class="n">X</span> <span class="o">-=</span> <span class="n">newX</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_initial_time_dictionary</span><span class="p">(</span>
-            <span class="nb">dict</span><span class="p">(</span><span class="n">t0</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dt</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">t0</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dt</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">self</span></div>
-
-<div class="viewcode-block" id="MrDMD.plot_eigs"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.plot_eigs">[docs]</a>    <span class="k">def</span> <span class="nf">plot_eigs</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">show_axes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">show_unit_circle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-        <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Plot the eigenvalues.</span>
-
-<span class="sd">        :param bool show_axes: if True, the axes will be showed in the plot.</span>
-<span class="sd">                Default is True.</span>
-<span class="sd">        :param bool show_unit_circle: if True, the circle with unitary radius</span>
-<span class="sd">                and center in the origin will be showed. Default is True.</span>
-<span class="sd">        :param tuple(int,int) figsize: tuple in inches of the figure.</span>
-<span class="sd">        :param str title: title of the plot.</span>
-<span class="sd">        :param int level: plot only the eigenvalues of specific level.</span>
-<span class="sd">        :param int node: plot only the eigenvalues of specific node.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;The eigenvalues have not been computed.&quot;</span>
-                <span class="s2">&quot;You have to perform the fit method.&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">level</span><span class="p">:</span>
-            <span class="n">peigs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_eigs</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">peigs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span>
-
-        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">gcf</span><span class="p">()</span>
-        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">level</span><span class="p">:</span>
-            <span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s2">&quot;viridis&quot;</span><span class="p">)</span>
-            <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">cmap</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">levels</span><span class="p">))</span>
-            <span class="p">]</span>
-
-            <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">levels</span><span class="p">:</span>
-                <span class="n">eigs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_eigs</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
-
-                <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">eigs</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">level</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">points</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">peigs</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">peigs</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s2">&quot;bo&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Eigenvalues&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="p">)</span>
-
-        <span class="c1"># set limits for axis</span>
-        <span class="n">limit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">peigs</span><span class="p">)))</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">((</span><span class="o">-</span><span class="n">limit</span><span class="p">,</span> <span class="n">limit</span><span class="p">))</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">((</span><span class="o">-</span><span class="n">limit</span><span class="p">,</span> <span class="n">limit</span><span class="p">))</span>
-
-        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Imaginary part&quot;</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Real part&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">show_unit_circle</span><span class="p">:</span>
-            <span class="n">unit_circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span>
-                <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span>
-            <span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">unit_circle</span><span class="p">)</span>
-
-        <span class="c1"># Dashed grid</span>
-        <span class="n">gridlines</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_xgridlines</span><span class="p">()</span> <span class="o">+</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_ygridlines</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">gridlines</span><span class="p">:</span>
-            <span class="n">line</span><span class="o">.</span><span class="n">set_linestyle</span><span class="p">(</span><span class="s2">&quot;-.&quot;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">)</span>
-
-        <span class="c1"># x and y axes</span>
-        <span class="k">if</span> <span class="n">show_axes</span><span class="p">:</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
-                <span class="s2">&quot;&quot;</span><span class="p">,</span>
-                <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">limit</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]),</span> <span class="mf">0.0</span><span class="p">),</span>
-                <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="o">-</span><span class="n">limit</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">]),</span> <span class="mf">0.0</span><span class="p">),</span>
-                <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">),</span>
-            <span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
-                <span class="s2">&quot;&quot;</span><span class="p">,</span>
-                <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">limit</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])),</span>
-                <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="o">-</span><span class="n">limit</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">])),</span>
-                <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">),</span>
-            <span class="p">)</span>
-
-        <span class="c1"># legend</span>
-        <span class="k">if</span> <span class="n">level</span><span class="p">:</span>
-            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Eigenvalues - level </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">level</span><span class="p">)]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="s2">&quot;Eigenvalues - level </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">)</span>
-            <span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">show_unit_circle</span><span class="p">:</span>
-            <span class="n">points</span> <span class="o">+=</span> <span class="p">[</span><span class="n">unit_circle</span><span class="p">]</span>
-            <span class="n">labels</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;Unit circle&quot;</span><span class="p">]</span>
-
-        <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">))</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
 </pre></div>
 
            </div>
@@ -694,7 +586,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2023.
+      <span class="lastupdated">Last updated on Feb 01, 2023.
       </span></p>
   </div>
 

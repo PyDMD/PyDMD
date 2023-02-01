@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.cdmd &mdash; PyDMD 0.4.0.post2301 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.cdmd &mdash; PyDMD 0.4.0.post2302 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2301
+                0.4.0.post2302
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -75,14 +75,15 @@
 <span class="sd">https://doi.org/10.1007/s11554-016-0655-2</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy.sparse</span>
 <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">sqrtm</span>
 
 <span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
 <span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
-
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_tlsq</span><span class="p">,</span> <span class="n">compute_svd</span>
+<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span><span class="p">,</span> <span class="n">compute_tlsq</span>
 
 
 <span class="k">class</span> <span class="nc">CDMDOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
@@ -223,6 +224,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_tlsq_rank</span> <span class="o">=</span> <span class="n">tlsq_rank</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_opt</span> <span class="o">=</span> <span class="n">opt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exact</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compression_matrix</span> <span class="o">=</span> <span class="n">compression_matrix</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">CDMDOperator</span><span class="p">(</span><span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span>
@@ -248,7 +250,7 @@
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">C_shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">C_shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">compression_matrix</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compression_matrix</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">compression_matrix</span> <span class="o">==</span> <span class="s1">&#39;uniform&#39;</span><span class="p">:</span>
@@ -259,11 +261,11 @@
             <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">C_shape</span><span class="p">))</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">compression_matrix</span> <span class="o">==</span> <span class="s1">&#39;sample&#39;</span><span class="p">:</span>
             <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">C_shape</span><span class="p">)</span>
-            <span class="n">C</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
-              <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.</span>
+            <span class="n">C</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+              <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.</span>
 
         <span class="c1"># compress the matrix</span>
-        <span class="n">Y</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">)</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Y</span></div>
 
@@ -274,16 +276,17 @@
 <span class="sd">        :param X: the input snapshots.</span>
 <span class="sd">        :type X: numpy.ndarray or iterable</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         <span class="n">compressed_snapshots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compress_snapshots</span><span class="p">()</span>
 
         <span class="n">n_samples</span> <span class="o">=</span> <span class="n">compressed_snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">X</span> <span class="o">=</span> <span class="n">compressed_snapshots</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">Y</span> <span class="o">=</span> <span class="n">compressed_snapshots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
 
-        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">compute_tlsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tlsq_rank</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">compute_operator</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:])</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">compute_tlsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tlsq_rank</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">compute_operator</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:])</span>
 
         <span class="c1"># Default timesteps</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_initial_time_dictionary</span><span class="p">(</span>
@@ -303,7 +306,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2023.
+      <span class="lastupdated">Last updated on Feb 01, 2023.
       </span></p>
   </div>
 

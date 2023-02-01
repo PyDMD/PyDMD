@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOP-DMD &mdash; PyDMD 0.4.0.post2302 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> PyDMD
+          </a>
+              <div class="version">
+                0.4.0.post2302
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="code.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">BOP-DMD</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/bopdmd.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-pydmd.bopdmd">
+<span id="bop-dmd"></span><h1>BOP-DMD<a class="headerlink" href="#module-pydmd.bopdmd" title="Permalink to this headline">¶</a></h1>
+<p>Derived module from dmdbase.py for Optimized DMD and Bagging, Optimized DMD
+(BOP-DMD).</p>
+<p>References:
+- Travis Askham and J. Nathan Kutz. Variable projection methods for an
+optimized dynamic mode decomposition. SIAM Journal on Applied Dynamical
+Systems, 17, 2018.
+- Diya Sashidhar and J. Nathan Kutz. Bagging, optimized dynamic mode
+decomposition (bop-dmd) for robust, stable forecasting with spatial and
+temporal uncertainty-quantification. 2021. arXiv:2107.10878.</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-name descname">BOPDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">use_proj=True</em>, <em class="sig-param">init_alpha=None</em>, <em class="sig-param">proj_basis=None</em>, <em class="sig-param">num_trials=0</em>, <em class="sig-param">trial_size=0.2</em>, <em class="sig-param">eig_sort='auto'</em>, <em class="sig-param">varpro_opts_dict=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
+<p>Bagging, Optimized Dynamic Mode Decomposition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – The rank for the truncation; If 0, the method computes the
+optimal rank and uses it for truncation; if positive integer, the
+method uses the argument for the truncation; if float between 0 and 1,
+the rank is the number of the biggest singular values that are needed
+to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1, the method does
+not compute truncation.</p></li>
+<li><p><strong>use_proj</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Flag that determines the type of computation to perform.
+If True, fit input data projected onto the first svd_rank POD modes or
+columns of proj_basis if provided. If False, fit the full input data.
+Default is True, fit projected data.</p></li>
+<li><p><strong>init_alpha</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – Initial guess for the continuous-time DMD eigenvalues.
+If not provided, one is computed via a trapezoidal rule approximation.
+Default is None (alpha not provided).</p></li>
+<li><p><strong>proj_basis</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – Orthogonal basis for projection, where each column of
+proj_basis contains a basis mode. If not provided, POD modes are used.
+Default is None (basis not provided).</p></li>
+<li><p><strong>num_trials</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of BOP-DMD trials to perform. If num_trials is a
+positive integer, num_trials BOP-DMD trials are performed. Otherwise,
+standard optimized dmd is performed. Default is 0.</p></li>
+<li><p><strong>trial_size</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Size of the randomly selected subset of observations to
+use for each trial of bagged optimized dmd (BOP-DMD). If trial_size is
+a positive integer, trial_size many observations will be used per
+trial. If trial_size is a float between 0 and 1, int(trial_size * m)
+many observations will be used per trial, where m denotes the total
+number of data points observed. Note that any other type of input for
+trial_size will yield an error. Default is 0.2.</p></li>
+<li><p><strong>eig_sort</strong> (<em>{&quot;real&quot;</em><em>, </em><em>&quot;imag&quot;</em><em>, </em><em>&quot;abs&quot;</em><em>, </em><em>&quot;auto&quot;}</em>) – Method used to sort eigenvalues (and modes accordingly)
+when performing BOP-DMD. Eigenvalues will be sorted by real part and
+then by imaginary part to break ties if <cite>eig_sort=”real”</cite>, by imaginary
+part and then by real part to break ties if <cite>eig_sort=”imag”</cite>, or by
+magnitude if <cite>eig_sort=”abs”</cite>. If <cite>eig_sort=”auto”</cite>, one of the
+previously-mentioned sorting methods is chosen depending on eigenvalue
+variance. Default is “auto”.</p></li>
+<li><p><strong>varpro_opts_dict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary containing the desired parameter values
+for variable projection. The following parameters may be specified:
+<cite>init_lambda</cite>, <cite>maxlam</cite>, <cite>lamup</cite>, <cite>use_levmarq</cite>, <cite>maxiter</cite>, <cite>tol</cite>,
+<cite>eps_stall</cite>, <cite>use_fulljac</cite>, <cite>verbose</cite>. Default values will be used for
+any parameters not specified in <cite>varpro_opts_dict</cite>.
+See <cite>BOPDMDOperator</cite> documentation for default values and descriptions
+for each parameter.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">A</code></dt>
+<dd><p>Get the full Koopman operator A.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the full Koopman operator A.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">_initialize_alpha</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD._initialize_alpha"><span class="viewcode-link">[source]</span></a></dt>
+<dd><dl class="simple">
+<dt>Uses projected trapezoidal rule to approximate the eigenvalues of A in</dt><dd><p>z’ = Az.</p>
+</dd>
+</dl>
+<p>The computed eigenvalues will serve as our initial guess for alpha.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Approximated eigenvalues of the matrix A.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">atilde</code></dt>
+<dd><p>Get the reduced Koopman operator A, called Atilde.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the reduced Koopman operator A.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">dynamics</code></dt>
+<dd><p>Get the time evolution of each mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>matrix that contains all the time evolution, stored by row.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD.fit"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute the Optimized Dynamic Mode Decomposition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
+<li><p><strong>t</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input time vector.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">forecast</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD.forecast"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Predict the output X given the input time t using the fitted DMD model.
+If model has been fitted using multiple enssembles, an average
+prediction and its variance is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>t</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input time vector.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>system prediction at times given by vector t.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">init_alpha</code></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>initial guess used for the continuous-time DMD eigenvalues.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">num_trials</code></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the number of BOP-DMD trials to perform.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">print_varpro_opts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD.print_varpro_opts"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Prints a formatted information string that displays all chosen
+variable projection parameter values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">proj_basis</code></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the projection basis used, with modes stored by column.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">svd_rank</code></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the rank used for the svd truncation.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a> or <a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">time</code></dt>
+<dd><p>Get the vector that contains the time points of the fitted snapshots.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the vector that contains the original time points.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">trial_size</code></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>size of the data subsets used during each BOP-DMD trial.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a> or <a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">use_proj</code></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>flag that determines whether to fit projected or full data.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
+      <span class="lastupdated">Last updated on Feb 01, 2023.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

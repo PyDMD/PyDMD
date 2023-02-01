@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.havok &mdash; PyDMD 0.4.0.post2301 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.havok &mdash; PyDMD 0.4.0.post2302 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="../../index.html" class="icon icon-home"> PyDMD
           </a>
               <div class="version">
-                0.4.0.post2301
+                0.4.0.post2302
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -80,8 +80,11 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span>
+
 <span class="kn">from</span> <span class="nn">.hankeldmd</span> <span class="kn">import</span> <span class="n">HankelDMD</span>
+<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span>
+
 
 <div class="viewcode-block" id="HAVOK"><a class="viewcode-back" href="../../havok.html#pydmd.havok.HAVOK">[docs]</a><span class="k">class</span> <span class="nc">HAVOK</span><span class="p">(</span><span class="n">HankelDMD</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -110,6 +113,9 @@
             <span class="n">tikhonov_regularization</span><span class="o">=</span><span class="n">tikhonov_regularization</span><span class="p">,</span>
             <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
         <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span> <span class="o">=</span> <span class="n">svd_rank</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_A</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_B</span> <span class="o">=</span> <span class="kc">None</span>
@@ -229,15 +235,15 @@
 <span class="sd">        Perform HAVOK analysis on 1-D time-series data x given the size of</span>
 <span class="sd">        the time step dt separating the observations in x.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_col_major_2darray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
 
-        <span class="c1"># Check that input data is a 1D time-series</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input data must be a 1-D time series.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span>
 
         <span class="c1"># Get number of data points</span>
-        <span class="n">n_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">)</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="c1"># Check that the input time-series contains enough observations</span>
         <span class="k">if</span> <span class="n">n_samples</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="p">:</span>
@@ -246,22 +252,22 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_d</span><span class="p">))</span>
 
         <span class="c1"># Compute hankel matrix for the input data</span>
-        <span class="n">hankel_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pseudo_hankel_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snapshots</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span>
+        <span class="n">hankel_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pseudo_hankel_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">)</span>
 
         <span class="c1"># Take SVD of the hankel matrix</span>
         <span class="c1"># Save the resulting U, s, and V for future reconstructions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_svd_modes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_svd_amps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_embeddings</span> <span class="o">=</span> <span class="n">compute_svd</span><span class="p">(</span>
-            <span class="n">hankel_matrix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">svd_rank</span>
+            <span class="n">hankel_matrix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span>
         <span class="p">)</span>
 
         <span class="c1"># Record the number of time-delay embeddings being used.</span>
         <span class="c1"># Throw an error if less than 2 embeddings are being used.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_r</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_svd_amps</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;HAVOK model is attempting to use r = </span><span class="si">{}</span><span class="s2"> embeddings when r</span>
-<span class="s2">should be at least 2. Try increasing the number of delays d and/or providing a</span>
-<span class="s2">positive integer argument for svd_rank.&quot;&quot;&quot;</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_r</span><span class="p">))</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;HAVOK model is attempting to use r = </span><span class="si">{self._r}</span><span class="s2"> embeddings</span>
+<span class="s2">when r should be at least 2. Try increasing the number of delays d and/or </span>
+<span class="s2">providing a positive integer argument for svd_rank.&quot;&quot;&quot;</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="c1"># Perform DMD on the time-delay embeddings</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_embeddings</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
@@ -297,7 +303,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2023.
+      <span class="lastupdated">Last updated on Feb 01, 2023.
       </span></p>
   </div>
 
