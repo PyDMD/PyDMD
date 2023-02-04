@@ -1,4 +1,4 @@
-from .linalg import (
+from .linalg_utils import (
     build_linalg_module,
     is_array,
     cast_as_array,
