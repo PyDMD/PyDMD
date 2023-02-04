@@ -317,8 +317,6 @@ class LinalgPyTorch(LinalgBase):
     def svd(cls, X, *args, **kwargs):
         import torch
 
-        if X.device.type == "cuda":
-            kwargs["driver"] = "gesvda"
         return torch.linalg.svd(X, *args, **kwargs)
 
     @classmethod
