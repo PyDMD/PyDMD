@@ -12,7 +12,7 @@ import numpy as np
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .utils import compute_svd
-from .linalg import build_linalg_module, is_array
+from pydmd.linalg import build_linalg_module, is_array
 from .snapshots import Snapshots
 
 

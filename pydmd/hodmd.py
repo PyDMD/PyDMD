@@ -8,7 +8,7 @@ Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.
 import warnings
 
 from .hankeldmd import HankelDMD
-from .linalg import build_linalg_module
+from pydmd.linalg import build_linalg_module
 from .utils import compute_svd
 from .snapshots import Snapshots
 

@@ -10,7 +10,7 @@ import numpy as np
 from past.utils import old_div
 
 from .dmdoperator import DMDOperator
-from .linalg import build_linalg_module
+from pydmd.linalg import build_linalg_module
 from .utils import compute_svd
 
 

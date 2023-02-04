@@ -10,7 +10,7 @@ Systems, 18, 2019.
 import numpy as np
 
 from .cdmd import CDMD
-from .linalg import build_linalg_module
+from pydmd.linalg import build_linalg_module
 
 
 def compute_rank(X, svd_rank=0):

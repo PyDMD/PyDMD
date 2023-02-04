@@ -10,7 +10,7 @@ from past.utils import old_div
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from .linalg import assert_same_linalg_type, build_linalg_module, cast_as_array
+from pydmd.linalg import assert_same_linalg_type, build_linalg_module, cast_as_array
 from .snapshots import Snapshots
 from .utils import compute_svd, compute_tlsq
 

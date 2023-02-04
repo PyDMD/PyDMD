@@ -13,7 +13,7 @@ from past.utils import old_div
 
 from .dmd_modes_tuner import select_modes
 from .dmdbase import DMDBase
-from .linalg import build_linalg_module, cast_as_array
+from pydmd.linalg import build_linalg_module, cast_as_array
 from .snapshots import Snapshots
 
 

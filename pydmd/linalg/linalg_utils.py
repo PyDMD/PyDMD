@@ -1,6 +1,5 @@
 import functools
 
-from .linalg_base import LinalgBase
 from .numpy_linalg import LinalgNumPy
 from .pytorch_linalg import LinalgPyTorch
 

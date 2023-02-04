@@ -10,7 +10,7 @@ import scipy.sparse
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from .linalg import build_linalg_module
+from pydmd.linalg import build_linalg_module
 from .utils import compute_svd, compute_tlsq
 from .snapshots import Snapshots
 

@@ -13,7 +13,7 @@ import numpy as np
 
 from .dmd import DMD
 from .dmdbase import DMDBase
-from .linalg import build_linalg_module, cast_as_array
+from pydmd.linalg import build_linalg_module, cast_as_array
 from .utils import nan_average
 from .snapshots import Snapshots
 

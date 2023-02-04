@@ -4,7 +4,7 @@ import warnings
 
 import numpy as np
 
-from .linalg import build_linalg_module, cast_as_array, is_array
+from pydmd.linalg import build_linalg_module, cast_as_array, is_array
 
 
 def compute_tlsq(X, Y, tlsq_rank):

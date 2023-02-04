@@ -13,7 +13,7 @@ from scipy import signal
 from .hankeldmd import HankelDMD
 from .snapshots import Snapshots
 from .utils import compute_svd
-from .linalg import no_torch, build_linalg_module
+from pydmd.linalg import no_torch, build_linalg_module
 
 
 class HAVOK(HankelDMD):
