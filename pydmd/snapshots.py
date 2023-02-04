@@ -4,7 +4,9 @@ Module for snapshots normalization.
 import warnings
 import logging
 from functools import reduce
-import operator
+from operator import mul
+
+import numpy as np
 
 from pydmd.linalg import build_linalg_module, cast_as_array
 
@@ -12,7 +14,7 @@ def _prod(iter):
     """
     Equivalent to math.prod, compatible with Python 3.7
     """
-    return reduce(operator.mul, iter, 1)
+    return reduce(mul, iter, 1)
 
 
 class Snapshots:
@@ -71,7 +73,7 @@ class Snapshots:
             if not batch:
                 snapshots = snapshots[0]
 
-            return snapshots, X.shape[1:]
+            return snapshots, tuple(space)
         else:
             if batch:
                 raise ValueError(
@@ -94,21 +96,13 @@ class Snapshots:
 
     @staticmethod
     def _check_condition_number(X):
-        linalg_module = build_linalg_module(X)
-        cond_number = linalg_module.cond(X)
-            
-        if (cond_number > 10e4).sum() > 0:
+        cond_number = np.linalg.cond(X)
+        if cond_number > 10e4:
             warnings.warn(
                 f"Input data condition number {cond_number}. "
                 """Consider preprocessing data, passing in augmented data
 matrix, or regularization methods."""
             )
-
-    def transpose(self):
-        """
-        Compute a new set of snapshots by permuting space and time.
-        """
-        return Snapshots(self.snapshots.T)
 
     @property
     def snapshots(self):

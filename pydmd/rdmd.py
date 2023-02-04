@@ -10,22 +10,67 @@ Systems, 18, 2019.
 import numpy as np
 
 from .cdmd import CDMD
-from .utils import compute_optimal_svd_rank
 from .linalg import build_linalg_module
+
+
+def compute_rank(X, svd_rank=0):
+    """
+    Rank computation for the truncated Singular Value Decomposition.
+    :param numpy.ndarray X: the matrix to decompose.
+    :param svd_rank: the rank for the truncation; If 0, the method computes
+        the optimal rank and uses it for truncation; if positive interger,
+        the method uses the argument for the truncation; if float between 0
+        and 1, the rank is the number of the biggest singular values that
+        are needed to reach the 'energy' specified by `svd_rank`; if -1,
+        the method does not compute truncation. Default is 0.
+    :type svd_rank: int or float
+    :return: the computed rank truncation.
+    :rtype: int
+    References:
+    Gavish, Matan, and David L. Donoho, The optimal hard threshold for
+    singular values is, IEEE Transactions on Information Theory 60.8
+    (2014): 5040-5053.
+    """
+    U, s, _ = np.linalg.svd(X, full_matrices=False)
+
+    def omega(x):
+        return 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
+
+    if svd_rank == 0:
+        beta = np.divide(*sorted(X.shape))
+        tau = np.median(s) * omega(beta)
+        rank = np.sum(s > tau)
+    elif 0 < svd_rank < 1:
+        cumulative_energy = np.cumsum(s**2 / (s**2).sum())
+        rank = np.searchsorted(cumulative_energy, svd_rank) + 1
+    elif svd_rank >= 1 and isinstance(svd_rank, int):
+        rank = min(svd_rank, U.shape[1])
+    else:
+        rank = X.shape[1]
+
+    return rank
 
 
 class RDMD(CDMD):
     """
     Randomized Dynamic Mode Decomposition
 
-    :param int oversampling: Number of additional samples to use when
-        computing the random test matrix.
-        Note that oversampling = {5,10} is often sufficient.
-    :param int power_iters: Number of power iterations to perform.
-        Note that power_iters = {1,2} leads to considerable improvements.
+    :param rand_mat: The random test matrix that will be used when executing
+        the Randomized QB Decomposition. If not provided, the `svd_rank` and
+        `oversampling` parameters will be used to compute the random matrix.
+    :type rand_mat: numpy.ndarray
+    :param oversampling: Number of additional samples (beyond the desired rank)
+        to use when computing the random test matrix. Note that values {5,10}
+        tend to be sufficient.
+    :type oversampling: int
+    :param power_iters: Number of power iterations to perform when executing
+        the Randomized QB Decomposition. Note that values {1,2} often lead to
+        considerable improvements.
+    :type power_iters: int
     """
     def __init__(
         self,
+        rand_mat=None,
         oversampling=10,
         power_iters=2,
         svd_rank=0,
@@ -49,45 +94,42 @@ class RDMD(CDMD):
         self._svd_rank = svd_rank
         self._oversampling = oversampling
         self._power_iters = power_iters
+        self._rand_mat = rand_mat
 
     def _compress_snapshots(self):
         """
         Private method that compresses the snapshot matrix X by projecting X
         onto a near-optimal orthonormal basis for the range of X computed via
         the Randomized QB Decomposition.
+
         :return: the compressed snapshots
         :rtype: numpy.ndarray
         """
-        # Perform the Randomized QB Decomposition
-        m = self.snapshots.shape[-1]
-
-        # Compute the target rank
-        if self.snapshots.ndim < 3:
-            optimal_svd_rank = compute_optimal_svd_rank(self.snapshots)
-        else:
-            optimal_svd_rank = min(self.snapshots.shape)
-
-        # Generate random test matrix (with slight oversampling)
         linalg_module = build_linalg_module(self.snapshots)
-        Omega = linalg_module.random((m, optimal_svd_rank + self._oversampling))
 
-        # Compute sampling matrix
-        Y = linalg_module.dot(self.snapshots, Omega)
+        # Define the random test matrix if not provided.
+        if self._rand_mat is None:
+            m = self.snapshots.shape[-1]
+            r = compute_rank(self.snapshots, self._svd_rank)
+            self._rand_mat = np.random.randn(m, r + self._oversampling)
+            self._rand_mat = linalg_module.to(self.snapshots, self._rand_mat)
 
-        # Perform power iterations
+        # Compute sampling matrix.
+        Y = linalg_module.dot(self.snapshots, self._rand_mat)
+
+        # Perform power iterations.
         for _ in range(self._power_iters):
             Q = linalg_module.qr_reduced(Y)[0]
-            snapQ = linalg_module.dot(self.snapshots.conj().swapaxes(-1, -2), Q)
-            Z = linalg_module.qr_reduced(snapQ)[0]
+            Z = linalg_module.qr_reduced(linalg_module.dot(self.snapshots.conj().swapaxes(-1, -2), Q))[0]
             Y = linalg_module.dot(self.snapshots, Z)
 
-        # Orthonormalize the sampling matrix
+        # Orthonormalize the sampling matrix.
         Q = linalg_module.qr_reduced(Y)[0]
 
-        # Project the snapshot matrix onto the smaller space
+        # Project the snapshot matrix onto the smaller space.
         B = linalg_module.dot(Q.conj().swapaxes(-1, -2), self.snapshots)
 
-        # Save the compression matrix
+        # Save the compression matrix.
         self._compression_matrix = Q.conj().swapaxes(-1, -2)
 
         return B
