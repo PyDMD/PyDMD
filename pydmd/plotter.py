@@ -528,7 +528,7 @@ def plot_snapshots_2D(
         plt.show()
 
 
-def diagnostics(
+def plot_summary(
     dmd,
     snapshots_shape=None,
     index_modes=None,
@@ -626,7 +626,7 @@ def diagnostics(
     # Only plot (at most) 50 of the leading singular values.
     s_var = s_var[:50]
 
-    # Generate the diagnostics plot.
+    # Generate the summarizing plot.
     fig, (eig_axes,
           mode_axes,
           dynamics_axes) = plt.subplots(3, 3, figsize=figsize, dpi=200)

@@ -12,7 +12,7 @@ from pydmd.plotter import (
     plot_eigs_mrdmd,
     plot_modes_2D,
     plot_snapshots_2D,
-    diagnostics,
+    plot_summary,
 )
 
 from .test_mrdmd import sample_data as mrdmd_sample_data
@@ -241,42 +241,42 @@ def test_mrdmd_plot_eig3():
     plt.close()
 
 
-def test_diagnostics_1():
+def test_plot_summary_1():
     # Test 1: Throw error if more than 3 modes are requested.
     dmd = DMD()
     dmd.fit(X=sample_data)
     with raises(ValueError):
-        diagnostics(dmd, index_modes=[0,1,2,3])
+        plot_summary(dmd, index_modes=[0,1,2,3])
 
 
-def test_diagnostics_2():
+def test_plot_summary_2():
     # Test 2: Everything is fine with all default settings.
     dmd = DMD()
     dmd.fit(X=sample_data)
-    diagnostics(dmd)
+    plot_summary(dmd)
     plt.close()
 
 
-def test_diagnostics_3():
+def test_plot_summary_3():
     # Test 3: Everything is fine when plotting in 2D.
     dmd = DMD()
     dmd.fit(X=sample_data)
-    diagnostics(dmd, snapshots_shape=(20,20))
+    plot_summary(dmd, snapshots_shape=(20,20))
     plt.close()
 
 
-def test_diagnostics_4():
+def test_plot_summary_4():
     # Test 4: Everything is fine when plotting fewer than 3 modes.
     dmd = DMD(svd_rank=2)
     dmd.fit(X=sample_data)
-    diagnostics(dmd, snapshots_shape=(20,20))
+    plot_summary(dmd, snapshots_shape=(20,20))
     plt.close()
 
 
-def test_diagnostics_5():
+def test_plot_summary_5():
     # Test 5: Everything is fine when saving the plot.
     dmd = DMD()
     dmd.fit(X=sample_data)
-    diagnostics(dmd, snapshots_shape=(20,20), filename="tmp.png")
+    plot_summary(dmd, snapshots_shape=(20,20), filename="tmp.png")
     os.remove("tmp.png")
 
