@@ -183,8 +183,7 @@ class DMDOperator:
             s = (s**2 + self._tikhonov_regularization * self._norm_X) / s
 
         linalg_module = build_linalg_module(U)
-        UY = linalg_module.dot(U.swapaxes(-1, -2).conj(), Y)
-        UYV = linalg_module.dot(UY, V)
+        UYV = linalg_module.multi_dot((U.swapaxes(-1, -2).conj(), Y, V))
         if UYV.ndim == 3:
             s = s[:, None]
         return UYV / s
@@ -217,8 +216,7 @@ class DMDOperator:
             factors_inv_sqrt[..., scaling_factors == 0] = 0
 
             factors_sqrt, factors_inv_sqrt = linalg_module.to(self.as_array, factors_sqrt, factors_inv_sqrt)
-            temp = linalg_module.dot(factors_inv_sqrt, self.as_array)
-            Ahat = linalg_module.dot(temp, factors_sqrt)
+            Ahat = linalg_module.multi_dot((factors_inv_sqrt, self.as_array, factors_sqrt))
         else:
             raise ValueError(
                 "Invalid value for rescale_mode: {} of type {}".format(

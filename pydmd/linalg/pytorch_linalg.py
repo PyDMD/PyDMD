@@ -1,5 +1,6 @@
 import logging
 import numbers
+from functools import reduce
 
 logging.basicConfig(
     format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
@@ -182,6 +183,11 @@ class LinalgPyTorch(LinalgBase):
             complex_dtypes.sort(key=lambda dtype: torch.finfo(dtype).bits)
             logging.debug(f"Converting tensors to {complex_dtypes[-1]}")
             Xs = tuple(map(lambda X: X.type(complex_dtypes[-1]), Xs))
+
+        # tensorized
+        if Xs[0].ndim >= 3:
+            return reduce(cls.dot, Xs)
+
         return torch.linalg.multi_dot(Xs, *args, **kwargs)
 
     @classmethod

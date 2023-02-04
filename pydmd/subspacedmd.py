@@ -66,8 +66,7 @@ class SubspaceDMDOperator(DMDOperator):
         _, _, Vp = compute_svd(Yp, svd_rank=self._svd_rank)
         linalg_module = build_linalg_module(Yp)
 
-        YfVp = linalg_module.dot(Yf, Vp)
-        O = linalg_module.dot(YfVp, Vp.swapaxes(-1, -2).conj())
+        O = linalg_module.multi_dot((Yf, Vp, Vp.swapaxes(-1, -2).conj()))
 
         Uq, _, _ = compute_svd(O, svd_rank=self._svd_rank)
 

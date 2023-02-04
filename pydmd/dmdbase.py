@@ -672,17 +672,14 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         P = linalg_module.multiply_elementwise(a, b)
 
         if self._exact:
-            vs = linalg_module.dot(vander, self.snapshots.conj().swapaxes(-1, -2))
-            vsm = linalg_module.dot(vs, self.modes)
+            vsm = linalg_module.multi_dot((vander, self.snapshots.conj().swapaxes(-1, -2), self.modes))
             q = linalg_module.extract_diagonal(vsm).conj()
         else:
             _, s, V = compute_svd(self.snapshots[..., :-1], self.modes.shape[-1])
 
             s_conj = linalg_module.diag_matrix(s).conj()
             s_conj, V, vander = linalg_module.to(self.operator.eigenvectors, s_conj, V, vander)
-            vV = linalg_module.dot(vander[..., :-1], V)
-            vVs = linalg_module.dot(vV, s_conj)
-            vVse = linalg_module.dot(vVs, self.operator.eigenvectors)
+            vVse = linalg_module.multi_dot((vander[..., :-1], V, s_conj, self.operator.eigenvectors))
             q = linalg_module.extract_diagonal(vVse).conj()
 
         return P, q
