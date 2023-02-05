@@ -10,6 +10,8 @@ from .linalg_base import LinalgBase
 
 import numpy as np
 
+svd_driver = None
+
 
 class LinalgPyTorch(LinalgBase):
     def __init__(self):
@@ -317,6 +319,9 @@ class LinalgPyTorch(LinalgBase):
     def svd(cls, X, *args, **kwargs):
         import torch
 
+        if X.device.type == "cuda":
+            global svd_driver
+            kwargs["driver"] = svd_driver
         return torch.linalg.svd(X, *args, **kwargs)
 
     @classmethod
