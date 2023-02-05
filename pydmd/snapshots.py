@@ -96,8 +96,10 @@ class Snapshots:
 
     @staticmethod
     def _check_condition_number(X):
-        cond_number = np.linalg.cond(X)
-        if cond_number > 10e4:
+        linalg_module = build_linalg_module(X)
+        cond_number = linalg_module.cond(X)
+            
+        if (cond_number > 10e4).sum() > 0:
             warnings.warn(
                 f"Input data condition number {cond_number}. "
                 """Consider preprocessing data, passing in augmented data
