@@ -6,9 +6,10 @@ import logging
 from functools import reduce
 from operator import mul
 
-import numpy as np
-
 from pydmd.linalg import build_linalg_module, cast_as_array
+
+cond_check = True
+
 
 def _prod(iter):
     """
@@ -42,7 +43,9 @@ class Snapshots:
         if self._snapshots.shape[-1] == 1:
             raise ValueError("Received only one time snapshot.")
 
-        Snapshots._check_condition_number(self._snapshots)
+        global cond_check
+        if cond_check:
+            Snapshots._check_condition_number(self._snapshots)
 
         logging.info(
             "Snapshots: %s, snapshot shape: %s",
@@ -69,7 +72,9 @@ class Snapshots:
                 n_batches = 1
 
             linalg_module = build_linalg_module(X)
-            snapshots = linalg_module.reshape(X, (n_batches, _prod(space), time))
+            snapshots = linalg_module.reshape(
+                X, (n_batches, _prod(space), time)
+            )
             if not batch:
                 snapshots = snapshots[0]
 
@@ -98,7 +103,7 @@ class Snapshots:
     def _check_condition_number(X):
         linalg_module = build_linalg_module(X)
         cond_number = linalg_module.cond(X)
-            
+
         if (cond_number > 10e4).sum() > 0:
             warnings.warn(
                 f"Input data condition number {cond_number}. "
