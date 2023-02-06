@@ -28,6 +28,9 @@ class BOPDMDOperator(DMDOperator):
     """
     BOP-DMD operator.
 
+    :param compute_A: Flag that determines whether or not to compute the full
+        Koopman operator A.
+    :type compute_A: bool
     :param use_proj: Flag that determines the type of computation to perform.
         If True, fit input data projected onto the first svd_rank POD modes or
         columns of proj_basis if provided. If False, fit the full input data.
@@ -97,6 +100,7 @@ class BOPDMDOperator(DMDOperator):
     """
     def __init__(
         self,
+        compute_A,
         use_proj,
         init_alpha,
         proj_basis,
@@ -113,6 +117,7 @@ class BOPDMDOperator(DMDOperator):
         use_fulljac=True,
         verbose=False
     ):
+        self._compute_A = compute_A
         self._use_proj = use_proj
         self._init_alpha = init_alpha
         self._proj_basis = proj_basis
@@ -159,6 +164,10 @@ class BOPDMDOperator(DMDOperator):
         :return: the full Koopman operator A.
         :rtype: numpy.ndarray
         """
+        if not self._compute_A:
+            msg = "A not computed during fit. " \
+                  "Set parameter compute_A = True to compute A."
+            raise ValueError(msg)
         if self._A is None:
             raise ValueError("You need to call fit before")
         return self._A
@@ -553,7 +562,10 @@ class BOPDMDOperator(DMDOperator):
             )
 
         # Compute the full system matrix A.
-        A = np.linalg.multi_dot([w, np.diag(e), np.linalg.pinv(w)])
+        if self._compute_A:
+            A = np.linalg.multi_dot([w, np.diag(e), np.linalg.pinv(w)])
+        else:
+            A = None
 
         return w, e, b, Atilde, A
 
@@ -632,11 +644,12 @@ class BOPDMDOperator(DMDOperator):
         self._Atilde = np.linalg.multi_dot(
             [w_proj, np.diag(self._eigenvalues), np.linalg.pinv(w_proj)]
         )
-        self._A = np.linalg.multi_dot(
-            [self._modes,
-             np.diag(self._eigenvalues),
-             np.linalg.pinv(self._modes)]
-        )
+        if self._compute_A:
+            self._A = np.linalg.multi_dot(
+                [self._modes,
+                np.diag(self._eigenvalues),
+                np.linalg.pinv(self._modes)]
+            )
 
         # Compute and save the standard deviation of the optimized dmd results.
         self._eigenvalues_std = np.std(all_e, axis=0)
@@ -656,6 +669,11 @@ class BOPDMD(DMDBase):
         to reach the 'energy' specified by `svd_rank`; if -1, the method does
         not compute truncation.
     :type svd_rank: int or float
+    :param compute_A: Flag that determines whether or not to compute the full
+        Koopman operator A. Default is False, do not compute the full operator.
+        Note that the full operator is potentially prohibitively expensive to
+        compute.
+    :type compute_A: bool
     :param use_proj: Flag that determines the type of computation to perform.
         If True, fit input data projected onto the first svd_rank POD modes or
         columns of proj_basis if provided. If False, fit the full input data.
@@ -700,6 +718,7 @@ class BOPDMD(DMDBase):
     """
     def __init__(self,
         svd_rank=0,
+        compute_A=False,
         use_proj=True,
         init_alpha=None,
         proj_basis=None,
@@ -709,6 +728,7 @@ class BOPDMD(DMDBase):
         varpro_opts_dict=None
     ):
         self._svd_rank = svd_rank
+        self._compute_A = compute_A
         self._use_proj = use_proj
         self._init_alpha = init_alpha
         self._proj_basis = proj_basis
@@ -735,6 +755,14 @@ class BOPDMD(DMDBase):
         :rtype: int or float
         """
         return self._svd_rank
+
+    @property
+    def compute_A(self):
+        """
+        :return: flag that determines whether to compute the full operator A.
+        :rtype: bool
+        """
+        return self._compute_A
 
     @property
     def use_proj(self):
@@ -930,6 +958,7 @@ class BOPDMD(DMDBase):
         # Build the BOP-DMD operator now that the initial alpha and
         # the projection basis have been defined.
         self._Atilde = BOPDMDOperator(
+            self._compute_A,
             self._use_proj,
             self._init_alpha,
             self._proj_basis,

@@ -60,7 +60,7 @@ def test_truncation_shape():
     Tests that, when given a positive integer rank truncation, the shape of the
     modes, eigenvalues, amplitudes, Atilde operator, and A matrix are accurate.
     """
-    bopdmd = BOPDMD(svd_rank=2)
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True)
     bopdmd.fit(Z, t)
     assert bopdmd.modes.shape[1] == 2
     assert len(bopdmd.eigs) == 2
@@ -106,23 +106,23 @@ def test_A():
     - standard optimized dmd, fit full data
     - optimized dmd with bagging
     """
-    bopdmd = BOPDMD()
+    bopdmd = BOPDMD(compute_A=True)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
-    bopdmd = BOPDMD()
+    bopdmd = BOPDMD(compute_A=True)
     bopdmd.fit(Z_uneven, t_uneven)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
-    bopdmd = BOPDMD(svd_rank=2)
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
-    bopdmd = BOPDMD(use_proj=False)
+    bopdmd = BOPDMD(compute_A=True, use_proj=False)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
-    bopdmd = BOPDMD(num_trials=100, trial_size=0.2)
+    bopdmd = BOPDMD(compute_A=True, num_trials=100, trial_size=0.2)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
