@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.integrate import ode
+from pytest import raises
 from pydmd.bopdmd import BOPDMD
 
 def f(t, y):
@@ -161,3 +162,22 @@ def test_forecast():
     bopdmd = BOPDMD(num_trials=100, trial_size=0.2)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.forecast(t_long)[0], Z_long, rtol=1e-4)
+
+def test_compute_A():
+    """
+    Tests that the BOPDMD module appropriately calculates or doesn't calculate
+    A depending on the compute_A flag. Also tests that atilde, the dmd modes,
+    and the dmd eigenvalues are not effected by the compute_A flag.
+    """
+    bopdmd_with_A = BOPDMD(compute_A=True)
+    bopdmd_no_A = BOPDMD(compute_A=False)
+    bopdmd_with_A.fit(Z, t)
+    bopdmd_no_A.fit(Z, t)
+
+    np.testing.assert_allclose(bopdmd_with_A.A, expected_A)
+    with raises(ValueError):
+        print(bopdmd_no_A.A)
+
+    np.testing.assert_array_equal(bopdmd_with_A.atilde, bopdmd_no_A.atilde)
+    np.testing.assert_array_equal(bopdmd_with_A.modes, bopdmd_no_A.modes)
+    np.testing.assert_array_equal(bopdmd_with_A.eigs, bopdmd_no_A.eigs)
