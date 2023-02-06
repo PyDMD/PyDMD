@@ -639,16 +639,17 @@ class BOPDMDOperator(DMDOperator):
         self._modes = np.mean(all_w, axis=0)
         self._eigenvalues = np.mean(all_e, axis=0)
 
-        # Compute Atilde and A using the average optimized dmd results.
+        # Compute Atilde using the average optimized dmd results.
         w_proj = self._proj_basis.conj().T.dot(self._modes)
         self._Atilde = np.linalg.multi_dot(
             [w_proj, np.diag(self._eigenvalues), np.linalg.pinv(w_proj)]
         )
+        # Compute A if requested.
         if self._compute_A:
             self._A = np.linalg.multi_dot(
                 [self._modes,
-                np.diag(self._eigenvalues),
-                np.linalg.pinv(self._modes)]
+                 np.diag(self._eigenvalues),
+                 np.linalg.pinv(self._modes)]
             )
 
         # Compute and save the standard deviation of the optimized dmd results.
