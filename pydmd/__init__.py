@@ -2,7 +2,7 @@
 PyDMD init
 """
 __all__ = ['dmdbase', 'dmd', 'fbdmd', 'mrdmd', 'cdmd', 'hodmd', 'dmdc',
-           'optdmd', 'hankeldmd', 'rdmd', 'havok', 'bopdmd']
+           'optdmd', 'hankeldmd', 'rdmd', 'havok', 'bopdmd', 'pidmd']
 
 
 from .meta import *
@@ -22,3 +22,4 @@ from .subspacedmd import SubspaceDMD
 from .rdmd import RDMD
 from .havok import HAVOK
 from .bopdmd import BOPDMD
+from .pidmd import PiDMD
