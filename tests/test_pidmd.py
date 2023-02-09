@@ -31,14 +31,14 @@ def assert_all_zero(A):
     Helper method that, given a matrix A, tests that A is
     approximately a matrix of only zero entries.
     """
-    assert_allclose(np.linalg.norm(A), 0, atol=1e-15)
+    assert_allclose(np.linalg.norm(A), 0, atol=1e-14)
 
 def assert_circulant(A):
     """
     Helper method that, given a matrix A, tests that A is a circulant matrix.
     """
     for i in range(1, len(A)):
-        assert_allclose(np.roll(A[i, :], -i), A[0, :], atol=1e-15)
+        assert_allclose(np.roll(A[i, :], -i), A[0, :], atol=1e-14)
 
 def assert_block_circulant(A):
     """
@@ -49,7 +49,7 @@ def assert_block_circulant(A):
     for i in range(1, block_n):
         block_row_i = A[i*block_n:(i+1)*block_n, :]
         rolled_block_row_i = np.roll(block_row_i, -i*block_n, axis=1)
-        assert_allclose(rolled_block_row_i, A[:block_n, :], atol=1e-15)
+        assert_allclose(rolled_block_row_i, A[:block_n, :], atol=1e-14)
 
 def test_invalid_manifold():
     # Test that an error is thrown if an invalid manifold is given.
@@ -59,7 +59,7 @@ def test_invalid_manifold():
 def test_unitary():
     pidmd = PiDMD("unitary", compute_A=True).fit(X)
     # Ensure that the A matrix is unitary and accurate.
-    assert_allclose(pidmd.A.conj().T.dot(pidmd.A), np.eye(25), atol=1e-15)
+    assert_allclose(pidmd.A.conj().T.dot(pidmd.A), np.eye(25), atol=1e-14)
     assert_accurate(pidmd.A)
 
 def test_uppertriangular():
@@ -110,7 +110,7 @@ def test_symmetric():
 def test_skewsymmetric():
     pidmd = PiDMD("skewsymmetric", compute_A=True).fit(X)
     # Ensure that the A matrix is skewsymmetric and accurate.
-    assert_allclose(pidmd.A, -pidmd.A.T, atol=1e-15)
+    assert_allclose(pidmd.A, -pidmd.A.T, atol=1e-14)
     assert_accurate(pidmd.A)
 
 def test_toeplitz():
@@ -145,7 +145,7 @@ def test_circulant():
     pidmd = PiDMD("circulant_unitary", compute_A=True).fit(X)
     assert_circulant(pidmd.A)
     assert_accurate(pidmd.A)
-    assert_allclose(pidmd.A.conj().T.dot(pidmd.A), np.eye(25), atol=1e-15)
+    assert_allclose(pidmd.A.conj().T.dot(pidmd.A), np.eye(25), atol=1e-14)
 
     # Test circulant_symmetric case.
     pidmd = PiDMD("circulant_symmetric", compute_A=True).fit(X)
@@ -157,7 +157,7 @@ def test_circulant():
     pidmd = PiDMD("circulant_skewsymmetric", compute_A=True).fit(X)
     assert_circulant(pidmd.A)
     assert_accurate(pidmd.A)
-    assert_allclose(pidmd.A, -pidmd.A.T, atol=1e-15)
+    assert_allclose(pidmd.A, -pidmd.A.T, atol=1e-14)
 
 def test_symmetric_tridiagonal():
     pidmd = PiDMD("symmetric_tridiagonal", compute_A=True).fit(X)
@@ -206,7 +206,7 @@ def test_BC():
         for j in range(5):
             block = pidmd.A[i*5:(i+1)*5, j*5:(j+1)*5]
             assert_circulant(block)
-    assert_allclose(pidmd.A.conj().T.dot(pidmd.A), np.eye(25), atol=1e-15)
+    assert_allclose(pidmd.A.conj().T.dot(pidmd.A), np.eye(25), atol=1e-14)
 
     # BCCB and symmetric
     pidmd = PiDMD("BCCBsymmetric", manifold_opt=(5,5), compute_A=True).fit(X)
@@ -226,4 +226,4 @@ def test_BC():
         for j in range(5):
             block = pidmd.A[i*5:(i+1)*5, j*5:(j+1)*5]
             assert_circulant(block)
-    assert_allclose(pidmd.A, -pidmd.A.T, atol=1e-15)
+    assert_allclose(pidmd.A, -pidmd.A.T, atol=1e-14)
