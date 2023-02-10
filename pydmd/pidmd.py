@@ -149,8 +149,8 @@ class PiDMDOperator(DMDOperator):
         for j in range(nx):
             l1 = int(max(j-(ind_mat[j,0]-1), 0))
             l2 = int(min(j+(ind_mat[j,1]-1), nx-1) + 1)
-            C = X[l1:l2, :].T
-            b = Y[j, :].T
+            C = X[l1:l2].T
+            b = Y[j].T
             I.append(j * np.ones(l2 - l1))
             J.append(np.arange(l1, l2))
             R.append(np.linalg.lstsq(C, b, rcond=None)[0].T)
@@ -208,24 +208,21 @@ class PiDMDOperator(DMDOperator):
         else: # toeplitz
             J = np.eye(nx)
 
-        # Shorthand for readability.
-        IZx = np.hstack([np.eye(nx), np.zeros((nx, nx))])
-
         # Define left and right matrices.
-        Am = fft(IZx.T, axis=0).conj().T / np.sqrt(2 * nx)
-        B = fft(np.hstack(
-            [J.dot(X).conj().T, np.zeros((nt, nx))]
-        ).T, axis=0).conj().T / np.sqrt(2 * nx)
+        Am = fft(np.hstack([np.eye(nx), np.zeros((nx, nx))]).T, axis=0)
+        Am = Am.conj().T / np.sqrt(2 * nx)
+        B = fft(np.hstack([J.dot(X).conj().T, np.zeros((nt, nx))]).T, axis=0)
+        B = B.conj().T / np.sqrt(2 * nx)
 
         # Compute AA* and B*B (fast computation of AA*).
-        AAt = ifft(fft(np.vstack(
-            [IZx, np.zeros((nx, 2*nx))]
-        ), axis=0).T, axis=0).T
-        BtB = B.conj().T.dot(B)
+        AAt = ifft(fft(np.vstack([
+            np.hstack([np.eye(nx), np.zeros((nx, nx))]),
+            np.zeros((nx, 2 * nx))
+        ]), axis=0).T, axis=0).T
 
         # Solve linear system y = dL.
-        y = np.diag(np.linalg.multi_dot([Am.conj().T,Y.conj(),B])).conj().T
-        L = np.multiply(AAt, BtB.T).conj().T
+        y = np.diag(np.linalg.multi_dot([Am.conj().T, Y.conj(), B])).conj().T
+        L = np.multiply(AAt, B.conj().T.dot(B).T).conj().T
         d = np.linalg.lstsq(L[:-1, :-1].T, y[:-1], rcond=None)[0]
         d = np.append(d, 0)
 
@@ -281,18 +278,17 @@ class PiDMDOperator(DMDOperator):
         Only the eigenvalues and eigenvectors of A are returned if the
         compute_A flag is not True.
         """
-        nx = len(X)
-
         # Form the leading block.
+        nx = len(X)
         T1e = np.linalg.norm(X, axis=1) ** 2
         T1 = sparse.diags(T1e)
 
         # Form the second and third blocks.
-        T2e = np.diag(X[1:, :].dot(X[:-1, :].T))
+        T2e = np.diag(X[1:].dot(X[:-1].T))
         T2 = sparse.spdiags([T2e, T2e], diags=[-1, 0], m=nx, n=nx-1)
 
         # Form the final block.
-        T3e = np.insert(np.diag(X[2:, :].dot(X[:-2, :].T)), 0, 0)
+        T3e = np.insert(np.diag(X[2:].dot(X[:-2].T)), 0, 0)
         T3_offdiag = sparse.spdiags(T3e, diags=1, m=nx-1, n=nx-1)
         T3 = sparse.spdiags(T1e[:-1] + T1e[1:], diags=0, m=nx-1, n=nx-1) \
                 + T3_offdiag + T3_offdiag.conj().T
@@ -303,16 +299,17 @@ class PiDMDOperator(DMDOperator):
         )
 
         # Solve for c in the system Tc = d.
-        d1 = np.diag(X.dot(Y.T))
-        d2 = np.diag(X[:-1, :].dot(Y[1:, :].T)) \
-                + np.diag(X[1:, :].dot(Y[:-1, :].T))
-        d = np.concatenate((d1, d2), axis=None)
+        d = np.concatenate(
+            (np.diag(X.dot(Y.T)),
+             np.diag(X[:-1].dot(Y[1:].T)) + np.diag(X[1:].dot(Y[:-1].T))),
+             axis=None
+        )
         c = sparse.linalg.lsqr(T.real, d.real)[0]
 
         # Form the solution matrix A.
         A_sparse = sparse.diags(c[:nx])
-        A_sparse += sparse.spdiags(np.insert(c[nx:],0,0),diags=1,m=nx,n=nx)
-        A_sparse += sparse.spdiags(np.append(c[nx:],0),diags=-1,m=nx,n=nx)
+        A_sparse += sparse.spdiags(np.insert(c[nx:],0,0), diags=1, m=nx, n=nx)
+        A_sparse += sparse.spdiags(np.append(c[nx:],0), diags=-1, m=nx, n=nx)
 
         if self._compute_A:
             return None, None, A_sparse.toarray()
@@ -347,8 +344,8 @@ class PiDMDOperator(DMDOperator):
 
         if not bccb_opt:
             for j in range(nx):
-                d[j] = np.dot(fX[j,:], fY[j,:].conj()).conj()
-                d[j] /= np.linalg.norm(fX[j, :].conj(), 2)**2
+                d[j] = np.dot(fX[j], fY[j].conj()).conj()
+                d[j] /= np.linalg.norm(fX[j].conj(), 2)**2
         else:
             for j in range(nx):
                 dp = np.linalg.lstsq(
@@ -364,11 +361,10 @@ class PiDMDOperator(DMDOperator):
         r = compute_rank(X, self._svd_rank)
         res = np.divide(np.diag(np.abs(fX.dot(fY.conj().T))),
                         np.linalg.norm(fX.conj().T, 2, axis=0).T)
-        ind_exclude = np.argpartition(res, nx-r)[:nx-r]
-        d[ind_exclude] = 0
-        fI = fft_block2d(np.eye(nx))
-        A = fft_block2d(np.multiply(d.conj(), fI.conj().T).T)
-
+        d[np.argpartition(res, nx-r)[:nx-r]] = 0
+        A = fft_block2d(
+            np.multiply(d.conj(), fft_block2d(np.eye(nx)).conj().T).T
+        )
         return A
 
 
@@ -390,7 +386,7 @@ class PiDMDOperator(DMDOperator):
             m, n = X.shape
             Y = X.reshape(*block_shape, n, order="F")
             Y_fft = fft(Y, axis=1)
-            return Y_fft.reshape(m,n,order="F")/np.sqrt(block_shape[1])
+            return Y_fft.reshape(m, n, order="F") / np.sqrt(block_shape[1])
 
         nx = len(X)
         fX = fft_block(X)
@@ -400,16 +396,16 @@ class PiDMDOperator(DMDOperator):
         for j in range(block_shape[1]):
             ls = (j * block_shape[0]) + np.arange(block_shape[0])
             if tridiagonal_blocks:
-                sol = self._compute_diagonal(fX[ls,:], fY[ls,:], 2)
+                sol = self._compute_diagonal(fX[ls], fY[ls], 2)
             else:
-                sol = np.linalg.lstsq(fX[ls,:].T, fY[ls,:].T, rcond=None)[0].T
+                sol = np.linalg.lstsq(fX[ls].T, fY[ls].T, rcond=None)[0].T
             d.append(sol)
 
-        bd = block_diag(*d)
         fI = fft_block(np.eye(nx))
-        A = fft_block(bd.dot(fI).conj()).conj()
+        A = fft_block(block_diag(*d).dot(fI).conj()).conj()
 
         return A
+
 
     def _compute_procrustes(self, X, Y, manifold, manifold_opt=None):
         """
@@ -455,7 +451,7 @@ class PiDMDOperator(DMDOperator):
             "circulant_symmetric",
             "circulant_skewsymmetric"
         ]:
-            circ_opt = manifold.removeprefix("circulant_")
+            circ_opt = manifold.replace("circulant_", "")
             eigenvalues, modes, A = self._compute_circulant(X, Y, circ_opt)
 
         elif manifold == "symmetric_tridiagonal":
@@ -478,7 +474,7 @@ class PiDMDOperator(DMDOperator):
             block_shape = np.array(manifold_opt)
 
             if manifold.startswith("BCCB"):
-                bccb_opt = manifold.removeprefix("BCCB")
+                bccb_opt = manifold.replace("BCCB", "")
                 A = self._compute_BCCB(X, Y, block_shape, bccb_opt)
             elif manifold == "BC":
                 A = self._compute_BC(X, Y, block_shape)
