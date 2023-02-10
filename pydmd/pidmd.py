@@ -396,13 +396,13 @@ class PiDMDOperator(DMDOperator):
         for j in range(block_shape[1]):
             ls = (j * block_shape[0]) + np.arange(block_shape[0])
             if tridiagonal_blocks:
-                sol = self._compute_diagonal(fX[ls], fY[ls], 2)
+                d.append(self._compute_diagonal(fX[ls], fY[ls], 2)[-1])
             else:
-                sol = np.linalg.lstsq(fX[ls].T, fY[ls].T, rcond=None)[0].T
-            d.append(sol)
+                d.append(np.linalg.lstsq(fX[ls].T, fY[ls].T, rcond=None)[0].T)
 
+        BD = block_diag(*d)
         fI = fft_block(np.eye(nx))
-        A = fft_block(block_diag(*d).dot(fI).conj()).conj()
+        A = fft_block(BD.dot(fI).conj()).conj()
 
         return A
 
