@@ -89,36 +89,34 @@ class PiDMDOperator(DMDOperator):
 
     def _compute_unitary(self, X, Y):
         """
-        Given the data matrices X and Y, solves the for the best-fit unitary
-        operator A that solves the relationship Y=AX. Returns the corresponding
+        Given the data matrices X and Y, solves for the best-fit unitary
+        operator A that solves the relationship Y=AX. Stores the corresponding
         reduced operator atilde.
         """
         Ux = compute_svd(X, self._svd_rank)[0]
         Yproj = Ux.conj().T.dot(Y)
         Xproj = Ux.conj().T.dot(X)
         Uyx, _, Vyx = compute_svd(Yproj.dot(Xproj.conj().T), -1)
-        atilde = Uyx.dot(Vyx.conj().T)
-        return atilde
+        self._Atilde = Uyx.dot(Vyx.conj().T)
 
 
     def _compute_uppertriangular(self, X, Y):
         """
-        Given the data matrices X and Y, solves for and returns the best-fit
+        Given the data matrices X and Y, solves for and stores the best-fit
         uppertriangular matrix A that solves the relationship Y=AX.
         """
         self._check_compute_A()
         R, Q = rq(X, mode="economic")
         Ut = np.triu(Y.dot(Q.conj().T))
-        A = np.linalg.lstsq(R.T, Ut.T, rcond=None)[0].T
-        return A
+        self._A = np.linalg.lstsq(R.T, Ut.T, rcond=None)[0].T
 
 
     def _compute_diagonal(self, X, Y, manifold_opt):
         """
         Given the data matrices X and Y and specification for the diagonals of
-        the matrix A, solves for and returns the best-fit matrix A that solves
+        the matrix A, solves for and stores the best-fit matrix A that solves
         the relationship Y=AX and has diagonal entries specified by
-        manifold_opt. Only the eigenvalues and eigenvectors of A are returned
+        manifold_opt. Only the eigenvalues and eigenvectors of A are stored
         if the compute_A flag is not True.
         """
         # Specify the index matrix for the diagonals of A.
@@ -159,18 +157,19 @@ class PiDMDOperator(DMDOperator):
         A_sparse = sparse.coo_array(
             (np.hstack(R), (np.hstack(I), np.hstack(J))), shape=(nx,nx)
         )
-
         if self._compute_A:
-            return None, None, A_sparse.toarray()
-
-        return sparse.linalg.eigs(A_sparse, k=nx-2), None
+            self._A = A_sparse.toarray()
+        else:
+            self._eigenvalues, self._modes = sparse.linalg.eigs(
+                A_sparse, k=compute_rank(X, self._svd_rank)
+            )
 
 
     def _compute_symmetric(self, X, Y, skewsymmetric=False):
         """
-        Given the data matrices X and Y, solves the for the best-fit symmetric
+        Given the data matrices X and Y, solves for the best-fit symmetric
         (or skewsymmetric) operator A that solves the relationship Y=AX.
-        Returns the corresponding reduced operator atilde.
+        Stores the corresponding reduced operator atilde.
         """
         U, s, V = compute_svd(X, -1)
         C = np.linalg.multi_dot([U.conj().T, Y, V])
@@ -192,16 +191,17 @@ class PiDMDOperator(DMDOperator):
                     atilde[i, j] /= (s[i] ** 2 + s[j] ** 2)
             atilde += atilde.conj().T - np.diag(np.diag(atilde.real))
 
-        return atilde
+        self._Atilde = atilde
 
 
     def _compute_toeplitz(self, X, Y, flipped=False):
         """
-        Given the data matrices X and Y, solves for and returns the
+        Given the data matrices X and Y, solves for and stores the
         best-fit toeplitz (or hankel if flipped=True) operator A that
         solves the relationship Y=AX.
         """
         self._check_compute_A()
+
         nx, nt = X.shape
         if flipped: # hankel
             J = np.fliplr(np.eye(nx))
@@ -230,17 +230,15 @@ class PiDMDOperator(DMDOperator):
         new_A = ifft(fft(np.diag(d), axis=0).T, axis=0).T
 
         # Extract toeplitz matrix from the circulant matrix.
-        A = new_A[:nx, :nx].dot(J)
-
-        return A
+        self._A = new_A[:nx, :nx].dot(J)
 
 
     def _compute_circulant(self, X, Y, circulant_opt):
         """
-        Given the data matrices X and Y, solves for and returns the best-fit
+        Given the data matrices X and Y, solves for and stores the best-fit
         circulant matrix A that solves the relationship Y=AX and satisfies any
         additional conditions set by circulant_opt. Only the eigenvalues and
-        eigenvectors of A are returned if the compute_A flag is not True.
+        eigenvectors of A are stored if the compute_A flag is not True.
         """
         nx = len(X)
         fX = fft(X, axis=0)
@@ -263,19 +261,17 @@ class PiDMDOperator(DMDOperator):
         d[ind_exclude] = 0
 
         if self._compute_A:
-            A = fft(np.multiply(d, ifft(np.eye(nx), axis=0).T).T, axis=0)
-            return None, None, A
-
-        eigenvalues = np.delete(d, ind_exclude)
-        modes = np.delete(fft(np.eye(nx),axis=0), ind_exclude, axis=1)
-        return eigenvalues, modes, None
+            self._A = fft(np.multiply(d, ifft(np.eye(nx), axis=0).T).T, axis=0)
+        else:
+            self._eigenvalues = np.delete(d, ind_exclude)
+            self._modes = np.delete(fft(np.eye(nx),axis=0),ind_exclude, axis=1)
 
 
     def _compute_symtridiagonal(self, X, Y):
         """
-        Given the data matrices X and Y, solves for and returns the best-fit
+        Given the data matrices X and Y, solves for and stores the best-fit
         symmetric tridiagonal matrix A that solves the relationship Y=AX.
-        Only the eigenvalues and eigenvectors of A are returned if the
+        Only the eigenvalues and eigenvectors of A are stored if the
         compute_A flag is not True.
         """
         # Form the leading block.
@@ -312,14 +308,16 @@ class PiDMDOperator(DMDOperator):
         A_sparse += sparse.spdiags(np.append(c[nx:],0), diags=-1, m=nx, n=nx)
 
         if self._compute_A:
-            return None, None, A_sparse.toarray()
-
-        return sparse.linalg.eigs(A_sparse, k=nx-2), None
+            self._A = A_sparse.toarray()
+        else:
+            self._eigenvalues, self._modes = sparse.linalg.eigs(
+                A_sparse, k=compute_rank(X, self._svd_rank)
+            )
 
 
     def _compute_BCCB(self, X, Y, block_shape, bccb_opt):
         """
-        Given the data matrices X and Y, solves for and returns the best-fit
+        Given the data matrices X and Y, solves for and stores the best-fit
         BCCB (block circulant with circulant blocks) matrix A that solves the
         relationship Y=AX. The blocks of A will have the shape block_shape and
         will have the additional matrix property given by bccb_opt.
@@ -362,15 +360,14 @@ class PiDMDOperator(DMDOperator):
         res = np.divide(np.diag(np.abs(fX.dot(fY.conj().T))),
                         np.linalg.norm(fX.conj().T, 2, axis=0).T)
         d[np.argpartition(res, nx-r)[:nx-r]] = 0
-        A = fft_block2d(
+        self._A = fft_block2d(
             np.multiply(d.conj(), fft_block2d(np.eye(nx)).conj().T).T
         )
-        return A
 
 
     def _compute_BC(self, X, Y, block_shape, tridiagonal_blocks=False):
         """
-        Given the data matrices X and Y, solves for and returns the best-fit
+        Given the data matrices X and Y, solves for and stores the best-fit
         BC (block circulant) matrix A that solves the relationship Y=AX. The
         blocks of A will have the shape block_shape and will be tridiagonal
         if tridiagonal_blocks is True.
@@ -396,15 +393,16 @@ class PiDMDOperator(DMDOperator):
         for j in range(block_shape[1]):
             ls = (j * block_shape[0]) + np.arange(block_shape[0])
             if tridiagonal_blocks:
-                d.append(self._compute_diagonal(fX[ls], fY[ls], 2)[-1])
+                # Updates self._A to be the current tridiagonal block.
+                self._compute_diagonal(fX[ls], fY[ls], 2)
+                d.append(np.copy(self._A))
             else:
                 d.append(np.linalg.lstsq(fX[ls].T, fY[ls].T, rcond=None)[0].T)
 
+        # Update self._A to be the full block circulant matrix.
         BD = block_diag(*d)
         fI = fft_block(np.eye(nx))
-        A = fft_block(BD.dot(fI).conj()).conj()
-
-        return A
+        self._A = fft_block(BD.dot(fI).conj()).conj()
 
 
     def _compute_procrustes(self, X, Y, manifold, manifold_opt=None):
@@ -412,51 +410,39 @@ class PiDMDOperator(DMDOperator):
         Private method that computes the best-fit linear operator A in the
         relationship Y=AX such that A is restricted to the family of matrices
         defined by the given manifold (and manifold option if applicable).
-        Computes and returns either (1) the eigenvalues and eigenvectors of A,
-        (2) the reduced operator atilde, or (3) the full operator A, depending
-        on the chosen manifold and the compute_A parameter.
-
-        :return: eigenvalues of A, eigenvectors of A, reduced operator atilde,
-            and the full operator A. None is returned for quantities that are
-            not computed.
-        :rtype: [numpy.ndarray, numpy.ndarray, NoneType, NoneType],
-            [NoneType, NoneType, numpy.ndarray, NoneType], or
-            [NoneType, NoneType, NoneType, numpy.ndarray]
+        Computes and stores either...
+        (1) the reduced operator atilde,
+        (2) the full operator A, or
+        (3) the eigenvalues and eigenvectors of A,
+        depending on the chosen manifold and the compute_A parameter.
         """
-        A = None
-        atilde = None
-        eigenvalues = None
-        modes = None
-
         if manifold == "unitary":
-            atilde = self._compute_unitary(X, Y)
+            self._compute_unitary(X, Y)
         elif manifold == "uppertriangular":
-            A = self._compute_uppertriangular(X, Y)
+            self._compute_uppertriangular(X, Y)
         elif manifold == "lowertriangular":
-            A_rot = self._compute_uppertriangular(np.flipud(X), np.flipud(Y))
-            A = np.rot90(A_rot, 2)
+            self._compute_uppertriangular(np.flipud(X), np.flipud(Y))
+            self._A = np.rot90(self._A, 2)
         elif manifold == "diagonal":
-            eigenvalues, modes, A = self._compute_diagonal(X, Y, manifold_opt)
+            self._compute_diagonal(X, Y, manifold_opt)
         elif manifold == "symmetric":
-            atilde = self._compute_symmetric(X, Y)
+            self._compute_symmetric(X, Y)
         elif manifold == "skewsymmetric":
-            atilde = self._compute_symmetric(X, Y, skewsymmetric=True)
+            self._compute_symmetric(X, Y, skewsymmetric=True)
         elif manifold == "toeplitz":
-            A = self._compute_toeplitz(X, Y)
+            self._compute_toeplitz(X, Y)
         elif manifold == "hankel":
-            A = self._compute_toeplitz(X, Y, flipped=True)
+            self._compute_toeplitz(X, Y, flipped=True)
         elif manifold in [
             "circulant",
             "circulant_unitary",
             "circulant_symmetric",
             "circulant_skewsymmetric"
         ]:
-            circ_opt = manifold.replace("circulant_", "")
-            eigenvalues, modes, A = self._compute_circulant(X, Y, circ_opt)
-
+            circulant_opt = manifold.replace("circulant_", "")
+            self._compute_circulant(X, Y, circulant_opt)
         elif manifold == "symmetric_tridiagonal":
-            eigenvalues, modes, A = self._compute_symtridiagonal(X, Y)
-
+            self._compute_symtridiagonal(X, Y)
         elif manifold in [
             "BC",
             "BCTB",
@@ -475,19 +461,18 @@ class PiDMDOperator(DMDOperator):
 
             if manifold.startswith("BCCB"):
                 bccb_opt = manifold.replace("BCCB", "")
-                A = self._compute_BCCB(X, Y, block_shape, bccb_opt)
+                self._compute_BCCB(X, Y, block_shape, bccb_opt)
             elif manifold == "BC":
-                A = self._compute_BC(X, Y, block_shape)
+                self._compute_BC(X, Y, block_shape)
             else:
-                A = self._compute_BC(X, Y, block_shape, tridiagonal_blocks=True)
+                self._compute_BC(X, Y, block_shape, tridiagonal_blocks=True)
         else:
             raise ValueError("The selected manifold is not implemented.")
 
-        return eigenvalues, modes, atilde, A
 
     def compute_operator(self, X, Y):
         """
-        Compute the low-rank operator and the full operator A.
+        Compute and store the low-rank operator and the full operator A.
 
         :param X: matrix containing the snapshots x0,..x{n-1} by column.
         :type X: numpy.ndarray
@@ -500,31 +485,31 @@ class PiDMDOperator(DMDOperator):
         """
         U, s, V = compute_svd(X, self._svd_rank)
 
-        eigenvalues, modes, atilde, A = self._compute_procrustes(
-            X, Y, self._manifold, self._manifold_opt
-        )
-        # Case 1: atilde was computed.
-        if atilde is not None:
-            eigenvalues, eigenvectors = np.linalg.eig(atilde)
-            modes = U.dot(eigenvectors)
-            if self._compute_A:
-                A = np.linalg.multi_dot([modes,
-                                         np.diag(eigenvalues),
-                                         np.linalg.pinv(modes)])
-        # Cases 2,3: A was computed, or eigs/modes were computed.
-        else:
-            if eigenvalues is None or modes is None:
-                eigenvalues, modes = np.linalg.eig(A)
-            eigenvectors = U.conj().T.dot(modes)
-            atilde = np.linalg.multi_dot([U.conj().T, A, U])
+        # Compute the corresponding Procrustes problem.
+        self._compute_procrustes(X, Y, self._manifold, self._manifold_opt)
 
-        self._A = A
-        self._Atilde = atilde
-        self._eigenvalues = eigenvalues
-        self._eigenvectors = eigenvectors
-        self._modes = modes
+        # Case 1: atilde was computed.
+        if self._Atilde is not None:
+            self._eigenvalues, self._eigenvectors = np.linalg.eig(self._Atilde)
+            self._modes = U.dot(self._eigenvectors)
+            if self._compute_A:
+                self._A = np.linalg.multi_dot([self._modes,
+                                               np.diag(self._eigenvalues),
+                                               np.linalg.pinv(self._modes)])
+        else:
+            # Case 2: A was computed.
+            if self._eigenvalues is None or self._modes is None:
+                self._eigenvalues, self._modes = np.linalg.eig(self._A)
+            # Case 3: eigenvalues and modes were computed.
+            self._eigenvectors = U.conj().T.dot(self._modes)
+            self._Atilde = np.linalg.multi_dot(
+                [self._eigenvectors,
+                 np.diag(self._eigenvalues),
+                 np.linalg.pinv(self._eigenvectors)]
+            )
 
         return U, s, V
+
 
 class PiDMD(DMD):
     """
