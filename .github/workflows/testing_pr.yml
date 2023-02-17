@@ -6,14 +6,10 @@ on:
       - "master"
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+  load_testing_environment:
+    uses: ./.github/workflows/testing_environment.yml
         
+  test_pr:
     steps:
     - uses: actions/checkout@v2
 
