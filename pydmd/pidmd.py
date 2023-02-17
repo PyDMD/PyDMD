@@ -7,9 +7,9 @@ Steven L. Brunton. Physics-informed dynamic mode decomposition (pidmd). 2021.
 arXiv:2112.04307.
 """
 import numpy as np
+from numpy.fft import fft, ifft, fft2
 from scipy import sparse
 from scipy.linalg import block_diag, rq
-from numpy.fft import fft, ifft, fft2
 
 from .dmd import DMD
 from .dmdoperator import DMDOperator
