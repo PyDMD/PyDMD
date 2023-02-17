@@ -178,8 +178,8 @@ class PiDMDOperator(DMDOperator):
         r = compute_rank(X, self._svd_rank)
 
         if skewsymmetric:
+            atilde = 1j * np.diag(np.diagonal(C).imag / s)
             for i in range(r):
-                atilde[i, i] = 1j * (C[i, i].imag / s[i])
                 for j in range(i + 1, r):
                     atilde[i, j] = -s[i] * np.conj(C[j,i]) + s[j] * C[i,j]
                     atilde[i, j] /= (s[i] ** 2 + s[j] ** 2)
