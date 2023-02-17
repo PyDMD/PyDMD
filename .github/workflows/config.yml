@@ -1,0 +1,14 @@
+stable:
+  os:
+    - "macos-latest"
+    - "ubuntu-latest"
+  python-version:
+    - "3.8"
+    
+testing:
+  os:
+    - "macos-latest"
+    - "ubuntu-latest"
+  python-version:
+    - "3.9"
+    - "3.8"   
