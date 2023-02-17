@@ -1,5 +1,8 @@
 name: Set the Testing Environment for Actions
 
+on:
+  workflow_call:
+
 jobs:
   install:
     runs-on: ${{ matrix.os }}
