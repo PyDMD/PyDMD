@@ -1,15 +1,20 @@
 name: "Testing Pull Request"
 
+!include config.yaml
+
 on:
   pull_request:
     branches:
       - "master"
 
 jobs:
-  load_testing_environment:
-    uses: ./.github/workflows/testing_environment.yml
-        
-  test_pr:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python-version: config.testing.python-version
     steps:
     - uses: actions/checkout@v2
 
