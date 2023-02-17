@@ -122,7 +122,7 @@ class PiDMDOperator(DMDOperator):
         # Specify the index matrix for the diagonals of A.
         nx = len(X)
         if manifold_opt is None:
-            ind_mat = np.ones((nx, 2))
+            ind_mat = np.ones((nx, 2), dtype=int)
         elif isinstance(manifold_opt, int) and manifold_opt > 0:
             ind_mat = manifold_opt * np.ones((nx, 2))
         elif (isinstance(manifold_opt, tuple)
