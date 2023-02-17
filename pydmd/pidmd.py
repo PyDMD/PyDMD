@@ -144,9 +144,11 @@ class PiDMDOperator(DMDOperator):
         R = []
 
         # Solve min||Cx-b|| along each row.
+        nxs = np.arange(nx)
+        l1s = (nxs - ind_mat[:, 0] + 1).clip(min=0)
+        l2s = (nxs + ind_mat[:, 1]).clip(max=nx)
         for j in range(nx):
-            l1 = int(max(j-(ind_mat[j,0]-1), 0))
-            l2 = int(min(j+(ind_mat[j,1]-1), nx-1) + 1)
+                l1, l2 = l1s[j], l2s[j]
             C = X[l1:l2].T
             b = Y[j].T
             I.append(j * np.ones(l2 - l1))
