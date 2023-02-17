@@ -124,7 +124,7 @@ class PiDMDOperator(DMDOperator):
         if manifold_opt is None:
             ind_mat = np.ones((nx, 2), dtype=int)
         elif isinstance(manifold_opt, int) and manifold_opt > 0:
-            ind_mat = manifold_opt * np.ones((nx, 2))
+            ind_mat = manifold_opt * np.ones((nx, 2), dtype=int)
         elif (isinstance(manifold_opt, tuple)
                 and len(manifold_opt) == 2
                 and np.all(np.array(manifold_opt) > 0)):
