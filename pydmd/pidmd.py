@@ -185,8 +185,8 @@ class PiDMDOperator(DMDOperator):
                     atilde[i, j] /= (s[i] ** 2 + s[j] ** 2)
             atilde += -atilde.conj().T - 1j * np.diag(np.diag(atilde.imag))
         else: # symmetric
+            atilde = np.diag(np.diagonal(C).real / s)
             for i in range(r):
-                atilde[i, i] = C[i, i].real / s[i]
                 for j in range(i + 1, r):
                     atilde[i, j] = s[i] * np.conj(C[j,i]) + s[j] * C[i,j]
                     atilde[i, j] /= (s[i] ** 2 + s[j] ** 2)
