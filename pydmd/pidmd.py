@@ -176,7 +176,6 @@ class PiDMDOperator(DMDOperator):
         U, s, V = compute_svd(X, -1)
         C = np.linalg.multi_dot([U.conj().T, Y, V])
         r = compute_rank(X, self._svd_rank)
-        atilde = np.zeros((r, r), dtype="complex")
 
         if skewsymmetric:
             for i in range(r):
