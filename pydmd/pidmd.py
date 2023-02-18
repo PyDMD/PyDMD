@@ -7,15 +7,21 @@ Steven L. Brunton. Physics-informed dynamic mode decomposition (pidmd). 2021.
 arXiv:2112.04307.
 """
 import numpy as np
-from numpy.fft import fft, ifft, fft2
-from scipy import sparse
-from scipy.linalg import block_diag, rq
 
 from .dmd import DMD
 from .dmdoperator import DMDOperator
 from .utils import compute_svd
-from .rdmd import compute_rank
-
+from .pidmd_utils import (
+    compute_unitary,
+    compute_uppertriangular,
+    compute_diagonal,
+    compute_symmetric,
+    compute_toeplitz,
+    compute_circulant,
+    compute_symtridiagonal,
+    compute_BCCB,
+    compute_BC,
+)
 
 class PiDMDOperator(DMDOperator):
     """
@@ -87,364 +93,58 @@ class PiDMDOperator(DMDOperator):
             )
 
 
-    def _compute_unitary(self, X, Y):
-        """
-        Given the data matrices X and Y, solves for the best-fit unitary
-        operator A that solves the relationship Y=AX. Stores the corresponding
-        reduced operator atilde.
-        """
-        Ux = compute_svd(X, self._svd_rank)[0]
-        Yproj = Ux.conj().T.dot(Y)
-        Xproj = Ux.conj().T.dot(X)
-        Uyx, _, Vyx = compute_svd(Yproj.dot(Xproj.conj().T), -1)
-        self._Atilde = Uyx.dot(Vyx.conj().T)
-
-
-    def _compute_uppertriangular(self, X, Y):
-        """
-        Given the data matrices X and Y, solves for and stores the best-fit
-        uppertriangular matrix A that solves the relationship Y=AX.
-        """
-        self._check_compute_A()
-        R, Q = rq(X, mode="economic")
-        Ut = np.triu(Y.dot(Q.conj().T))
-        self._A = np.linalg.lstsq(R.T, Ut.T, rcond=None)[0].T
-
-
-    def _compute_diagonal(self, X, Y, manifold_opt):
-        """
-        Given the data matrices X and Y and specification for the diagonals of
-        the matrix A, solves for and stores the best-fit matrix A that solves
-        the relationship Y=AX and has diagonal entries specified by
-        manifold_opt. Only the eigenvalues and eigenvectors of A are stored
-        if the compute_A flag is not True.
-        """
-        # Specify the index matrix for the diagonals of A.
-        nx = len(X)
-        if manifold_opt is None:
-            ind_mat = np.ones((nx, 2), dtype=int)
-        elif isinstance(manifold_opt, int) and manifold_opt > 0:
-            ind_mat = manifold_opt * np.ones((nx, 2), dtype=int)
-        elif (isinstance(manifold_opt, tuple)
-                and len(manifold_opt) == 2
-                and np.all(np.array(manifold_opt) > 0)):
-            ind_mat = np.ones((nx, 2))
-            ind_mat[:, 0] *= manifold_opt[0]
-            ind_mat[:, 1] *= manifold_opt[1]
-        elif (isinstance(manifold_opt, np.ndarray)
-                and manifold_opt.shape == (nx, 2)
-                and np.all(manifold_opt > 0)):
-            ind_mat = manifold_opt
-        else:
-            raise ValueError("manifold_opt is not in an allowable format.")
-
-        # Keep track of info for building A as a sparse coordinate matrix.
-        I = []
-        J = []
-        R = []
-
-        # Solve min||Cx-b|| along each row.
-        nxs = np.arange(nx)
-        l1s = (nxs - ind_mat[:, 0] + 1).clip(min=0).astype(int)
-        l2s = (nxs + ind_mat[:, 1]).clip(max=nx).astype(int)
-        for j in range(nx):
-            l1, l2 = l1s[j], l2s[j]
-            C = X[l1:l2].T
-            b = Y[j].T
-            I.append(j * np.ones(l2 - l1))
-            J.append(np.arange(l1, l2))
-            R.append(np.linalg.lstsq(C, b, rcond=None)[0].T)
-
-        # Build A as a sparse matrix.
-        A_sparse = sparse.coo_array(
-            (np.hstack(R), (np.hstack(I), np.hstack(J))), shape=(nx,nx)
-        )
-        if self._compute_A:
-            self._A = A_sparse.toarray()
-        else:
-            self._eigenvalues, self._modes = sparse.linalg.eigs(
-                A_sparse, k=compute_rank(X, self._svd_rank)
-            )
-
-
-    def _compute_symmetric(self, X, Y, skewsymmetric=False):
-        """
-        Given the data matrices X and Y, solves for the best-fit symmetric
-        (or skewsymmetric) operator A that solves the relationship Y=AX.
-        Stores the corresponding reduced operator atilde.
-        """
-        U, s, V = compute_svd(X, -1)
-        C = np.linalg.multi_dot([U.conj().T, Y, V])
-        r = compute_rank(X, self._svd_rank)
-
-        if skewsymmetric:
-            atilde = 1j * np.diag(np.diagonal(C).imag / s)
-            for i in range(r):
-                for j in range(i + 1, r):
-                    atilde[i, j] = -s[i] * np.conj(C[j,i]) + s[j] * C[i,j]
-                    atilde[i, j] /= (s[i] ** 2 + s[j] ** 2)
-            atilde += -atilde.conj().T - 1j * np.diag(np.diag(atilde.imag))
-        else: # symmetric
-            atilde = np.diag(np.diagonal(C).real / s)
-            for i in range(r):
-                for j in range(i + 1, r):
-                    atilde[i, j] = s[i] * np.conj(C[j,i]) + s[j] * C[i,j]
-                    atilde[i, j] /= (s[i] ** 2 + s[j] ** 2)
-            atilde += atilde.conj().T - np.diag(np.diag(atilde.real))
-
-        self._Atilde = atilde
-
-
-    def _compute_toeplitz(self, X, Y, flipped=False):
-        """
-        Given the data matrices X and Y, solves for and stores the
-        best-fit toeplitz (or hankel if flipped=True) operator A that
-        solves the relationship Y=AX.
-        """
-        self._check_compute_A()
-
-        nx, nt = X.shape
-        if flipped: # hankel
-            J = np.fliplr(np.eye(nx))
-        else: # toeplitz
-            J = np.eye(nx)
-
-        # Define left and right matrices.
-        Am = fft(np.hstack([np.eye(nx), np.zeros((nx, nx))]).T, axis=0)
-        Am = Am.conj().T / np.sqrt(2 * nx)
-        B = fft(np.hstack([J.dot(X).conj().T, np.zeros((nt, nx))]).T, axis=0)
-        B = B.conj().T / np.sqrt(2 * nx)
-
-        # Compute AA* and B*B (fast computation of AA*).
-        AAt = ifft(fft(np.vstack([
-            np.hstack([np.eye(nx), np.zeros((nx, nx))]),
-            np.zeros((nx, 2 * nx))
-        ]), axis=0).T, axis=0).T
-
-        # Solve linear system y = dL.
-        y = np.diag(np.linalg.multi_dot([Am.conj().T, Y.conj(), B])).conj().T
-        L = np.multiply(AAt, B.conj().T.dot(B).T).conj().T
-        d = np.linalg.lstsq(L[:-1, :-1].T, y[:-1], rcond=None)[0]
-        d = np.append(d, 0)
-
-        # Convert eigenvalues into circulant matrix.
-        new_A = ifft(fft(np.diag(d), axis=0).T, axis=0).T
-
-        # Extract toeplitz matrix from the circulant matrix.
-        self._A = new_A[:nx, :nx].dot(J)
-
-
-    def _compute_circulant(self, X, Y, circulant_opt):
-        """
-        Given the data matrices X and Y, solves for and stores the best-fit
-        circulant matrix A that solves the relationship Y=AX and satisfies any
-        additional conditions set by circulant_opt. Only the eigenvalues and
-        eigenvectors of A are stored if the compute_A flag is not True.
-        """
-        nx = len(X)
-        fX = fft(X, axis=0)
-        fY = fft(Y.conj(), axis=0)
-        fX_norm = np.linalg.norm(fX, axis=1)
-        d = np.divide(np.diag(fX.dot(fY.conj().T)), fX_norm ** 2)
-
-        if circulant_opt == "unitary":
-            d = np.exp(1j * np.angle(d))
-        elif circulant_opt == "symmetric":
-            d = d.real
-        elif circulant_opt == "skewsymmetric":
-            d = 1j * d.imag
-
-        # Remove the least important eigenvalues.
-        r = compute_rank(X, self._svd_rank)
-        res = np.divide(np.diag(np.abs(fX.dot(fY.conj().T))),
-                        np.linalg.norm(fX.conj().T, 2, axis=0).T)
-        ind_exclude = np.argpartition(res, nx-r)[:nx-r]
-        d[ind_exclude] = 0
-
-        if self._compute_A:
-            self._A = fft(np.multiply(d, ifft(np.eye(nx), axis=0).T).T, axis=0)
-        else:
-            self._eigenvalues = np.delete(d, ind_exclude)
-            self._modes = np.delete(fft(np.eye(nx),axis=0),ind_exclude, axis=1)
-
-
-    def _compute_symtridiagonal(self, X, Y):
-        """
-        Given the data matrices X and Y, solves for and stores the best-fit
-        symmetric tridiagonal matrix A that solves the relationship Y=AX.
-        Only the eigenvalues and eigenvectors of A are stored if the
-        compute_A flag is not True.
-        """
-        # Form the leading block.
-        nx = len(X)
-        T1e = np.linalg.norm(X, axis=1) ** 2
-        T1 = sparse.diags(T1e)
-
-        # Form the second and third blocks.
-        T2e = np.diag(X[1:].dot(X[:-1].T))
-        T2 = sparse.spdiags([T2e, T2e], diags=[-1, 0], m=nx, n=nx-1)
-
-        # Form the final block.
-        T3e = np.insert(np.diag(X[2:].dot(X[:-2].T)), 0, 0)
-        T3_offdiag = sparse.spdiags(T3e, diags=1, m=nx-1, n=nx-1)
-        T3 = sparse.spdiags(T1e[:-1] + T1e[1:], diags=0, m=nx-1, n=nx-1) \
-                + T3_offdiag + T3_offdiag.conj().T
-
-        # Form the symmetric block-tridiagonal matrix T = [T1  T2; T2* T3].
-        T = sparse.vstack(
-            [sparse.hstack([T1, T2]), sparse.hstack([T2.conj().T, T3])]
-        )
-
-        # Solve for c in the system Tc = d.
-        d = np.concatenate(
-            (np.diag(X.dot(Y.T)),
-             np.diag(X[:-1].dot(Y[1:].T)) + np.diag(X[1:].dot(Y[:-1].T))),
-             axis=None
-        )
-        c = sparse.linalg.lsqr(T.real, d.real)[0]
-
-        # Form the solution matrix A.
-        A_sparse = sparse.diags(c[:nx])
-        A_sparse += sparse.spdiags(np.insert(c[nx:],0,0), diags=1, m=nx, n=nx)
-        A_sparse += sparse.spdiags(np.append(c[nx:],0), diags=-1, m=nx, n=nx)
-
-        if self._compute_A:
-            self._A = A_sparse.toarray()
-        else:
-            self._eigenvalues, self._modes = sparse.linalg.eigs(
-                A_sparse, k=compute_rank(X, self._svd_rank)
-            )
-
-
-    def _compute_BCCB(self, X, Y, block_shape, bccb_opt):
-        """
-        Given the data matrices X and Y, solves for and stores the best-fit
-        BCCB (block circulant with circulant blocks) matrix A that solves the
-        relationship Y=AX. The blocks of A will have the shape block_shape and
-        will have the additional matrix property given by bccb_opt.
-        """
-        def fft_block2d(X):
-            """
-            Helper method that, given a 2D numpy array X, reshapes the
-            columns of X into arrays of shape block_shape, computes the
-            2D discrete Fourier Transform, and returns the resulting
-            FFT matrix restored to the original X shape and scaled
-            according to the length of the columns of X.
-            """
-            m, n = X.shape
-            Y = X.reshape(*block_shape, n, order="F")
-            Y_fft2 = fft2(Y, axes=(0, 1))
-            return Y_fft2.reshape(m, n, order="F") / np.sqrt(m)
-
-        nx = len(X)
-        fX = fft_block2d(X.conj())
-        fY = fft_block2d(Y.conj())
-        d = np.zeros(nx, dtype="complex")
-
-        if not bccb_opt:
-            for j in range(nx):
-                d[j] = np.dot(fX[j], fY[j].conj()).conj()
-                d[j] /= np.linalg.norm(fX[j].conj(), 2)**2
-        else:
-            for j in range(nx):
-                dp = np.linalg.lstsq(
-                    fX[j,:,None], fY[j,:,None], rcond=None)[0][0][0]
-                if bccb_opt == "unitary":
-                    d[j] = np.exp(1j * np.angle(dp))
-                elif bccb_opt == "symmetric":
-                    d[j] = dp.real
-                else: # skewsymmetric
-                    d[j] = 1j * dp.imag
-
-        # Remove the least important eigenvalues.
-        r = compute_rank(X, self._svd_rank)
-        res = np.divide(np.diag(np.abs(fX.dot(fY.conj().T))),
-                        np.linalg.norm(fX.conj().T, 2, axis=0).T)
-        d[np.argpartition(res, nx-r)[:nx-r]] = 0
-        self._A = fft_block2d(
-            np.multiply(d.conj(), fft_block2d(np.eye(nx)).conj().T).T
-        )
-
-
-    def _compute_BC(self, X, Y, block_shape, tridiagonal_blocks=False):
-        """
-        Given the data matrices X and Y, solves for and stores the best-fit
-        BC (block circulant) matrix A that solves the relationship Y=AX. The
-        blocks of A will have the shape block_shape and will be tridiagonal
-        if tridiagonal_blocks is True.
-        """
-        def fft_block(X):
-            """
-            Helper method that, given a 2D numpy array X, reshapes the
-            columns of X into arrays of shape block_shape, computes the
-            1D discrete Fourier Transform, and returns the resulting
-            FFT matrix restored to the original X shape and scaled
-            according to the number of columns per block.
-            """
-            m, n = X.shape
-            Y = X.reshape(*block_shape, n, order="F")
-            Y_fft = fft(Y, axis=1)
-            return Y_fft.reshape(m, n, order="F") / np.sqrt(block_shape[1])
-
-        nx = len(X)
-        fX = fft_block(X)
-        fY = fft_block(Y)
-        d = []
-
-        for j in range(block_shape[1]):
-            ls = (j * block_shape[0]) + np.arange(block_shape[0])
-            if tridiagonal_blocks:
-                # Updates self._A to be the current tridiagonal block.
-                self._compute_diagonal(fX[ls], fY[ls], 2)
-                d.append(np.copy(self._A))
-            else:
-                d.append(np.linalg.lstsq(fX[ls].T, fY[ls].T, rcond=None)[0].T)
-
-        # Update self._A to be the full block circulant matrix.
-        BD = block_diag(*d)
-        fI = fft_block(np.eye(nx))
-        self._A = fft_block(BD.dot(fI).conj()).conj()
-
-
-    def _compute_procrustes(self, X, Y, manifold, manifold_opt=None):
+    def _compute_procrustes(self, X, Y):
         """
         Private method that computes the best-fit linear operator A in the
-        relationship Y=AX such that A is restricted to the family of matrices
+        relationship Y = AX such that A is restricted to the family of matrices
         defined by the given manifold (and manifold option if applicable).
-        Computes and stores either...
-        (1) the reduced operator atilde,
-        (2) the full operator A, or
-        (3) the eigenvalues and eigenvectors of A,
+        Computes and returns a dictionary that contains either...
+        (1) the reduced operator "atilde",
+        (2) the full operator "A", or
+        (3) the "eigenvalues" and eigenvectors of A, referred to as "modes",
         depending on the chosen manifold and the compute_A parameter.
         """
-        if manifold == "unitary":
-            self._compute_unitary(X, Y)
-        elif manifold == "uppertriangular":
-            self._compute_uppertriangular(X, Y)
-        elif manifold == "lowertriangular":
-            self._compute_uppertriangular(np.flipud(X), np.flipud(Y))
-            self._A = np.rot90(self._A, 2)
-        elif manifold == "diagonal":
-            self._compute_diagonal(X, Y, manifold_opt)
-        elif manifold == "symmetric":
-            self._compute_symmetric(X, Y)
-        elif manifold == "skewsymmetric":
-            self._compute_symmetric(X, Y, skewsymmetric=True)
-        elif manifold == "toeplitz":
-            self._compute_toeplitz(X, Y)
-        elif manifold == "hankel":
-            self._compute_toeplitz(X, Y, flipped=True)
-        elif manifold in [
+        if self._manifold == "unitary":
+            result_dict = compute_unitary(X, Y, self._svd_rank)
+        elif self._manifold == "uppertriangular":
+            self._check_compute_A()
+            result_dict = compute_uppertriangular(X, Y)
+        elif self._manifold == "lowertriangular":
+            self._check_compute_A()
+            A_rot = compute_uppertriangular(np.flipud(X), np.flipud(Y))["A"]
+            result_dict = {"A": np.rot90(A_rot, 2)}
+        elif self._manifold == "diagonal":
+            result_dict = compute_diagonal(X, Y,
+                                           self._svd_rank,
+                                           self._manifold_opt,
+                                           self._compute_A)
+        elif self._manifold == "symmetric":
+            result_dict = compute_symmetric(X, Y, self._svd_rank)
+        elif self._manifold == "skewsymmetric":
+            result_dict = compute_symmetric(X, Y, self._svd_rank,
+                                            skew_symmetric=True)
+        elif self._manifold == "toeplitz":
+            self._check_compute_A()
+            result_dict = compute_toeplitz(X, Y)
+        elif self._manifold == "hankel":
+            self._check_compute_A()
+            result_dict = compute_toeplitz(X, Y, flipped=True)
+        elif self._manifold in [
             "circulant",
             "circulant_unitary",
             "circulant_symmetric",
             "circulant_skewsymmetric"
         ]:
-            circulant_opt = manifold.replace("circulant_", "")
-            self._compute_circulant(X, Y, circulant_opt)
-        elif manifold == "symmetric_tridiagonal":
-            self._compute_symtridiagonal(X, Y)
-        elif manifold in [
+            circulant_opt = self._manifold.replace("circulant_", "")
+            result_dict = compute_circulant(X, Y,
+                                            circulant_opt,
+                                            self._svd_rank,
+                                            self._compute_A)
+        elif self._manifold == "symmetric_tridiagonal":
+            result_dict = compute_symtridiagonal(X, Y,
+                                                 self._svd_rank,
+                                                 self._compute_A)
+        elif self._manifold in [
             "BC",
             "BCTB",
             "BCCB",
@@ -452,23 +152,30 @@ class PiDMDOperator(DMDOperator):
             "BCCBsymmetric",
             "BCCBskewsymmetric",
         ]:
-            self._check_compute_A()
             # Specify the shape of the blocks in the output matrix A.
-            if manifold_opt is None:
+            self._check_compute_A()
+            if self._manifold_opt is None:
                 raise ValueError("manifold_opt must be specified.")
-            if (not isinstance(manifold_opt,tuple) or len(manifold_opt) != 2):
+            if (not isinstance(self._manifold_opt, tuple)
+                or len(self._manifold_opt) != 2):
                 raise ValueError("manifold_opt is not in an allowable format.")
-            block_shape = np.array(manifold_opt)
+            block_shape = np.array(self._manifold_opt)
 
-            if manifold.startswith("BCCB"):
-                bccb_opt = manifold.replace("BCCB", "")
-                self._compute_BCCB(X, Y, block_shape, bccb_opt)
-            elif manifold == "BC":
-                self._compute_BC(X, Y, block_shape)
+            if self._manifold.startswith("BCCB"):
+                bccb_opt = self._manifold.replace("BCCB", "")
+                result_dict = compute_BCCB(X, Y,
+                                           block_shape,
+                                           bccb_opt,
+                                           self._svd_rank)
+            elif self._manifold == "BC":
+                result_dict = compute_BC(X, Y, block_shape)
             else:
-                self._compute_BC(X, Y, block_shape, tridiagonal_blocks=True)
+                result_dict = compute_BC(X, Y, block_shape,
+                                         tridiagonal_blocks=True)
         else:
             raise ValueError("The selected manifold is not implemented.")
+
+        return result_dict
 
 
     def compute_operator(self, X, Y):
@@ -487,21 +194,26 @@ class PiDMDOperator(DMDOperator):
         U, s, V = compute_svd(X, self._svd_rank)
 
         # Compute the corresponding Procrustes problem.
-        self._compute_procrustes(X, Y, self._manifold, self._manifold_opt)
+        result_dict = self._compute_procrustes(X, Y)
 
         # Case 1: atilde was computed.
-        if self._Atilde is not None:
+        if "atilde" in result_dict.keys():
+            self._Atilde = result_dict["atilde"]
             self._eigenvalues, self._eigenvectors = np.linalg.eig(self._Atilde)
             self._modes = U.dot(self._eigenvectors)
             if self._compute_A:
                 self._A = np.linalg.multi_dot([self._modes,
                                                np.diag(self._eigenvalues),
                                                np.linalg.pinv(self._modes)])
-        else:
+        else: # Cases 2 and 3.
             # Case 2: A was computed.
-            if self._eigenvalues is None or self._modes is None:
+            if "A" in result_dict.keys():
+                self._A = result_dict["A"]
                 self._eigenvalues, self._modes = np.linalg.eig(self._A)
-            # Case 3: eigenvalues and modes were computed.
+            else:
+                # Case 3: eigenvalues and modes were computed.
+                self._eigenvalues = result_dict["eigenvalues"]
+                self._modes = result_dict["modes"]
             self._eigenvectors = U.conj().T.dot(self._modes)
             self._Atilde = np.linalg.multi_dot(
                 [self._eigenvectors,
