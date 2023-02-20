@@ -27,7 +27,7 @@ jobs:
   job2:
     needs: prepare_strategy
     runs-on: {{ matrix.os }}
-    strategy: $(( fromJson(needs.prepare_strategy.outputs.strategy) }}
+    strategy: ${{ fromJson(needs.prepare_strategy.outputs.strategy) }}
     steps:
     - run: echo Run ${{ matrix. }}
     - run: date
