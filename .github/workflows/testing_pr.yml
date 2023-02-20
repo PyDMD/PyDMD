@@ -6,7 +6,31 @@ on:
       - "master"
 
 jobs:
-  build:
+  prepare_strategy:
+    runs-on: ubuntu-latest
+    outputs:
+	# Making use of job.output
+       matrix: ${{ steps.setmatrix.outputs.matrix }}
+    steps:
+      - name: Set Dynamic Matrix
+        id: setmatrix
+        run: |
+           matrixStringifiedObject="{\"include\":[{\"run\":\"run1\"},{\"run\":\"run2\"}]}"
+           echo "::set-output name=matrix::$matrixStringifiedObject"
+  job2:
+    needs: prepare_strategy
+    runs-on: ubuntu-latest
+    strategy:
+		# Making use of fromJson (JSON syntax)
+      matrix: ${{ fromJson(needs.job1.outputs.matrix) }}
+    steps:
+    - run: echo Run ${{ matrix.run }}
+    - run: date
+    - run: sleep 1
+    - run: date
+    
+  test:
+    needs: prepare_strategy
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
