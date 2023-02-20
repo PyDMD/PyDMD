@@ -18,9 +18,9 @@ jobs:
            # echo "::set-output name=matrix::$matrixStringifiedObject"
            ls
            pwd
-           ls utils
-           matrixStringifiedObject=$(python utils/info2json.py)
-           echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
+           #ls utils
+           #matrixStringifiedObject=$(python utils/info2json.py)
+           #echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
   job2:
     needs: prepare_strategy
     runs-on: ubuntu-latest
