@@ -26,7 +26,7 @@ jobs:
            echo "strategy=$matrixStringifiedObject" >> $GITHUB_OUTPUT
   job2:
     needs: prepare_strategy
-    runs-on: {{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy: ${{ fromJson(needs.prepare_strategy.outputs.strategy) }}
     steps:
     - run: echo Run ${{ matrix. }}
