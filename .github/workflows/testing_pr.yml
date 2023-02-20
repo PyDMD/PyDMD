@@ -16,6 +16,9 @@ jobs:
         run: |
            # matrixStringifiedObject="{\"include\":[{\"run\":\"run1\"},{\"run\":\"run2\"}]}"
            # echo "::set-output name=matrix::$matrixStringifiedObject"
+           ls
+           pwd
+           ls utils
            matrixStringifiedObject=$(python utils/info2json.py)
            echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
   job2:
