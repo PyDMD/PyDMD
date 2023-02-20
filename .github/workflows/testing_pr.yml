@@ -9,7 +9,6 @@ jobs:
   prepare_strategy:
     runs-on: ubuntu-latest
     outputs:
-	# Making use of job.output
        matrix: ${{ steps.setmatrix.outputs.matrix }}
     steps:
       - name: Set Dynamic Matrix
@@ -21,7 +20,6 @@ jobs:
     needs: prepare_strategy
     runs-on: ubuntu-latest
     strategy:
-		# Making use of fromJson (JSON syntax)
       matrix: ${{ fromJson(needs.job1.outputs.matrix) }}
     steps:
     - run: echo Run ${{ matrix.run }}
