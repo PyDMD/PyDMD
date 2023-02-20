@@ -14,7 +14,7 @@ VERSION = meta['__version__']
 KEYWORDS = 'dynamic-mode-decomposition dmd mrdmd fbdmd cdmd'
 
 REQUIRED = [
-    'future', 'numpy', 'scipy>=1.8',	'matplotlib'
+    'future', 'numpy', 'scipy',	'matplotlib'
 ]
 
 EXTRAS = {

@@ -83,7 +83,7 @@ def compute_diagonal(X, Y, svd_rank, manifold_opt, compute_A):
         R.append(np.linalg.lstsq(C, b, rcond=None)[0].T)
 
     # Build A as a sparse matrix.
-    A_sparse = sparse.coo_array(
+    A_sparse = sparse.coo_matrix(
         (np.hstack(R), (np.hstack(I), np.hstack(J))), shape=(nx,nx))
     if compute_A:
         return {"A": A_sparse.toarray()}
