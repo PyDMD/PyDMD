@@ -17,4 +17,4 @@ config = {
     }       
 }   
 
-print(json.dumps(config))
+print(json.dumps(config['testing_strategy_ghact']))
