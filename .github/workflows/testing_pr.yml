@@ -9,7 +9,7 @@ jobs:
   prepare_strategy:
     runs-on: ubuntu-latest
     outputs:
-       strategy: ${{ steps.setmatrix.outputs.matrix }}
+       strategy: ${{ steps.setmatrix.outputs.strategy }}
     steps:
         - uses: actions/checkout@v2
 
@@ -24,15 +24,6 @@ jobs:
            #ls utils
            matrixStringifiedObject=$(python utils/info2json.py)
            echo "strategy=$matrixStringifiedObject" >> $GITHUB_OUTPUT
-  job2:
-    needs: prepare_strategy
-    runs-on: ${{ matrix.os }}
-    strategy: ${{ fromJson(needs.prepare_strategy.outputs.strategy) }}
-    steps:
-    - run: echo Run ${{ matrix.os }}
-    - run: date
-    - run: sleep 1
-    - run: date
     
   test:
     needs: prepare_strategy
