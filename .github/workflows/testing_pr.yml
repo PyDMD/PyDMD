@@ -11,14 +11,19 @@ jobs:
     outputs:
        matrix: ${{ steps.setmatrix.outputs.matrix }}
     steps:
-      - run: |
+        - uses: actions/checkout@v2
+
+        - name: Set up Python
+          uses: actions/setup-python@v4.5.0
+
+        - run: |
            ls -la
            ls .
            dir
            
-      - name: Set Dynamic Matrix
-        id: setmatrix
-        run: |
+        - name: Set Dynamic Matrix
+          id: setmatrix
+          run: |
            # matrixStringifiedObject="{\"include\":[{\"run\":\"run1\"},{\"run\":\"run2\"}]}"
            # echo "::set-output name=matrix::$matrixStringifiedObject"
            ls
