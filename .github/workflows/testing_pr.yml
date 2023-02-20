@@ -16,6 +16,7 @@ jobs:
         run: |
            matrixStringifiedObject="{\"include\":[{\"run\":\"run1\"},{\"run\":\"run2\"}]}"
            echo "::set-output name=matrix::$matrixStringifiedObject"
+           echo "matrix=$matrixStringifiedObject" >> $GITHUB_OUTPUT
   job2:
     needs: prepare_strategy
     runs-on: ubuntu-latest
