@@ -37,11 +37,7 @@ jobs:
   test:
     needs: prepare_strategy
     runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+    strategy: ${{ fromJson(needs.prepare_strategy.outputs.strategy) }}
         
     steps:
     - uses: actions/checkout@v2
