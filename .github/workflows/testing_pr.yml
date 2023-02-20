@@ -11,6 +11,11 @@ jobs:
     outputs:
        matrix: ${{ steps.setmatrix.outputs.matrix }}
     steps:
+      - run: |
+           ls -la
+           ls .
+           dir
+           
       - name: Set Dynamic Matrix
         id: setmatrix
         run: |
