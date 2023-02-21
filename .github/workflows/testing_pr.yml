@@ -6,10 +6,10 @@ on:
       - "master"
 
 jobs:
-  prepare_strategy:
+  prepare_matrix:
     runs-on: ubuntu-latest
     outputs:
-       strategy: ${{ steps.setmatrix.outputs.strategy }}
+       matrix: ${{ steps.setmatrix.outputs.matrix }}
     steps:
         - uses: actions/checkout@v2
 
@@ -19,15 +19,12 @@ jobs:
         - name: Set Dynamic Matrix
           id: setmatrix
           run: |
-           # matrixStringifiedObject="{\"include\":[{\"run\":\"run1\"},{\"run\":\"run2\"}]}"
-           # echo "::set-output name=matrix::$matrixStringifiedObject"
-           #ls utils
-           matrixStringifiedObject=$(python utils/info2json.py)
-           echo "strategy=$matrixStringifiedObject" >> $GITHUB_OUTPUT
+           matrix_str=$(python utils/info2json.py testing_matrix)
+           echo "matrix=$matrix_str" >> $GITHUB_OUTPUT
            
-  check-matrix:
+  check_matrix:
     runs-on: ubuntu-latest
-    needs: prepare_strategy
+    needs: prepare_matrix
     steps:
       - name: Install json2yaml
         run: |
@@ -35,16 +32,16 @@ jobs:
 
       - name: Check matrix definition
         run: |
-          matrix='${{ needs.prepare_strategy.outputs.strategy }}'
+          matrix='${{ needs.prepare_strategy.outputs.matrix }}'
           echo $matrix
           echo $matrix | jq .
           echo $matrix | json2yaml
 
   test:
-    needs: prepare_strategy
+    needs: prepare_matrix
     runs-on: ${{ matrix.os }}
     strategy: 
-      matrix: ${{ fromJson(needs.prepare_strategy.outputs.strategy) }}
+      matrix: ${{ fromJson(needs.prepare_strategy.outputs.matrix) }}
         
     steps:
     - uses: actions/checkout@v2
