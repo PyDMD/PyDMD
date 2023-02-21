@@ -24,11 +24,27 @@ jobs:
            #ls utils
            matrixStringifiedObject=$(python utils/info2json.py)
            echo "strategy=$matrixStringifiedObject" >> $GITHUB_OUTPUT
-    
+           
+  check-matrix:
+    runs-on: ubuntu-latest
+    needs: prepare_strategy
+    steps:
+      - name: Install json2yaml
+        run: |
+          sudo npm install -g json2yaml
+
+      - name: Check matrix definition
+        run: |
+          matrix='${{ needs.prepare_strategy.outputs.strategy }}'
+          echo $matrix
+          echo $matrix | jq .
+          echo $matrix | json2yaml
+
   test:
     needs: prepare_strategy
     runs-on: ${{ matrix.os }}
-    strategy: ${{ fromJson(needs.prepare_strategy.outputs.strategy) }}
+    strategy: 
+      matrix: ${{ fromJson(needs.prepare_strategy.outputs.strategy) }}
         
     steps:
     - uses: actions/checkout@v2
