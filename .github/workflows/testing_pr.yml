@@ -32,7 +32,7 @@ jobs:
 
       - name: Check matrix definition
         run: |
-          matrix='${{ needs.prepare_strategy.outputs.matrix }}'
+          matrix='${{ needs.prepare_matrix.outputs.matrix }}'
           echo $matrix
           echo $matrix | jq .
           echo $matrix | json2yaml
@@ -41,7 +41,7 @@ jobs:
     needs: prepare_matrix
     runs-on: ${{ matrix.os }}
     strategy: 
-      matrix: ${{ fromJson(needs.prepare_strategy.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix) }}
         
     steps:
     - uses: actions/checkout@v2
