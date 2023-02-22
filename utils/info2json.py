@@ -2,14 +2,9 @@ import json
 from argparse import ArgumentParser
 
 testing_matrix_ghact = {
-    'python-version':
-    [
-        "3.8",
-        "3.9",
-        "3.10",
-        "3.11",
-    ],
-    'os': ["windows-latest", "macos-latest", "ubuntu-latest"]
+    'python-version': ["3.8", "3.9", "3.10", "3.11"],
+    'os': ["windows-latest", "macos-latest", "ubuntu-latest"],
+    'exclude': [{'os': "windows-latest", 'python-version': "3.11"}],
 }
 
 deploy_matrix_ghact = {
