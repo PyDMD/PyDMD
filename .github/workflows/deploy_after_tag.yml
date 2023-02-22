@@ -34,8 +34,21 @@ jobs:
           echo $matrix
           echo $matrix | jq .
           echo $matrix | json2yaml
-          
-   pypi_deploy: #####################################################################################
+         
+  create_release_from_tag: ############################################################################
+    needs: prepare_matrix
+    runs-on: ${{ matrix.os }}
+    strategy: 
+      matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix) }}
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ncipollo/release-action@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+  pypi_deploy: #####################################################################################
     needs: prepare_matrix
     runs-on: ${{ matrix.os }}
     strategy: 
