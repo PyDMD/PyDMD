@@ -178,7 +178,6 @@ class DMDBase:
         sorted_eigs=False,
         tikhonov_regularization=None,
     ):
-
         self._Atilde = DMDOperator(
             svd_rank=svd_rank,
             exact=exact,
@@ -479,8 +478,7 @@ class DMDBase:
         """
         if hasattr(self, "_b") and self._b is not None:
             self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(
-                self.operator,
-                self._b
+                self.operator, self._b
             )
 
     def __getitem__(self, key):
@@ -671,18 +669,28 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         )
 
         if self._exact:
-            q = np.conj(np.diag(np.linalg.multi_dot([vander,
-                                                     self.snapshots.conj().T,
-                                                     self.modes])))
+            q = np.conj(
+                np.diag(
+                    np.linalg.multi_dot(
+                        [vander, self.snapshots.conj().T, self.modes]
+                    )
+                )
+            )
         else:
-            _, s, V = compute_svd(self.snapshots[:, :-1],
-                                  self.modes.shape[-1])
+            _, s, V = compute_svd(self.snapshots[:, :-1], self.modes.shape[-1])
 
-            q = np.conj(np.diag(
-                np.linalg.multi_dot([vander[:, :-1],
-                                     V,
-                                     np.diag(s).conj(),
-                                     self.operator.eigenvectors])))
+            q = np.conj(
+                np.diag(
+                    np.linalg.multi_dot(
+                        [
+                            vander[:, :-1],
+                            V,
+                            np.diag(s).conj(),
+                            self.operator.eigenvectors,
+                        ]
+                    )
+                )
+            )
 
         return P, q
 

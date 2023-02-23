@@ -44,13 +44,22 @@ class CDMDOperator(DMDOperator):
     :type tikhonov_regularization: int or float
     """
 
-    def __init__(self, svd_rank, rescale_mode, forward_backward, sorted_eigs,
-                tikhonov_regularization):
-        super().__init__(svd_rank=svd_rank, exact=True,
-                         rescale_mode=rescale_mode,
-                         forward_backward=forward_backward,
-                         sorted_eigs=sorted_eigs,
-                         tikhonov_regularization=tikhonov_regularization)
+    def __init__(
+        self,
+        svd_rank,
+        rescale_mode,
+        forward_backward,
+        sorted_eigs,
+        tikhonov_regularization,
+    ):
+        super().__init__(
+            svd_rank=svd_rank,
+            exact=True,
+            rescale_mode=rescale_mode,
+            forward_backward=forward_backward,
+            sorted_eigs=sorted_eigs,
+            tikhonov_regularization=tikhonov_regularization,
+        )
         self._Atilde = None
 
     def compute_operator(self, compressedX, compressedY, nonCompressedY):
@@ -147,21 +156,29 @@ class CDMD(DMDBase):
     :type tikhonov_regularization: int or float
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, compression_matrix='uniform',
-                 opt=False, rescale_mode=None, forward_backward=False,
-                 sorted_eigs=False, tikhonov_regularization=None):
-
+    def __init__(
+        self,
+        svd_rank=0,
+        tlsq_rank=0,
+        compression_matrix="uniform",
+        opt=False,
+        rescale_mode=None,
+        forward_backward=False,
+        sorted_eigs=False,
+        tikhonov_regularization=None,
+    ):
         self._tlsq_rank = tlsq_rank
         self._opt = opt
         self._exact = True
         self._compression_matrix = compression_matrix
 
-        self._Atilde = CDMDOperator(svd_rank=svd_rank,
-                                    rescale_mode=rescale_mode,
-                                    forward_backward=forward_backward,
-                                    sorted_eigs=sorted_eigs,
-                                    tikhonov_regularization=
-                                    tikhonov_regularization)
+        self._Atilde = CDMDOperator(
+            svd_rank=svd_rank,
+            rescale_mode=rescale_mode,
+            forward_backward=forward_backward,
+            sorted_eigs=sorted_eigs,
+            tikhonov_regularization=tikhonov_regularization,
+        )
 
         self._modes_activation_bitmask_proxy = None
 
@@ -182,16 +199,18 @@ class CDMD(DMDBase):
         C_shape = (self.snapshots.shape[1], self.snapshots.shape[0])
         if isinstance(self.compression_matrix, np.ndarray):
             C = self.compression_matrix
-        elif self.compression_matrix == 'uniform':
+        elif self.compression_matrix == "uniform":
             C = np.random.uniform(0, 1, size=(C_shape))
-        elif self.compression_matrix == 'sparse':
-            C = scipy.sparse.random(*C_shape, density=1.)
-        elif self.compression_matrix == 'normal':
+        elif self.compression_matrix == "sparse":
+            C = scipy.sparse.random(*C_shape, density=1.0)
+        elif self.compression_matrix == "normal":
             C = np.random.normal(0, 1, size=(C_shape))
-        elif self.compression_matrix == 'sample':
+        elif self.compression_matrix == "sample":
             C = np.zeros(C_shape)
-            C[np.arange(self.snapshots.shape[1]),
-              np.random.choice(*self.snapshots.shape, replace=False)] = 1.
+            C[
+                np.arange(self.snapshots.shape[1]),
+                np.random.choice(*self.snapshots.shape, replace=False),
+            ] = 1.0
 
         # compress the matrix
         Y = C.dot(self.snapshots)

@@ -130,9 +130,7 @@ class DMDOptOperator(DMDOperator):
         self._right_eigenvectors = right_vecs
 
     def _compute_modes(self, Y, U, Sigma, V):
-        raise NotImplementedError(
-            "This function has not been implemented yet."
-        )
+        raise NotImplementedError("This function has not been implemented yet.")
 
 
 class OptDMD(DMDBase):
@@ -163,9 +161,7 @@ class OptDMD(DMDBase):
     :type opt: bool or int
     """
 
-    def __init__(
-        self, factorization="evd", svd_rank=0, tlsq_rank=0, opt=False
-    ):
+    def __init__(self, factorization="evd", svd_rank=0, tlsq_rank=0, opt=False):
         self._factorization = factorization
         self._tlsq_rank = tlsq_rank
 
@@ -269,30 +265,20 @@ class OptDMD(DMDBase):
         raise RuntimeError("This feature has not been implemented yet.")
 
     def _compute_amplitudes(self, modes, snapshots, eigs, opt):
-        raise NotImplementedError(
-            "This function has not been implemented yet."
-        )
+        raise NotImplementedError("This function has not been implemented yet.")
 
     @property
     def dynamics(self):
-        raise NotImplementedError(
-            "This function has not been implemented yet."
-        )
+        raise NotImplementedError("This function has not been implemented yet.")
 
     @property
     def fitted(self):
-        raise NotImplementedError(
-            "This function has not been implemented yet."
-        )
+        raise NotImplementedError("This function has not been implemented yet.")
 
     @property
     def modes_activation_bitmask(self):
-        raise NotImplementedError(
-            "This function has not been implemented yet."
-        )
+        raise NotImplementedError("This function has not been implemented yet.")
 
     @modes_activation_bitmask.setter
     def modes_activation_bitmask(self, value):
-        raise NotImplementedError(
-            "This function has not been implemented yet."
-        )
+        raise NotImplementedError("This function has not been implemented yet.")

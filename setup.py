@@ -5,21 +5,19 @@ with open("pydmd/meta.py") as fp:
     exec(fp.read(), meta)
 
 # Package meta-data.
-NAME = meta['__title__']
-DESCRIPTION = 'Python Dynamic Mode Decomposition.'
-URL = 'https://github.com/mathLab/PyDMD'
-MAIL = meta['__mail__']
-AUTHOR = meta['__author__']
-VERSION = meta['__version__']
-KEYWORDS = 'dynamic-mode-decomposition dmd mrdmd fbdmd cdmd'
+NAME = meta["__title__"]
+DESCRIPTION = "Python Dynamic Mode Decomposition."
+URL = "https://github.com/mathLab/PyDMD"
+MAIL = meta["__mail__"]
+AUTHOR = meta["__author__"]
+VERSION = meta["__version__"]
+KEYWORDS = "dynamic-mode-decomposition dmd mrdmd fbdmd cdmd"
 
-REQUIRED = [
-    'future', 'numpy', 'scipy',	'matplotlib'
-]
+REQUIRED = ["future", "numpy", "scipy", "matplotlib"]
 
 EXTRAS = {
-    'docs': ['Sphinx==1.4', 'sphinx_rtd_theme'],
-    'test': ['pytest', 'pytest-cov', 'ezyrb>=v1.2.1.post2205'],
+    "docs": ["Sphinx==1.4", "sphinx_rtd_theme"],
+    "test": ["pytest", "pytest-cov", "ezyrb>=v1.2.1.post2205"],
 }
 
 LDESCRIPTION = (
@@ -62,18 +60,18 @@ setup(
     author=AUTHOR,
     author_email=MAIL,
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Intended Audience :: Science/Research',
-        'Topic :: Scientific/Engineering :: Mathematics'
+        "Development Status :: 5 - Production/Stable",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Mathematics",
     ],
     keywords=KEYWORDS,
     url=URL,
-    license='MIT',
+    license="MIT",
     packages=[NAME],
     install_requires=REQUIRED,
     extras_require=EXTRAS,

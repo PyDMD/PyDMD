@@ -246,7 +246,7 @@ def test_plot_summary_1():
     dmd = DMD()
     dmd.fit(X=sample_data)
     with raises(ValueError):
-        plot_summary(dmd, index_modes=[0,1,2,3])
+        plot_summary(dmd, index_modes=[0, 1, 2, 3])
 
 
 def test_plot_summary_2():
@@ -261,7 +261,7 @@ def test_plot_summary_3():
     # Test 3: Everything is fine when plotting in 2D.
     dmd = DMD()
     dmd.fit(X=sample_data)
-    plot_summary(dmd, snapshots_shape=(20,20))
+    plot_summary(dmd, snapshots_shape=(20, 20))
     plt.close()
 
 
@@ -269,7 +269,7 @@ def test_plot_summary_4():
     # Test 4: Everything is fine when plotting fewer than 3 modes.
     dmd = DMD(svd_rank=2)
     dmd.fit(X=sample_data)
-    plot_summary(dmd, snapshots_shape=(20,20))
+    plot_summary(dmd, snapshots_shape=(20, 20))
     plt.close()
 
 
@@ -277,6 +277,5 @@ def test_plot_summary_5():
     # Test 5: Everything is fine when saving the plot.
     dmd = DMD()
     dmd.fit(X=sample_data)
-    plot_summary(dmd, snapshots_shape=(20,20), filename="tmp.png")
+    plot_summary(dmd, snapshots_shape=(20, 20), filename="tmp.png")
     os.remove("tmp.png")
-

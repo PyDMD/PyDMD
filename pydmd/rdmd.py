@@ -67,6 +67,7 @@ class RDMD(CDMD):
         considerable improvements.
     :type power_iters: int
     """
+
     def __init__(
         self,
         rand_mat=None,
@@ -78,7 +79,7 @@ class RDMD(CDMD):
         rescale_mode=None,
         forward_backward=False,
         sorted_eigs=False,
-        tikhonov_regularization=None
+        tikhonov_regularization=None,
     ):
         super().__init__(
             svd_rank=svd_rank,
@@ -88,7 +89,7 @@ class RDMD(CDMD):
             rescale_mode=rescale_mode,
             forward_backward=forward_backward,
             sorted_eigs=sorted_eigs,
-            tikhonov_regularization=tikhonov_regularization
+            tikhonov_regularization=tikhonov_regularization,
         )
         self._svd_rank = svd_rank
         self._oversampling = oversampling
