@@ -12,10 +12,11 @@
 # In[1]:
 
 
-get_ipython().run_line_magic('matplotlib', 'inline')
+get_ipython().run_line_magic("matplotlib", "inline")
 import matplotlib.pyplot as plt
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 import numpy as np
 
 from pydmd import DMD
@@ -29,14 +30,16 @@ from pydmd.plotter import plot_eigs
 # In[2]:
 
 
-def f1(x,t): 
-    return 1./np.cosh(x+3)*np.exp(2.3j*t)
+def f1(x, t):
+    return 1.0 / np.cosh(x + 3) * np.exp(2.3j * t)
 
-def f2(x,t):
-    return 2./np.cosh(x)*np.tanh(x)*np.exp(2.8j*t)
+
+def f2(x, t):
+    return 2.0 / np.cosh(x) * np.tanh(x) * np.exp(2.8j * t)
+
 
 x = np.linspace(-5, 5, 65)
-t = np.linspace(0, 4*np.pi, 129)
+t = np.linspace(0, 4 * np.pi, 129)
 
 xgrid, tgrid = np.meshgrid(x, t)
 
@@ -50,7 +53,7 @@ X = X1 + X2
 # In[3]:
 
 
-titles = ['$f_1(x,t)$', '$f_2(x,t)$', '$f$']
+titles = ["$f_1(x,t)$", "$f_2(x,t)$", "$f$"]
 data = [X1, X2, X]
 
 fig = plt.figure(figsize=(17, 6))
@@ -72,11 +75,11 @@ dmd.fit(X.T)
 
 
 # The `dmd` object contains the principal information about the decomposition:
-# - the attribute `modes` is a 2D numpy array where the columns are the low-rank structures individuated; 
+# - the attribute `modes` is a 2D numpy array where the columns are the low-rank structures individuated;
 # - the attribute `dynamics` is a 2D numpy array where the rows refer to the time evolution of each mode;
 # - the attribute `eigs` refers to the eigenvalues of the low dimensional operator;
 # - the attribute `reconstructed_data` refers to the approximated system evolution.
-# 
+#
 # Moreover, some helpful methods for the graphical representation are provided.
 
 # Thanks to the eigenvalues, we can check if the modes are stable or not: if an eigenvalue is on the unit circle, the corresponding mode will be stable; while if an eigenvalue is inside or outside the unit circle, the mode will converge or diverge, respectively. From the following plot, we can note that the two modes are stable.
@@ -85,7 +88,11 @@ dmd.fit(X.T)
 
 
 for eig in dmd.eigs:
-    print('Eigenvalue {}: distance from unit circle {}'.format(eig, np.abs(np.sqrt(eig.imag**2+eig.real**2) - 1)))
+    print(
+        "Eigenvalue {}: distance from unit circle {}".format(
+            eig, np.abs(np.sqrt(eig.imag**2 + eig.real**2) - 1)
+        )
+    )
 
 plot_eigs(dmd, show_axes=True, show_unit_circle=True)
 
@@ -97,12 +104,12 @@ plot_eigs(dmd, show_axes=True, show_unit_circle=True)
 
 for mode in dmd.modes.T:
     plt.plot(x, mode.real)
-    plt.title('Modes')
+    plt.title("Modes")
 plt.show()
 
 for dynamic in dmd.dynamics:
     plt.plot(t, dynamic.real)
-    plt.title('Dynamics')
+    plt.title("Dynamics")
 plt.show()
 
 
@@ -111,12 +118,14 @@ plt.show()
 # In[7]:
 
 
-fig = plt.figure(figsize=(17,6))
+fig = plt.figure(figsize=(17, 6))
 
 for n, mode, dynamic in zip(range(131, 133), dmd.modes.T, dmd.dynamics):
     plt.subplot(n)
-    plt.pcolor(xgrid, tgrid, (mode.reshape(-1, 1).dot(dynamic.reshape(1, -1))).real.T)
-    
+    plt.pcolor(
+        xgrid, tgrid, (mode.reshape(-1, 1).dot(dynamic.reshape(1, -1))).real.T
+    )
+
 plt.subplot(133)
 plt.pcolor(xgrid, tgrid, dmd.reconstructed_data.T.real)
 plt.colorbar()
@@ -129,7 +138,7 @@ plt.show()
 # In[8]:
 
 
-plt.pcolor(xgrid, tgrid, (X-dmd.reconstructed_data.T).real)
+plt.pcolor(xgrid, tgrid, (X - dmd.reconstructed_data.T).real)
 fig = plt.colorbar()
 
 

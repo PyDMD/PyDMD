@@ -2,15 +2,15 @@
 # coding: utf-8
 
 # # Foreground Modeling using Dynamic Mode Decomposition
-# 
+#
 # This tutorial is inspired by the paper [Compressed dynamic mode decomposition for background modeling](https://arxiv.org/abs/1512.04205) by Erichson et al.
-# 
+#
 # Author: [Josh Myers-Dean](https://joshmyersdean.github.io/)
-# 
+#
 # Packages needed: **PyDMD**, NumPy, pandas, opencv-python, Matplotlib
 
 # ## Download data
-# 
+#
 # First we will download the data, [SegTrackV2](https://web.engr.oregonstate.edu/~lif/SegTrack2/dataset.html) from Oregon State. This is an older binary segmentation dataset that offers a good test bed for this method. This cell could take some seconds to execute since it downloads and unzips a compressed file of size 200MB.
 
 # In[ ]:
@@ -20,8 +20,10 @@ import os
 
 print("Downloading data...")
 if not os.path.exists("SegTrackv2"):
-    get_ipython().system('wget https://web.engr.oregonstate.edu/~lif/SegTrack2/SegTrackv2.zip >& /dev/null')
-    get_ipython().system('unzip -qq SegTrackv2.zip')
+    get_ipython().system(
+        "wget https://web.engr.oregonstate.edu/~lif/SegTrack2/SegTrackv2.zip >& /dev/null"
+    )
+    get_ipython().system("unzip -qq SegTrackv2.zip")
     print("Done!")
 else:
     print("Data already present")
@@ -35,8 +37,9 @@ from pydmd.plotter import plot_eigs
 
 import matplotlib.pyplot as plt
 from matplotlib import style
+
 plt.gray()
-style.use('tableau-colorblind10')
+style.use("tableau-colorblind10")
 from matplotlib import animation
 
 from IPython.display import HTML
@@ -74,8 +77,8 @@ display(df)
 # In[ ]:
 
 
-OBJ = 'frog' # Change this to desired object
-assert OBJ in df['Name'].to_list(), 'Object not found in dataset'
+OBJ = "frog"  # Change this to desired object
+assert OBJ in df["Name"].to_list(), "Object not found in dataset"
 
 
 # ## Methods needed for the tutorial
@@ -145,9 +148,7 @@ def get_video(object: str = "frog") -> np.ndarray:
     return np.asarray(imgs)
 
 
-def calc_iou(
-    pred: np.ndarray, truth: np.ndarray, thresh: float = 0.1
-) -> float:
+def calc_iou(pred: np.ndarray, truth: np.ndarray, thresh: float = 0.1) -> float:
     """
     Helper method to calculate IoU for single frame
 
@@ -231,8 +232,8 @@ def f1_score(y_true: np.ndarray, y_pred: np.ndarray, beta: int = 1) -> float:
     precision = tp / (tp + fp + epsilon)
     recall = tp / (tp + fn + epsilon)
 
-    f1 = (1 + beta ** 2) * (precision * recall)
-    f1 /= beta ** 2 * precision + recall + epsilon
+    f1 = (1 + beta**2) * (precision * recall)
+    f1 /= beta**2 * precision + recall + epsilon
     return f1
 
 
@@ -442,18 +443,18 @@ def play_video_removed(
     return HTML(anim.to_html5_video())
 
 
-# ## Let's peak at the data! 
-# 
+# ## Let's peak at the data!
+#
 # The parameter `interval` is the delay (in ms) between frames. For shorter videos, use a higher interval.
 
 # In[ ]:
 
 
-'''
+"""
 play the video we will model,
 change interval based on video size
-'''
-play_video(OBJ, interval=10) 
+"""
+play_video(OBJ, interval=10)
 
 
 # In[ ]:
@@ -465,27 +466,27 @@ play_gt_video(OBJ, interval=10)
 
 # ## Fitting a DMD instance
 
-# Time to fit our video to (c)DMD, add noise, tinker with SVD rank, etc. We can also visualize our background model! Since we average the first `K` modes, we can visualize how our model changes wrt `K`. 
-# 
+# Time to fit our video to (c)DMD, add noise, tinker with SVD rank, etc. We can also visualize our background model! Since we average the first `K` modes, we can visualize how our model changes wrt `K`.
+#
 # Recall that each column of our matrix will be a frame in the video and unless we have a long video, the system will be overdetermined. Note that in the paper the authors use an optimization scheme to decide on the number of modes; we are going to choose it emprically.
 
 # In[ ]:
 
 
 use_noise = False
-noise = .01
-video, shape = get_video_dmd(OBJ, use_noise, noise) # get video
-print(f'Condition number of video matrix is {np.linalg.cond(video): .3f}')
+noise = 0.01
+video, shape = get_video_dmd(OBJ, use_noise, noise)  # get video
+print(f"Condition number of video matrix is {np.linalg.cond(video): .3f}")
 
 
 # In[ ]:
 
 
-comp = True # use compressed DMD
-svd_rank = 0 # rank=0 will automatically detect rank, try other values next!
-optim = True # Use optimized DMD
-compression = ['linear', 'sparse', 'uniform', 'sample']
-cmat = compression[2] # compression matrix
+comp = True  # use compressed DMD
+svd_rank = 0  # rank=0 will automatically detect rank, try other values next!
+optim = True  # Use optimized DMD
+compression = ["linear", "sparse", "uniform", "sample"]
+cmat = compression[2]  # compression matrix
 
 if comp:
     dmd = CDMD(svd_rank=svd_rank, opt=optim, compression_matrix=cmat).fit(video)
@@ -542,23 +543,23 @@ plt.show()
 
 
 tmp = get_video(OBJ)
-img = tmp[0,:,:]
-fg = (img-bg).clip(0,1)
-plt.title('Foreground for Frame 0')
+img = tmp[0, :, :]
+fg = (img - bg).clip(0, 1)
+plt.title("Foreground for Frame 0")
 plt.imshow(fg)
 plt.show()
 
 
 # ## Results
 # Time to get some quanitative (and qualitative) results! We will examine mean intersection over union (`mIoU`) and `F1`
-# score, respectively. These metrics are a function of the threshold we choose for deciding foreground vs background. 
-# 
+# score, respectively. These metrics are a function of the threshold we choose for deciding foreground vs background.
+#
 # We can also visualize the eigenvalues, modes, and dynamics of our video computed from DMD.
 
 # In[ ]:
 
 
-video_removed = get_video_removed(tmp, bg).clip(0,1)
+video_removed = get_video_removed(tmp, bg).clip(0, 1)
 gt = get_gt_video(OBJ)
 
 video_removed.shape, gt.shape
@@ -583,21 +584,21 @@ for thresh in thresholds:
 # In[ ]:
 
 
-plt.figure(figsize=(20,5))
+plt.figure(figsize=(20, 5))
 
-plt.subplot(1,2,1)
+plt.subplot(1, 2, 1)
 plt.plot(mious, "bo-")
 plt.title("mIoU vs Threshold")
 plt.ylabel("mIoU")
 plt.xlabel("Threshold")
-plt.xticks(range(len(thresholds)), np.round(thresholds,2))
+plt.xticks(range(len(thresholds)), np.round(thresholds, 2))
 
-plt.subplot(1,2,2)
+plt.subplot(1, 2, 2)
 plt.plot(f1s, "ro-")
 plt.title("F1 Score vs Threshold")
 plt.ylabel("F1")
 plt.xlabel("Threshold")
-plt.xticks(range(len(thresholds)), np.round(thresholds,2))
+plt.xticks(range(len(thresholds)), np.round(thresholds, 2))
 
 plt.show()
 
@@ -609,7 +610,7 @@ plt.show()
 
 # show binary output or not, if False thresh doesn't matter
 use_mask = False
-play_video_removed(bg, OBJ, mask=use_mask, thresh=.03)
+play_video_removed(bg, OBJ, mask=use_mask, thresh=0.03)
 
 
 # We print the distances from the unit circle of the first 6 eigenvalues in `dmd.eigs`, and plot all.
@@ -618,7 +619,9 @@ play_video_removed(bg, OBJ, mask=use_mask, thresh=.03)
 
 
 for idx, eig in enumerate(dmd.eigs[:6]):
-    print(f"Eigenvalue {eig}: distance from unit circle {np.abs(np.abs(eig)-1): .5f}")
+    print(
+        f"Eigenvalue {eig}: distance from unit circle {np.abs(np.abs(eig)-1): .5f}"
+    )
 
 plot_eigs(dmd, show_axes=True, show_unit_circle=True)
 
@@ -630,17 +633,16 @@ plot_eigs(dmd, show_axes=True, show_unit_circle=True)
 
 plt.figure(figsize=(20, 8))
 
-plt.subplot(1,2,1)
+plt.subplot(1, 2, 1)
 for idx, mode in enumerate(dmd.modes.T[:6]):
     plt.plot(mode.real, alpha=0.5, label=f"Mode {idx}")
 plt.title("Modes")
 plt.legend()
 
-plt.subplot(1,2,2)
+plt.subplot(1, 2, 2)
 for idx, dynamic in enumerate(dmd.dynamics[:6]):
     plt.plot(dynamic.real, label=f"Mode {idx}")
 plt.title("Dynamics")
 plt.legend()
 
 plt.show()
-
