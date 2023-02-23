@@ -198,7 +198,7 @@ class PiDMDOperator(DMDOperator):
         result_dict = self._compute_procrustes(X, Y)
 
         # Case 1: atilde was computed.
-        if "atilde" in result_dict.keys():
+        if "atilde" in result_dict:
             self._Atilde = result_dict["atilde"]
             self._eigenvalues, self._eigenvectors = np.linalg.eig(self._Atilde)
             self._modes = U.dot(self._eigenvectors)
@@ -212,7 +212,7 @@ class PiDMDOperator(DMDOperator):
                 )
         else:  # Cases 2 and 3.
             # Case 2: A was computed.
-            if "A" in result_dict.keys():
+            if "A" in result_dict:
                 self._A = result_dict["A"]
                 self._eigenvalues, self._modes = np.linalg.eig(self._A)
             else:

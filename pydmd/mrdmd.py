@@ -9,7 +9,6 @@ from copy import deepcopy
 from functools import partial
 
 import numpy as np
-from past.utils import old_div
 from scipy.linalg import block_diag
 
 from .dmd_modes_tuner import select_modes
@@ -482,7 +481,7 @@ Expected one item per level, got {} out of {} levels.""".format(
                 current_dmd = self.dmd_tree[level, leaf]
                 current_dmd.fit(x)
 
-                rho = old_div(float(self.max_cycles), x.shape[1])
+                rho = self.max_cycles / x.shape[1]
                 slow_modes_selector = partial(slow_modes, rho=rho)
 
                 select_modes(current_dmd, slow_modes_selector)
