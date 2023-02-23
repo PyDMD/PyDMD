@@ -23,6 +23,7 @@ from .pidmd_utils import (
     compute_BC,
 )
 
+
 class PiDMDOperator(DMDOperator):
     """
     DMD operator for Physics-informed DMD.
@@ -45,6 +46,7 @@ class PiDMDOperator(DMDOperator):
         not compute truncation.
     :type svd_rank: int or float
     """
+
     def __init__(
         self,
         manifold,
@@ -63,7 +65,6 @@ class PiDMDOperator(DMDOperator):
         self._eigenvectors = None
         self._modes = None
 
-
     @property
     def A(self):
         """
@@ -73,13 +74,14 @@ class PiDMDOperator(DMDOperator):
         :rtype: numpy.ndarray
         """
         if not self._compute_A:
-            msg = "A not computed during fit. " \
-                  "Set parameter compute_A = True to compute A."
+            msg = (
+                "A not computed during fit. "
+                "Set parameter compute_A = True to compute A."
+            )
             raise ValueError(msg)
         if self._A is None:
             raise ValueError("You need to call fit before")
         return self._A
-
 
     def _check_compute_A(self):
         """
@@ -91,7 +93,6 @@ class PiDMDOperator(DMDOperator):
                 "A must be computed for the chosen manifold."
                 "Set compute_A = True to compute A."
             )
-
 
     def _compute_procrustes(self, X, Y):
         """
@@ -114,15 +115,15 @@ class PiDMDOperator(DMDOperator):
             A_rot = compute_uppertriangular(np.flipud(X), np.flipud(Y))["A"]
             result_dict = {"A": np.rot90(A_rot, 2)}
         elif self._manifold == "diagonal":
-            result_dict = compute_diagonal(X, Y,
-                                           self._svd_rank,
-                                           self._manifold_opt,
-                                           self._compute_A)
+            result_dict = compute_diagonal(
+                X, Y, self._svd_rank, self._manifold_opt, self._compute_A
+            )
         elif self._manifold == "symmetric":
             result_dict = compute_symmetric(X, Y, self._svd_rank)
         elif self._manifold == "skewsymmetric":
-            result_dict = compute_symmetric(X, Y, self._svd_rank,
-                                            skew_symmetric=True)
+            result_dict = compute_symmetric(
+                X, Y, self._svd_rank, skew_symmetric=True
+            )
         elif self._manifold == "toeplitz":
             self._check_compute_A()
             result_dict = compute_toeplitz(X, Y)
@@ -133,17 +134,16 @@ class PiDMDOperator(DMDOperator):
             "circulant",
             "circulant_unitary",
             "circulant_symmetric",
-            "circulant_skewsymmetric"
+            "circulant_skewsymmetric",
         ]:
             circulant_opt = self._manifold.replace("circulant_", "")
-            result_dict = compute_circulant(X, Y,
-                                            circulant_opt,
-                                            self._svd_rank,
-                                            self._compute_A)
+            result_dict = compute_circulant(
+                X, Y, circulant_opt, self._svd_rank, self._compute_A
+            )
         elif self._manifold == "symmetric_tridiagonal":
-            result_dict = compute_symtridiagonal(X, Y,
-                                                 self._svd_rank,
-                                                 self._compute_A)
+            result_dict = compute_symtridiagonal(
+                X, Y, self._svd_rank, self._compute_A
+            )
         elif self._manifold in [
             "BC",
             "BCTB",
@@ -156,27 +156,28 @@ class PiDMDOperator(DMDOperator):
             self._check_compute_A()
             if self._manifold_opt is None:
                 raise ValueError("manifold_opt must be specified.")
-            if (not isinstance(self._manifold_opt, tuple)
-                or len(self._manifold_opt) != 2):
+            if (
+                not isinstance(self._manifold_opt, tuple)
+                or len(self._manifold_opt) != 2
+            ):
                 raise ValueError("manifold_opt is not in an allowable format.")
             block_shape = np.array(self._manifold_opt)
 
             if self._manifold.startswith("BCCB"):
                 bccb_opt = self._manifold.replace("BCCB", "")
-                result_dict = compute_BCCB(X, Y,
-                                           block_shape,
-                                           bccb_opt,
-                                           self._svd_rank)
+                result_dict = compute_BCCB(
+                    X, Y, block_shape, bccb_opt, self._svd_rank
+                )
             elif self._manifold == "BC":
                 result_dict = compute_BC(X, Y, block_shape)
             else:
-                result_dict = compute_BC(X, Y, block_shape,
-                                         tridiagonal_blocks=True)
+                result_dict = compute_BC(
+                    X, Y, block_shape, tridiagonal_blocks=True
+                )
         else:
             raise ValueError("The selected manifold is not implemented.")
 
         return result_dict
-
 
     def compute_operator(self, X, Y):
         """
@@ -202,10 +203,14 @@ class PiDMDOperator(DMDOperator):
             self._eigenvalues, self._eigenvectors = np.linalg.eig(self._Atilde)
             self._modes = U.dot(self._eigenvectors)
             if self._compute_A:
-                self._A = np.linalg.multi_dot([self._modes,
-                                               np.diag(self._eigenvalues),
-                                               np.linalg.pinv(self._modes)])
-        else: # Cases 2 and 3.
+                self._A = np.linalg.multi_dot(
+                    [
+                        self._modes,
+                        np.diag(self._eigenvalues),
+                        np.linalg.pinv(self._modes),
+                    ]
+                )
+        else:  # Cases 2 and 3.
             # Case 2: A was computed.
             if "A" in result_dict.keys():
                 self._A = result_dict["A"]
@@ -216,9 +221,11 @@ class PiDMDOperator(DMDOperator):
                 self._modes = result_dict["modes"]
             self._eigenvectors = U.conj().T.dot(self._modes)
             self._Atilde = np.linalg.multi_dot(
-                [self._eigenvectors,
-                 np.diag(self._eigenvalues),
-                 np.linalg.pinv(self._eigenvectors)]
+                [
+                    self._eigenvectors,
+                    np.diag(self._eigenvalues),
+                    np.linalg.pinv(self._eigenvectors),
+                ]
             )
 
         return U, s, V
@@ -290,6 +297,7 @@ class PiDMD(DMD):
         between 0 and 1 may give better results. Default is False.
     :type opt: bool or int
     """
+
     def __init__(
         self,
         manifold,

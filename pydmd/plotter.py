@@ -244,9 +244,7 @@ def plot_eigs_mrdmd(
 
     if not level:
         cmap = plt.get_cmap("viridis")
-        colors = [
-            cmap(i) for i in np.linspace(0, 1, len(dmd.dmd_tree.levels))
-        ]
+        colors = [cmap(i) for i in np.linspace(0, 1, len(dmd.dmd_tree.levels))]
 
         points = []
         for l in dmd.dmd_tree.levels:
@@ -302,10 +300,7 @@ def plot_eigs_mrdmd(
     if level:
         labels = [f"Eigenvalues - level {level}"]
     else:
-        labels = [
-            f"Eigenvalues - level {i}"
-            for i in range(dmd.max_level)
-        ]
+        labels = [f"Eigenvalues - level {i}" for i in range(dmd.max_level)]
 
     if show_unit_circle:
         points += [unit_circle]
@@ -313,7 +308,6 @@ def plot_eigs_mrdmd(
 
     ax.add_artist(plt.legend(points, labels, loc="best"))
     plt.show()
-
 
 
 def plot_modes_2D(
@@ -534,7 +528,7 @@ def plot_summary(
     index_modes=None,
     filename=None,
     order="C",
-    figsize=(12,8),
+    figsize=(12, 8),
     mode_colors=None,
 ):
     """
@@ -591,7 +585,7 @@ def plot_summary(
         snapshots_shape = (len(dmd.snapshots),)
     elif isinstance(snapshots_shape, int):
         snapshots_shape = (snapshots_shape,)
-    elif (not isinstance(snapshots_shape, tuple) or len(snapshots_shape) != 2):
+    elif not isinstance(snapshots_shape, tuple) or len(snapshots_shape) != 2:
         raise ValueError("snapshots_shape must be an int or a 2D tuple.")
 
     if len(dmd.eigs) < 3:
@@ -604,11 +598,11 @@ def plot_summary(
         index_modes = list(range(len(dmd.eigs)))
     elif index_modes is None:
         index_modes = list(range(3))
-    elif (not isinstance(index_modes, list) or len(index_modes) > 3):
+    elif not isinstance(index_modes, list) or len(index_modes) > 3:
         raise ValueError("index_modes must be a list of length at most 3.")
 
     if mode_colors is None:
-        mode_colors = ["r","b","g","gray"]
+        mode_colors = ["r", "b", "g", "gray"]
 
     # Order the DMD eigenvalues, modes, and dynamics according to amplitude.
     mode_order = np.argsort(-np.abs(dmd.amplitudes))
@@ -627,9 +621,9 @@ def plot_summary(
     s_var = s_var[:50]
 
     # Generate the summarizing plot.
-    fig, (eig_axes,
-          mode_axes,
-          dynamics_axes) = plt.subplots(3, 3, figsize=figsize, dpi=200)
+    fig, (eig_axes, mode_axes, dynamics_axes) = plt.subplots(
+        3, 3, figsize=figsize, dpi=200
+    )
 
     # Plot 1: Plot the singular value spectrum.
     eig_axes[0].set_title("Singular Values")
@@ -656,7 +650,7 @@ def plot_summary(
         if i == 0:
             ax.set_title("Discrete-time Eigenvalues")
             eigs = lead_eigs
-            t = np.linspace(0, 2*np.pi, 100)
+            t = np.linspace(0, 2 * np.pi, 100)
             ax.plot(np.cos(t), np.sin(t), c="tab:blue", ls="--")
         # Plot 3: Plot the continuous-time eigenvalues
         else:

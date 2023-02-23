@@ -38,14 +38,14 @@ class BinaryTree:
                 )
             )
 
-        if bin_ >= 2 ** level_:
+        if bin_ >= 2**level_:
             raise ValueError("Invalid node")
 
-        return self.tree[2 ** level_ + bin_ - 1]
+        return self.tree[2**level_ + bin_ - 1]
 
     def __setitem__(self, val, item):
         level_, bin_ = val
-        self.tree[2 ** level_ + bin_ - 1] = item
+        self.tree[2**level_ + bin_ - 1] = item
 
     def __iter__(self):
         return self.tree.__iter__()
@@ -55,7 +55,7 @@ class BinaryTree:
         return range(self.depth + 1)
 
     def index_leaves(self, level):
-        return range(0, 2 ** level)
+        return range(0, 2**level)
 
 
 class MrDMD(DMDBase):
@@ -256,14 +256,11 @@ Expected one item per level, got {} out of {} levels.""".format(
         indexes = []
         for level in self.dmd_tree.levels:
             for leaf in self.dmd_tree.index_leaves(level):
-
                 local_times = self.partial_time_interval(level, leaf)
                 if (
                     local_times["t0"] <= t0 < local_times["tend"]
                     or local_times["t0"] < tend <= local_times["tend"]
-                    or (
-                        t0 <= local_times["t0"] and tend >= local_times["tend"]
-                    )
+                    or (t0 <= local_times["t0"] and tend >= local_times["tend"])
                 ):
                     indexes.append((level, leaf))
 
@@ -294,9 +291,7 @@ Expected one item per level, got {} out of {} levels.""".format(
         :rtype: numpy.ndarray
         """
         indexes = self.time_window_bins(t0, tend)
-        return np.concatenate(
-            [self.dmd_tree[idx].frequency for idx in indexes]
-        )
+        return np.concatenate([self.dmd_tree[idx].frequency for idx in indexes])
 
     def time_window_growth_rate(self, t0, tend):
         """
@@ -428,11 +423,11 @@ Expected one item per level, got {} out of {} levels.""".format(
                 )
             )
 
-        if leaf >= 2 ** level:
+        if leaf >= 2**level:
             raise ValueError("Invalid node")
 
         full_period = self.original_time["tend"] - self.original_time["t0"]
-        period = full_period / 2 ** level
+        period = full_period / 2**level
         t0 = self.original_time["t0"] + period * leaf
         tend = t0 + period
         return {"t0": t0, "tend": tend, "delta": period}
@@ -480,7 +475,7 @@ Expected one item per level, got {} out of {} levels.""".format(
 
         X = self.snapshots.copy()
         for level in self.dmd_tree.levels:
-            n_leaf = 2 ** level
+            n_leaf = 2**level
             Xs = np.array_split(X, n_leaf, axis=1)
 
             for leaf, x in enumerate(Xs):

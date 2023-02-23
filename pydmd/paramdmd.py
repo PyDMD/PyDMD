@@ -308,9 +308,9 @@ class ParametricDMD:
         :rtype: list
         """
 
-        spatial_modal_coefficients = self._spatial_pod.fit(
+        spatial_modal_coefficients = self._spatial_pod.fit(space_timemu).reduce(
             space_timemu
-        ).reduce(space_timemu)
+        )
         return np.split(spatial_modal_coefficients, self._ntrain, axis=1)
 
     def fit(self, X, training_parameters):
@@ -361,8 +361,8 @@ class ParametricDMD:
         space_timemu = self._arrange_parametric_snapshots(X)
 
         # obtain POD modal coefficients from the training set
-        training_modal_coefficients = (
-            self._compute_training_modal_coefficients(space_timemu)
+        training_modal_coefficients = self._compute_training_modal_coefficients(
+            space_timemu
         )
 
         if not self._light:

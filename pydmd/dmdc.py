@@ -37,11 +37,14 @@ class DMDControlOperator(DMDOperator):
     """
 
     def __init__(self, svd_rank, svd_rank_omega, tlsq_rank):
-        super(DMDControlOperator, self).__init__(svd_rank=svd_rank, exact=True,
-                                                 rescale_mode=None,
-                                                 forward_backward=False,
-                                                 sorted_eigs=False,
-                                                 tikhonov_regularization=None)
+        super(DMDControlOperator, self).__init__(
+            svd_rank=svd_rank,
+            exact=True,
+            rescale_mode=None,
+            forward_backward=False,
+            sorted_eigs=False,
+            tikhonov_regularization=None,
+        )
         self._svd_rank_omega = svd_rank_omega
         self._tlsq_rank = tlsq_rank
 
@@ -133,15 +136,15 @@ class DMDBUnknownOperator(DMDControlOperator):
 
         Ur, _, _ = compute_svd(Y, self._svd_rank)
 
-        self._Atilde = np.linalg.multi_dot([Ur.T.conj(), Y, Vp,
-                                            np.diag(np.reciprocal(sp)),
-                                            Up1.T.conj(), Ur])
+        self._Atilde = np.linalg.multi_dot(
+            [Ur.T.conj(), Y, Vp, np.diag(np.reciprocal(sp)), Up1.T.conj(), Ur]
+        )
         self._compute_eigenquantities()
         self._compute_modes(Y, sp, Vp, Up1, Ur)
 
-        Btilde = np.linalg.multi_dot([Ur.T.conj(), Y, Vp,
-                                      np.diag(np.reciprocal(sp)),
-                                      Up2.T.conj()])
+        Btilde = np.linalg.multi_dot(
+            [Ur.T.conj(), Y, Vp, np.diag(np.reciprocal(sp)), Up2.T.conj()]
+        )
 
         return Ur, Ur.dot(Btilde)
 
@@ -151,9 +154,16 @@ class DMDBUnknownOperator(DMDControlOperator):
         high-dimensional operator (stored in self.modes and self.Lambda).
         """
 
-        self._modes = np.linalg.multi_dot([Y, Vp, np.diag(np.reciprocal(sp)),
-                                           Up1.T.conj(), Ur,
-                                           self.eigenvectors])
+        self._modes = np.linalg.multi_dot(
+            [
+                Y,
+                Vp,
+                np.diag(np.reciprocal(sp)),
+                Up1.T.conj(),
+                Ur,
+                self.eigenvectors,
+            ]
+        )
         self._Lambda = self.eigenvalues
 
 
@@ -182,15 +192,15 @@ class DMDc(DMDBase):
         `svd_rank` parameter description above.
     :type svd_rank_omega: int or float
     """
-    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1):
 
+    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1):
         # we're going to initialize Atilde when we know if B is known
         self._Atilde = None
         # remember the arguments for when we'll need them
         self._dmd_operator_kwargs = {
-            'svd_rank': svd_rank,
-            'svd_rank_omega': svd_rank_omega,
-            'tlsq_rank': tlsq_rank
+            "svd_rank": svd_rank,
+            "svd_rank_omega": svd_rank_omega,
+            "tlsq_rank": tlsq_rank,
         }
 
         self._opt = opt
@@ -247,14 +257,16 @@ class DMDc(DMDBase):
 
         if controlin.shape[-1] != self.dynamics.shape[-1] - 1:
             raise RuntimeError(
-                'The number of control inputs and the number of snapshots to '
-                'reconstruct has to be the same'
+                "The number of control inputs and the number of snapshots to "
+                "reconstruct has to be the same"
             )
 
-        eigs = np.power(self.eigs,
-                        old_div(self.dmd_time['dt'], self.original_time['dt']))
-        A = np.linalg.multi_dot([self.modes, np.diag(eigs),
-                                 np.linalg.pinv(self.modes)])
+        eigs = np.power(
+            self.eigs, old_div(self.dmd_time["dt"], self.original_time["dt"])
+        )
+        A = np.linalg.multi_dot(
+            [self.modes, np.diag(eigs), np.linalg.pinv(self.modes)]
+        )
 
         data = [self.snapshots[:, 0]]
         expected_shape = data[0].shape
@@ -301,7 +313,8 @@ class DMDc(DMDBase):
         if B is None:
             self._Atilde = DMDBUnknownOperator(**self._dmd_operator_kwargs)
             self._basis, self._B = self.operator.compute_operator(
-                X, Y, self._controlin)
+                X, Y, self._controlin
+            )
         else:
             self._Atilde = DMDBKnownOperator(**self._dmd_operator_kwargs)
             U, _, _ = self.operator.compute_operator(X, Y, B, self._controlin)

@@ -3,6 +3,7 @@ from scipy.integrate import ode
 from pytest import raises
 from pydmd.bopdmd import BOPDMD
 
+
 def f(t, y):
     """
     y'(t) = f(t, y)
@@ -11,6 +12,7 @@ def f(t, y):
     z1_prime = z1 - 2 * z2
     z2_prime = z1 - z2
     return np.array((z1_prime, z2_prime))
+
 
 def simulate_z(t):
     """
@@ -33,6 +35,7 @@ def simulate_z(t):
         Z[:, i] = r.y
     return Z
 
+
 def sort_imag(x):
     """
     Helper method that sorts the entries of x by imaginary component, and then
@@ -41,6 +44,7 @@ def sort_imag(x):
     x_real_imag_swapped = x.imag + 1j * x.real
     sorted_inds = np.argsort(x_real_imag_swapped)
     return x[sorted_inds]
+
 
 # Simulate data.
 t = np.arange(2000) * 0.01
@@ -56,6 +60,7 @@ expected_eigs = np.array((-1j, 1j))
 # Define the true system operator.
 expected_A = np.array(((1, -2), (1, -1)))
 
+
 def test_truncation_shape():
     """
     Tests that, when given a positive integer rank truncation, the shape of the
@@ -68,6 +73,7 @@ def test_truncation_shape():
     assert len(bopdmd.amplitudes) == 2
     assert bopdmd.atilde.shape == (2, 2)
     assert bopdmd.A.shape == (2, 2)
+
 
 def test_eigs():
     """
@@ -98,6 +104,7 @@ def test_eigs():
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
 
+
 def test_A():
     """
     Tests that the computed A matrix is accurate for the following cases:
@@ -127,6 +134,7 @@ def test_A():
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
+
 def test_reconstruction():
     """
     Tests the accuracy of the reconstructed data for the default parameters.
@@ -139,6 +147,7 @@ def test_reconstruction():
     bopdmd = BOPDMD(num_trials=100, trial_size=0.2)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.reconstructed_data, Z, rtol=1e-5)
+
 
 def test_forecast():
     """
@@ -162,6 +171,7 @@ def test_forecast():
     bopdmd = BOPDMD(num_trials=100, trial_size=0.2)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.forecast(t_long)[0], Z_long, rtol=1e-4)
+
 
 def test_compute_A():
     """

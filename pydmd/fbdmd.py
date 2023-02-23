@@ -33,8 +33,21 @@ class FbDMD(DMD):
     Reference: Dawson et al. https://arxiv.org/abs/1507.02264
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-                 rescale_mode=None, sorted_eigs=False):
-        super().__init__(svd_rank=svd_rank, tlsq_rank=tlsq_rank, exact=exact,
-                         opt=opt, rescale_mode=rescale_mode,
-                         forward_backward=True, sorted_eigs=sorted_eigs)
+    def __init__(
+        self,
+        svd_rank=0,
+        tlsq_rank=0,
+        exact=False,
+        opt=False,
+        rescale_mode=None,
+        sorted_eigs=False,
+    ):
+        super().__init__(
+            svd_rank=svd_rank,
+            tlsq_rank=tlsq_rank,
+            exact=exact,
+            opt=opt,
+            rescale_mode=rescale_mode,
+            forward_backward=True,
+            sorted_eigs=sorted_eigs,
+        )

@@ -203,7 +203,9 @@ def do_experiment(r, pnoise, onoise, T=1000, action=plot_eigs):
     dmd = evaluate_eigs(DMD(svd_rank=-1, sorted_eigs="real"), Y)
     sdmd = evaluate_eigs(SubspaceDMD(svd_rank=-1, sorted_eigs="real"), Y)
 
-    return action((dmd_nonoise, "No noise"), (dmd, "DMD"), (sdmd, "SubspaceDMD"))
+    return action(
+        (dmd_nonoise, "No noise"), (dmd, "DMD"), (sdmd, "SubspaceDMD")
+    )
 
 
 do_experiment(1, 0.1, 0.1)
@@ -231,7 +233,9 @@ def compute_distance(*args):
     sdmd, _ = args[2]
 
     dmd_dst = np.abs(dmd[None] - no_noise[:, None]) / np.abs(no_noise[:, None])
-    sdmd_dst = np.abs(sdmd[None] - no_noise[:, None]) / np.abs(no_noise[:, None])
+    sdmd_dst = np.abs(sdmd[None] - no_noise[:, None]) / np.abs(
+        no_noise[:, None]
+    )
 
     return np.sum(np.min(dmd_dst, axis=0)), np.sum(np.min(sdmd_dst, axis=0))
 
@@ -252,8 +256,15 @@ plt.figure(figsize=(20, 7))
 plt.plot(data[:, 0], "b", label="DMD")
 plt.plot(data[:, 1], "r", label="SDMD")
 
-plt.plot(range(times), np.repeat(np.mean(data[:, 0]), times), "-.b", label="DMD mean")
-plt.plot(range(times), np.repeat(np.mean(data[:, 1]), times), "-.r", label="SDMD mean")
+plt.plot(
+    range(times), np.repeat(np.mean(data[:, 0]), times), "-.b", label="DMD mean"
+)
+plt.plot(
+    range(times),
+    np.repeat(np.mean(data[:, 1]), times),
+    "-.r",
+    label="SDMD mean",
+)
 
 plt.yscale("log")
 
@@ -293,7 +304,9 @@ def extract_means(r, pnoise, onoise, times, T=1000):
 
 onoise_grid = [0.1, 0.25, 0.5, 1, 2.5, 5, 10]
 
-data = np.array([extract_means(1, 0.1, onoise, times) for onoise in onoise_grid])
+data = np.array(
+    [extract_means(1, 0.1, onoise, times) for onoise in onoise_grid]
+)
 
 plt.figure(figsize=(20, 7))
 plt.plot(onoise_grid, data[:, 0], "-ob", label="DMD")
@@ -324,7 +337,9 @@ plt.show()
 
 pnoise_grid = [0.1, 0.25, 0.5, 1, 2.5, 5, 7.5, 10]
 
-data = np.array([extract_means(1, pnoise, 0.1, times) for pnoise in pnoise_grid])
+data = np.array(
+    [extract_means(1, pnoise, 0.1, times) for pnoise in pnoise_grid]
+)
 
 plt.figure(figsize=(20, 7))
 plt.plot(pnoise_grid, data[:, 0], "-ob", label="DMD")
@@ -449,14 +464,21 @@ def do_experiment2(r, pnoise, onoise, k, T=1000, action=plot_eigs):
     dmd = evaluate_eigs(DMD(svd_rank=-1, sorted_eigs="real"), Y)
     sdmd = evaluate_eigs(SubspaceDMD(svd_rank=-1, sorted_eigs="real"), Y)
 
-    return action((dmd_nonoise, "No noise"), (dmd, "DMD"), (sdmd, "SubspaceDMD"))
+    return action(
+        (dmd_nonoise, "No noise"), (dmd, "DMD"), (sdmd, "SubspaceDMD")
+    )
 
 
 def extract_means2(r, pnoise, onoise, k, times, T=1000):
     data = np.array(
         [
             do_experiment2(
-                r=1, pnoise=pnoise, onoise=onoise, k=k, T=T, action=compute_distance
+                r=1,
+                pnoise=pnoise,
+                onoise=onoise,
+                k=k,
+                T=T,
+                action=compute_distance,
             )
             for _ in range(times)
         ]
@@ -478,7 +500,9 @@ warnings.filterwarnings("ignore")
 
 k_grid = [10, 25, 50, 75, 100, 250, 500]
 
-data = np.array([extract_means2(0.9, 0.1, 0.1, k=ki, times=10) for ki in k_grid])
+data = np.array(
+    [extract_means2(0.9, 0.1, 0.1, k=ki, times=10) for ki in k_grid]
+)
 
 plt.figure(figsize=(20, 7))
 plt.plot(k_grid, data[:, 0], "-ob", label="DMD")
