@@ -45,7 +45,7 @@ def compute_rank(X, svd_rank=0):
     elif svd_rank >= 1 and isinstance(svd_rank, int):
         rank = min(svd_rank, U.shape[1])
     else:
-        rank = X.shape[1]
+        rank = min(X.shape)
 
     return rank
 
