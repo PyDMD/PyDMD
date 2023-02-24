@@ -8,7 +8,6 @@ from copy import copy, deepcopy
 from os.path import splitext
 
 import numpy as np
-from past.utils import old_div
 
 from .dmdoperator import DMDOperator
 from .utils import compute_svd
@@ -289,10 +288,9 @@ class DMDBase:
         temp = np.repeat(
             self.eigs[:, None], self.dmd_timesteps.shape[0], axis=1
         )
-        tpow = old_div(
-            self.dmd_timesteps - self.original_time["t0"],
-            self.original_time["dt"],
-        )
+        tpow = (
+            self.dmd_timesteps - self.original_time["t0"]
+        ) // self.original_time["dt"]
 
         # The new formula is x_(k+j) = \Phi \Lambda^k \Phi^(-1) x_j.
         # Since j is fixed, for a given snapshot "u" we have the following

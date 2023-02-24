@@ -1,7 +1,6 @@
 from __future__ import division
 
 import numpy as np
-from past.utils import old_div
 from pytest import raises
 
 from pydmd import DMD, FbDMD
@@ -13,7 +12,7 @@ def create_data(t_size=1600):
     t = np.linspace(0, 20, t_size)
     Xm, Tm = np.meshgrid(x, t)
 
-    D = np.exp(-np.power(old_div(Xm, 2), 2)) * np.exp(0.8j * Tm)
+    D = np.exp(-np.power(Xm / 2, 2)) * np.exp(0.8j * Tm)
     D += np.sin(0.9 * Xm) * np.exp(1j * Tm)
     D += np.cos(1.1 * Xm) * np.exp(2j * Tm)
     D += 0.6 * np.sin(1.2 * Xm) * np.exp(3j * Tm)
@@ -26,8 +25,8 @@ def create_data(t_size=1600):
     D += 0.03 * np.random.randn(*Xm.shape)
     D += (
         5
-        * np.exp(-np.power(old_div((Xm + 5), 5), 2))
-        * np.exp(-np.power(old_div((Tm - 5), 5), 2))
+        * np.exp(-np.power((Xm + 5) / 5, 2))
+        * np.exp(-np.power((Tm - 5) / 5, 2))
     )
     D[:800, 40:] += 2
     D[200:600, 50:70] -= 3
@@ -154,8 +153,8 @@ def test_reconstructed_data():
     mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
     mrdmd.fit(X=sample_data)
     dmd_data = mrdmd.reconstructed_data
-    norm_err = old_div(
-        np.linalg.norm(sample_data - dmd_data), np.linalg.norm(sample_data)
+    norm_err = np.linalg.norm(sample_data - dmd_data) / np.linalg.norm(
+        sample_data
     )
     assert norm_err < 1
 

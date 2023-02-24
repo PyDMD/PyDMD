@@ -6,7 +6,6 @@ Reference:
 with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.
 """
 import numpy as np
-from past.utils import old_div
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
@@ -262,7 +261,7 @@ class DMDc(DMDBase):
             )
 
         eigs = np.power(
-            self.eigs, old_div(self.dmd_time["dt"], self.original_time["dt"])
+            self.eigs, self.dmd_time["dt"] // self.original_time["dt"]
         )
         A = np.linalg.multi_dot(
             [self.modes, np.diag(eigs), np.linalg.pinv(self.modes)]
