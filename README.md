@@ -183,7 +183,7 @@ Here there is a list of the scientific works involving **PyDMD** you can consult
 * Tezzele. *Data-driven parameter and model order reduction for industrial optimisation problems with applications in naval engineering*, PhD Thesis. 2021. [[Iris](http://hdl.handle.net/20.500.11767/124569)].
 
 ## Contributing
-We warmly thank all the contributors that have supported PyDMD! Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIBUTING.md) and the [Tutorials for Developers](tutorials) before starting to play!
+We warmly thank all the contributors that have supported PyDMD! Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIBUTING.md) and the [Tutorials for Developers](tutorials#tutorials-for-developers) before starting to play!
 
 
 <a href="https://github.com/mathLab/PyDMD/graphs/contributors">
