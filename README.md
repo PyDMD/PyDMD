@@ -185,6 +185,8 @@ Here there is a list of the scientific works involving **PyDMD** you can consult
 ## Contributing
 We warmely thanks all the contributors that have supported PyDMD!
 Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIBUTING.md) and the [Tutorials for Developer]() before start to play!
+
+
 <a href="https://github.com/mathLab/PyDMD/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=mathLab/PyDMD" />
 </a>
