@@ -9,8 +9,8 @@ jobs:
   prepare_matrix: ##############################################################################
     runs-on: ubuntu-latest
     outputs:
-       matrix_unittest: ${{ steps.setmatrix.outputs.matrix1 }}
-       matrix_tutorialtest: ${{ steps.setmatrix.outputs.matrix2 }}
+       matrix_unit_test: ${{ steps.setmatrix.outputs.matrix1 }}
+       matrix_tutorial_test: ${{ steps.setmatrix.outputs.matrix2 }}
 
     steps:
         - uses: actions/checkout@v2
@@ -40,11 +40,11 @@ jobs:
           echo $matrix | jq .
           echo $matrix | json2yaml
 
-  unittest: ##############################################################################
+  unit_test: ##############################################################################
     needs: prepare_matrix
     runs-on: ${{ matrix.os }}
     strategy: 
-      matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix_unittest) }}
+      matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix_unit_test) }}
         
     steps:
     - uses: actions/checkout@v2
@@ -62,11 +62,11 @@ jobs:
       run: |
         pytest
 
-  tutorialtest: ##############################################################################
+  tutorial_test: ##############################################################################
     needs: prepare_matrix
     runs-on: ${{ matrix.os }}
     strategy: 
-      matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix_tutorialtest) }}
+      matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix_tutorial_test) }}
         
     steps:
     - uses: actions/checkout@v3
