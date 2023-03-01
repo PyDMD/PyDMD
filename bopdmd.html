@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BOP-DMD &mdash; PyDMD 0.4.0.post2302 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>BOP-DMD &mdash; PyDMD 0.4.0.post2303 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -24,14 +24,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> PyDMD
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PyDMD
           </a>
               <div class="version">
-                0.4.0.post2302
+                0.4.0.post2303
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -57,7 +61,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">BOP-DMD</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/bopdmd.rst.txt" rel="nofollow"> View page source</a>
@@ -81,7 +85,7 @@ decomposition (bop-dmd) for robust, stable forecasting with spatial and
 temporal uncertainty-quantification. 2021. arXiv:2107.10878.</p>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-name descname">BOPDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">use_proj=True</em>, <em class="sig-param">init_alpha=None</em>, <em class="sig-param">proj_basis=None</em>, <em class="sig-param">num_trials=0</em>, <em class="sig-param">trial_size=0.2</em>, <em class="sig-param">eig_sort='auto'</em>, <em class="sig-param">varpro_opts_dict=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="sig-name descname">BOPDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">compute_A=False</em>, <em class="sig-param">use_proj=True</em>, <em class="sig-param">init_alpha=None</em>, <em class="sig-param">proj_basis=None</em>, <em class="sig-param">num_trials=0</em>, <em class="sig-param">trial_size=0.2</em>, <em class="sig-param">eig_sort='auto'</em>, <em class="sig-param">varpro_opts_dict=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
 <p>Bagging, Optimized Dynamic Mode Decomposition.</p>
 <dl class="field-list simple">
@@ -93,6 +97,10 @@ method uses the argument for the truncation; if float between 0 and 1,
 the rank is the number of the biggest singular values that are needed
 to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1, the method does
 not compute truncation.</p></li>
+<li><p><strong>compute_A</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Flag that determines whether or not to compute the full
+Koopman operator A. Default is False, do not compute the full operator.
+Note that the full operator is potentially prohibitively expensive to
+compute.</p></li>
 <li><p><strong>use_proj</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Flag that determines the type of computation to perform.
 If True, fit input data projected onto the first svd_rank POD modes or
 columns of proj_basis if provided. If False, fit the full input data.
@@ -172,6 +180,19 @@ for each parameter.</p></li>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">compute_A</code></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>flag that determines whether to compute the full operator A.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -335,7 +356,7 @@ variable projection parameter values.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
-      <span class="lastupdated">Last updated on Feb 01, 2023.
+      <span class="lastupdated">Last updated on Mar 01, 2023.
       </span></p>
   </div>
 

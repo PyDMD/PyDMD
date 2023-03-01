@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Physics-informed DMD &mdash; PyDMD 0.4.0.post2303 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PyDMD
+          </a>
+              <div class="version">
+                0.4.0.post2303
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="code.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Physics-informed DMD</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/pidmd.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-pydmd.pidmd">
+<span id="physics-informed-dmd"></span><h1>Physics-informed DMD<a class="headerlink" href="#module-pydmd.pidmd" title="Permalink to this headline">¶</a></h1>
+<p>Derived module from dmd.py for Physics-informed DMD.</p>
+<p>References:
+- Peter J. Baddoo, Benjamin Herrmann, Beverley J. McKeon, J. Nathan Kutz, and
+Steven L. Brunton. Physics-informed dynamic mode decomposition (pidmd). 2021.
+arXiv:2112.04307.</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-name descname">PiDMD</code><span class="sig-paren">(</span><em class="sig-param">manifold</em>, <em class="sig-param">manifold_opt=None</em>, <em class="sig-param">compute_A=False</em>, <em class="sig-param">svd_rank=-1</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">opt=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/pidmd.html#PiDMD"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmd.DMD</span></code></p>
+<p>Physics-informed Dynamic Mode Decomposition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>manifold</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – the matrix manifold to restrict the full operator A to.
+The following matrix manifolds are permissible:
+- “unitary”
+- “uppertriangular”
+- “lowertriangular”
+- “diagonal”
+- “symmetric”,
+- “skewsymmetric”
+- “toeplitz”
+- “hankel”
+- “circulant”
+- “circulant_unitary”
+- “circulant_symmetric”
+- “circulant_skewsymmetric”
+- “symmetric_tridiagonal”
+- “BC” (block circulant)
+- “BCTB” (BC with tridiagonal blocks)
+- “BCCB” (BC with circulant blocks)
+- “BCCBunitary” (BCCB and unitary)
+- “BCCBsymmetric” (BCCB and symmetric)
+- “BCCBskewsymmetric” (BCCB and skewsymmetric)</p></li>
+<li><p><strong>manifold_opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>, </em><em>tuple</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em><em>, or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – option used to specify certain manifolds.
+If manifold is “diagonal”, manifold_opt may be used to specify the
+width of the diagonal of A. If manifold_opt is an integer k, A is
+banded, with a lower and upper bandwidth of k-1. If manifold_opt is
+a tuple containing two integers k1 and k2, A is banded with a lower
+bandwidth of k1-1 and an upper bandwidth of k2-1. Finally, if
+manifold_opt is a numpy array of size (len(X), 2), the entries of
+manifold_opt are used to explicitly define the the upper and lower
+bounds of the indices of the non-zero elements of A.
+If manifold starts with “BC”, manifold_opt must be a 2D tuple that
+specifies the desired dimensions of the blocks of A.
+Note that all other manifolds do not use manifold_opt.</p></li>
+<li><p><strong>compute_A</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Flag that determines whether or not to compute the full
+Koopman operator A.</p></li>
+<li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If 0, the method computes the
+optimal rank and uses it for truncation; if positive integer, the
+method uses the argument for the truncation; if float between 0 and 1,
+the rank is the number of the biggest singular values that are needed
+to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1, the method does
+not compute truncation. Default is -1, meaning no truncation.</p></li>
+<li><p><strong>tlsq_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation computing Total Least Square. Default is
+0, meaning no truncation.</p></li>
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – If True, amplitudes are computed like in optimized DMD  (see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">_compute_amplitudes()</span></code> for reference). If
+False, amplitudes are computed following the standard algorithm. If
+<cite>opt</cite> is an integer, it is used as the (temporal) index of the snapshot
+used to compute DMD modes amplitudes (following the standard
+algorithm).
+The reconstruction will generally be better in time instants near the
+chosen snapshot; however increasing <cite>opt</cite> may lead to wrong results
+when the system presents small eigenvalues. For this reason a manual
+selection of the number of eigenvalues considered for the analyisis may
+be needed (check <cite>svd_rank</cite>). Also setting <cite>svd_rank</cite> to a value
+between 0 and 1 may give better results. Default is False.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">A</code></dt>
+<dd><p>Get the full Koopman operator A.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the full Koopman operator A.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2021, PyDMD contributors.
+      <span class="lastupdated">Last updated on Mar 01, 2023.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
