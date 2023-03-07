@@ -10,7 +10,7 @@ jobs:
   prepare_matrix: ##############################################################################
     runs-on: ubuntu-latest
     outputs:
-       matrix ${{ steps.setmatrix.outputs.matrix }}
+       matrix: ${{ steps.setmatrix.outputs.matrix }}
 
     steps:
         - uses: actions/checkout@v2
