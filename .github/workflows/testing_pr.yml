@@ -45,6 +45,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy: 
       matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix_unit_test) }}
+      fail-fast: false
         
     steps:
     - uses: actions/checkout@v2
@@ -67,6 +68,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy: 
       matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix_tutorial_test) }}
+      fail-fast: false
+
         
     steps:
     - uses: actions/checkout@v3
