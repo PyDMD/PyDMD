@@ -13,8 +13,8 @@
     <a href="https://badge.fury.io/py/pydmd"  target="_blank">
         <img alt="PyPI version" src="https://badge.fury.io/py/pydmd.svg">
     </a>
-    <a href="https://github.com/mathLab/PyDMD/actions/workflows/ci.yml" target="_blank">
-        <img alt="Build Status" src="https://github.com/mathLab/PyDMD/actions/workflows/ci.yml/badge.svg">
+    <a href="https://github.com/mathLab/PyDMD/actions/workflows/deploy_after_push.yml" target="_blank">
+        <img alt="Build Status" src="https://github.com/mathLab/PyDMD/actions/workflows/deploy_after_push.yml/badge.svg">
     </a>
     <a href="https://www.codacy.com/gh/mathLab/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Coverage">
       <img src="https://app.codacy.com/project/badge/Coverage/c36adbea2e4a44eb8c0e4505b75e8245"/>
