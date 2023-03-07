@@ -1,4 +1,5 @@
-name: "Deploy after Push"
+## Deploy after push action
+name: "CI"
 
 on:
   push:
