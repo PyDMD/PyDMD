@@ -5,7 +5,7 @@
 
 # ### Tutorial 3: Multiresolution DMD: different time scales
 
-# In this tutorial we will show the possibilities of the multiresolution dynamic modes decomposition (mrDMD) with respect to the classical DMD. We follow a wonderful blog post written by Robert Taylor [available here](http://www.pyrunner.com/weblog/2016/08/05/mrdmd-python/). We did not use his implementation of the mrDMD but only the sample data and the structure of the tutorial. You can find a mathematical reference for the mrDMD by Kutz et al. [here](http://epubs.siam.org/doi/pdf/10.1137/15M1023543).
+# In this tutorial we will show the possibilities of the multiresolution dynamic modes decomposition (mrDMD) with respect to the classical DMD. We follow a wonderful blog post written by Robert Taylor [available here](http://www.pyrunner.com/weblog/2016/08/05/mrdmd-python/). We did not use his implementation of the mrDMD but only the sample data and the structure of the tutorial. You can find a mathematical reference for the mrDMD by Kutz et al. [here](http://epubs.siam.org/doi/pdf/10.1137/15M1023543). 
 # For the advanced settings of the DMD base class please refer to [this tutorial](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial-2-adv-dmd.ipynb).
 
 # First of all we just import the MrDMD and DMD classes from the pydmd package, we set matplotlib for the notebook and we import numpy.
@@ -13,14 +13,14 @@
 # In[1]:
 
 
-get_ipython().run_line_magic("matplotlib", "inline")
+get_ipython().run_line_magic('matplotlib', 'inline')
 import matplotlib.pyplot as plt
 from pydmd import MrDMD, DMD
 from pydmd.plotter import plot_eigs_mrdmd
 import numpy as np
 
 
-# The code below generates a spatio-temporal example dataset. The data can be thought of as 80 locations or signals (the x-axis) being sampled 1600 times at a constant rate in time (the t-axis). It contains many features at varying time scales, like oscillating sines and cosines, one-time events, and random noise.
+# The code below generates a spatio-temporal example dataset. The data can be thought of as 80 locations or signals (the x-axis) being sampled 1600 times at a constant rate in time (the t-axis). It contains many features at varying time scales, like oscillating sines and cosines, one-time events, and random noise. 
 
 # In[2]:
 
@@ -75,7 +75,7 @@ def make_plot(X, x=None, y=None, figsize=(12, 8), title=""):
     plt.show()
 
 
-# Let us start by creating the dataset and plot the data in order to have a first idea of the problem.
+# Let us start by creating the dataset and plot the data in order to have a first idea of the problem. 
 
 # In[4]:
 
@@ -128,9 +128,9 @@ plot_eigs_mrdmd(
 
 
 # The idea is to extract the slow modes at each iteration, where a slow mode is a mode with a relative low frequency. This just means that the mode changes somewhat slowly as the system evolves in time. Thus the mrDMD is able to catch different time events.
-#
+# 
 # The general mrDMD algorithm is as follows:
-#
+# 
 # 1. Compute DMD for available data.
 # 2. Determine fast and slow modes.
 # 3. Find the best DMD approximation to the available data constructed from the slow modes only.
@@ -139,7 +139,7 @@ plot_eigs_mrdmd(
 # 6. Repeat the procedure for the first half of data (including this step).
 # 7. Repeat the procedure for the second half of data (including this step).
 
-# Let us have a look at the modes for the first two levels and the corresponding time evolution. At the first level we have two very slow modes, while at the second one there are 5 modes.
+# Let us have a look at the modes for the first two levels and the corresponding time evolution. At the first level we have two very slow modes, while at the second one there are 5 modes. 
 
 # In[9]:
 
@@ -155,7 +155,7 @@ pdyna = dmd.partial_dynamics(level=0)
 fig = plt.plot(t, pdyna.real.T)
 
 
-# Notice the discontinuities in the time evolution where the data were split.
+# Notice the discontinuities in the time evolution where the data were split. 
 
 # In[11]:
 
@@ -165,7 +165,7 @@ print("The number of modes in the level number 1 is {}".format(pdyna.shape[0]))
 fig = plt.plot(t, pdyna.real.T)
 
 
-# Now we recreate the original data by adding levels together. For each level, starting with the first (note that the starting index is 0), we construct an approximation of the data.
+# Now we recreate the original data by adding levels together. For each level, starting with the first (note that the starting index is 0), we construct an approximation of the data. 
 
 # In[12]:
 
