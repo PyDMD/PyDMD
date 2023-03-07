@@ -14,7 +14,7 @@
         <img alt="PyPI version" src="https://badge.fury.io/py/pydmd.svg">
     </a>
     <a href="https://github.com/mathLab/PyDMD/actions/workflows/deploy_after_push.yml" target="_blank">
-        <img alt="Build Status" src="https://github.com/mathLab/PyDMD/actions/workflows/deploy_after_push.yml/badge.svg">
+        <img alt="B tus" src="https://github.com/mathLab/PyDMD/actions/workflows/deploy_after_push.yml/badge.svg">
     </a>
     <a href="https://www.codacy.com/gh/mathLab/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Coverage">
       <img src="https://app.codacy.com/project/badge/Coverage/c36adbea2e4a44eb8c0e4505b75e8245"/>
@@ -183,7 +183,9 @@ Here there is a list of the scientific works involving **PyDMD** you can consult
 * Tezzele. *Data-driven parameter and model order reduction for industrial optimisation problems with applications in naval engineering*, PhD Thesis. 2021. [[Iris](http://hdl.handle.net/20.500.11767/124569)].
 
 ## Contributing
-We warmly thank all the contributors that have supported PyDMD! Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIBUTING.md) and the [Tutorials for Developers](tutorials#tutorials-for-developers) before starting to play!
+We warmly thank all the contributors that have supported PyDMD! The financial support of the [AROMA-CFD ERC CoG project](https://people.sissa.it/~grozza/aroma-cfd/) project is also gratefully acknowledged.
+
+Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIBUTING.md) and the [Tutorials for Developers](tutorials#tutorials-for-developers) before starting to play!
 
 
 <a href="https://github.com/mathLab/PyDMD/graphs/contributors">
