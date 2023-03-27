@@ -290,7 +290,7 @@ class DMDBase:
         )
         tpow = (
             self.dmd_timesteps - self.original_time["t0"]
-        ) // self.original_time["dt"]
+        ) / self.original_time["dt"]
 
         # The new formula is x_(k+j) = \Phi \Lambda^k \Phi^(-1) x_j.
         # Since j is fixed, for a given snapshot "u" we have the following
