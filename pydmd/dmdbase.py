@@ -8,7 +8,6 @@ from copy import copy, deepcopy
 from os.path import splitext
 
 import numpy as np
-from past.utils import old_div
 
 from .dmdoperator import DMDOperator
 from .utils import compute_svd
@@ -178,7 +177,6 @@ class DMDBase:
         sorted_eigs=False,
         tikhonov_regularization=None,
     ):
-
         self._Atilde = DMDOperator(
             svd_rank=svd_rank,
             exact=exact,
@@ -290,10 +288,9 @@ class DMDBase:
         temp = np.repeat(
             self.eigs[:, None], self.dmd_timesteps.shape[0], axis=1
         )
-        tpow = old_div(
-            self.dmd_timesteps - self.original_time["t0"],
-            self.original_time["dt"],
-        )
+        tpow = (
+            self.dmd_timesteps - self.original_time["t0"]
+        ) // self.original_time["dt"]
 
         # The new formula is x_(k+j) = \Phi \Lambda^k \Phi^(-1) x_j.
         # Since j is fixed, for a given snapshot "u" we have the following
@@ -479,8 +476,7 @@ class DMDBase:
         """
         if hasattr(self, "_b") and self._b is not None:
             self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(
-                self.operator,
-                self._b
+                self.operator, self._b
             )
 
     def __getitem__(self, key):
@@ -671,18 +667,28 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         )
 
         if self._exact:
-            q = np.conj(np.diag(np.linalg.multi_dot([vander,
-                                                     self.snapshots.conj().T,
-                                                     self.modes])))
+            q = np.conj(
+                np.diag(
+                    np.linalg.multi_dot(
+                        [vander, self.snapshots.conj().T, self.modes]
+                    )
+                )
+            )
         else:
-            _, s, V = compute_svd(self.snapshots[:, :-1],
-                                  self.modes.shape[-1])
+            _, s, V = compute_svd(self.snapshots[:, :-1], self.modes.shape[-1])
 
-            q = np.conj(np.diag(
-                np.linalg.multi_dot([vander[:, :-1],
-                                     V,
-                                     np.diag(s).conj(),
-                                     self.operator.eigenvectors])))
+            q = np.conj(
+                np.diag(
+                    np.linalg.multi_dot(
+                        [
+                            vander[:, :-1],
+                            V,
+                            np.diag(s).conj(),
+                            self.operator.eigenvectors,
+                        ]
+                    )
+                )
+            )
 
         return P, q
 

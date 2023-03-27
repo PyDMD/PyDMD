@@ -12,7 +12,7 @@
 # In[1]:
 
 
-get_ipython().run_line_magic('matplotlib', 'inline')
+get_ipython().run_line_magic("matplotlib", "inline")
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy
@@ -31,14 +31,14 @@ from pydmd.plotter import plot_eigs
 
 def create_system(n, m):
     A = scipy.linalg.helmert(n, True)
-    B = np.random.rand(n, n)-.5
-    x0 = np.array([0.25]*n)
-    u = np.random.rand(n, m-1)-.5
+    B = np.random.rand(n, n) - 0.5
+    x0 = np.array([0.25] * n)
+    u = np.random.rand(n, m - 1) - 0.5
     snapshots = [x0]
-    for i in range(m-1):
-        snapshots.append(A.dot(snapshots[i])+B.dot(u[:, i]))
+    for i in range(m - 1):
+        snapshots.append(A.dot(snapshots[i]) + B.dot(u[:, i]))
     snapshots = np.array(snapshots).T
-    return {'snapshots': snapshots, 'u': u, 'B': B, 'A': A}
+    return {"snapshots": snapshots, "u": u, "B": B, "A": A}
 
 
 # We got 10 snapshots of the evolving system.
@@ -47,7 +47,7 @@ def create_system(n, m):
 
 
 s = create_system(25, 10)
-print(s['snapshots'].shape)
+print(s["snapshots"].shape)
 
 
 # Now, we can compute as usually the DMD algorithm on the data: the `fit` method in this version take as arguments the snapshots and the control input (the $\mathbf{B}$ operator can be also passed). In this case, we do not perform any truncation.
@@ -56,7 +56,7 @@ print(s['snapshots'].shape)
 
 
 dmdc = DMDc(svd_rank=-1)
-dmdc.fit(s['snapshots'], s['u'])
+dmdc.fit(s["snapshots"], s["u"])
 
 
 # Let us visualize the original system and the reconstructed one: also because without truncation, the plots are the same!
@@ -67,12 +67,12 @@ dmdc.fit(s['snapshots'], s['u'])
 plt.figure(figsize=(16, 6))
 
 plt.subplot(121)
-plt.title('Original system')
-plt.pcolor(s['snapshots'].real)
+plt.title("Original system")
+plt.pcolor(s["snapshots"].real)
 plt.colorbar()
 
 plt.subplot(122)
-plt.title('Reconstructed system')
+plt.title("Reconstructed system")
 plt.pcolor(dmdc.reconstructed_data().real)
 plt.colorbar()
 
@@ -84,7 +84,7 @@ plt.show()
 # In[6]:
 
 
-new_u = np.exp(s['u'])
+new_u = np.exp(s["u"])
 
 plt.figure(figsize=(8, 6))
 plt.pcolor(dmdc.reconstructed_data(new_u).real)
@@ -97,8 +97,8 @@ plt.show()
 # In[7]:
 
 
-dmdc.dmd_time['dt'] = .5
-new_u = np.random.rand(s['u'].shape[0], dmdc.dynamics.shape[1]-1)
+dmdc.dmd_time["dt"] = 0.5
+new_u = np.random.rand(s["u"].shape[0], dmdc.dynamics.shape[1] - 1)
 
 plt.figure(figsize=(8, 6))
 plt.pcolor(dmdc.reconstructed_data(new_u).real)
@@ -116,7 +116,7 @@ plt.show()
 time_instants = 5
 
 A = np.array([[2.1, 0, 0], [0, 0.5, 0], [0, 0, 6.9]])
-B = np.array([1.3 , 0, 3])[:, None] * 2
+B = np.array([1.3, 0, 3])[:, None] * 2
 
 snapshots = np.zeros((3, time_instants))
 snapshots[:, 0] = np.array([5, 6, 3])
@@ -128,8 +128,10 @@ snapshots[:, 0] = np.array([5, 6, 3])
 
 
 for i in range(1, time_instants):
-    previous_snapshot = snapshots[:, i-1][:, None]
-    snapshots[:, i] = (A.dot(previous_snapshot) - B*previous_snapshot).flatten()
+    previous_snapshot = snapshots[:, i - 1][:, None]
+    snapshots[:, i] = (
+        A.dot(previous_snapshot) - B * previous_snapshot
+    ).flatten()
 print(snapshots)
 
 
@@ -150,13 +152,20 @@ dmdc = DMDc(svd_rank=-1).fit(snapshots, I, np.diag(B.flatten()))
 
 
 from pydmd import DMD
+
 dmd = DMD(svd_rank=-1)
 dmd.fit(snapshots)
-plot_eigs(dmd, show_axes=True, show_unit_circle=True, figsize=(5, 5), filename='eigs_ex1.pdf')
+plot_eigs(
+    dmd,
+    show_axes=True,
+    show_unit_circle=True,
+    figsize=(5, 5),
+    filename="eigs_ex1.pdf",
+)
 
 
-# As we can see the eigenvalues are all inside the unit sphere, therefore the corresponding dynamics are all stable. 
-# 
+# As we can see the eigenvalues are all inside the unit sphere, therefore the corresponding dynamics are all stable.
+#
 # By contrast, if we use DMD with control we see that there are some unstable dynamics in the "real" `A` operator, which we lose when we use the original algorithm, but are recovered if we employ the modified one.
 
 # In[12]:
@@ -165,7 +174,11 @@ plot_eigs(dmd, show_axes=True, show_unit_circle=True, figsize=(5, 5), filename='
 plot_eigs(dmdc, show_axes=True, show_unit_circle=True, figsize=(5, 5))
 
 for eig in dmdc.eigs:
-    print('Eigenvalue {}: distance from unit circle {}'.format(eig, np.abs(1-np.linalg.norm(eig))))
+    print(
+        "Eigenvalue {}: distance from unit circle {}".format(
+            eig, np.abs(1 - np.linalg.norm(eig))
+        )
+    )
 
 
 # We seek a confirmation about this fact by computing the eigenvalues of the operator `A` which we used when we constructed the system, and we compare them with the eigenvalues of `dmd.atilde` which holds the approximation of `A` built by DMD with control.
@@ -173,6 +186,9 @@ for eig in dmdc.eigs:
 # In[14]:
 
 
-print('Eigenvalues of A:', np.linalg.eigvals(A), '; eigenvalues of A_tilde: ', 
-      np.linalg.eigvals(dmdc.operator.as_numpy_array))
-
+print(
+    "Eigenvalues of A:",
+    np.linalg.eigvals(A),
+    "; eigenvalues of A_tilde: ",
+    np.linalg.eigvals(dmdc.operator.as_numpy_array),
+)

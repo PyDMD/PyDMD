@@ -30,7 +30,7 @@ def create_sample_data():
     t = np.linspace(0, 20, 1600)
     Xm, Tm = np.meshgrid(x, t)
 
-    D = np.exp(-np.power(Xm/2, 2)) * np.exp(0.8j * Tm)
+    D = np.exp(-np.power(Xm / 2, 2)) * np.exp(0.8j * Tm)
     D += np.sin(0.9 * Xm) * np.exp(1j * Tm)
     D += np.cos(1.1 * Xm) * np.exp(2j * Tm)
     D += 0.6 * np.sin(1.2 * Xm) * np.exp(3j * Tm)
@@ -41,14 +41,18 @@ def create_sample_data():
     D += 0.1 * np.cos(5.9 * Xm) * np.exp(12j * Tm)
     D += 0.1 * np.random.randn(*Xm.shape)
     D += 0.03 * np.random.randn(*Xm.shape)
-    D += 5 * np.exp(-np.power((Xm+5)/5, 2)) * np.exp(-np.power((Tm-5)/5, 2))
-    D[:800,40:] += 2
-    D[200:600,50:70] -= 3
-    D[800:,:40] -= 2
-    D[1000:1400,10:30] += 3
-    D[1000:1080,50:70] += 2
-    D[1160:1240,50:70] += 2
-    D[1320:1400,50:70] += 2
+    D += (
+        5
+        * np.exp(-np.power((Xm + 5) / 5, 2))
+        * np.exp(-np.power((Tm - 5) / 5, 2))
+    )
+    D[:800, 40:] += 2
+    D[200:600, 50:70] -= 3
+    D[800:, :40] -= 2
+    D[1000:1400, 10:30] += 3
+    D[1000:1080, 50:70] += 2
+    D[1160:1240, 50:70] += 2
+    D[1320:1400, 50:70] += 2
     return D.T
 
 
@@ -57,7 +61,7 @@ def create_sample_data():
 # In[3]:
 
 
-def make_plot(X, x=None, y=None, figsize=(12, 8), title=''):
+def make_plot(X, x=None, y=None, figsize=(12, 8), title=""):
     """
     Plot of the data X
     """
@@ -66,8 +70,8 @@ def make_plot(X, x=None, y=None, figsize=(12, 8), title=''):
     X = np.real(X)
     CS = plt.pcolor(x, y, X)
     cbar = plt.colorbar(CS)
-    plt.xlabel('Space')
-    plt.ylabel('Time')
+    plt.xlabel("Space")
+    plt.ylabel("Time")
     plt.show()
 
 
@@ -109,7 +113,7 @@ make_plot(dmd.reconstructed_data.T, x=x, y=t)
 # In[7]:
 
 
-print('The number of eigenvalues is {}'.format(dmd.eigs.shape[0]))
+print("The number of eigenvalues is {}".format(dmd.eigs.shape[0]))
 plot_eigs_mrdmd(dmd, show_axes=True, show_unit_circle=True, figsize=(8, 8))
 
 
@@ -118,7 +122,9 @@ plot_eigs_mrdmd(dmd, show_axes=True, show_unit_circle=True, figsize=(8, 8))
 # In[8]:
 
 
-plot_eigs_mrdmd(dmd, show_axes=True, show_unit_circle=True, figsize=(8, 8), level=3, node=0)
+plot_eigs_mrdmd(
+    dmd, show_axes=True, show_unit_circle=True, figsize=(8, 8), level=3, node=0
+)
 
 
 # The idea is to extract the slow modes at each iteration, where a slow mode is a mode with a relative low frequency. This just means that the mode changes somewhat slowly as the system evolves in time. Thus the mrDMD is able to catch different time events.
@@ -155,7 +161,7 @@ fig = plt.plot(t, pdyna.real.T)
 
 
 pdyna = dmd.partial_dynamics(level=1)
-print('The number of modes in the level number 1 is {}'.format(pdyna.shape[0]))
+print("The number of modes in the level number 1 is {}".format(pdyna.shape[0]))
 fig = plt.plot(t, pdyna.real.T)
 
 
@@ -165,7 +171,7 @@ fig = plt.plot(t, pdyna.real.T)
 
 
 pdata = dmd.partial_reconstructed_data(level=0)
-make_plot(pdata.T, x=x, y=t, title='level 0', figsize=(7.5, 5))
+make_plot(pdata.T, x=x, y=t, title="level 0", figsize=(7.5, 5))
 
 
 # Then, we sequentially add them all together, one on top of another. It is interesting to see how the original data has been broken into features of finer and finer resolution.
@@ -175,7 +181,7 @@ make_plot(pdata.T, x=x, y=t, title='level 0', figsize=(7.5, 5))
 
 for i in range(1, 7):
     pdata += dmd.partial_reconstructed_data(level=i)
-    make_plot(pdata.T, x=x, y=t, title='levels 0-' + str(i), figsize=(7.5, 5))
+    make_plot(pdata.T, x=x, y=t, title="levels 0-" + str(i), figsize=(7.5, 5))
 
 
 # The multiresolution DMD has been employed in many different fields of study due to its versatility. Feel free to share with us your applications!

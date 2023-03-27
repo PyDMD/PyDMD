@@ -14,6 +14,7 @@ from scipy.linalg import block_diag, rq
 from .utils import compute_svd
 from .rdmd import compute_rank
 
+
 def compute_unitary(X, Y, svd_rank):
     """
     Given the data matrices X and Y and the rank truncation svd_rank, solves
@@ -27,6 +28,7 @@ def compute_unitary(X, Y, svd_rank):
     atilde = Uyx.dot(Vyx.conj().T)
     return {"atilde": atilde}
 
+
 def compute_uppertriangular(X, Y):
     """
     Given the data matrices X and Y, solves for the best-fit
@@ -37,6 +39,7 @@ def compute_uppertriangular(X, Y):
     Ut = np.triu(Y.dot(Q.conj().T))
     A = np.linalg.lstsq(R.T, Ut.T, rcond=None)[0].T
     return {"A": A}
+
 
 def compute_diagonal(X, Y, svd_rank, manifold_opt, compute_A):
     """
@@ -52,15 +55,19 @@ def compute_diagonal(X, Y, svd_rank, manifold_opt, compute_A):
         ind_mat = np.ones((nx, 2), dtype=int)
     elif isinstance(manifold_opt, int) and manifold_opt > 0:
         ind_mat = manifold_opt * np.ones((nx, 2), dtype=int)
-    elif (isinstance(manifold_opt, tuple)
-            and len(manifold_opt) == 2
-            and np.all(np.array(manifold_opt) > 0)):
+    elif (
+        isinstance(manifold_opt, tuple)
+        and len(manifold_opt) == 2
+        and np.all(np.array(manifold_opt) > 0)
+    ):
         ind_mat = np.ones((nx, 2))
         ind_mat[:, 0] *= manifold_opt[0]
         ind_mat[:, 1] *= manifold_opt[1]
-    elif (isinstance(manifold_opt, np.ndarray)
-            and manifold_opt.shape == (nx, 2)
-            and np.all(manifold_opt > 0)):
+    elif (
+        isinstance(manifold_opt, np.ndarray)
+        and manifold_opt.shape == (nx, 2)
+        and np.all(manifold_opt > 0)
+    ):
         ind_mat = manifold_opt
     else:
         raise ValueError("manifold_opt is not in an allowable format.")
@@ -84,12 +91,14 @@ def compute_diagonal(X, Y, svd_rank, manifold_opt, compute_A):
 
     # Build A as a sparse matrix.
     A_sparse = sparse.coo_matrix(
-        (np.hstack(R), (np.hstack(I), np.hstack(J))), shape=(nx,nx))
+        (np.hstack(R), (np.hstack(I), np.hstack(J))), shape=(nx, nx)
+    )
     if compute_A:
         return {"A": A_sparse.toarray()}
     r = compute_rank(X, svd_rank)
     eigenvalues, modes = sparse.linalg.eigs(A_sparse, k=r)
     return {"eigenvalues": eigenvalues, "modes": modes}
+
 
 def compute_symmetric(X, Y, svd_rank, skew_symmetric=False):
     """
@@ -105,17 +114,18 @@ def compute_symmetric(X, Y, svd_rank, skew_symmetric=False):
         atilde = 1j * np.diag(np.diagonal(C).imag / s)
         for i in range(r):
             for j in range(i + 1, r):
-                atilde[i, j] = -s[i] * np.conj(C[j,i]) + s[j] * C[i,j]
-                atilde[i, j] /= (s[i] ** 2 + s[j] ** 2)
+                atilde[i, j] = -s[i] * np.conj(C[j, i]) + s[j] * C[i, j]
+                atilde[i, j] /= s[i] ** 2 + s[j] ** 2
         atilde += -atilde.conj().T - 1j * np.diag(np.diag(atilde.imag))
-    else: # symmetric
+    else:  # symmetric
         atilde = np.diag(np.diagonal(C).real / s)
         for i in range(r):
             for j in range(i + 1, r):
-                atilde[i, j] = s[i] * np.conj(C[j,i]) + s[j] * C[i,j]
-                atilde[i, j] /= (s[i] ** 2 + s[j] ** 2)
+                atilde[i, j] = s[i] * np.conj(C[j, i]) + s[j] * C[i, j]
+                atilde[i, j] /= s[i] ** 2 + s[j] ** 2
         atilde += atilde.conj().T - np.diag(np.diag(atilde.real))
     return {"atilde": atilde}
+
 
 def compute_toeplitz(X, Y, flipped=False):
     """
@@ -125,9 +135,9 @@ def compute_toeplitz(X, Y, flipped=False):
     """
     nx, nt = X.shape
 
-    if flipped: # hankel
+    if flipped:  # hankel
         J = np.fliplr(np.eye(nx))
-    else: # toeplitz
+    else:  # toeplitz
         J = np.eye(nx)
 
     # Define left and right matrices.
@@ -137,10 +147,18 @@ def compute_toeplitz(X, Y, flipped=False):
     B = B.conj().T / np.sqrt(2 * nx)
 
     # Compute AA* and B*B (fast computation of AA*).
-    AAt = ifft(fft(np.vstack([
-        np.hstack([np.eye(nx), np.zeros((nx, nx))]),
-        np.zeros((nx, 2 * nx))
-    ]), axis=0).T, axis=0).T
+    AAt = ifft(
+        fft(
+            np.vstack(
+                [
+                    np.hstack([np.eye(nx), np.zeros((nx, nx))]),
+                    np.zeros((nx, 2 * nx)),
+                ]
+            ),
+            axis=0,
+        ).T,
+        axis=0,
+    ).T
 
     # Solve linear system y = dL.
     y = np.diag(np.linalg.multi_dot([Am.conj().T, Y.conj(), B])).conj().T
@@ -156,6 +174,7 @@ def compute_toeplitz(X, Y, flipped=False):
 
     return {"A": A}
 
+
 def compute_circulant(X, Y, circulant_opt, svd_rank, compute_A):
     """
     Given the data matrices X and Y and the rank truncation svd_rank, solves
@@ -168,7 +187,7 @@ def compute_circulant(X, Y, circulant_opt, svd_rank, compute_A):
     fX = fft(X, axis=0)
     fY = fft(Y.conj(), axis=0)
     fX_norm = np.linalg.norm(fX, axis=1)
-    eigenvalues = np.divide(np.diag(fX.dot(fY.conj().T)), fX_norm ** 2)
+    eigenvalues = np.divide(np.diag(fX.dot(fY.conj().T)), fX_norm**2)
 
     if circulant_opt == "unitary":
         eigenvalues = np.exp(1j * np.angle(eigenvalues))
@@ -179,9 +198,11 @@ def compute_circulant(X, Y, circulant_opt, svd_rank, compute_A):
 
     # Remove the least important eigenvalues.
     r = compute_rank(X, svd_rank)
-    res = np.divide(np.diag(np.abs(fX.dot(fY.conj().T))),
-                    np.linalg.norm(fX.conj().T, 2, axis=0).T)
-    ind_exclude = np.argpartition(res, nx-r)[:nx-r]
+    res = np.divide(
+        np.diag(np.abs(fX.dot(fY.conj().T))),
+        np.linalg.norm(fX.conj().T, 2, axis=0).T,
+    )
+    ind_exclude = np.argpartition(res, nx - r)[: nx - r]
     eigenvalues[ind_exclude] = 0
 
     if compute_A:
@@ -191,6 +212,7 @@ def compute_circulant(X, Y, circulant_opt, svd_rank, compute_A):
     eigenvalues = np.delete(eigenvalues, ind_exclude)
     modes = np.delete(fft(np.eye(nx), axis=0), ind_exclude, axis=1)
     return {"eigenvalues": eigenvalues, "modes": modes}
+
 
 def compute_symtridiagonal(X, Y, svd_rank, compute_A):
     """
@@ -206,30 +228,38 @@ def compute_symtridiagonal(X, Y, svd_rank, compute_A):
 
     # Form the second and third blocks.
     T2e = np.diag(X[1:].dot(X[:-1].T))
-    T2 = sparse.spdiags([T2e, T2e], diags=[-1, 0], m=nx, n=nx-1)
+    T2 = sparse.spdiags([T2e, T2e], diags=[-1, 0], m=nx, n=nx - 1)
 
     # Form the final block.
     T3e = np.insert(np.diag(X[2:].dot(X[:-2].T)), 0, 0)
-    T3_offdiag = sparse.spdiags(T3e, diags=1, m=nx-1, n=nx-1)
-    T3 = sparse.spdiags(T1e[:-1] + T1e[1:], diags=0, m=nx-1, n=nx-1) \
-        + T3_offdiag + T3_offdiag.conj().T
+    T3_offdiag = sparse.spdiags(T3e, diags=1, m=nx - 1, n=nx - 1)
+    T3 = (
+        sparse.spdiags(T1e[:-1] + T1e[1:], diags=0, m=nx - 1, n=nx - 1)
+        + T3_offdiag
+        + T3_offdiag.conj().T
+    )
 
     # Form the symmetric block-tridiagonal matrix T = [T1  T2; T2* T3].
-    T = sparse.vstack([sparse.hstack([T1, T2]),
-                       sparse.hstack([T2.conj().T, T3])])
+    T = sparse.vstack(
+        [sparse.hstack([T1, T2]), sparse.hstack([T2.conj().T, T3])]
+    )
 
     # Solve for c in the system Tc = d.
     d = np.concatenate(
-        (np.diag(X.dot(Y.T)),
-         np.diag(X[:-1].dot(Y[1:].T)) + np.diag(X[1:].dot(Y[:-1].T))),
-         axis=None
+        (
+            np.diag(X.dot(Y.T)),
+            np.diag(X[:-1].dot(Y[1:].T)) + np.diag(X[1:].dot(Y[:-1].T)),
+        ),
+        axis=None,
     )
     c = sparse.linalg.lsqr(T.real, d.real)[0]
 
     # Form the solution matrix A.
-    A_sparse = sparse.diags(c[:nx]) \
-        + sparse.spdiags(np.insert(c[nx:], 0, 0), diags=1, m=nx, n=nx) \
+    A_sparse = (
+        sparse.diags(c[:nx])
+        + sparse.spdiags(np.insert(c[nx:], 0, 0), diags=1, m=nx, n=nx)
         + sparse.spdiags(np.append(c[nx:], 0), diags=-1, m=nx, n=nx)
+    )
 
     if compute_A:
         return {"A": A_sparse.toarray()}
@@ -237,6 +267,7 @@ def compute_symtridiagonal(X, Y, svd_rank, compute_A):
     r = compute_rank(X, svd_rank)
     eigenvalues, modes = sparse.linalg.eigs(A_sparse, k=r)
     return {"eigenvalues": eigenvalues, "modes": modes}
+
 
 def compute_BCCB(X, Y, block_shape, bccb_opt, svd_rank):
     """
@@ -246,6 +277,7 @@ def compute_BCCB(X, Y, block_shape, bccb_opt, svd_rank):
     block_shape and A will have the additional matrix property given by
     bccb_opt. Returns a dictionary containing A.
     """
+
     def fft_block2d(X):
         """
         Helper method that, given a 2D numpy array X, reshapes the
@@ -267,25 +299,29 @@ def compute_BCCB(X, Y, block_shape, bccb_opt, svd_rank):
     if not bccb_opt:
         for j in range(nx):
             d[j] = np.dot(fX[j], fY[j].conj()).conj()
-            d[j] /= np.linalg.norm(fX[j].conj(), 2)**2
+            d[j] /= np.linalg.norm(fX[j].conj(), 2) ** 2
     else:
         for j in range(nx):
-            dp = np.linalg.lstsq(
-                fX[j,:,None], fY[j,:,None], rcond=None)[0][0][0]
+            dp = np.linalg.lstsq(fX[j, :, None], fY[j, :, None], rcond=None)[0][
+                0
+            ][0]
             if bccb_opt == "unitary":
                 d[j] = np.exp(1j * np.angle(dp))
             elif bccb_opt == "symmetric":
                 d[j] = dp.real
-            else: # skewsymmetric
+            else:  # skewsymmetric
                 d[j] = 1j * dp.imag
 
     # Remove the least important eigenvalues.
     r = compute_rank(X, svd_rank)
-    res = np.divide(np.diag(np.abs(fX.dot(fY.conj().T))),
-                    np.linalg.norm(fX.conj().T, 2, axis=0).T)
-    d[np.argpartition(res, nx-r)[:nx-r]] = 0
+    res = np.divide(
+        np.diag(np.abs(fX.dot(fY.conj().T))),
+        np.linalg.norm(fX.conj().T, 2, axis=0).T,
+    )
+    d[np.argpartition(res, nx - r)[: nx - r]] = 0
     A = fft_block2d(np.multiply(d.conj(), fft_block2d(np.eye(nx)).conj().T).T)
     return {"A": A}
+
 
 def compute_BC(X, Y, block_shape, tridiagonal_blocks=False):
     """
@@ -294,6 +330,7 @@ def compute_BC(X, Y, block_shape, tridiagonal_blocks=False):
     shape block_shape and will be tridiagonal if tridiagonal_blocks is True.
     Returns a dictionary containing A.
     """
+
     def fft_block(X):
         """
         Helper method that, given a 2D numpy array X, reshapes the
@@ -315,8 +352,11 @@ def compute_BC(X, Y, block_shape, tridiagonal_blocks=False):
     for j in range(block_shape[1]):
         ls = (j * block_shape[0]) + np.arange(block_shape[0])
         if tridiagonal_blocks:
-            d.append(compute_diagonal(fX[ls], fY[ls], svd_rank=-1,
-                                      manifold_opt=2, compute_A=True)["A"])
+            d.append(
+                compute_diagonal(
+                    fX[ls], fY[ls], svd_rank=-1, manifold_opt=2, compute_A=True
+                )["A"]
+            )
         else:
             d.append(np.linalg.lstsq(fX[ls].T, fY[ls].T, rcond=None)[0].T)
 

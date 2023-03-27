@@ -80,12 +80,25 @@ class SpDMD(DMD):
         algorithm are deleted after the termination of a call to :func:`fit`.
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=True, opt=False,
-                 rescale_mode=None, forward_backward=False, sorted_eigs=False,
-                 abs_tolerance=1.0e-6, rel_tolerance=1.0e-4,
-                 max_iterations=10000, rho=1, gamma=10, verbose=True,
-                 enforce_zero=True, release_memory=True,
-                 zero_absolute_tolerance=1.e-12):
+    def __init__(
+        self,
+        svd_rank=0,
+        tlsq_rank=0,
+        exact=True,
+        opt=False,
+        rescale_mode=None,
+        forward_backward=False,
+        sorted_eigs=False,
+        abs_tolerance=1.0e-6,
+        rel_tolerance=1.0e-4,
+        max_iterations=10000,
+        rho=1,
+        gamma=10,
+        verbose=True,
+        enforce_zero=True,
+        release_memory=True,
+        zero_absolute_tolerance=1.0e-12,
+    ):
         super().__init__(
             svd_rank=svd_rank,
             tlsq_rank=tlsq_rank,
@@ -256,8 +269,10 @@ class SpDMD(DMD):
 
         # at the beginning of each iteration check if ADMM can stop (because of
         # loop_condition or number of iterations)
-        while (not self._loop_condition(alpha, beta, lmbd, old_beta) and
-               i < self._max_iterations):
+        while (
+            not self._loop_condition(alpha, beta, lmbd, old_beta)
+            and i < self._max_iterations
+        ):
             i += 1
 
             old_beta = beta

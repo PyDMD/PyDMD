@@ -1,8 +1,21 @@
 """
 PyDMD init
 """
-__all__ = ['dmdbase', 'dmd', 'fbdmd', 'mrdmd', 'cdmd', 'hodmd', 'dmdc',
-           'optdmd', 'hankeldmd', 'rdmd', 'havok', 'bopdmd', 'pidmd']
+__all__ = [
+    "dmdbase",
+    "dmd",
+    "fbdmd",
+    "mrdmd",
+    "cdmd",
+    "hodmd",
+    "dmdc",
+    "optdmd",
+    "hankeldmd",
+    "rdmd",
+    "havok",
+    "bopdmd",
+    "pidmd",
+]
 
 
 from .meta import *

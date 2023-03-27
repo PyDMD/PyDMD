@@ -65,10 +65,19 @@ class HODMD(HankelDMD):
     :type svd_rank: int or float
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, exact=False, opt=False,
-                 rescale_mode=None, forward_backward=False, d=1,
-                 sorted_eigs=False, reconstruction_method="first",
-                 svd_rank_extra=0,):
+    def __init__(
+        self,
+        svd_rank=0,
+        tlsq_rank=0,
+        exact=False,
+        opt=False,
+        rescale_mode=None,
+        forward_backward=False,
+        d=1,
+        sorted_eigs=False,
+        reconstruction_method="first",
+        svd_rank_extra=0,
+    ):
         super().__init__(
             svd_rank=svd_rank,
             tlsq_rank=tlsq_rank,
@@ -128,9 +137,12 @@ class HODMD(HankelDMD):
         space_dim = snapshots.shape[0]
         if space_dim == 1:
             svd_rank_extra = -1
-            warnings.warn((
-                f"The parameter 'svd_rank_extra={self._svd_rank_extra}' has "
-                "been ignored because the given system is a scalar function"))
+            warnings.warn(
+                (
+                    f"The parameter 'svd_rank_extra={self._svd_rank_extra}' has "
+                    "been ignored because the given system is a scalar function"
+                )
+            )
         else:
             svd_rank_extra = self._svd_rank_extra
         self.U_extra, _, _ = compute_svd(snapshots, svd_rank_extra)

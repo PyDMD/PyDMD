@@ -18,20 +18,21 @@ from pydmd import DMD
 # - $f_2(x, t) = (1-e^{1-\frac{x^2}{6}})e^{(1.3i)t}$
 # - $f_3(x, t) = (-\frac{x^2}{50} + 1)1.1i^{-2t}$
 
-def create_dataset(x_dim, t_dim):
-    def f1(x,t): 
-        return np.exp(-x**2*.2)*np.cos(4*x)*np.exp(2.3j*t)
 
-    def f2(x,t):
-        return (1-np.exp(1-x**2/6)) * np.exp(1.3j*t)
+def create_dataset(x_dim, t_dim):
+    def f1(x, t):
+        return np.exp(-(x**2) * 0.2) * np.cos(4 * x) * np.exp(2.3j * t)
+
+    def f2(x, t):
+        return (1 - np.exp(1 - x**2 / 6)) * np.exp(1.3j * t)
 
     def f3(x, t):
-        return (-.02*x**2 + 1) * (1.1j**(-2*t))
+        return (-0.02 * x**2 + 1) * (1.1j ** (-2 * t))
 
     x = np.linspace(-5, 5, x_dim)
-    t = np.linspace(0, 4*np.pi, t_dim)
+    t = np.linspace(0, 4 * np.pi, t_dim)
 
-    xgrid, tgrid = np.meshgrid(x,t)
+    xgrid, tgrid = np.meshgrid(x, t)
 
     X1 = f1(xgrid, tgrid)
     X2 = f2(xgrid, tgrid)
@@ -52,12 +53,16 @@ plt.show()
 # - *uniform*: a matrix with dimension (`nsnaps`, `ndim`) where the elements are randomly generated with uniform distribution between 0 and 1;
 # - *sparse*: a random sparse matrix with dimension (`nsnaps`, `ndim`);
 # - *sample*: a matrix with dimension (`nsnaps`, `ndim`) where each row contains an element equal to 1 and all the other elements are null.
-# 
+#
 # It is sufficient to pass the right string when the new object is created to choose the matrix. Otherwise it is possible to use a custom matrix for the compression, as we show below.
 
 snapshots_matrix = X.T
-random_matrix = np.random.permutation(snapshots_matrix.shape[0] * snapshots_matrix.shape[1])
-random_matrix = random_matrix.reshape(snapshots_matrix.shape[1], snapshots_matrix.shape[0])
+random_matrix = np.random.permutation(
+    snapshots_matrix.shape[0] * snapshots_matrix.shape[1]
+)
+random_matrix = random_matrix.reshape(
+    snapshots_matrix.shape[1], snapshots_matrix.shape[0]
+)
 
 compression_matrix = random_matrix / np.linalg.norm(random_matrix)
 
@@ -80,20 +85,20 @@ plt.show()
 dmd = DMD(svd_rank=3, exact=True)
 dmd.fit(snapshots_matrix)
 
-dmd_error = np.linalg.norm(snapshots_matrix-dmd.reconstructed_data)
-cdmd_error = np.linalg.norm(snapshots_matrix-cdmd.reconstructed_data)
+dmd_error = np.linalg.norm(snapshots_matrix - dmd.reconstructed_data)
+cdmd_error = np.linalg.norm(snapshots_matrix - cdmd.reconstructed_data)
 print("DMD error: {}".format(dmd_error))
 print("CDMD error: {}".format(cdmd_error))
 
-plt.figure(figsize=(16,8))
+plt.figure(figsize=(16, 8))
 plt.subplot(1, 3, 1)
-plt.title('Original snapshots')
+plt.title("Original snapshots")
 plt.pcolor(xgrid, tgrid, snapshots_matrix.real.T)
 plt.subplot(1, 3, 2)
-plt.title('Reconstructed with DMD')
+plt.title("Reconstructed with DMD")
 plt.pcolor(xgrid, tgrid, dmd.reconstructed_data.real.T)
 plt.subplot(1, 3, 3)
-plt.title('Reconstructed with CDMD')
+plt.title("Reconstructed with CDMD")
 plt.pcolor(xgrid, tgrid, cdmd.reconstructed_data.real.T)
 plt.show()
 
@@ -105,33 +110,39 @@ time_cdmd = []
 dim = []
 
 niter = 4
-ndims = 10 ** np.arange(2, 2+niter)
+ndims = 10 ** np.arange(2, 2 + niter)
 nsnaps = [100] * niter
 for nsnap, ndim in zip(nsnaps, ndims):
     snapshots_matrix = create_dataset(ndim, nsnap)[-1].T
     dim.append(snapshots_matrix.shape[0])
-    random_matrix = np.random.permutation(snapshots_matrix.shape[0] * snapshots_matrix.shape[1])
-    random_matrix = random_matrix.reshape(snapshots_matrix.shape[1], snapshots_matrix.shape[0])
+    random_matrix = np.random.permutation(
+        snapshots_matrix.shape[0] * snapshots_matrix.shape[1]
+    )
+    random_matrix = random_matrix.reshape(
+        snapshots_matrix.shape[1], snapshots_matrix.shape[0]
+    )
 
     compression_matrix = random_matrix / np.linalg.norm(random_matrix)
-    
+
     t0 = time.time()
     DMD(svd_rank=-1, exact=True).fit(snapshots_matrix)
     t1 = time.time()
-    time_dmd.append(t1-t0)
-    
-    t0 = time.time()
-    CDMD(svd_rank=-1, compression_matrix=compression_matrix).fit(snapshots_matrix)
-    t1 = time.time()
-    time_cdmd.append(t1-t0)
+    time_dmd.append(t1 - t0)
 
-plt.figure(figsize=(10,5))
-plt.plot(dim, time_dmd, 'ro--', label='exact dmd')
-plt.plot(dim, time_cdmd, 'bo--', label='compressed dmd')
+    t0 = time.time()
+    CDMD(svd_rank=-1, compression_matrix=compression_matrix).fit(
+        snapshots_matrix
+    )
+    t1 = time.time()
+    time_cdmd.append(t1 - t0)
+
+plt.figure(figsize=(10, 5))
+plt.plot(dim, time_dmd, "ro--", label="exact dmd")
+plt.plot(dim, time_cdmd, "bo--", label="compressed dmd")
 plt.legend()
-plt.ylabel('Seconds')
-plt.xlabel('Snapshots dimension')
+plt.ylabel("Seconds")
+plt.xlabel("Snapshots dimension")
 plt.show()
 
 
-# The input compression, in this case, halves the computational time, with just a negligible quality loss. Try this technique with your biggest datasets and share with us your results! 
+# The input compression, in this case, halves the computational time, with just a negligible quality loss. Try this technique with your biggest datasets and share with us your results!
