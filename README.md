@@ -13,8 +13,8 @@
     <a href="https://badge.fury.io/py/pydmd"  target="_blank">
         <img alt="PyPI version" src="https://badge.fury.io/py/pydmd.svg">
     </a>
-    <a href="https://github.com/mathLab/PyDMD/actions/workflows/ci.yml" target="_blank">
-        <img alt="Build Status" src="https://github.com/mathLab/PyDMD/actions/workflows/ci.yml/badge.svg">
+    <a href="https://github.com/mathLab/PyDMD/actions/workflows/deploy_after_push.yml" target="_blank">
+        <img alt="CI Status" src="https://github.com/mathLab/PyDMD/actions/workflows/deploy_after_push.yml/badge.svg">
     </a>
     <a href="https://www.codacy.com/gh/mathLab/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Coverage">
       <img src="https://app.codacy.com/project/badge/Coverage/c36adbea2e4a44eb8c0e4505b75e8245"/>
@@ -182,59 +182,17 @@ Here there is a list of the scientific works involving **PyDMD** you can consult
 
 * Tezzele. *Data-driven parameter and model order reduction for industrial optimisation problems with applications in naval engineering*, PhD Thesis. 2021. [[Iris](http://hdl.handle.net/20.500.11767/124569)].
 
-## Authors and contributors
-**PyDMD** is currently developed and mantained at [SISSA mathLab](http://mathlab.sissa.it/) by
-* [Nicola Demo](mailto:demo.nicola@gmail.com)
-* [Marco Tezzele](mailto:marcotez@gmail.com)
-* [Francesco Andreuzzi](mailto:andreuzzi.francesco@gmail.com)
+## Contributing
+We warmly thank all the contributors that have supported PyDMD! The financial support of the [AROMA-CFD ERC CoG project](https://people.sissa.it/~grozza/aroma-cfd/) project is also gratefully acknowledged.
+
+Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIBUTING.md) and the [Tutorials for Developers](tutorials#tutorials-for-developers) before starting to play!
 
 
-under the supervision of [Prof. Gianluigi Rozza](mailto:gianluigi.rozza@sissa.it).
+<a href="https://github.com/mathLab/PyDMD/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=mathLab/PyDMD" />
+</a>
 
-Contact us by email for further information or questions about **PyDMD**, or suggest pull requests. Contributions improving either the code or the documentation are welcome!
-
-
-## How to contribute
-We'd love to accept your patches and contributions to this project. There are just a few small guidelines you need to follow.
-
-### Submitting a patch
-
-  1. It's generally best to start by opening a new issue describing the bug or
-     feature you're intending to fix.  Even if you think it's relatively minor,
-     it's helpful to know what people are working on.  Mention in the initial
-     issue that you are planning to work on that bug or feature so that it can
-     be assigned to you.
-
-  2. Follow the normal process of [forking][] the project, and setup a new
-     branch to work in.  It's important that each group of changes be done in
-     separate branches in order to ensure that a pull request only includes the
-     commits related to that bug or feature.
-
-  3. To ensure properly formatted code, please run `black` on the files you edited.
-     You can install `black` with `pip3 install black`.
-     You should also run [pylint][] over your code. It's not strictly necessary
-     that your code be completely "lint-free", but this will help you find common
-     style issues.
-
-  4. Any significant changes should almost always be accompanied by tests.  The
-     project already has good test coverage, so look at some of the existing
-     tests if you're unsure how to go about it. We're using [coveralls][] that
-     is an invaluable tools for seeing which parts of your code aren't being
-     exercised by your tests.
-
-  5. Do your best to have [well-formed commit messages][] for each change.
-     This provides consistency throughout the project, and ensures that commit
-     messages are able to be formatted properly by various git tools.
-
-  6. Finally, push the commits to your fork and submit a [pull request][]. Please,
-     remember to rebase properly in order to maintain a clean, linear git history.
-
-[forking]: https://help.github.com/articles/fork-a-repo
-[pylint]: https://www.pylint.org/
-[coveralls]: https://coveralls.io
-[well-formed commit messages]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
-[pull request]: https://help.github.com/articles/creating-a-pull-request
-
+Made with [contrib.rocks](https://contrib.rocks).
 
 ## License
 
