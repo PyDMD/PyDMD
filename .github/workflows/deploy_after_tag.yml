@@ -1,4 +1,5 @@
-name: "Testing Pull Request"
+# deploy_after_tag.yml
+name: "Deploy after Tag"
 
 on:
   push:
@@ -9,7 +10,7 @@ jobs:
   prepare_matrix: ##############################################################################
     runs-on: ubuntu-latest
     outputs:
-       matrix ${{ steps.setmatrix.outputs.matrix }}
+       matrix: ${{ steps.setmatrix.outputs.matrix }}
 
     steps:
         - uses: actions/checkout@v2
