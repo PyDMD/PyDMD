@@ -1022,6 +1022,8 @@ class BOPDMD(DMDBase):
         # Fit the data.
         self._b = self.operator.compute_operator(snp.T, self._time)
 
+        return self
+
     def forecast(self, t):
         """
         Predict the output X given the input time t using the fitted DMD model.
