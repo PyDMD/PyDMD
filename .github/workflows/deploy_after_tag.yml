@@ -56,15 +56,16 @@ jobs:
       matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix) }}
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.7
+    - name: Set up Python
       uses: actions/setup-python@v4.5.0
       with:
-        python-version: 3.7
+        python-version: ${{ matrix.python-version }}
     - name: Install build
-      run: >-
-        pip install build --user
+      run: |
+        pip install --upgrade pip
+        pip install build
     - name: Build a binary wheel and a source tarball
-      run: >-
+      run: |
         build --sdist --wheel --outdir dist/ .
     - name: Publish distribution to PyPI
       if: startsWith(github.ref, 'refs/tags')
