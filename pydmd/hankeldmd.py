@@ -82,6 +82,7 @@ class HankelDMD(DMDBase):
             sorted_eigs=sorted_eigs,
         )
         self._d = d
+        self._ho_snapshots = None
 
         if isinstance(reconstruction_method, list):
             if len(reconstruction_method) != d:
@@ -305,6 +306,16 @@ class HankelDMD(DMDBase):
     @property
     def svd_rank(self):
         return self._sub_dmd.svd_rank
+    
+    @property
+    def ho_snapshots(self):
+        """
+        Get the time-delay data matrix.
+
+        :return: the matrix that contains the time-delayed data.
+        :rtype: numpy.ndarray
+        """
+        return self._ho_snapshots
 
     @property
     def modes_activation_bitmask(self):
@@ -361,10 +372,10 @@ class HankelDMD(DMDBase):
 Expected at least d."""
             raise ValueError(msg.format(self._d))
 
-        ho_snapshots = Snapshots(
+        self._ho_snapshots = Snapshots(
             self._pseudo_hankel_matrix(self.snapshots)
         ).snapshots
-        self._sub_dmd.fit(ho_snapshots)
+        self._sub_dmd.fit(self._ho_snapshots)
 
         # Default timesteps
         self._set_initial_time_dictionary(
