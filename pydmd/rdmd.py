@@ -42,7 +42,7 @@ def compute_rank(X, svd_rank=0):
     elif 0 < svd_rank < 1:
         cumulative_energy = np.cumsum(s**2 / (s**2).sum())
         rank = np.searchsorted(cumulative_energy, svd_rank) + 1
-    elif svd_rank >= 1 and isinstance(svd_rank, int):
+    elif svd_rank >= 1 and isinstance(svd_rank, (int, np.integer)):
         rank = min(svd_rank, U.shape[1])
     else:
         rank = min(X.shape)
