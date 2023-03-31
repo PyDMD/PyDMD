@@ -888,6 +888,28 @@ class BOPDMD(DMDBase):
         t_omega = np.exp(np.outer(self.eigs, self._time))
         return np.diag(self.amplitudes).dot(t_omega)
 
+    @property
+    def amplitudes_std(self):
+        """
+        Get the amplitudes standard deviation.
+
+        :return: amplitudes standard deviation.
+        :rtype: numpy.ndarray
+        """
+        return self.operator.amplitudes_std
+
+
+    @property
+    def eigenvalues_std(self):
+        """
+        Get the eigenvalues standard deviation.
+
+        :return: eigenvalues standard deviation.
+        :rtype: numpy.ndarray
+        """
+        return self.operator.eigenvalues_std
+
+
     def print_varpro_opts(self):
         """
         Prints a formatted information string that displays all chosen

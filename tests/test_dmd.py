@@ -219,6 +219,19 @@ def test_dmd_time_4():
     )
     np.testing.assert_almost_equal(dmd.dynamics, expected_data, decimal=6)
 
+def test_dmd_time_5():
+    """
+    Let us check that the timestep is actually reduced and not rounded to
+    the closest integer.
+    """
+    dmd = DMD(svd_rank=3)
+    dmd.fit(X=sample_data)
+    dmd.dmd_time["t0"] = 5
+    dmd.dmd_time["tend"] = 20
+    dmd.dmd_time["dt"] = 0.5
+    reconstruction = dmd.reconstructed_data
+    assert np.linalg.norm(reconstruction[0] - reconstruction[1]) != 0
+
 
 # we check that modes are the same vector multiplied by a coefficient
 # when we rescale
