@@ -601,6 +601,8 @@ def plot_summary(
         index_modes = list(range(3))
     elif not isinstance(index_modes, list) or len(index_modes) > 3:
         raise ValueError("index_modes must be a list of length at most 3.")
+    elif np.any(np.array(index_modes) >= 50):
+        raise ValueError("Cannot view past the 50th mode.")
 
     if mode_colors is None:
         mode_colors = ["r", "b", "g", "gray"]
