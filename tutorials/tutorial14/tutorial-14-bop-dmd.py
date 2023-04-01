@@ -22,10 +22,10 @@
 # ## Methods compared
 # 
 # Three methods are compared:
-# 1) The exact DMD with amplitudes calculated as in the optimal closed-form solution from Heas and Herzet (2016)
-# 2) The optimized DMD from Askham and Kutz (2018; note the namespace conflict!)
+# 1) The total least-squares DMD with optimal amplitudes.
+# 2) The optimized DMD from Askham and Kutz (2018; note the namespace conflict with Heas and Herzet's (2016) optimal solution!)
 # 3) The BOP-DMD
-# 
+#  
 # Method (1) comes directly from Tutorial 2.
 # 
 # ## Citations
@@ -440,9 +440,3 @@ plt.show()
 # 1) How do other methods designed to handle noisy data (e.g., the forward-backward DMD) compare to the BOP-DMD and the exact DMD with the `tlsq_rank` keyword?
 # 
 # 2) What happens if you change the noise? Consider types of noise commonly present in real data sets such as noise that is not uniform in time or space or non-white noise.
-
-# In[ ]:
-
-
-
-
