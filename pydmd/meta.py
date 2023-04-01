@@ -15,7 +15,7 @@ __title__ = "pydmd"
 __author__ = "Nicola Demo, Marco Tezzele, Francesco Andreuzzi"
 __copyright__ = "Copyright 2017-2023, PyDMD contributors"
 __license__ = "MIT"
-__version__ = "0.4.1"
+__version__ = "0.4.1.post2304"
 __mail__ = (
     "demo.nicola@gmail.com, marcotez@gmail.com, andreuzzi.francesco@gmail.com"
 )
