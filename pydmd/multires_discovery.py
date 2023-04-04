@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 class multi_res_discovery:
     def __init__(
             self,
-            window_length,
-            n_components,
-            step_size,
+            window_length=None,
+            step_size=None,
+            n_components=None,
             svd_rank=None,
             global_svd=True,
             initialize_artificially=False,
@@ -181,7 +181,11 @@ class multi_res_discovery:
             raise ValueError("You need to call fit before")
         return self._time_means_array
 
-    def fit(self, data, time, verbose=False, corner_sharpness=None):
+    def fit(self, data, time, window_length, step_size, verbose=False,
+            corner_sharpness=None):
+        self._window_length = window_length
+        self._step_size = step_size
+
         self._n_time_steps, self._n_data_vars = self._data_shape(data)
         self._n_slides = self.build_windows(data)
         self._svd_rank = self._compute_svd_rank(data, svd_rank=self._svd_rank)
@@ -195,8 +199,8 @@ class multi_res_discovery:
         self._omega_array = np.zeros((self._n_slides, self._svd_rank), np.complex128)
         self._amplitudes_array = np.zeros((self._n_slides, self._svd_rank), np.complex128)
         self._window_means_array = np.zeros((self._n_slides, self._n_data_vars))
-        self._t_starts_array = np.zeros((self._n_slides))
-        self._time_means_array = np.zeros((self._n_slides))
+        self._t_starts_array = np.zeros(self._n_slides)
+        self._time_means_array = np.zeros(self._n_slides)
 
         # Round the corners of the window to shrink real components.
         lv_kern = self.calculate_lv_kern(self._window_length,
@@ -260,7 +264,8 @@ class multi_res_discovery:
             self._amplitudes_array[k, :] = optdmd.amplitudes
             self._window_means_array[k, :] = c.flatten()
 
-    def cluster_omega(self, omega_array, kmeans_kwargs=None):
+    def cluster_omega(self, omega_array, n_components, kmeans_kwargs=None):
+        self._n_components = n_components
         omega_rshp = omega_array.reshape(self._n_slides * self._svd_rank)
         omega_squared = (np.conj(omega_rshp) * omega_rshp).astype('float')
 
@@ -297,7 +302,7 @@ class multi_res_discovery:
                     omega_classes == component,
                     omega_squared.reshape((self._n_slides, self._svd_rank)), np.nan
                 ),
-                color=colors[ncomponent]
+                color=colors[ncomponent % len(colors)]
             )
         ax.set_ylabel('$|\omega|^{2}$')
         ax.set_xlabel('Time')
@@ -308,7 +313,7 @@ class multi_res_discovery:
     def global_reconstruction(self, ):
         # Container for the reconstructed time series
         glbl_reconstruction = np.zeros(
-            (self._svd_rank, self._n_time_steps)).astype('complex128')
+            (self._n_data_vars, self._n_time_steps)).astype('complex128')
 
         # Count the number of windows contributing to each step
         xn = np.zeros(self._n_time_steps)
@@ -354,7 +359,7 @@ class multi_res_discovery:
         """
 
         # Each individual reconstructed window
-        xr_sep = np.zeros((self._n_components, self._svd_rank, self._n_time_steps))
+        xr_sep = np.zeros((self._n_components, self._n_data_vars, self._n_time_steps))
 
         # Track the total contribution from all windows to each time step
         xn = np.zeros(self._n_time_steps)
@@ -385,7 +390,7 @@ class multi_res_discovery:
             t = t - t_start
 
             xr_sep_window = np.zeros(
-                (self._n_components, self._svd_rank, self._window_length))
+                (self._n_components, self._n_data_vars, self._window_length))
             for j in np.unique(omega_classes):
                 xr_sep_window[j, :, :] = np.linalg.multi_dot(
                     [
