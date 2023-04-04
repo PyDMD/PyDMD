@@ -15,16 +15,16 @@ PyDMD is a Python package that uses Dynamic Mode Decomposition for a data-driven
 
 Dynamic Mode Decomposition (DMD) is a model reduction algorithm developed by Schmid (see "Dynamic mode decomposition of numerical and experimental data"). Since then has emerged as a powerful tool for analyzing the dynamics of nonlinear systems. DMD relies only on the high-fidelity measurements, like experimental data and numerical simulations, so it is an equation-free algorithm. Its popularity is also due to the fact that it does not make any assumptions about the underlying system. See Kutz ("Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems") for a comprehensive overview of the algorithm and its connections to the Koopman-operator analysis, initiated in Koopman ("Hamiltonian systems and transformation in Hilbert space"), along with examples in computational fluid dynamics.
 
-In the last years many variants arose, such as multiresolution DMD, compressed DMD, forward backward DMD, and higher order DMD among others, in order to deal with noisy data, big dataset, or spurius data for example.
+In the last years many variants arose, such as multiresolution DMD, compressed DMD, forward backward DMD, higher order DMD, and physics-informed DMD among others, in order to deal with noisy data, big dataset, or spurius data for example. We implemented in Python the majority of the DMD extensions currently present in the literature with a user friendly interface. We also provide many tutorials that show all the characteristics of the software.
 
-In the PyDMD package we implemented in Python the majority of the variants mentioned above with a user friendly interface. We also provide many tutorials that show all the characteristics of the software, ranging from the basic use case to the most sofisticated one allowed by the package.
-
-The research in the field is growing both in computational fluid dynamic and in structural mechanics, due to the equation-free nature of the model.
+.. image:: _static/pydmd_capabilities.png
+   :width: 700 px
+   :align: center
 
 
 Installation
 --------------------
-PyDMD requires requires numpy, scipy, matplotlib, sphinx (for the documentation). The code is compatible with Python 2.7 and Python 3.6. It can be installed using pip or directly from the source code.
+PyDMD requires requires numpy, scipy, matplotlib, future, sphinx (for the documentation) and pytest (for local test). The code is tested for Python 3, while compatibility of Python 2 is not guaranteed anymore. It can be installed using pip or directly from the source code.
 
 Installing via PIP
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -50,14 +50,12 @@ The official distribution is on GitHub, and you can clone the repository using
 To install the package just type:
 ::
 
-    python setup.py install
+    pip install -e .
 
-To uninstall the package you have to rerun the installation and record the installed files in order to remove them:
-
+To uninstall the package type:
 ::
 
-    python setup.py install --record installed_files.txt
-    cat installed_files.txt | xargs rm -rf
+    pip uninstall pydmd
 
 
 Developer's Guide
