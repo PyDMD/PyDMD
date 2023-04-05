@@ -8,6 +8,7 @@ pydmd\.egg-info/
 .idea/*
 
 tutorials/\.ipynb_checkpoints/
+**/SegTrackv2.zip
 
 # Vscode
 .vscode/*

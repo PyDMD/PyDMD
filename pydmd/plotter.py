@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pydmd import MrDMD
+from .hankeldmd import HankelDMD
 from .bopdmd import BOPDMD
 
 mpl.rcParams["figure.max_open_warning"] = 0
@@ -600,6 +601,8 @@ def plot_summary(
         index_modes = list(range(3))
     elif not isinstance(index_modes, list) or len(index_modes) > 3:
         raise ValueError("index_modes must be a list of length at most 3.")
+    elif np.any(np.array(index_modes) >= 50):
+        raise ValueError("Cannot view past the 50th mode.")
 
     if mode_colors is None:
         mode_colors = ["r", "b", "g", "gray"]
@@ -614,25 +617,30 @@ def plot_summary(
         lead_eigs = np.exp(lead_eigs)
 
     # Compute the singular values of the data matrix.
-    s = np.linalg.svd(dmd.snapshots, full_matrices=False, compute_uv=False)
+    if isinstance(dmd, HankelDMD):
+        # Use time-delay data matrix to compute singular values.
+        snp = dmd.ho_snapshots
+    else:
+        # Use input data matrix to compute singular values.
+        snp = dmd.snapshots
+    s = np.linalg.svd(snp, full_matrices=False, compute_uv=False)
     # Compute the percent of data variance captured by each singular value.
     s_var = s * (100 / np.sum(s))
-    # Only plot (at most) 50 of the leading singular values.
-    s_var = s_var[:50]
 
     # Generate the summarizing plot.
     fig, (eig_axes, mode_axes, dynamics_axes) = plt.subplots(
         3, 3, figsize=figsize, dpi=200
     )
 
-    # Plot 1: Plot the singular value spectrum.
+    # Plot 1: Plot the singular value spectrum (plot at most 50 values).
+    s_var_plot = s_var[:50]
     eig_axes[0].set_title("Singular Values")
     eig_axes[0].set_ylabel("% variance")
-    t = np.arange(len(s_var)) + 1
-    eig_axes[0].plot(t, s_var, "o", c=mode_colors[-1], ms=8, mec="k")
+    t = np.arange(len(s_var_plot)) + 1
+    eig_axes[0].plot(t, s_var_plot, "o", c=mode_colors[-1], ms=8, mec="k")
     for i, idx in enumerate(index_modes):
         eig_axes[0].plot(
-            t[idx], s_var[idx], "o", c=mode_colors[i], ms=8, mec="k"
+            t[idx], s_var_plot[idx], "o", c=mode_colors[i], ms=8, mec="k"
         )
 
     # Plots 2-3: Plot the eigenvalues (discrete-time and continuous-time).
@@ -641,8 +649,8 @@ def plot_summary(
     ms_vals = max_marker_size * np.sqrt(s_var / s_var[0])
     for i, ax in enumerate(eig_axes[1:]):
         # Plot the complex plane axes.
-        ax.axvline(x=0, c="k")
-        ax.axhline(y=0, c="k")
+        ax.axvline(x=0, c="k", lw=1)
+        ax.axhline(y=0, c="k", lw=1)
         ax.set_xlabel("Real")
         ax.set_ylabel("Imag")
         ax.axis("equal")
@@ -670,7 +678,7 @@ def plot_summary(
         ax.set_title(f"Mode {idx + 1}", c=mode_colors[i], fontsize=15)
         # Plot modes in 1D.
         if len(snapshots_shape) == 1:
-            ax.plot(lead_modes[:, idx].real, c="k")
+            ax.plot(lead_modes[:, idx].real, c="tab:orange")
         # Plot modes in 2D.
         else:
             mode = lead_modes[:, idx].reshape(*snapshots_shape, order=order)
@@ -679,10 +687,8 @@ def plot_summary(
             im = ax.imshow(mode.real, vmax=vmax, vmin=-vmax, cmap="bwr")
             # Align the colorbar with the plotted image.
             divider = make_axes_locatable(ax)
-            cax = divider.append_axes("right", size="5%", pad=0.05)
+            cax = divider.append_axes("right", size="3%", pad=0.05)
             fig.colorbar(im, cax=cax)
-        ax.set_xticks([])
-        ax.set_yticks([])
 
     # Plots 7-9: Plot the DMD mode dynamics.
     for i, idx in enumerate(index_modes):
