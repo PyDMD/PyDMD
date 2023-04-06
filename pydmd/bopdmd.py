@@ -1034,7 +1034,7 @@ class BOPDMD(DMDBase):
             raise ValueError(msg)
 
         # Compute the rank of the fit.
-        self._svd_rank = compute_rank(self.snapshots, self._svd_rank)
+        self._svd_rank = int(compute_rank(self.snapshots, self._svd_rank))
 
         # Set/check the projection basis.
         if self._proj_basis is None and self._use_proj:
