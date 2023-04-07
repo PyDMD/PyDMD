@@ -295,9 +295,10 @@ class multi_res_discovery:
             self._window_means_array[k, :] = c.flatten()
 
             # Reset optdmd between iterations
-            optdmd._svd_rank = self._svd_rank
-            optdmd._proj_basis = self._pydmd_kwargs['proj_basis']
-            optdmd._init_alpha = self._init_alpha
+            if not self._global_svd:
+                optdmd._svd_rank = self._svd_rank
+                optdmd._proj_basis = self._pydmd_kwargs['proj_basis']
+                optdmd._init_alpha = self._init_alpha
 
     def cluster_omega(self, omega_array, n_components, kmeans_kwargs=None):
         self._n_components = n_components
