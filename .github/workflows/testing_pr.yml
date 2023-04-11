@@ -73,14 +73,16 @@ jobs:
         
     - name: Run black formatter on PyDMD source code
       run: |
-        if [[ $(black --check pydmd/) -ne "0" ]]; then
+        black --check pydmd/
+        if [[ $? -ne "0" ]]; then
           echo "Source code needs re-formatting"
           exit 1
         fi
         
     - name: Run black formatter on PyDMD tutorials
       run: |
-        if [[ $(black --check tutorials/) -ne "0" ]]; then
+        black --check tutorials/
+        if [[ $? -ne "0" ]]; then
           echo "Tutorials need re-formatting"
           exit 1
         fi
