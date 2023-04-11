@@ -4,36 +4,36 @@
 # # PyDMD
 
 # ## Tutorial 14: Demonstrating the optDMD and BOP-DMD
-#
+# 
 # In this tutorial we go over the Bagging-Optimized Dynamic Mode Decomposition (BOP-DMD) and Optimized Dynamic Mode Decomposition (optDMD) methods. The tutorial is set up exactly as in [Tutorial 2](https://github.com/mathLab/PyDMD/blob/master/tutorials/tutorial2/tutorial-2-adv-dmd.ipynb) to provide a direct comparison between methods.
-#
+# 
 # Note, that there is a namespace conflict with `optimized DMD`. The optDMD we refer to in this tutorial is the one by Ashkham and Kutz (2018). We differentiate the optDMD of Ashkham and Kutz from the exact DMD with the optimal closed-form solution from Heas and Herzet (2016).
-#
+# 
 # The optDMD and BOP-DMD are effectively the same method, but with the BOP-DMD implementing a statistical bagging of optDMD fits and aggregating the results.
-#
+# 
 # 1) optDMD: Provides an optimized framework for solving the DMD regressions that may come from unevenly spaced time snapshots.
-#
+# 
 # 2) The BOP-DMD takes advantage of this property and solves the DMD using statistical bagging (i.e., randomly selected ensembles) for constructing the optDMD.
-#
-# The advantages of the combined BOP-DMD are:
+# 
+# The advantages of the combined BOP-DMD are: 
 # - The additional ability to provide uncertainty estimates in the solutions, including uncertainty in the spatial modes, eigenvalues, and amplitudes
 # - More robustly fitting noisy data.
-#
+# 
 # ## Methods compared
-#
+# 
 # Three methods are compared:
 # 1) The total least-squares DMD with optimal amplitudes.
 # 2) The optimized DMD from Askham and Kutz (2018; note the namespace conflict with Heas and Herzet's (2016) optimal solution!)
 # 3) The BOP-DMD
-#
+#  
 # Method (1) comes directly from Tutorial 2.
-#
+# 
 # ## Citations
-#
+# 
 # - **optimized Dynamic Mode Decomposition (optDMD)**: Askham, T., & Kutz, J. N. (2018). Variable projection methods for an optimized dynamic mode decomposition. SIAM Journal on Applied Dynamical Systems, 17(1), 380–416. https://doi.org/10.1137/M1124176
-#
+# 
 # - **Bagging, Optimized Dynamic Mode Decomposition (BOP-DMD)**: Sashidhar, D., & Kutz, J. N. (2022). Bagging, optimized dynamic mode decomposition for robust, stable forecasting with spatial and temporal uncertainty quantification. Philosophical Transactions of the Royal Society A: Mathematical, Physical and Engineering Sciences, 380(2229). https://doi.org/10.1098/rsta.2021.0199
-#
+# 
 # - **optimal closed-form solution to the exact DMD**: Héas, P., & Herzet, C. (2022). Low-Rank Dynamic Mode Decomposition: An Exact and Tractable Solution. Journal of Nonlinear Science, 32(1). https://doi.org/10.1007/s00332-021-09770-w
 
 # In[1]:
@@ -56,12 +56,12 @@ def relative_error(x_est, x_true):
 
 
 # ## Setting up the toy data
-#
+# 
 # The toy data is exactly the same as in tutorial 2 to provide a direct comparison. The example is a single two-dimensional spatial mode modified by a temporal oscillation with period of 4 that decays towards zero amplitude with time.
-#
+# 
 # Two versions of the data are created as a convenience: a 3d array of 2d spatial snapshots along a time dimension and a 2d array where the spatial dimensions have been flattened down. This is necessary because PyDMD classes expect data of the form `len(samples) x len(time)`.
-#
-# The data are subdivided into training data and forecast data, as this represents real world use cases for fitting and forecasting.
+# 
+# The data are subdivided into training data and forecast data, as this represents real world use cases for fitting and forecasting. 
 
 # In[3]:
 
@@ -107,9 +107,9 @@ plt.show()
 
 
 # ## Fitting and forecasting
-#
+# 
 # All methods are fit through the same syntax, but vary in how the forecasted period is represented.
-#
+# 
 # To reiterate, PyDMD objects expect data of the shape len(space) x len(time), so we have to use the data in which the spatial dimensions collapsed down to a single dimension. After fitting the training data, the data are then forecasted to the forecast period.
 
 # In[4]:
@@ -141,9 +141,9 @@ dmd_forecast.dmd_time["tend"] *= 3
 # - The number of trials, `num_trials`, specifies the number of ensemble members to use in the bagging step of the BOP-DMD.
 # - The optDMD is the default method when calling BOP-DMD as the 'num_trials' keyword defaults to 0.
 # - `trial_size` determines how much of the total data is used when constructing each ensemble member.
-#
+# 
 # For the DMD we follow Tutorial 2 to provide a direct comparison between methods.
-#
+# 
 # Finally, the optDMD/BOP-DMD methods do not need to have evenly spaced data. e.g., randomly chosen snapshots could be dropped (for example representing a case where observational instruments fail) and the data could still be fit.
 
 # In[5]:
@@ -197,9 +197,9 @@ plt.show()
 
 
 # The optDMD and BOP-DMD recover the true eigenvalues. It is unclear what is driving the difference in eigenvalues between the DMD methods.
-#
+# 
 # One of the main advantages of the BOP-DMD is the ability to provide uncertainties on the fit. Here, the eigenvalue (and thus time dyanmic) uncertainties can be recovered.
-#
+# 
 
 # In[7]:
 
@@ -250,7 +250,7 @@ plt.show()
 
 
 # The average time dynamics of the entire system can also be recovered by averaging the spatial modes for each time step. This roughly corresponds to the two-dimensional integral from Tutorial 2. The forecasted period is also examined.
-#
+# 
 # The optDMD is neglected here for visual clarity.
 
 # In[9]:
@@ -408,7 +408,7 @@ print("Relative Error of the BOP-DMD forecast: {:0.2f}".format(re))
 # The BOP-DMD just barely outperforms the DMD when evaluating a forecasted period. Note: the relative improvement depends on the level of noise and the DMD can even out perform the BOP-DMD in some cases.
 
 # ### Spatial Modes
-#
+# 
 # In most real-world cases we don't have the actual underlying modes to compare to. However, with the toy data we can see how well the spatial mode was recovered.
 
 # In[12]:
@@ -458,9 +458,9 @@ plt.show()
 
 
 # The BOP-DMD spatial mode error is effectively flat, with just random white noise corrupting the spatial modes. The relative error in the spatial modes is slightly smaller than for the DMD.
-#
+# 
 # ### Spatial Mode uncertainty
-#
+# 
 # One of the major features of BOP-DMD is the ability to quantify uncertainty in the temporal and spatial modes. The below shows the uncertainty in the spatial modes.
 
 # In[14]:
@@ -484,9 +484,9 @@ plt.show()
 # The uncertainty is largest in the center of the spatial domain (although the magnitude of the uncertainty is perhaps a bit unbelievable given how noisy the system is). However, it is worth nothing that the uncertainty is much smaller than the error, potentially revealing an underestimate of the true uncertainty in the system.
 
 # ## Parting comments
-#
+# 
 # The BOP-DMD and optDMD were designed for fitting DMDs to noisy data or data with unevenly spaced data points. But, there are a number of other methods for handling noisy data with DMDs. In this tutorial we examined the exact DMD using the `tlsq_rank` keyword.
-#
+# 
 # 1) How do other methods designed to handle noisy data (e.g., the forward-backward DMD) compare to the BOP-DMD and the exact DMD with the `tlsq_rank` keyword?
-#
+# 
 # 2) What happens if you change the noise? Consider types of noise commonly present in real data sets such as noise that is not uniform in time or space or non-white noise.
