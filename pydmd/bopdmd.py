@@ -925,7 +925,6 @@ class BOPDMD(DMDBase):
         """
         return self.operator.amplitudes_std
 
-
     @property
     def eigenvalues_std(self):
         """
@@ -936,7 +935,6 @@ class BOPDMD(DMDBase):
         """
         return self.operator.eigenvalues_std
 
-
     @property
     def modes_std(self):
         """
@@ -946,7 +944,6 @@ class BOPDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         return self.operator.modes_std
-
 
     def print_varpro_opts(self):
         """
