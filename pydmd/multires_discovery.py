@@ -7,20 +7,19 @@ import matplotlib.pyplot as plt
 
 class multi_res_discovery:
     def __init__(
-            self,
-            window_length=None,
-            step_size=None,
-            n_components=None,
-            svd_rank=None,
-            global_svd=True,
-            initialize_artificially=False,
-            use_last_freq=False,
-            use_kmean_freqs=False,
-            init_alpha=None,
-            pydmd_kwargs=None,
-            threshhold_percent=1,
-            cluster_centroids=None,
-            reset_alpha_init=False,
+        self,
+        window_length=None,
+        step_size=None,
+        n_components=None,
+        svd_rank=None,
+        global_svd=True,
+        initialize_artificially=False,
+        use_last_freq=False,
+        use_kmean_freqs=False,
+        init_alpha=None,
+        pydmd_kwargs=None,
+        cluster_centroids=None,
+        reset_alpha_init=False,
     ):
         self._n_components = n_components
         self._step_size = step_size
@@ -34,23 +33,39 @@ class multi_res_discovery:
         self._cluster_centroids = cluster_centroids
         self._reset_alpha_init = reset_alpha_init
 
+        # Initialize variables that are defined in fitting.
+        self._n_data_vars = None
+        self._n_time_steps = None
+        self._window_length = None
+        self._n_slides = None
+        self._time_array = None
+        self._modes_array = None
+        self._omega_array = None
+        self._time_means_array = None
+        self._amplitudes_array = None
+        self._t_starts_array = None
+
         if pydmd_kwargs is None:
             self._pydmd_kwargs = {
-                'eig_sort': 'imag',
+                "eig_sort": "imag",
+                "proj_basis": None,
+                "use_proj": False,
             }
         else:
             self._pydmd_kwargs = pydmd_kwargs
-            self._pydmd_kwargs['eig_sort'] = pydmd_kwargs.get('eig_sort', 'imag')
-
-        # Set the threshold for the number of frequencies to use in clustering,
-        # where the frequencies have been sorted in order of magnitude.
-        # Note: this value is not currently implemented (it was always 1 in examples).
-        self._threshhold_percent = threshhold_percent
+            self._pydmd_kwargs["eig_sort"] = pydmd_kwargs.get(
+                "eig_sort", "imag"
+            )
+            self._pydmd_kwargs["proj_basis"] = pydmd_kwargs.get(
+                "proj_basis", None
+            )
+            self._pydmd_kwargs["use_proj"] = pydmd_kwargs.get(
+                "proj_basis", False
+            )
 
     def _compute_svd_rank(self, data, svd_rank=None):
-
         def omega(x):
-            return 0.56 * x ** 3 - 0.95 * x ** 2 + 1.82 * x + 1.43
+            return 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
 
         U, s, _ = np.linalg.svd(data, full_matrices=False)
 
@@ -59,7 +74,7 @@ class multi_res_discovery:
             tau = np.median(s) * omega(beta)
             svd_rank = np.sum(s > tau)
         elif 0 < svd_rank < 1:
-            cumulative_energy = np.cumsum(s ** 2 / (s ** 2).sum())
+            cumulative_energy = np.cumsum(s**2 / (s**2).sum())
             svd_rank = np.searchsorted(cumulative_energy, svd_rank) + 1
         elif svd_rank >= 1 and isinstance(svd_rank, (int, np.integer)):
             svd_rank = min(svd_rank, self._n_data_vars)
@@ -68,21 +83,14 @@ class multi_res_discovery:
 
         return svd_rank
 
-    def _build_proj_basis(self, data, global_svd=True, svd_rank=None):
-
-        if svd_rank is None:
-            self._svd_rank = self._compute_svd_rank(data, svd_rank=svd_rank)
-
-        # Use global SVD modes for each DMD rather than individual SVD on
-        # each window.
-        if global_svd:
-            # Recover the first r modes of the global svd
-            u, _, _ = scipy.linalg.svd(data, full_matrices=False)
-            return u[:, :self._svd_rank]
+    def _build_proj_basis(self, data, svd_rank=None):
+        self._svd_rank = self._compute_svd_rank(data, svd_rank=svd_rank)
+        # Recover the first r modes of the global svd
+        u, _, _ = scipy.linalg.svd(data, full_matrices=False)
+        return u[:, : self._svd_rank]
 
     def _build_initizialization(self):
-        """ Method for making initial guess of DMD eigenvalues.
-        """
+        """Method for making initial guess of DMD eigenvalues."""
 
         # User provided initial eigenvalues.
         init_alpha = None
@@ -91,17 +99,19 @@ class multi_res_discovery:
         # Initial eigenvalue guesses from kmeans clustering.
         elif self._initialize_artificially and self._init_alpha is None:
             if self._use_kmean_freqs:
-                init_alpha = np.repeat(np.sqrt(self._cluster_centroids) * 1j,
-                                       int(self._svd_rank / self._n_components))
-                init_alpha = init_alpha * np.tile([1, -1],
-                                                  int(self._svd_rank / self._n_components))
+                init_alpha = np.repeat(
+                    np.sqrt(self._cluster_centroids) * 1j,
+                    int(self._svd_rank / self._n_components),
+                )
+                init_alpha = init_alpha * np.tile(
+                    [1, -1], int(self._svd_rank / self._n_components)
+                )
 
         return init_alpha
 
-    def build_windows(self, data, window_length, step_size, integer_windows=False):
-        """Calculate how many times to slide the window across the data.
-
-        """
+    @staticmethod
+    def build_windows(data, window_length, step_size, integer_windows=False):
+        """Calculate how many times to slide the window across the data."""
 
         if integer_windows:
             n_split = np.floor(data.shape[1] / window_length).astype(int)
@@ -113,24 +123,28 @@ class multi_res_discovery:
         # Number of sliding-window iterations
         n_slides = np.floor((n_steps - window_length) / step_size).astype(int)
 
-        return n_slides
+        return n_slides + 1
 
-    def calculate_lv_kern(self, window_length, corner_sharpness=None):
-        """Calculate the kerning window for suppressing real eigenvalues.
-
-        """
+    @staticmethod
+    def calculate_lv_kern(window_length, corner_sharpness=None):
+        """Calculate the kerning window for suppressing real eigenvalues."""
 
         # Higher = sharper corners
         if corner_sharpness is None:
             corner_sharpness = 16
 
         lv_kern = (
-                np.tanh(
-                    corner_sharpness * np.arange(1, window_length + 1) / window_length
-                )
-                - np.tanh(
-            corner_sharpness * (
-                    np.arange(1, window_length + 1) - window_length) / window_length) - 1
+            np.tanh(
+                corner_sharpness
+                * np.arange(1, window_length + 1)
+                / window_length
+            )
+            - np.tanh(
+                corner_sharpness
+                * (np.arange(1, window_length + 1) - window_length)
+                / window_length
+            )
+            - 1
         )
 
         return lv_kern
@@ -167,12 +181,6 @@ class multi_res_discovery:
         return self._omega_array
 
     @property
-    def omega_array(self):
-        if not hasattr(self, "_omega_array"):
-            raise ValueError("You need to call fit before")
-        return self._omega_array
-
-    @property
     def time_array(self):
         if not hasattr(self, "_time_array"):
             raise ValueError("You need to call fit before")
@@ -196,43 +204,73 @@ class multi_res_discovery:
             raise ValueError("You need to call fit before")
         return self._time_means_array
 
-    def fit(self, data, time, window_length, step_size, verbose=False,
-            corner_sharpness=None):
-
+    def fit(
+        self,
+        data,
+        time,
+        window_length,
+        step_size,
+        verbose=False,
+        corner_sharpness=None,
+    ):
         # Prepare window and data properties.
         self._window_length = window_length
         self._step_size = step_size
 
         self._n_time_steps, self._n_data_vars = self._data_shape(data)
-        self._n_slides = self.build_windows(data, self._window_length, self._step_size)
+        self._n_slides = self.build_windows(
+            data, self._window_length, self._step_size
+        )
+
+        # If the window size and step size do not span the data in an integer
+        # number of slides, we add one last window that has a smaller step spacing
+        # relative to the other window spacings.
+        n_slide_last_window = self._n_time_steps - (
+            self._step_size * (self._n_slides - 1) + self._window_length
+        )
+        if n_slide_last_window > 0:
+            self._n_slides += 1
+        self._n_slide_last_window = n_slide_last_window
 
         # Build the projection basis if using a global svd.
         if self._global_svd:
-            u = self._build_proj_basis(data, global_svd=self._global_svd,
-                                       svd_rank=self._svd_rank)
-            self._pydmd_kwargs['proj_basis'] = self._pydmd_kwargs.get('proj_basis', u)
-            self._pydmd_kwargs['use_proj'] = self._pydmd_kwargs.get('use_proj', False)
+            u = self._build_proj_basis(data, svd_rank=self._svd_rank)
+            # self._pydmd_kwargs['proj_basis'] = self._pydmd_kwargs.get('proj_basis', u)
+            self._pydmd_kwargs["proj_basis"] = u
+            self._pydmd_kwargs["use_proj"] = self._pydmd_kwargs.get(
+                "use_proj", False
+            )
 
-            self._svd_rank = self._compute_svd_rank(data, svd_rank=self._svd_rank)
+            self._svd_rank = self._compute_svd_rank(
+                data, svd_rank=self._svd_rank
+            )
             svd_rank_pre_allocate = self._svd_rank
+        elif not self._global_svd and self._svd_rank > 0:
+            svd_rank_pre_allocate = self._compute_svd_rank(
+                data, svd_rank=self._svd_rank
+            )
         # If not using a global svd, local u  from each window is used instead.
         else:
-            # The various arrays the optimal svd_rank may change when using the locally
-            # optimal svd_rank. To deal with this situation, we give the maximally
+            # The optimal svd_rank may change when using the locally optimal svd_rank.
+            # To deal with this situation in the pre-allocation we give the maximally
             # allowed svd_rank for pre-allocation.
             svd_rank_pre_allocate = self._n_data_vars
 
         # Pre-allocate all elements for the sliding window DMD.
         # Each element calculated for a window is returned through these array.
-        data_array = np.zeros((self._n_slides, self._n_data_vars, self._window_length))
+        # data_array = np.zeros(
+        #     (self._n_slides, self._n_data_vars, self._window_length))  # * np.nan
         self._time_array = np.zeros((self._n_slides, self._window_length))
         self._modes_array = np.zeros(
             (self._n_slides, self._n_data_vars, svd_rank_pre_allocate),
-            np.complex128)
-        self._omega_array = np.zeros((self._n_slides, svd_rank_pre_allocate),
-                                     np.complex128)
-        self._amplitudes_array = np.zeros((self._n_slides, svd_rank_pre_allocate),
-                                          np.complex128)
+            np.complex128,
+        )
+        self._omega_array = np.zeros(
+            (self._n_slides, svd_rank_pre_allocate), np.complex128
+        )
+        self._amplitudes_array = np.zeros(
+            (self._n_slides, svd_rank_pre_allocate), np.complex128
+        )
         self._window_means_array = np.zeros((self._n_slides, self._n_data_vars))
         self._t_starts_array = np.zeros(self._n_slides)
         self._time_means_array = np.zeros(self._n_slides)
@@ -241,30 +279,41 @@ class multi_res_discovery:
         if self._initialize_artificially:
             self._init_alpha = self._build_initizialization()
             optdmd = BOPDMD(
-                svd_rank=self._svd_rank, num_trials=0, init_alpha=self._init_alpha,
-                **self._pydmd_kwargs
+                svd_rank=self._svd_rank,
+                num_trials=0,
+                init_alpha=self._init_alpha,
+                **self._pydmd_kwargs,
             )
         else:
             optdmd = BOPDMD(
-                svd_rank=self._svd_rank, num_trials=0, **self._pydmd_kwargs,
+                svd_rank=self._svd_rank,
+                num_trials=0,
+                **self._pydmd_kwargs,
             )
 
         # Round the corners of the window to shrink real components.
-        lv_kern = self.calculate_lv_kern(self._window_length,
-                                         corner_sharpness=corner_sharpness)
+        lv_kern = self.calculate_lv_kern(
+            self._window_length, corner_sharpness=corner_sharpness
+        )
 
         # Perform the sliding window DMD fitting.
         for k in range(self._n_slides):
             if verbose:
                 if k // 50 == k / 50:
-                    print('{} of {}'.format(k, self._n_slides))
+                    print("{} of {}".format(k, self._n_slides))
 
             # Get the window indices and data.
             sample_start = self._step_size * k
-            sample_steps = np.arange(sample_start, sample_start + self._window_length)
-            data_window = data[:, sample_steps]
-            time_window = time[:, sample_steps]
-            data_array[k, :, :] = data_window
+            if k == self._n_slides - 1 and self._n_slide_last_window > 0:
+                sample_slice = slice(-self._window_length, None)
+            else:
+                sample_slice = slice(
+                    sample_start, sample_start + self._window_length
+                )
+            # sample_steps = np.arange(sample_start, sample_start + self._window_length)
+            data_window = data[:, sample_slice]
+            time_window = time[:, sample_slice]
+            # data_array[k, :, :] = data_window
             self._time_array[k, :] = time_window
             self._time_means_array[k] = np.mean(time_window)
 
@@ -274,8 +323,6 @@ class multi_res_discovery:
             self._t_starts_array[k] = t_start
 
             # Subtract off mean before rounding corners
-            # https://stackoverflow.com/questions/32030343/
-            # subtracting-the-mean-of-each-row-in-numpy-with-broadcasting
             c = np.mean(data_window, 1, keepdims=True)
             data_window = data_window - c
 
@@ -285,25 +332,39 @@ class multi_res_discovery:
             # Fit with the desired DMD class
             optdmd.fit(data_window, time_window)
 
-            # if use_last_freq == 1:
-            #     e_init = e
-
             # Assign the results from this window
-            self._modes_array[k, :, :optdmd.modes.shape[-1]] = optdmd.modes
-            self._omega_array[k, :optdmd.eigs.shape[0]] = optdmd.eigs
-            self._amplitudes_array[k, :optdmd.eigs.shape[0]] = optdmd.amplitudes
+            self._modes_array[k, :, : optdmd.modes.shape[-1]] = optdmd.modes
+            self._omega_array[k, : optdmd.eigs.shape[0]] = optdmd.eigs
+            self._amplitudes_array[
+                k, : optdmd.eigs.shape[0]
+            ] = optdmd.amplitudes
             self._window_means_array[k, :] = c.flatten()
 
             # Reset optdmd between iterations
             if not self._global_svd:
                 optdmd._svd_rank = self._svd_rank
-                optdmd._proj_basis = self._pydmd_kwargs['proj_basis']
-                optdmd._init_alpha = self._init_alpha
+                optdmd._proj_basis = self._pydmd_kwargs["proj_basis"]
+
+                # The default behavior is to reset the optdmd object to use the default
+                # initial value (None) or the user provided values.
+                if not self._use_last_freq:
+                    optdmd._init_alpha = self._init_alpha
+                # Otherwise use the eigenvalues from this window to seed the next window.
+                elif self._use_last_freq:
+                    optdmd._init_alpha = optdmd.eigs
 
     def cluster_omega(self, omega_array, n_components, kmeans_kwargs=None):
         self._n_components = n_components
-        omega_rshp = omega_array.reshape(self._n_slides * self._svd_rank)
-        omega_squared = (np.conj(omega_rshp) * omega_rshp).astype('float')
+
+        # Reshape the omega array into a 1d array
+        n_slides = self._n_slides
+        if self._svd_rank == 0:
+            svd_rank = self._n_data_vars
+        else:
+            svd_rank = self._svd_rank
+        omega_rshp = omega_array.reshape(n_slides * svd_rank)
+
+        omega_squared = (np.conj(omega_rshp) * omega_rshp).astype("float")
 
         if kmeans_kwargs is None:
             random_state = 0
@@ -311,45 +372,62 @@ class multi_res_discovery:
                 "n_init": "auto",
                 "random_state": random_state,
             }
-        kmeans = KMeans(n_clusters=self._n_components, **kmeans_kwargs)
-        y_pred = kmeans.fit_predict(np.atleast_2d(omega_squared).T)
-        omega_classes = y_pred.reshape(self._n_slides, self._svd_rank)
+        kmeans = KMeans(n_clusters=n_components, **kmeans_kwargs)
+        omega_classes = kmeans.fit_predict(np.atleast_2d(omega_squared).T)
+        omega_classes = omega_classes.reshape(n_slides, svd_rank)
         cluster_centroids = kmeans.cluster_centers_.flatten()
 
         return omega_classes, omega_squared, cluster_centroids
 
-    def plot_omega_squared_histogram(self, omega_squared, cluster_centroids):
+    @staticmethod
+    def plot_omega_squared_histogram(omega_squared, cluster_centroids):
+        colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
         fig, ax = plt.subplots(1, 1)
         ax.hist(omega_squared, bins=64)
-        ax.set_xlabel('$|\omega|^{2}$')
-        ax.set_ylabel('Count')
-        ax.set_title('$|\omega|^2$ Spectrum & k-Means Centroids')
-        [ax.axvline(c, color='r') for c in cluster_centroids]
+        ax.set_xlabel("$|\omega|^{2}$")
+        ax.set_ylabel("Count")
+        ax.set_title("$|\omega|^2$ Spectrum & k-Means Centroids")
+        [
+            ax.axvline(c, color=colors[nc % len(colors)])
+            for nc, c in enumerate(cluster_centroids)
+        ]
 
         return fig, ax
 
     def plot_omega_squared_time_series(self, omega_squared, omega_classes):
         fig, ax = plt.subplots(1, 1)
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+        # Reshape the omega array into a 1d array
+        n_slides = self._n_slides
+        if self._svd_rank == 0:
+            svd_rank = self._n_data_vars
+        else:
+            svd_rank = self._svd_rank
+
         for ncomponent, component in enumerate(range(self._n_components)):
             ax.plot(
                 self._time_means_array,
                 np.where(
                     omega_classes == component,
-                    omega_squared.reshape((self._n_slides, self._svd_rank)), np.nan
+                    omega_squared.reshape((n_slides, svd_rank)),
+                    np.nan,
                 ),
-                color=colors[ncomponent % len(colors)]
+                color=colors[ncomponent % len(colors)],
             )
-        ax.set_ylabel('$|\omega|^{2}$')
-        ax.set_xlabel('Time')
-        ax.set_title('$|\omega|^2$ Spectrum (Moving Window)')
+        ax.set_ylabel("$|\omega|^{2}$")
+        ax.set_xlabel("Time")
+        ax.set_title("$|\omega|^2$ Spectrum (Moving Window)")
 
         return fig, ax
 
-    def global_reconstruction(self, ):
+    def global_reconstruction(
+        self,
+    ):
         # Container for the reconstructed time series
         glbl_reconstruction = np.zeros(
-            (self._n_data_vars, self._n_time_steps)).astype('complex128')
+            (self._n_data_vars, self._n_time_steps)
+        ).astype("complex128")
 
         # Count the number of windows contributing to each step
         xn = np.zeros(self._n_time_steps)
@@ -367,10 +445,13 @@ class multi_res_discovery:
             t = t - t_start
 
             # Perform the global reconstruction.
-            recon_window = np.linalg.multi_dot([w, np.diag(b), np.exp(omega * t)]) + c
+            recon_window = (
+                np.linalg.multi_dot([w, np.diag(b), np.exp(omega * t)]) + c
+            )
 
-            window_indices = slice(k * self._step_size,
-                                   k * self._step_size + self._window_length)
+            window_indices = slice(
+                k * self._step_size, k * self._step_size + self._window_length
+            )
             glbl_reconstruction[:, window_indices] += recon_window
             xn[window_indices] += 1
 
@@ -379,8 +460,13 @@ class multi_res_discovery:
 
         return glbl_reconstruction
 
-    def scale_reconstruction(self, omega_classes, cluster_centroids, suppress_growth=True,
-                             include_means=True):
+    def scale_reconstruction(
+        self,
+        omega_classes,
+        cluster_centroids,
+        suppress_growth=True,
+        include_means=True,
+    ):
         """Reconstruct the sliding mrDMD into the constituent components.
 
         The reconstructed data are convolved with a guassian filter since
@@ -395,7 +481,9 @@ class multi_res_discovery:
         """
 
         # Each individual reconstructed window
-        xr_sep = np.zeros((self._n_components, self._n_data_vars, self._n_time_steps))
+        xr_sep = np.zeros(
+            (self._n_components, self._n_data_vars, self._n_time_steps)
+        )
 
         # Track the total contribution from all windows to each time step
         xn = np.zeros(self._n_time_steps)
@@ -405,9 +493,11 @@ class multi_res_discovery:
         recon_filter_sd = self._window_length / 8
         recon_filter = np.exp(
             -(
-                     np.arange(self._window_length)
-                     - (self._window_length + 1) / 2
-             ) ** 2 / recon_filter_sd ** 2)
+                (np.arange(self._window_length) - (self._window_length + 1) / 2)
+                ** 2
+            )
+            / recon_filter_sd**2
+        )
 
         for k in range(self._n_slides):
             w = self._modes_array[k]
@@ -426,13 +516,14 @@ class multi_res_discovery:
             t = t - t_start
 
             xr_sep_window = np.zeros(
-                (self._n_components, self._n_data_vars, self._window_length))
+                (self._n_components, self._n_data_vars, self._window_length)
+            )
             for j in np.unique(omega_classes):
                 xr_sep_window[j, :, :] = np.linalg.multi_dot(
                     [
                         w[:, classification == j],
                         np.diag(b[classification == j]),
-                        np.exp(omega[classification == j] * t)
+                        np.exp(omega[classification == j] * t),
                     ]
                 )
 
@@ -440,10 +531,17 @@ class multi_res_discovery:
                 if include_means and (j == np.argmin(cluster_centroids)):
                     xr_sep_window[j, :, :] += c
                 xr_sep_window[j, :, :] = xr_sep_window[j, :, :] * recon_filter
-                window_indices = slice(k * self._step_size,
-                                       k * self._step_size + self._window_length)
-                xr_sep[j, :, window_indices] = xr_sep[j, :,
-                                               window_indices] + xr_sep_window[j, :, :]
+
+                if k == self._n_slides - 1 and self._n_slide_last_window > 0:
+                    window_indices = slice(-self._window_length, None)
+                else:
+                    window_indices = slice(
+                        k * self._step_size,
+                        k * self._step_size + self._window_length,
+                    )
+                xr_sep[j, :, window_indices] = (
+                    xr_sep[j, :, window_indices] + xr_sep_window[j, :, :]
+                )
 
             xn[window_indices] += recon_filter
 
