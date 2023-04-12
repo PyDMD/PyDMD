@@ -3,12 +3,12 @@
 
 # compiled python codes
 *.pyc
-pydmd\.egg-info/
+pydmd\.egg-info/**
 
-.idea/*
+.idea/**
 
-tutorials/\.ipynb_checkpoints/
+**/\.ipynb_checkpoints/**
 **/SegTrackv2.zip
 
 # Vscode
-.vscode/*
+.vscode/**
