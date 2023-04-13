@@ -39,9 +39,7 @@
 * [How to cite](#how-to-cite)
 	* [References](#references)
 	* [Recent works with PyDMD](#recent-works-with-pydmd)
-* [Authors and contributors](#authors-and-contributors)
-* [How to contribute](#how-to-contribute)
-	* [Submitting a patch](#submitting-a-patch)
+* [Developers and contributors](#developers-and-contributors)
 * [License](#license)
 
 ## Description
@@ -178,7 +176,12 @@ Here there is a list of the scientific works involving **PyDMD** you can consult
 
 * Tezzele. *Data-driven parameter and model order reduction for industrial optimisation problems with applications in naval engineering*, PhD Thesis. 2021. [[Iris](http://hdl.handle.net/20.500.11767/124569)].
 
-## Contributing
+## Developers and contributors
+The main developers are 
+<p align="center">
+    <img src="readme/main_developers.png" width="800" />
+</p>
+
 We warmly thank all the contributors that have supported PyDMD! The financial support of the [AROMA-CFD ERC CoG project](https://people.sissa.it/~grozza/aroma-cfd/) project is also gratefully acknowledged.
 
 Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIBUTING.md) and the [Tutorials for Developers](tutorials#tutorials-for-developers) before starting to play!

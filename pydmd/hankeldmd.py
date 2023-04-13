@@ -306,7 +306,7 @@ class HankelDMD(DMDBase):
     @property
     def svd_rank(self):
         return self._sub_dmd.svd_rank
-    
+
     @property
     def ho_snapshots(self):
         """
