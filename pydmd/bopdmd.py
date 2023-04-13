@@ -140,6 +140,7 @@ class BOPDMDOperator(DMDOperator):
 
         self._modes = None
         self._eigenvalues = None
+        self._modes_std = None
         self._eigenvalues_std = None
         self._amplitudes_std = None
         self._Atilde = None
@@ -192,6 +193,16 @@ class BOPDMDOperator(DMDOperator):
         :rtype: numpy.ndarray
         """
         return self._eigenvalues_std
+
+    @property
+    def modes_std(self):
+        """
+        Get the modes standard deviation.
+
+        :return: modes standard deviation.
+        :rtype: numpy.ndarray
+        """
+        return self._modes_std
 
     def _varpro_opts_warn(self):
         """
@@ -619,13 +630,16 @@ class BOPDMDOperator(DMDOperator):
             return b_0
 
         # Perform BOP-DMD.
-        # Initialize bagging result storage.
-        all_w = np.empty((self._num_trials, *w_0.shape), dtype="complex")
-        all_e = np.empty((self._num_trials, *e_0.shape), dtype="complex")
-        all_b = np.empty((self._num_trials, *b_0.shape), dtype="complex")
+        # Initialize storage for values needed for stat computations.
+        w_sum = np.zeros(w_0.shape, dtype="complex")
+        e_sum = np.zeros(e_0.shape, dtype="complex")
+        b_sum = np.zeros(b_0.shape, dtype="complex")
+        w_sum2 = np.zeros(w_0.shape, dtype="complex")
+        e_sum2 = np.zeros(e_0.shape, dtype="complex")
+        b_sum2 = np.zeros(b_0.shape, dtype="complex")
 
         # Perform num_trials many trials of optimized dmd.
-        for i in range(self._num_trials):
+        for _ in range(self._num_trials):
             H_i, subset_inds = self._bag(H, self._trial_size)
             w_i, e_i, b_i, _, _ = self._single_trial_compute_operator(
                 H_i, t[subset_inds], e_0
@@ -655,13 +669,30 @@ class BOPDMDOperator(DMDOperator):
             else:
                 raise ValueError("Provided eig_sort method is not supported.")
 
-            all_w[i] = w_i[:, sorted_inds]
-            all_e[i] = e_i[sorted_inds]
-            all_b[i] = b_i[sorted_inds]
+            # Add to iterative sums.
+            w_sum += w_i[:, sorted_inds]
+            e_sum += e_i[sorted_inds]
+            b_sum += b_i[sorted_inds]
 
-        # Compute and use the average optimized dmd results.
-        self._modes = np.mean(all_w, axis=0)
-        self._eigenvalues = np.mean(all_e, axis=0)
+            # Add to iterative sums of squares.
+            w_sum2 += np.abs(w_i[:, sorted_inds]) ** 2
+            e_sum2 += np.abs(e_i[sorted_inds]) ** 2
+            b_sum2 += np.abs(b_i[sorted_inds]) ** 2
+
+        # Compute the BOP-DMD statistics.
+        w_mu = w_sum / self._num_trials
+        e_mu = e_sum / self._num_trials
+        b_mu = b_sum / self._num_trials
+        w_std = np.sqrt(np.abs(w_sum2 / self._num_trials - np.abs(w_mu) ** 2))
+        e_std = np.sqrt(np.abs(e_sum2 / self._num_trials - np.abs(e_mu) ** 2))
+        b_std = np.sqrt(np.abs(b_sum2 / self._num_trials - np.abs(b_mu) ** 2))
+
+        # Save the BOP-DMD statistics.
+        self._modes = w_mu
+        self._eigenvalues = e_mu
+        self._modes_std = w_std
+        self._eigenvalues_std = e_std
+        self._amplitudes_std = b_std
 
         # Compute Atilde using the average optimized dmd results.
         w_proj = self._proj_basis.conj().T.dot(self._modes)
@@ -678,11 +709,7 @@ class BOPDMDOperator(DMDOperator):
                 ]
             )
 
-        # Compute and save the standard deviation of the optimized dmd results.
-        self._eigenvalues_std = np.std(all_e, axis=0)
-        self._amplitudes_std = np.std(all_b, axis=0)
-
-        return np.mean(all_b, axis=0)
+        return b_mu
 
 
 class BOPDMD(DMDBase):
@@ -898,7 +925,6 @@ class BOPDMD(DMDBase):
         """
         return self.operator.amplitudes_std
 
-
     @property
     def eigenvalues_std(self):
         """
@@ -909,6 +935,15 @@ class BOPDMD(DMDBase):
         """
         return self.operator.eigenvalues_std
 
+    @property
+    def modes_std(self):
+        """
+        Get the modes standard deviation.
+
+        :return: modes standard deviation.
+        :rtype: numpy.ndarray
+        """
+        return self.operator.modes_std
 
     def print_varpro_opts(self):
         """
@@ -996,7 +1031,7 @@ class BOPDMD(DMDBase):
             raise ValueError(msg)
 
         # Compute the rank of the fit.
-        self._svd_rank = compute_rank(self.snapshots, self._svd_rank)
+        self._svd_rank = int(compute_rank(self.snapshots, self._svd_rank))
 
         # Set/check the projection basis.
         if self._proj_basis is None and self._use_proj:
