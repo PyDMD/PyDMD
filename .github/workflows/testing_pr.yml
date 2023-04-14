@@ -128,7 +128,7 @@ jobs:
     - name: Setup FFmpeg
       uses: FedericoCarboni/setup-ffmpeg@v2
       
-    - name: Check tutorial links
+    - name: Check tutorial references
       run: |
         cd tutorials/
         for dir in $(ls -d tutorial*/); do
