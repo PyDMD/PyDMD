@@ -132,7 +132,7 @@ jobs:
       run: |
         cd tutorials/
         for dir in $(ls -d tutorial*/); do
-          if grep -q "$dir" README.md"
+          if grep -q "$dir" "README.md"
             then
             echo "$dir is referenced"
           else
