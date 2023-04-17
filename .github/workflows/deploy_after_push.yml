@@ -64,14 +64,18 @@ jobs:
         chmod +x CodacyCoverageReporter.sh
         ./CodacyCoverageReporter.sh report -r cobertura.xml  -t $CODACY_API_TOKEN
         
-  tutorials_deploy: ##########################################################################
+  deploy_website: ############################################################################
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Deploy tutorials
+    - name: Create public
+      run: |
+        mkdir ./public
+        cp -r tutorials public
+        cp -r docs/build/html public
+    - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./tutorials
-        exclude_assets: '**/*.md,**/*.ipynb,**/*.py'
-        allow_empty_commit: false
+        publish_dir: public/
+        allow_empty_commit: true
