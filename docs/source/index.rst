@@ -67,7 +67,7 @@ Developer's Guide
    code
    contact
    contributing
-   conde_of_conduct
+   code_of_conduct
    LICENSE
 
 
