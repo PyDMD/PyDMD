@@ -72,3 +72,22 @@ jobs:
       uses: pypa/gh-action-pypi-publish@master
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
+        
+  online_documentation_deploy: #####################################################################################
+    needs: prepare_matrix
+    runs-on: ${{ matrix.os }}
+    strategy: 
+      matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix) }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Create the new documentation
+      uses: ammaraskar/sphinx-action@master
+      with:
+        pre-build-command: "python -m pip install pip .[test] -U"
+        docs-folder: "docs/"
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs/build/html
+        allow_empty_commit: true
