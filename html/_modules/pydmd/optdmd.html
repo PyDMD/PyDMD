@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pydmd.optdmd &mdash; PyDMD 0.4.1 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            PyDMD
+          </a>
+              <div class="version">
+                0.4.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pydmd.optdmd</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pydmd.optdmd</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Derived module from :meth:`pydmd.dmdbase` for the optimal closed-form solution</span>
+<span class="sd">to dmd.</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">    P. Heas &amp; C. Herzet. Low-rank dynamic mode decomposition: optimal</span>
+<span class="sd">    solution in polynomial time. arXiv:1610.02962. 2016.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">eig</span>
+
+<span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
+<span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span><span class="p">,</span> <span class="n">compute_tlsq</span>
+<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
+
+
+<span class="k">def</span> <span class="nf">pinv_diag</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to compute the pseudo-inverse of a diagonal matrix.</span>
+
+<span class="sd">    :param array_like x: diagonal of the matrix to be pseudo-inversed.</span>
+<span class="sd">    :return: the computed pseudo-inverse</span>
+<span class="sd">    :rtype: numpy.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">char</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">factor</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;f&quot;</span><span class="p">:</span> <span class="mf">1e2</span><span class="p">,</span> <span class="s2">&quot;d&quot;</span><span class="p">:</span> <span class="mf">1e4</span><span class="p">}</span>
+    <span class="n">rcond</span> <span class="o">=</span> <span class="n">factor</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">y</span><span class="p">[</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">rcond</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">rcond</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">DMDOptOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DMD operator for OptDMD.</span>
+
+<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes the</span>
+<span class="sd">        optimal rank and uses it for truncation; if positive interger, the</span>
+<span class="sd">        method uses the argument for the truncation; if float between 0 and 1,</span>
+<span class="sd">        the rank is the number of the biggest singular values that are needed</span>
+<span class="sd">        to reach the &#39;energy&#39; specified by `svd_rank`; if -1, the method does</span>
+<span class="sd">        not compute truncation.</span>
+<span class="sd">    :type svd_rank: int or float</span>
+<span class="sd">    :param str factorization: compute either the eigenvalue decomposition of</span>
+<span class="sd">        the unknown high-dimensional DMD operator (factorization=&quot;evd&quot;) or</span>
+<span class="sd">        its singular value decomposition (factorization=&quot;svd&quot;). Default is</span>
+<span class="sd">        &quot;evd&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">svd_rank</span><span class="p">,</span> <span class="n">factorization</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span>
+            <span class="n">exact</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">tikhonov_regularization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_factorization</span> <span class="o">=</span> <span class="n">factorization</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">right_eigenvectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factorization</span> <span class="o">==</span> <span class="s2">&quot;evd&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_right_eigenvectors</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Eigenquantities haven&#39;t been computed yet.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the low-rank operator.</span>
+
+<span class="sd">        :param numpy.ndarray X: matrix containing the snapshots x0,..x{n-1} by</span>
+<span class="sd">            column.</span>
+<span class="sd">        :param numpy.ndarray Y: matrix containing the snapshots x1,..x{n} by</span>
+<span class="sd">            column.</span>
+<span class="sd">        :return: Left singular vectors of Z, and Q.</span>
+<span class="sd">        :rtype: numpy.ndarray, numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">Ux</span><span class="p">,</span> <span class="n">Sx</span><span class="p">,</span> <span class="n">Vx</span> <span class="o">=</span> <span class="n">compute_svd</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">Y</span><span class="p">,</span> <span class="n">Vx</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Sx</span><span class="p">),</span> <span class="n">pinv_diag</span><span class="p">(</span><span class="n">Sx</span><span class="p">),</span> <span class="n">Vx</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()]</span>
+        <span class="p">)</span>
+
+        <span class="n">Uz</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_svd</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span><span class="p">)</span>
+
+        <span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">Uz</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Vx</span><span class="p">,</span> <span class="n">pinv_diag</span><span class="p">(</span><span class="n">Sx</span><span class="p">),</span> <span class="n">Ux</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Uz</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factorization</span> <span class="o">==</span> <span class="s2">&quot;evd&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_eigenquantities</span><span class="p">(</span><span class="n">Uz</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Uz</span><span class="p">,</span> <span class="n">Q</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Private method that computes eigenvalues and eigenvectors of the</span>
+<span class="sd">        low-dimensional operator.</span>
+
+<span class="sd">        :param numpy.ndarray P: Left singular vectors of Z.</span>
+<span class="sd">        :param numpy.ndarray Q: The matrix Q.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_compute_eigenquantities</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Q</span><span class="p">):</span>
+        <span class="n">Atilde</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_numpy_array</span>
+
+        <span class="n">vals</span><span class="p">,</span> <span class="n">vecs_left</span><span class="p">,</span> <span class="n">vecs_right</span> <span class="o">=</span> <span class="n">eig</span><span class="p">(</span><span class="n">Atilde</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># --&gt; Build the matrix of right eigenvectors.</span>
+        <span class="n">right_vecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="n">P</span><span class="p">,</span> <span class="n">Atilde</span><span class="p">,</span> <span class="n">vecs_right</span><span class="p">])</span>
+        <span class="n">right_vecs</span> <span class="o">=</span> <span class="n">right_vecs</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pinv_diag</span><span class="p">(</span><span class="n">vals</span><span class="p">))</span>
+
+        <span class="c1"># --&gt; Build the matrix of left eigenvectors.</span>
+        <span class="n">left_vecs</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vecs_left</span><span class="p">)</span>
+        <span class="n">left_vecs</span> <span class="o">=</span> <span class="n">left_vecs</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pinv_diag</span><span class="p">(</span><span class="n">vals</span><span class="p">))</span>
+
+        <span class="c1"># --&gt; Rescale the left eigenvectors.</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">left_vecs</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">right_vecs</span><span class="p">))</span>
+        <span class="n">left_vecs</span> <span class="o">=</span> <span class="n">left_vecs</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pinv_diag</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span> <span class="o">=</span> <span class="n">vals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvectors</span> <span class="o">=</span> <span class="n">left_vecs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_right_eigenvectors</span> <span class="o">=</span> <span class="n">right_vecs</span>
+
+    <span class="k">def</span> <span class="nf">_compute_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">V</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This function has not been implemented yet.&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="OptDMD"><a class="viewcode-back" href="../../optdmd.html#pydmd.optdmd.OptDMD">[docs]</a><span class="k">class</span> <span class="nc">OptDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dynamic Mode Decomposition</span>
+
+<span class="sd">    This class implements the closed-form solution to the DMD minimization</span>
+<span class="sd">    problem. It relies on the optimal solution given by [HeasHerzet16]_.</span>
+
+<span class="sd">    .. [HeasHerzet16] P. Heas &amp; C. Herzet. Low-rank dynamic mode decomposition:</span>
+<span class="sd">        optimal solution in polynomial time. arXiv:1610.02962. 2016.</span>
+
+<span class="sd">    :param str factorization: compute either the eigenvalue decomposition of</span>
+<span class="sd">        the unknown high-dimensional DMD operator (factorization=&quot;evd&quot;) or</span>
+<span class="sd">        its singular value decomposition (factorization=&quot;svd&quot;). Default is</span>
+<span class="sd">        &quot;evd&quot;.</span>
+<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes the</span>
+<span class="sd">        optimal rank and uses it for truncation; if positive interger, the</span>
+<span class="sd">        method uses the argument for the truncation; if float between 0 and 1,</span>
+<span class="sd">        the rank is the number of the biggest singular values that are needed</span>
+<span class="sd">        to reach the &#39;energy&#39; specified by `svd_rank`; if -1, the method does</span>
+<span class="sd">        not compute truncation.</span>
+<span class="sd">    :type svd_rank: int or float</span>
+<span class="sd">    :param int tlsq_rank: rank truncation computing Total Least Square. Default</span>
+<span class="sd">        is 0, that means TLSQ is not applied.</span>
+<span class="sd">    :param opt: argument to control the computation of DMD modes amplitudes. See</span>
+<span class="sd">        :class:`DMDBase`. Default is False.</span>
+<span class="sd">    :type opt: bool or int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factorization</span><span class="o">=</span><span class="s2">&quot;evd&quot;</span><span class="p">,</span> <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_factorization</span> <span class="o">=</span> <span class="n">factorization</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tlsq_rank</span> <span class="o">=</span> <span class="n">tlsq_rank</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">DMDOptOperator</span><span class="p">(</span>
+            <span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span> <span class="n">factorization</span><span class="o">=</span><span class="n">factorization</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_svds</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_input_space</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_space</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_input_holder</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_holder</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">factorization</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factorization</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_space</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">eigenvalues</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span>
+
+<div class="viewcode-block" id="OptDMD.fit"><a class="viewcode-back" href="../../optdmd.html#pydmd.optdmd.OptDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the Dynamic Modes Decomposition to the input data.</span>
+
+<span class="sd">        :param X: the input snapshots.</span>
+<span class="sd">        :type X: numpy.ndarray or iterable</span>
+<span class="sd">        :param Y: the input snapshots at sequential timestep, if passed. Default</span>
+<span class="sd">            is None.</span>
+<span class="sd">        :type Y: numpy.ndarray or iterable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">Y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># x = x[k]</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>  <span class="c1"># y = x[k+1]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_input_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_holder</span><span class="o">.</span><span class="n">snapshots</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_output_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_holder</span><span class="o">.</span><span class="n">snapshots</span>
+
+        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">compute_tlsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tlsq_rank</span><span class="p">)</span>
+        <span class="n">Uz</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">compute_operator</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">factorization</span> <span class="o">==</span> <span class="s2">&quot;svd&quot;</span><span class="p">:</span>
+            <span class="c1"># --&gt; DMD basis for the input space.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_input_space</span> <span class="o">=</span> <span class="n">Q</span>
+
+            <span class="c1"># --&gt; DMD basis for the output space.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_output_space</span> <span class="o">=</span> <span class="n">Uz</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">factorization</span> <span class="o">==</span> <span class="s2">&quot;evd&quot;</span><span class="p">:</span>
+            <span class="c1"># --&gt; Compute DMD eigenvalues and right/left eigenvectors</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_input_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_output_space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">right_eigenvectors</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="OptDMD.predict"><a class="viewcode-back" href="../../optdmd.html#pydmd.optdmd.OptDMD.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict the output Y given the input X using the fitted DMD model.</span>
+
+<span class="sd">        :param numpy.ndarray X: the input vector.</span>
+<span class="sd">        :return: one time-step ahead predicted output.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">factorization</span> <span class="o">==</span> <span class="s2">&quot;svd&quot;</span><span class="p">:</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_space</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">X</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">factorization</span> <span class="o">==</span> <span class="s2">&quot;evd&quot;</span><span class="p">:</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_output_space</span><span class="p">,</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span><span class="p">),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_input_space</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span>
+                    <span class="n">X</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Y</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This feature has not been implemented yet.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@modes_activation_bitmask</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This feature has not been implemented yet.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OptDMD._compute_amplitudes"><a class="viewcode-back" href="../../optdmd.html#pydmd.optdmd.OptDMD._compute_amplitudes">[docs]</a>    <span class="k">def</span> <span class="nf">_compute_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modes</span><span class="p">,</span> <span class="n">snapshots</span><span class="p">,</span> <span class="n">eigs</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This function has not been implemented yet.&quot;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This function has not been implemented yet.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This function has not been implemented yet.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This function has not been implemented yet.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@modes_activation_bitmask</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This function has not been implemented yet.&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2023, PyDMD contributors.
+      <span class="lastupdated">Last updated on Apr 17, 2023.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

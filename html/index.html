@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to PyDMD’s documentation! &mdash; PyDMD 0.4.1 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Code Documentation" href="code.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            PyDMD
+          </a>
+              <div class="version">
+                0.4.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="code.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Welcome to PyDMD’s documentation!</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="welcome-to-pydmd-s-documentation">
+<h1>Welcome to PyDMD’s documentation!<a class="headerlink" href="#welcome-to-pydmd-s-documentation" title="Permalink to this headline">¶</a></h1>
+<a class="reference internal image-reference" href="_images/logo_PyDMD.png"><img alt="_images/logo_PyDMD.png" class="align-right" src="_images/logo_PyDMD.png" style="width: 150px; height: 150px;" /></a>
+<p>Python Dynamic Mode Decomposition.</p>
+<div class="section" id="description">
+<h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
+<p>PyDMD is a Python package that uses Dynamic Mode Decomposition for a data-driven model simplification based on spatiotemporal coherent structures.</p>
+<p>Dynamic Mode Decomposition (DMD) is a model reduction algorithm developed by Schmid (see “Dynamic mode decomposition of numerical and experimental data”). Since then has emerged as a powerful tool for analyzing the dynamics of nonlinear systems. DMD relies only on the high-fidelity measurements, like experimental data and numerical simulations, so it is an equation-free algorithm. Its popularity is also due to the fact that it does not make any assumptions about the underlying system. See Kutz (“Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems”) for a comprehensive overview of the algorithm and its connections to the Koopman-operator analysis, initiated in Koopman (“Hamiltonian systems and transformation in Hilbert space”), along with examples in computational fluid dynamics.</p>
+<p>In the last years many variants arose, such as multiresolution DMD, compressed DMD, forward backward DMD, higher order DMD, and physics-informed DMD among others, in order to deal with noisy data, big dataset, or spurius data for example. We implemented in Python the majority of the DMD extensions currently present in the literature with a user friendly interface. We also provide many tutorials that show all the characteristics of the software.</p>
+<a class="reference internal image-reference" href="_images/pydmd_capabilities.png"><img alt="_images/pydmd_capabilities.png" class="align-center" src="_images/pydmd_capabilities.png" style="width: 700px;" /></a>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>PyDMD requires requires numpy, scipy, matplotlib, future, sphinx (for the documentation) and pytest (for local test). The code is tested for Python 3, while compatibility of Python 2 is not guaranteed anymore. It can be installed using pip or directly from the source code.</p>
+<div class="section" id="installing-via-pip">
+<h3>Installing via PIP<a class="headerlink" href="#installing-via-pip" title="Permalink to this headline">¶</a></h3>
+<p>Mac and Linux users can install pre-built binary packages using pip.
+To install the package just type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">pydmd</span>
+</pre></div>
+</div>
+<p>To uninstall the package:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">uninstall</span> <span class="n">pydmd</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="installing-from-source">
+<h3>Installing from source<a class="headerlink" href="#installing-from-source" title="Permalink to this headline">¶</a></h3>
+<p>The official distribution is on GitHub, and you can clone the repository using</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">mathLab</span><span class="o">/</span><span class="n">PyDMD</span>
+</pre></div>
+</div>
+<p>To install the package just type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
+</pre></div>
+</div>
+<p>To uninstall the package type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">uninstall</span> <span class="n">pydmd</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="developer-s-guide">
+<h2>Developer’s Guide<a class="headerlink" href="#developer-s-guide" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="code.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="tutorials">
+<h2>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h2>
+<p>We made some tutorial examples. Please refer to the official GitHub repository for the last updates. Here the list of the exported tutorials:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="tutorial1dmd.html">Tutorial 1</a> - Here we show a basic application of the standard dynamic mode decomposition on a simple system in order to reconstruct and analyze it.</p></li>
+<li><p><a class="reference external" href="tutorial2advdmd.html">Tutorial 2</a> - Here we show a more complex application of the standard dynamic mode decomposition on a 2D system evolving in time, focusing on the advanced settings the class provides.</p></li>
+<li><p><a class="reference external" href="tutorial3mrdmd.html">Tutorial 3</a> - Here we show the application of the multi-resolution dynamic mode decomposition on a system that contains transient time events.</p></li>
+<li><p><a class="reference external" href="tutorial4cdmd.html">Tutorial 4</a> - Here we show the application of the compressed dynamic mode decomposition in order to decrease the computational cost required by decomposition.</p></li>
+<li><p><a class="reference external" href="tutorial5fbdmd.html">Tutorial 5</a> - Here we show the forward-backward dynamic mode decomposition on a dataset coming from a fluid dynamics problem.</p></li>
+<li><p><a class="reference external" href="tutorial6hodmd.html">Tutorial 6</a> - Here we show the higher order dynamic mode decomposition applied on 1D snapshots.</p></li>
+<li><p><a class="reference external" href="tutorial7dmdc.html">Tutorial 7</a> - Here we show the dynamic mode decomposition incorporanting the effect of control, on a toy dataset.</p></li>
+<li><p><a class="reference external" href="tutorial8comparison.html">Tutorial 8</a> - Here we show the comparison between standard DMD and the optimal closed-form DMD.</p></li>
+<li><p><a class="reference external" href="tutorial9spdmd.html">Tutorial 9</a> - Here we show the sparsity-promoting DMD on a dataset coming from an heat transfer problem.</p></li>
+<li><p><a class="reference external" href="tutorial10paramdmd.html">Tutorial 10</a> - Here we apply Parametric DMD (in two possible approaches) to a simple toy problem.</p></li>
+<li><p><a class="reference external" href="dev-tutorial1.html">Developers Tutorial 1</a> - Here we show the procedure to extending PyDMD by adding a new version of DMD.</p></li>
+</ul>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>To implement the various versions of the DMD algorithm we follow these works:</p>
+<ul class="simple">
+<li><p>Kutz, Brunton, Brunton, Proctor. Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems. SIAM Other Titles in Applied Mathematics, 2016.</p></li>
+<li><p>Gavish, Donoho. The optimal hard threshold for singular values is 4/sqrt(3). IEEE Transactions on Information Theory, 2014.</p></li>
+<li><p>Matsumoto, Indinger. On-the-fly algorithm for Dynamic Mode Decomposition using Incremental Singular Value Decomposition and Total Least Squares. 2017.</p></li>
+<li><p>Hemati, Rowley, Deem, Cattafesta. De-biasing the dynamic mode decomposition for applied Koopman spectral analysis of noisy datasets. Theoretical and Computational Fluid Dynamics, 2017.</p></li>
+<li><p>Dawson, Hemati, Williams, Rowley. Characterizing and correcting for the effect of sensor noise in the dynamic mode decomposition. Experiments in Fluids, 2016.</p></li>
+<li><p>Kutz, Fu, Brunton. Multiresolution Dynamic Mode Decomposition. SIAM Journal on Applied Dynamical Systems, 2016.</p></li>
+<li><p>Erichson, Brunton, Kutz. Compressed dynamic mode decomposition for background modeling. Journal of Real-Time Image Processing, 2016.</p></li>
+<li><p>Le Clainche, Vega. Higher Order Dynamic Mode Decomposition. Journal on Applied Dynamical Systems, 2017.</p></li>
+</ul>
+</div>
+<div class="section" id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="code.html" class="btn btn-neutral float-right" title="Code Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2023, PyDMD contributors.
+      <span class="lastupdated">Last updated on Apr 17, 2023.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

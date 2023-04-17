@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pydmd.dmdbase &mdash; PyDMD 0.4.1 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            PyDMD
+          </a>
+              <div class="version">
+                0.4.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pydmd.dmdbase</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pydmd.dmdbase</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Base module for the DMD: `fit` method must be implemented in inherited classes</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span><span class="p">,</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">splitext</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span>
+
+
+<span class="k">class</span> <span class="nc">ActivationBitmaskProxy</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A proxy which stands in the middle between a bitmask and an instance of</span>
+<span class="sd">    :class:`DMDBase`. The proxy holds the original values of modes,</span>
+<span class="sd">    eigenvalues and amplitudes, and exposes (via</span>
+<span class="sd">    :func:`ActivationBitmaskProxy.modes`, :func:`ActivationBitmaskProxy.eigs`</span>
+<span class="sd">    and :func:`ActivationBitmaskProxy.amplitudes`) the proxied (i.e. filtered)</span>
+<span class="sd">    those quantities, depending on the current value of the</span>
+<span class="sd">    bitmask (see also :func:`ActivationBitmaskProxy.change_bitmask`).</span>
+
+<span class="sd">    This machinery is needed in order to allow for the modification of the</span>
+<span class="sd">    matrices containing modes, amplitudes and eigenvalues after the indexing</span>
+<span class="sd">    provided by the bitmask. Since double indexing in NumPy does not deliver a</span>
+<span class="sd">    modifiable view of the original array, we need to propagate any change</span>
+<span class="sd">    on the selection to the original matrices at some point: we decided to</span>
+<span class="sd">    propagate the changes just before a change in the bitmask, namely in the</span>
+<span class="sd">    last available moment before losing the information provided by the ``old&#39;&#39;</span>
+<span class="sd">    bitmask.</span>
+
+<span class="sd">    :param dmd_operator: DMD operator to be proxied.</span>
+<span class="sd">    :type dmd_operator: DMDOperator</span>
+<span class="sd">    :param amplitudes: DMD amplitudes.</span>
+<span class="sd">    :type amplitudes: np.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dmd_operator</span><span class="p">,</span> <span class="n">amplitudes</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_modes</span> <span class="o">=</span> <span class="n">dmd_operator</span><span class="o">.</span><span class="n">modes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_eigs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">dmd_operator</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_amplitudes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">amplitudes</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">old_bitmask</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">change_bitmask</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dmd_operator</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">),</span> <span class="kc">True</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">change_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change the bitmask which regulates this proxy.</span>
+
+<span class="sd">        Before changing the bitmask this method reflects any change performed</span>
+<span class="sd">        on the proxied quantities provided by this proxy to the original values</span>
+<span class="sd">        of the quantities.</span>
+
+<span class="sd">        :param value: New value of the bitmask, represented by an array of</span>
+<span class="sd">            `bool` whose size is the same of the number of DMD modes.</span>
+<span class="sd">        :type value: np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># apply changes made on the proxied values to the original values</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_bitmask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_original_modes</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_bitmask</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_original_eigs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">old_bitmask</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_original_amplitudes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">old_bitmask</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">amplitudes</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_original_modes</span><span class="p">)[:,</span> <span class="n">value</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_original_eigs</span><span class="p">)[</span><span class="n">value</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_amplitudes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_original_amplitudes</span><span class="p">)[</span><span class="n">value</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">old_bitmask</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Proxied (i.e. filtered according to the bitmask) view on the matrix</span>
+<span class="sd">        of DMD modes.</span>
+
+<span class="sd">        :return: A matrix containing the selected DMD modes.</span>
+<span class="sd">        :rtype: np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Proxied (i.e. filtered according to the bitmask) view on the array</span>
+<span class="sd">        of DMD eigenvalues.</span>
+
+<span class="sd">        :return: An array containing the selected DMD eigenvalues.</span>
+<span class="sd">        :rtype: np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Proxied (i.e. filtered according to the bitmask) view on the array</span>
+<span class="sd">        of DMD amplitudes.</span>
+
+<span class="sd">        :return: An array containing the selected DMD amplitudes.</span>
+<span class="sd">        :rtype: np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_amplitudes</span>
+
+
+<div class="viewcode-block" id="DMDBase"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase">[docs]</a><span class="k">class</span> <span class="nc">DMDBase</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dynamic Mode Decomposition base class.</span>
+
+<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes the</span>
+<span class="sd">        optimal rank and uses it for truncation; if positive interger, the</span>
+<span class="sd">        method uses the argument for the truncation; if float between 0 and 1,</span>
+<span class="sd">        the rank is the number of the biggest singular values that are needed</span>
+<span class="sd">        to reach the &#39;energy&#39; specified by `svd_rank`; if -1, the method does</span>
+<span class="sd">        not compute truncation.</span>
+<span class="sd">    :type svd_rank: int or float</span>
+<span class="sd">    :param int tlsq_rank: rank truncation computing Total Least Square. Default</span>
+<span class="sd">        is 0, that means no truncation.</span>
+<span class="sd">    :param bool exact: flag to compute either exact DMD or projected DMD.</span>
+<span class="sd">        Default is False.</span>
+<span class="sd">    :param opt: If True, amplitudes are computed like in optimized DMD  (see</span>
+<span class="sd">        :func:`~dmdbase.DMDBase._compute_amplitudes` for reference). If</span>
+<span class="sd">        False, amplitudes are computed following the standard algorithm. If</span>
+<span class="sd">        `opt` is an integer, it is used as the (temporal) index of the snapshot</span>
+<span class="sd">        used to compute DMD modes amplitudes (following the standard</span>
+<span class="sd">        algorithm).</span>
+<span class="sd">        The reconstruction will generally be better in time instants near the</span>
+<span class="sd">        chosen snapshot; however increasing `opt` may lead to wrong results</span>
+<span class="sd">        when the system presents small eigenvalues. For this reason a manual</span>
+<span class="sd">        selection of the number of eigenvalues considered for the analyisis may</span>
+<span class="sd">        be needed (check `svd_rank`). Also setting `svd_rank` to a value</span>
+<span class="sd">        between 0 and 1 may give better results. Default is False.</span>
+<span class="sd">    :type opt: bool or int</span>
+<span class="sd">    :param rescale_mode: Scale Atilde as shown in</span>
+<span class="sd">            10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its</span>
+<span class="sd">            eigendecomposition. None means no rescaling, &#39;auto&#39; means automatic</span>
+<span class="sd">            rescaling using singular values, otherwise the scaling factors.</span>
+<span class="sd">    :type rescale_mode: {&#39;auto&#39;} or None or numpy.ndarray</span>
+<span class="sd">    :param bool forward_backward: If True, the low-rank operator is computed</span>
+<span class="sd">        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is</span>
+<span class="sd">        False.</span>
+<span class="sd">    :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by</span>
+<span class="sd">        magnitude if `sorted_eigs=&#39;abs&#39;`, by real part (and then by imaginary</span>
+<span class="sd">        part to break ties) if `sorted_eigs=&#39;real&#39;`. Default: False.</span>
+<span class="sd">    :type sorted_eigs: {&#39;real&#39;, &#39;abs&#39;} or False</span>
+<span class="sd">    :param tikhonov_regularization: Tikhonov parameter for the regularization.</span>
+<span class="sd">        If `None`, no regularization is applied, if `float`, it is used as the</span>
+<span class="sd">        :math:`\\lambda` tikhonov parameter.</span>
+<span class="sd">    :type tikhonov_regularization: int or float</span>
+
+<span class="sd">    :cvar dict original_time: dictionary that contains information about the</span>
+<span class="sd">        time window where the system is sampled:</span>
+
+<span class="sd">           - `t0` is the time of the first input snapshot;</span>
+<span class="sd">           - `tend` is the time of the last input snapshot;</span>
+<span class="sd">           - `dt` is the delta time between the snapshots.</span>
+
+<span class="sd">    :cvar dict dmd_time: dictionary that contains information about the time</span>
+<span class="sd">        window where the system is reconstructed:</span>
+
+<span class="sd">            - `t0` is the time of the first approximated solution;</span>
+<span class="sd">            - `tend` is the time of the last approximated solution;</span>
+<span class="sd">            - `dt` is the delta time between the approximated solutions.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">opt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">rescale_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">forward_backward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">sorted_eigs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">tikhonov_regularization</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">DMDOperator</span><span class="p">(</span>
+            <span class="n">svd_rank</span><span class="o">=</span><span class="n">svd_rank</span><span class="p">,</span>
+            <span class="n">exact</span><span class="o">=</span><span class="n">exact</span><span class="p">,</span>
+            <span class="n">rescale_mode</span><span class="o">=</span><span class="n">rescale_mode</span><span class="p">,</span>
+            <span class="n">forward_backward</span><span class="o">=</span><span class="n">forward_backward</span><span class="p">,</span>
+            <span class="n">sorted_eigs</span><span class="o">=</span><span class="n">sorted_eigs</span><span class="p">,</span>
+            <span class="n">tikhonov_regularization</span><span class="o">=</span><span class="n">tikhonov_regularization</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tlsq_rank</span> <span class="o">=</span> <span class="n">tlsq_rank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_time</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_time</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_opt</span> <span class="o">=</span> <span class="n">opt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exact</span> <span class="o">=</span> <span class="n">exact</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># amplitudes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dmd_timesteps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the timesteps of the reconstructed states.</span>
+
+<span class="sd">        :return: the time intervals of the original snapshots.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;tend&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmd_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">original_timesteps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the timesteps of the original snapshot.</span>
+
+<span class="sd">        :return: the time intervals of the original snapshots.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;tend&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the matrix containing the DMD modes, stored by column.</span>
+
+<span class="sd">        :return: the matrix containing the DMD modes.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_allocate_modes_bitmask_proxy</span><span class="p">()</span>
+                <span class="c1"># if the value is still None, it means that we cannot create</span>
+                <span class="c1"># the proxy at the moment</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">modes</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span><span class="o">.</span><span class="n">modes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the instance of DMDOperator.</span>
+
+<span class="sd">        :return: the instance of DMDOperator</span>
+<span class="sd">        :rtype: DMDOperator</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the eigenvalues of A tilde.</span>
+
+<span class="sd">        :return: the eigenvalues from the eigendecomposition of `atilde`.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_allocate_modes_bitmask_proxy</span><span class="p">()</span>
+                <span class="c1"># if the value is still None, it means that we cannot create</span>
+                <span class="c1"># the proxy at the moment</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">eigenvalues</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span><span class="o">.</span><span class="n">eigs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the time evolution of each mode.</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \\mathbf{x}(t) \\approx</span>
+<span class="sd">            \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\exp \\left( \\omega_{k} t</span>
+<span class="sd">            \\right) b_{k} = \\sum_{k=1}^{r} \\boldsymbol{\\phi}_{k} \\left(</span>
+<span class="sd">            \\lambda_{k} \\right)^{\\left( t / \\Delta t \\right)} b_{k}</span>
+
+<span class="sd">        :return: the matrix that contains all the time evolution, stored by</span>
+<span class="sd">            row.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_timesteps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="n">tpow</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dmd_timesteps</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span>
+        <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+
+        <span class="c1"># The new formula is x_(k+j) = \Phi \Lambda^k \Phi^(-1) x_j.</span>
+        <span class="c1"># Since j is fixed, for a given snapshot &quot;u&quot; we have the following</span>
+        <span class="c1"># formula:</span>
+        <span class="c1"># x_u = \Phi \Lambda^{u-j} \Phi^(-1) x_j</span>
+        <span class="c1"># Therefore tpow must be scaled appropriately.</span>
+        <span class="n">tpow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_translate_eigs_exponent</span><span class="p">(</span><span class="n">tpow</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">tpow</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">amplitudes</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+
+<div class="viewcode-block" id="DMDBase._translate_eigs_exponent"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._translate_eigs_exponent">[docs]</a>    <span class="k">def</span> <span class="nf">_translate_eigs_exponent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tpow</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transforms the exponent of the eigenvalues in the dynamics formula</span>
+<span class="sd">        according to the selected value of `self._opt` (check the documentation</span>
+<span class="sd">        for `opt` in :func:`__init__ &lt;dmdbase.DMDBase.__init__&gt;`).</span>
+
+<span class="sd">        :param tpow: the exponent(s) of Sigma in the original DMD formula.</span>
+<span class="sd">        :type tpow: int or np.ndarray</span>
+<span class="sd">        :return: the exponent(s) adjusted according to `self._opt`</span>
+<span class="sd">        :rtype: int or np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_opt</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="n">amplitudes_snapshot_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">amplitudes_snapshot_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opt</span>
+
+        <span class="k">if</span> <span class="n">amplitudes_snapshot_index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># we take care of negative indexes: -n becomes T - n</span>
+            <span class="k">return</span> <span class="n">tpow</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">amplitudes_snapshot_index</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tpow</span> <span class="o">-</span> <span class="n">amplitudes_snapshot_index</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the reconstructed data.</span>
+
+<span class="sd">        :return: the matrix that contains the reconstructed snapshots.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dynamics</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the input data (space flattened).</span>
+
+<span class="sd">        :return: the matrix that contains the flattened snapshots.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span><span class="o">.</span><span class="n">snapshots</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">snapshots_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the original input snapshot shape.</span>
+
+<span class="sd">        :return: input snapshots shape.</span>
+<span class="sd">        :rtype: tuple</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span><span class="o">.</span><span class="n">snapshots_shape</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the amplitude spectrum.</span>
+
+<span class="sd">        :return: the array that contains the frequencies of the eigenvalues.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">growth_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># To check</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the growth rate values relative to the modes.</span>
+
+<span class="sd">        :return: the Floquet values</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;dt&quot;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the coefficients that minimize the error between the original</span>
+<span class="sd">        system and the reconstructed one. For futher information, see</span>
+<span class="sd">        `dmdbase._compute_amplitudes`.</span>
+
+<span class="sd">        :return: the array that contains the amplitudes coefficient.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_allocate_modes_bitmask_proxy</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span><span class="o">.</span><span class="n">amplitudes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fitted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check whether this DMD instance has been fitted.</span>
+
+<span class="sd">        :return: `True` is the instance has been fitted, `False` otherwise.</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">modes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the bitmask which controls which DMD modes are enabled at the</span>
+<span class="sd">        moment in this DMD instance.</span>
+
+<span class="sd">        The DMD instance must be fitted before this property becomes valid.</span>
+<span class="sd">        After :func:`fit` is called, the defalt value of</span>
+<span class="sd">        `modes_activation_bitmask` is an array of `True` values of the same</span>
+<span class="sd">        shape of :func:`amplitudes`.</span>
+
+<span class="sd">        The array returned is read-only (this allow us to react appropriately</span>
+<span class="sd">        to changes in the bitmask). In order to modify the bitmask you need to</span>
+<span class="sd">        set the field to a brand-new value (see example below).</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &gt;&gt;&gt; # this is an error</span>
+<span class="sd">            &gt;&gt;&gt; dmd.modes_activation_bitmask[[1,2]] = False</span>
+<span class="sd">            ValueError: assignment destination is read-only</span>
+<span class="sd">            &gt;&gt;&gt; tmp = np.array(dmd.modes_activation_bitmask)</span>
+<span class="sd">            &gt;&gt;&gt; tmp[[1,2]] = False</span>
+<span class="sd">            &gt;&gt;&gt; dmd.modes_activation_bitmask = tmp</span>
+
+<span class="sd">        :return: The DMD modes activation bitmask.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># check that the DMD was fitted</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This DMD instance has not been fitted yet.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_allocate_modes_bitmask_proxy</span><span class="p">()</span>
+
+        <span class="n">bitmask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span><span class="o">.</span><span class="n">old_bitmask</span>
+        <span class="c1"># make sure that the array is immutable</span>
+        <span class="n">bitmask</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">bitmask</span>
+
+    <span class="nd">@modes_activation_bitmask</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="c1"># check that the DMD was fitted</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This DMD instance has not been fitted yet.&quot;</span><span class="p">)</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Unxpected dtype, expected bool, got </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># check that the shape is correct</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes_activation_bitmask</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Expected shape </span><span class="si">{}</span><span class="s2">, got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">modes_activation_bitmask</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span><span class="o">.</span><span class="n">change_bitmask</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DMDBase._allocate_modes_bitmask_proxy"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._allocate_modes_bitmask_proxy">[docs]</a>    <span class="k">def</span> <span class="nf">_allocate_modes_bitmask_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Utility method which allocates the activation bitmask proxy using the</span>
+<span class="sd">        quantities that are currently available in this DMD instance. Fails</span>
+<span class="sd">        quietly if the amplitudes are not set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_b&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span> <span class="o">=</span> <span class="n">ActivationBitmaskProxy</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span>
+            <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Restrict the DMD modes used by this instance to a subset of indexes</span>
+<span class="sd">        specified by keys. The value returned is a shallow copy of this DMD</span>
+<span class="sd">        instance, with a different value in :func:`modes_activation_bitmask`.</span>
+<span class="sd">        Therefore assignments to attributes are not reflected into the original</span>
+<span class="sd">        instance.</span>
+
+<span class="sd">        However the DMD instance returned should not be used for low-level</span>
+<span class="sd">        manipulations on DMD modes, since the underlying DMD operator is shared</span>
+<span class="sd">        with the original instance. For this reasons modifications to NumPy</span>
+<span class="sd">        arrays may result in unwanted and unspecified situations which should</span>
+<span class="sd">        be avoided in principle.</span>
+
+<span class="sd">        :param key: An index (integer), slice or list of indexes.</span>
+<span class="sd">        :type key: int or slice or list or np.ndarray</span>
+<span class="sd">        :return: A shallow copy of this DMD instance having only a subset of</span>
+<span class="sd">            DMD modes which are those indexed by `key`.</span>
+<span class="sd">        :rtype: DMDBase</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">slice</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="n">filter_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">filter_function</span><span class="p">,</span> <span class="n">key</span><span class="p">)):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;Invalid argument type, expected a slice, an int, or &quot;</span>
+                        <span class="s2">&quot;a list of indexes.&quot;</span>
+                    <span class="p">)</span>
+                <span class="c1"># no repeated elements</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Repeated indexes are not supported.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid argument type, expected a slice, an int, or a list &quot;</span>
+                <span class="s2">&quot;of indexes, got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+            <span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modes_activation_bitmask</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">mask</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">shallow_copy</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">shallow_copy</span><span class="o">.</span><span class="n">_allocate_modes_bitmask_proxy</span><span class="p">()</span>
+        <span class="n">shallow_copy</span><span class="o">.</span><span class="n">modes_activation_bitmask</span> <span class="o">=</span> <span class="n">mask</span>
+
+        <span class="k">return</span> <span class="n">shallow_copy</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">original_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A dictionary which contains information about the time window used to</span>
+<span class="sd">        fit this DMD instance.</span>
+
+<span class="sd">        Inside the dictionary:</span>
+
+<span class="sd">        ======  ====================================================================================</span>
+<span class="sd">        Key     Value</span>
+<span class="sd">        ======  ====================================================================================</span>
+<span class="sd">        `t0`    Time of the first input snapshot (0 by default).</span>
+<span class="sd">        `tend`  Time of the last input snapshot (usually corresponds to the number of snapshots).</span>
+<span class="sd">        `dt`    Timestep between two snapshots (1 by default).</span>
+<span class="sd">        ======  ====================================================================================</span>
+
+<span class="sd">        :return: A dict which contains info about the input time frame.</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">_set_initial_time_dictionary() has not been called, did you call fit()?&quot;&quot;&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original_time</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dmd_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A dictionary which contains information about the time window used to</span>
+<span class="sd">        reconstruct/predict using this DMD instance. By default this is equal</span>
+<span class="sd">        to :func:`original_time`.</span>
+
+<span class="sd">        Inside the dictionary:</span>
+
+<span class="sd">        ======  ====================================================================================</span>
+<span class="sd">        Key     Value</span>
+<span class="sd">        ======  ====================================================================================</span>
+<span class="sd">        `t0`    Time of the first output snapshot.</span>
+<span class="sd">        `tend`  Time of the last output snapshot.</span>
+<span class="sd">        `dt`    Timestep between two snapshots.</span>
+<span class="sd">        ======  ====================================================================================</span>
+
+<span class="sd">        :return: A dict which contains info about the input time frame.</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">_set_initial_time_dictionary() has not been called, did you call fit()?&quot;&quot;&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_time</span>
+
+    <span class="nd">@dmd_time</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">dmd_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_time</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DMDBase._set_initial_time_dictionary"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._set_initial_time_dictionary">[docs]</a>    <span class="k">def</span> <span class="nf">_set_initial_time_dictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the initial values for the class fields `time_dict` and</span>
+<span class="sd">        `original_time`. This is usually called in `fit()` and never again.</span>
+
+<span class="sd">        :param time_dict: Initial time dictionary for this DMD instance.</span>
+<span class="sd">        :type time_dict: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="s2">&quot;t0&quot;</span> <span class="ow">in</span> <span class="n">time_dict</span> <span class="ow">and</span> <span class="s2">&quot;tend&quot;</span> <span class="ow">in</span> <span class="n">time_dict</span> <span class="ow">and</span> <span class="s2">&quot;dt&quot;</span> <span class="ow">in</span> <span class="n">time_dict</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;time_dict must contain the keys &quot;t0&quot;, &quot;tend&quot; and &quot;dt&quot;.&#39;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_dict</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;time_dict must contain only the keys &quot;t0&quot;, &quot;tend&quot; and &quot;dt&quot;.&#39;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_time</span> <span class="o">=</span> <span class="n">DMDTimeDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">time_dict</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_time</span> <span class="o">=</span> <span class="n">DMDTimeDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">time_dict</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="DMDBase.fit"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Abstract method to fit the snapshots matrices.</span>
+
+<span class="sd">        Not implemented, it has to be implemented in subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Subclass must implement abstract method </span><span class="si">{name}</span><span class="s2">.fit&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DMDBase._reset"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._reset">[docs]</a>    <span class="k">def</span> <span class="nf">_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset this instance. Should be called in :func:`fit`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="DMDBase.save"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the object to `fname` using the pickle module.</span>
+
+<span class="sd">        :param str fname: the name of file where the reduced order model will</span>
+<span class="sd">            be saved.</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        &gt;&gt;&gt; from pydmd import DMD</span>
+<span class="sd">        &gt;&gt;&gt; dmd = DMD(...) #  Construct here the rom</span>
+<span class="sd">        &gt;&gt;&gt; dmd.fit(...)</span>
+<span class="sd">        &gt;&gt;&gt; dmd.save(&#39;pydmd.dmd&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">pickle</span><span class="o">.</span><span class="n">HIGHEST_PROTOCOL</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DMDBase.load"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase.load">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the object from `fname` using the pickle module.</span>
+
+<span class="sd">        :return: The `ReducedOrderModel` loaded</span>
+
+<span class="sd">        Example:</span>
+
+<span class="sd">        &gt;&gt;&gt; from pydmd import DMD</span>
+<span class="sd">        &gt;&gt;&gt; dmd = DMD.load(&#39;pydmd.dmd&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; print(dmd.reconstructed_data)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">output</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DMDBase._optimal_dmd_matrices"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._optimal_dmd_matrices">[docs]</a>    <span class="k">def</span> <span class="nf">_optimal_dmd_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># compute the vandermonde matrix</span>
+        <span class="n">vander</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vander</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_timesteps</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vander</span><span class="p">,</span> <span class="n">vander</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exact</span><span class="p">:</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">vander</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">compute_svd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
+                        <span class="p">[</span>
+                            <span class="n">vander</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                            <span class="n">V</span><span class="p">,</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">eigenvectors</span><span class="p">,</span>
+                        <span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">P</span><span class="p">,</span> <span class="n">q</span></div>
+
+<div class="viewcode-block" id="DMDBase._compute_amplitudes"><a class="viewcode-back" href="../../dmdbase.html#pydmd.dmdbase.DMDBase._compute_amplitudes">[docs]</a>    <span class="k">def</span> <span class="nf">_compute_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the amplitude coefficients. If `self._opt` is False the</span>
+<span class="sd">        amplitudes are computed by minimizing the error between the modes and</span>
+<span class="sd">        the first snapshot; if `self._opt` is True the amplitudes are computed</span>
+<span class="sd">        by minimizing the error between the modes and all the snapshots, at the</span>
+<span class="sd">        expense of bigger computational cost.</span>
+
+<span class="sd">        This method uses the class variables self.snapshots (for the</span>
+<span class="sd">        snapshots), self.modes and self.eigs.</span>
+
+<span class="sd">        :return: the amplitudes array</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+
+<span class="sd">        References for optimal amplitudes:</span>
+<span class="sd">        Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,</span>
+<span class="sd">        https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_opt</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opt</span><span class="p">:</span>
+            <span class="c1"># b optimal</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimal_dmd_matrices</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_opt</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+                <span class="n">amplitudes_snapshot_index</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">amplitudes_snapshot_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_opt</span>
+
+            <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">modes</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">amplitudes_snapshot_index</span><span class="p">],</span>
+                <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">a</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">DMDTimeDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">,</span> <span class="s2">&quot;tend&quot;</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">]:</span>
+            <span class="nb">dict</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sd">&quot;&quot;&quot;DMDBase.dmd_time accepts only the following keys: &quot;t0&quot;,</span>
+<span class="sd">&quot;tend&quot;, &quot;dt&quot;, {} is not allowed.&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">key</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">o</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="p">[</span><span class="n">s</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">,</span> <span class="s2">&quot;tend&quot;</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="kc">False</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2023, PyDMD contributors.
+      <span class="lastupdated">Last updated on Apr 17, 2023.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
