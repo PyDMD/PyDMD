@@ -7,13 +7,13 @@ on:
       - master
 
 jobs:
-  prepare_matrix: ############################################################################
+  prepare_matrix: ##############################################################################
     runs-on: ubuntu-latest
     outputs:
        matrix: ${{ steps.setmatrix.outputs.matrix }}
 
     steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v2
         - name: Set up Python
           uses: actions/setup-python@v4.5.0
         - name: Set Dynamic Matrix
@@ -64,23 +64,3 @@ jobs:
         chmod +x CodacyCoverageReporter.sh
         ./CodacyCoverageReporter.sh report -r cobertura.xml  -t $CODACY_API_TOKEN
         
-  deploy_website: ############################################################################
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Create the new documentation
-      uses: ammaraskar/sphinx-action@master
-      with:
-        pre-build-command: "python -m pip install -U pip .[test] sphinx-rtd-theme"
-        docs-folder: "docs/"
-    - name: Setup directories
-      run: |
-        mkdir public
-        cp -r docs/build/html/* public/
-        cp -r tutorials public/
-    - name: Deploy
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: public/
-        allow_empty_commit: true
