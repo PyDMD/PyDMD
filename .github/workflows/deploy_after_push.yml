@@ -13,7 +13,7 @@ jobs:
        matrix: ${{ steps.setmatrix.outputs.matrix }}
 
     steps:
-        - uses: actions/checkout@v2
+        - uses: actions/checkout@v3
         - name: Set up Python
           uses: actions/setup-python@v4.5.0
         - name: Set Dynamic Matrix
@@ -64,3 +64,14 @@ jobs:
         chmod +x CodacyCoverageReporter.sh
         ./CodacyCoverageReporter.sh report -r cobertura.xml  -t $CODACY_API_TOKEN
         
+  tutorials_deploy: ##########################################################################
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Deploy tutorials
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./tutorials
+        exclude_assets: '**/*.md,**/*.ipynb,**/*.py'
+        allow_empty_commit: false
