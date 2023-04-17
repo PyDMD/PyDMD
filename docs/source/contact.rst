@@ -1,7 +1,6 @@
 Contact
 =======
 
-Feel free to contact the authors for any informations.
+Feel free to contact the developers for any information at
 
-- demo.nicola@gmail.com
-- marcotez@gmail.com
+- pydmd.info@gmail.com
