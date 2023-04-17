@@ -73,14 +73,12 @@ jobs:
       with:
         pre-build-command: "python -m pip install -U pip .[test] sphinx-rtd-theme"
         docs-folder: "docs/"
-    - name: Create public
+    - name: Setup directories
       run: |
-        mkdir ./public
-        cp -r tutorials public
-        cp -r docs/build/html public
+        cp -r tutorials docs/build/html/
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: public/
+        publish_dir: docs/build/html/
         allow_empty_commit: true
