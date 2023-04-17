@@ -68,6 +68,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: Create the new documentation
+      uses: ammaraskar/sphinx-action@master
+      with:
+	pre-build-command: "python -m pip install pip .[test] -U"
+        docs-folder: "docs/"
     - name: Create public
       run: |
         mkdir ./public
