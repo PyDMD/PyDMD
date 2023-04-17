@@ -85,9 +85,16 @@ jobs:
       with:
         pre-build-command: "python -m pip install pip .[test] -U"
         docs-folder: "docs/"
-    - name: Deploy
+    - name: Deploy docs
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./docs/build/html
+        allow_empty_commit: true
+    - name: Deploy tutorials
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./tutorials
+        exclude_assets: '**/*.md,**/*.ipynb,**/*.py'
         allow_empty_commit: true
