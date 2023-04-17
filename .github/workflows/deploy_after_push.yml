@@ -7,7 +7,7 @@ on:
       - master
 
 jobs:
-  prepare_matrix: ##############################################################################
+  prepare_matrix: ############################################################################
     runs-on: ubuntu-latest
     outputs:
        matrix: ${{ steps.setmatrix.outputs.matrix }}
@@ -71,7 +71,7 @@ jobs:
     - name: Create the new documentation
       uses: ammaraskar/sphinx-action@master
       with:
-	pre-build-command: "python -m pip install pip .[test] -U"
+        pre-build-command: "python -m pip install pip .[test] -U"
         docs-folder: "docs/"
     - name: Create public
       run: |
