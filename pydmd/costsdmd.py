@@ -5,20 +5,52 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
 
-class CospamDMD:
-    """Coherent Spatiotemporal Scale Separation from Dynamic Mode Decomposition
+class CostsDMD:
+    """Coherent Spatio-Temporal Scale Separation with DMD
 
     :param window_length: Length of the analysis window in number of time steps.
     :type window_length: int
     :param step_size: Number of time steps to slide each CSM-DMD window.
-    :type compute_A: bool
+    :type step_size: int
+    :param n_components: Number of independent frequency bands for this window length.
+    :type n_components: int
+    :param svd_rank: The rank of the BOPDMD fit.
+    :type svd_rank: int
+    :param global_svd: Flag indicating whether to find the proj_basis and initial
+        values using the entire dataset instead of individually for each window.
+        Generally using the global_svd speeds up the fitting process by not finding a
+        new initial value for each window. Default is True.
+    :type global_svd: bool
+    :param initialize_artificially: Flag indicating whether to initialize the DMD using
+        imaginary eigenvalues (i.e., the imaginary component of the cluster results from a
+        previous iteration) through the `cluster_centroids` keyword. Default is False.
+    :type initialize_artificially: bool
+    :param pydmd_kwargs: Keyword arguments to pass onto the BOPDMD object.
+    :type global_svd: dict
+    :param cluster_centroids: Cluster centroids from a previous fitting iteration to
+        use for the initial guess of the eigenvalues. Should only be the imaginary
+        component.
+    :type cluster_centroids: numpy array
+    :param reset_alpha_init: Flag indicating whether the initial guess for the BOPDMD
+        eigenvalues should be reset for each window. Resetting the initial value increases
+        the computation time due to finding a new initial guess. Default is False.
+    :type reset_alpha_init: bool
+    :param force_even_eigs: Flag indicating whether an even svd_rank should be forced
+        when not specifying the svd_rank directly (i.e., svd_rank=0). Default is True.
+    :type global_svd: bool
+    :param max_rank: Maximum svd_rank allowed when the svd_rank is found through rank
+        truncation (i.e., svd_rank=0).
+    :type max_rank: int
+    :param use_kmean_freqs:
+    :type use_kmean_freqs: bool
+    :param init_alpha:
+    :type init_alpha: numpy array
     """
 
     def __init__(
         self,
         window_length=None,
         step_size=None,
-        n_components=None,
         svd_rank=None,
         global_svd=True,
         initialize_artificially=False,
@@ -30,6 +62,7 @@ class CospamDMD:
         reset_alpha_init=False,
         force_even_eigs=True,
         max_rank=None,
+        n_components=None,
     ):
         self._n_components = n_components
         self._step_size = step_size
@@ -102,20 +135,33 @@ class CospamDMD:
     def _build_initizialization(self):
         """Method for making initial guess of DMD eigenvalues."""
 
-        # User provided initial eigenvalues.
+        # If not initial values are provided return None by default.
         init_alpha = None
+        # User provided initial eigenvalues.
         if self._initialize_artificially and self._init_alpha is not None:
             init_alpha = self._init_alpha
         # Initial eigenvalue guesses from kmeans clustering.
-        elif self._initialize_artificially and self._init_alpha is None:
-            if self._use_kmean_freqs:
-                init_alpha = np.repeat(
-                    np.sqrt(self._cluster_centroids) * 1j,
-                    int(self._svd_rank / self._n_components),
-                )
-                init_alpha = init_alpha * np.tile(
-                    [1, -1], int(self._svd_rank / self._n_components)
-                )
+        elif (
+            self._initialize_artificially
+            and self._init_alpha is None
+            and self._cluster_centroids is not None
+        ):
+            init_alpha = np.repeat(
+                np.sqrt(self._cluster_centroids) * 1j,
+                int(self._svd_rank / self._n_components),
+            )
+            init_alpha = init_alpha * np.tile(
+                [1, -1], int(self._svd_rank / self._n_components)
+            )
+        # The user accidentally provided both methods of initializing the eigenvalues.
+        elif (
+            self._initialize_artificially
+            and self._init_alpha is not None
+            and self._cluster_centroids is not None
+        ):
+            raise ValueError(
+                "Only one of `init_alpha` and `cluster_centroids` can be provided"
+            )
 
         return init_alpha
 
@@ -333,8 +379,8 @@ class CospamDMD:
 
             # Reset optdmd between iterations
             if not self._global_svd:
-                # Get the svd rank for this window. Primarily used when svd_rank is not
-                # fixed, i.e. svd_rank = 0.
+                # Get the svd rank for this window. Uses rank truncation when svd_rank is
+                # not fixed, i.e. svd_rank = 0, otherwise uses the specified rank.
                 _svd_rank = self._compute_svd_rank(
                     data_window, svd_rank=self._svd_rank
                 )
@@ -468,9 +514,13 @@ class CospamDMD:
                 np.linalg.multi_dot([w, np.diag(b), np.exp(omega * t)]) + c
             )
 
-            window_indices = slice(
-                k * self._step_size, k * self._step_size + self._window_length
-            )
+            if k == self._n_slides - 1 and self._n_slide_last_window > 0:
+                window_indices = slice(-self._window_length, None)
+            else:
+                window_indices = slice(
+                    k * self._step_size,
+                    k * self._step_size + self._window_length,
+                )
             glbl_reconstruction[:, window_indices] += recon_window
             xn[window_indices] += 1
 
