@@ -5,7 +5,15 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
 
-class multi_res_discovery:
+class CospamDMD:
+    """Coherent Spatiotemporal Scale Separation from Dynamic Mode Decomposition
+
+    :param window_length: Length of the analysis window in number of time steps.
+    :type window_length: int
+    :param step_size: Number of time steps to slide each CSM-DMD window.
+    :type compute_A: bool
+    """
+
     def __init__(
         self,
         window_length=None,
@@ -20,6 +28,8 @@ class multi_res_discovery:
         pydmd_kwargs=None,
         cluster_centroids=None,
         reset_alpha_init=False,
+        force_even_eigs=True,
+        max_rank=None,
     ):
         self._n_components = n_components
         self._step_size = step_size
@@ -32,6 +42,8 @@ class multi_res_discovery:
         self._init_alpha = init_alpha
         self._cluster_centroids = cluster_centroids
         self._reset_alpha_init = reset_alpha_init
+        self._force_even_eigs = force_even_eigs
+        self._max_rank = max_rank
 
         # Initialize variables that are defined in fitting.
         self._n_data_vars = None
@@ -59,9 +71,7 @@ class multi_res_discovery:
             self._pydmd_kwargs["proj_basis"] = pydmd_kwargs.get(
                 "proj_basis", None
             )
-            self._pydmd_kwargs["use_proj"] = pydmd_kwargs.get(
-                "proj_basis", False
-            )
+            self._pydmd_kwargs["use_proj"] = pydmd_kwargs.get("use_proj", False)
 
     def _compute_svd_rank(self, data, svd_rank=None):
         def omega(x):
@@ -171,38 +181,44 @@ class multi_res_discovery:
     @property
     def amplitudes_array(self):
         if not hasattr(self, "_amplitudes_array"):
-            raise ValueError("You need to call fit before")
+            raise ValueError("You need to call fit first.")
         return self._amplitudes_array
 
     @property
     def omega_array(self):
         if not hasattr(self, "_omega_array"):
-            raise ValueError("You need to call fit before")
+            raise ValueError("You need to call fit first.")
         return self._omega_array
 
     @property
     def time_array(self):
         if not hasattr(self, "_time_array"):
-            raise ValueError("You need to call fit before")
+            raise ValueError("You need to call fit first.")
         return self._time_array
 
     @property
     def window_means_array(self):
         if not hasattr(self, "_window_means_array"):
-            raise ValueError("You need to call fit before")
+            raise ValueError("You need to call fit first.")
         return self._window_means_array
 
     @property
     def t_starts_array(self):
         if not hasattr(self, "_t_starts_array"):
-            raise ValueError("You need to call fit before")
+            raise ValueError("You need to call fit first.")
         return self._t_starts_array
 
     @property
     def time_means_array(self):
         if not hasattr(self, "_time_means_array"):
-            raise ValueError("You need to call fit before")
+            raise ValueError("You need to call fit first.")
         return self._time_means_array
+
+    @property
+    def n_components(self):
+        if not hasattr(self, "_n_components"):
+            raise ValueError("You need to call `cluster_omega()` first.")
+        return self._n_components
 
     def fit(
         self,
@@ -216,7 +232,6 @@ class multi_res_discovery:
         # Prepare window and data properties.
         self._window_length = window_length
         self._step_size = step_size
-
         self._n_time_steps, self._n_data_vars = self._data_shape(data)
         self._n_slides = self.build_windows(
             data, self._window_length, self._step_size
@@ -235,12 +250,10 @@ class multi_res_discovery:
         # Build the projection basis if using a global svd.
         if self._global_svd:
             u = self._build_proj_basis(data, svd_rank=self._svd_rank)
-            # self._pydmd_kwargs['proj_basis'] = self._pydmd_kwargs.get('proj_basis', u)
             self._pydmd_kwargs["proj_basis"] = u
             self._pydmd_kwargs["use_proj"] = self._pydmd_kwargs.get(
                 "use_proj", False
             )
-
             self._svd_rank = self._compute_svd_rank(
                 data, svd_rank=self._svd_rank
             )
@@ -249,17 +262,16 @@ class multi_res_discovery:
             svd_rank_pre_allocate = self._compute_svd_rank(
                 data, svd_rank=self._svd_rank
             )
-        # If not using a global svd, local u  from each window is used instead.
+        # If not using a global svd or a specified svd_rank, local u from each window is
+        # used instead. The optimal svd_rank may change when using the locally optimal
+        # svd_rank. To deal with this situation in the pre-allocation we give the
+        # maximally allowed svd_rank for pre-allocation.
+        elif self._max_rank is not None:
+            svd_rank_pre_allocate = self._max_rank
         else:
-            # The optimal svd_rank may change when using the locally optimal svd_rank.
-            # To deal with this situation in the pre-allocation we give the maximally
-            # allowed svd_rank for pre-allocation.
             svd_rank_pre_allocate = self._n_data_vars
 
         # Pre-allocate all elements for the sliding window DMD.
-        # Each element calculated for a window is returned through these array.
-        # data_array = np.zeros(
-        #     (self._n_slides, self._n_data_vars, self._window_length))  # * np.nan
         self._time_array = np.zeros((self._n_slides, self._window_length))
         self._modes_array = np.zeros(
             (self._n_slides, self._n_data_vars, svd_rank_pre_allocate),
@@ -275,21 +287,15 @@ class multi_res_discovery:
         self._t_starts_array = np.zeros(self._n_slides)
         self._time_means_array = np.zeros(self._n_slides)
 
-        # Initialize the DMD class.
-        if self._initialize_artificially:
-            self._init_alpha = self._build_initizialization()
-            optdmd = BOPDMD(
-                svd_rank=self._svd_rank,
-                num_trials=0,
-                init_alpha=self._init_alpha,
-                **self._pydmd_kwargs,
-            )
-        else:
-            optdmd = BOPDMD(
-                svd_rank=self._svd_rank,
-                num_trials=0,
-                **self._pydmd_kwargs,
-            )
+        # Get initial values for the eigenvalues.
+        self._init_alpha = self._build_initizialization()
+
+        # Initialize the BOPDMD object.
+        optdmd = BOPDMD(
+            svd_rank=self._svd_rank,
+            init_alpha=self._init_alpha,
+            **self._pydmd_kwargs,
+        )
 
         # Round the corners of the window to shrink real components.
         lv_kern = self.calculate_lv_kern(
@@ -310,48 +316,61 @@ class multi_res_discovery:
                 sample_slice = slice(
                     sample_start, sample_start + self._window_length
                 )
-            # sample_steps = np.arange(sample_start, sample_start + self._window_length)
             data_window = data[:, sample_slice]
-            time_window = time[:, sample_slice]
-            # data_array[k, :, :] = data_window
-            self._time_array[k, :] = time_window
-            self._time_means_array[k] = np.mean(time_window)
+            original_time_window = time[:, sample_slice]
+            time_window_mean = np.mean(original_time_window)
 
             # All windows are fit with the time array reset to start at t=0.
-            t_start = time_window[:, 0]
-            time_window = time_window - t_start
-            self._t_starts_array[k] = t_start
+            t_start = original_time_window[:, 0]
+            time_window = original_time_window - t_start
 
-            # Subtract off mean before rounding corners
+            # Subtract off the time mean before rounding corners.
             c = np.mean(data_window, 1, keepdims=True)
             data_window = data_window - c
 
-            # Round corners of the window
+            # Round the corners of the window.
             data_window = data_window * lv_kern
 
-            # Fit with the desired DMD class
+            # Reset optdmd between iterations
+            if not self._global_svd:
+                # Get the svd rank for this window. Primarily used when svd_rank is not
+                # fixed, i.e. svd_rank = 0.
+                _svd_rank = self._compute_svd_rank(
+                    data_window, svd_rank=self._svd_rank
+                )
+                # Force svd rank to be even to allow for conjugate pairs.
+                if _svd_rank % 2:
+                    _svd_rank += 1
+                # Force svd rank to not exceed a user specified amount.
+                if self._max_rank is not None:
+                    optdmd.svd_rank = min(_svd_rank, self._max_rank)
+                else:
+                    optdmd.svd_rank = _svd_rank
+                optdmd._proj_basis = self._pydmd_kwargs["proj_basis"]
+
+            # Fit the window using the optDMD.
             optdmd.fit(data_window, time_window)
 
-            # Assign the results from this window
+            # Assign the results from this window.
             self._modes_array[k, :, : optdmd.modes.shape[-1]] = optdmd.modes
             self._omega_array[k, : optdmd.eigs.shape[0]] = optdmd.eigs
             self._amplitudes_array[
                 k, : optdmd.eigs.shape[0]
             ] = optdmd.amplitudes
             self._window_means_array[k, :] = c.flatten()
+            self._time_array[k, :] = original_time_window
+            self._time_means_array[k] = time_window_mean
+            self._t_starts_array[k] = t_start
 
             # Reset optdmd between iterations
             if not self._global_svd:
-                optdmd._svd_rank = self._svd_rank
-                optdmd._proj_basis = self._pydmd_kwargs["proj_basis"]
-
                 # The default behavior is to reset the optdmd object to use the default
                 # initial value (None) or the user provided values.
                 if not self._use_last_freq:
-                    optdmd._init_alpha = self._init_alpha
+                    optdmd.init_alpha = self._init_alpha
                 # Otherwise use the eigenvalues from this window to seed the next window.
                 elif self._use_last_freq:
-                    optdmd._init_alpha = optdmd.eigs
+                    optdmd.init_alpha = optdmd.eigs
 
     def cluster_omega(self, omega_array, n_components, kmeans_kwargs=None):
         self._n_components = n_components
