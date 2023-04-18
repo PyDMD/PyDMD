@@ -85,6 +85,9 @@ jobs:
       with:
         pre-build-command: "python -m pip install pip .[test] -U"
         docs-folder: "docs/"
+    - name: Gather tutorials
+      run: |
+        cp docs/source/_tutorials/* docs/build/html
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
