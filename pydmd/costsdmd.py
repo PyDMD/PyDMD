@@ -470,6 +470,8 @@ class CostsDMD:
         self._omega_classes = omega_classes
         self._square_frequencies = square_frequencies
         self._n_components = n_components
+        self._class_values = np.unique(omega_classes)[idx]
+        self._trimmed = False
 
         return self
 
@@ -678,15 +680,22 @@ class CostsDMD:
     def threshold_modes(self, data, xr_sep):
         """Remove frequency bands that do not contribute significantly to the magnitude of the reconstruction."""
 
-        # Remove scales that do not contribute significantly to the magnitude of the signal
-        n = np.nanmedian(np.abs(xr_sep.real), axis=(1, 2))
-        magnitude_threshold = np.nanmedian(np.abs(data.real)) / 10
+        if not self._trimmed:
+            # Remove scales that do not contribute significantly to the magnitude of the signal
+            n = np.nanmedian(np.abs(xr_sep.real), axis=(1, 2))
+            magnitude_threshold = np.nanmedian(np.abs(data.real)) / 100
 
-        # Trim frequencies bands that do not meet the magnitude threshold.
-        xr_sep = xr_sep[n > magnitude_threshold, ::]
-        self._cluster_centroids = self._cluster_centroids[
-            n > magnitude_threshold
-        ]
+            # Trim frequencies bands that do not meet the magnitude threshold.
+            xr_sep = xr_sep[n > magnitude_threshold, ::]
+            self._cluster_centroids = self._cluster_centroids[
+                n > magnitude_threshold
+            ]
+            num_modes_to_keep = np.sum(n > magnitude_threshold)
+            self._class_values = self._class_values[
+                self._class_values < num_modes_to_keep
+            ]
+
+            self._trimmed = True
 
         return xr_sep
 
@@ -712,8 +721,14 @@ class CostsDMD:
 
     def plot_scale_separation(self, data, scale_reconstruction_kwargs=None):
         """Plot the scale-separated low and high frequency bands."""
+        if scale_reconstruction_kwargs is None:
+            scale_reconstruction_kwargs = {}
+        scale_reconstruction_kwargs["data"] = scale_reconstruction_kwargs.get(
+            "data", data
+        )
+
         xr_low_frequency, xr_high_frequency = self.scale_separation(
-            data=data, **scale_reconstruction_kwargs
+            scale_reconstruction_kwargs
         )
 
         fig, axes = plt.subplots(3, 1, sharex=True, figsize=(10, 8))
@@ -746,9 +761,7 @@ class CostsDMD:
         if scale_reconstruction_kwargs is None:
             scale_reconstruction_kwargs = {}
 
-        xr_sep = self.scale_reconstruction(
-            data=data, **scale_reconstruction_kwargs
-        )
+        xr_sep = self.scale_reconstruction(scale_reconstruction_kwargs)
 
         fig, axes = plt.subplots(
             len(self._cluster_centroids) + 1, 1, sharex=True, figsize=(10, 10)
