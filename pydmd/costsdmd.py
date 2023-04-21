@@ -89,6 +89,8 @@ class CostsDMD:
         self._time_means_array = None
         self._amplitudes_array = None
         self._t_starts_array = None
+        self._cluster_centroids = None
+        self._omega_classes = None
 
         if pydmd_kwargs is None:
             self._pydmd_kwargs = {
@@ -266,6 +268,18 @@ class CostsDMD:
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._n_components
 
+    @property
+    def cluster_centroids(self):
+        if not hasattr(self, "_cluster_centroids"):
+            raise ValueError("You need to call `cluster_omega()` first.")
+        return self._cluster_centroids
+
+    @property
+    def omega_classes(self):
+        if not hasattr(self, "_omega_classes"):
+            raise ValueError("You need to call `cluster_omega()` first.")
+        return self._omega_classes
+
     def fit(
         self,
         data,
@@ -418,18 +432,20 @@ class CostsDMD:
                 elif self._use_last_freq:
                     optdmd.init_alpha = optdmd.eigs
 
-    def cluster_omega(self, omega_array, n_components, kmeans_kwargs=None):
-        self._n_components = n_components
+    def cluster_omega(
+        self, n_components, kmeans_kwargs=None, square_frequencies=True
+    ):
 
         # Reshape the omega array into a 1d array
-        n_slides = self._n_slides
-        if self._svd_rank == 0:
-            svd_rank = self._n_data_vars
-        else:
-            svd_rank = self._svd_rank
+        omega_array = self.omega_array
+        n_slides = omega_array.shape[0]
+        svd_rank = omega_array.shape[1]
         omega_rshp = omega_array.reshape(n_slides * svd_rank)
 
-        omega_squared = (np.conj(omega_rshp) * omega_rshp).astype("float")
+        if square_frequencies:
+            omega_squared = (np.conj(omega_rshp) * omega_rshp).astype("float")
+        else:
+            omega_squared = np.abs(omega_rshp.imag.astype("float"))
 
         if kmeans_kwargs is None:
             random_state = 0
@@ -442,16 +458,44 @@ class CostsDMD:
         omega_classes = omega_classes.reshape(n_slides, svd_rank)
         cluster_centroids = kmeans.cluster_centers_.flatten()
 
-        return omega_classes, omega_squared, cluster_centroids
+        # Sort the clusters by the centroid magnitude.
+        idx = np.argsort(cluster_centroids)
+        lut = np.zeros_like(idx)
+        lut[idx] = np.arange(n_components)
+        omega_classes = lut[omega_classes]
+        cluster_centroids = cluster_centroids[idx]
 
-    @staticmethod
-    def plot_omega_squared_histogram(omega_squared, cluster_centroids):
+        # Assign the results to the object.
+        self._cluster_centroids = cluster_centroids
+        self._omega_classes = omega_classes
+        self._square_frequencies = square_frequencies
+        self._n_components = n_components
+
+        return self
+
+    def plot_omega_squared_histogram(self):
+
+        # Reshape the omega array into a 1d array
+        omega_array = self.omega_array
+        n_slides = omega_array.shape[0]
+        svd_rank = omega_array.shape[1]
+        omega_rshp = omega_array.reshape(n_slides * svd_rank)
+
+        if self._square_frequencies:
+            omega_squared = (np.conj(omega_rshp) * omega_rshp).astype("float")
+            label = "$|\omega|^{2}$"
+        else:
+            omega_squared = np.abs(omega_rshp.imag.astype("float"))
+            label = "$|\omega|$"
+
+        cluster_centroids = self._cluster_centroids
+
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
         fig, ax = plt.subplots(1, 1)
         ax.hist(omega_squared, bins=64)
-        ax.set_xlabel("$|\omega|^{2}$")
+        ax.set_xlabel(label)
         ax.set_ylabel("Count")
-        ax.set_title("$|\omega|^2$ Spectrum & k-Means Centroids")
+        ax.set_title("$\omega$ Spectrum & k-Means Centroids")
         [
             ax.axvline(c, color=colors[nc % len(colors)])
             for nc, c in enumerate(cluster_centroids)
@@ -459,30 +503,36 @@ class CostsDMD:
 
         return fig, ax
 
-    def plot_omega_squared_time_series(self, omega_squared, omega_classes):
+    def plot_omega_squared_time_series(self):
         fig, ax = plt.subplots(1, 1)
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
         # Reshape the omega array into a 1d array
-        n_slides = self._n_slides
-        if self._svd_rank == 0:
-            svd_rank = self._n_data_vars
+        omega_array = self.omega_array
+        n_slides = omega_array.shape[0]
+        svd_rank = omega_array.shape[1]
+        omega_rshp = omega_array.reshape(n_slides * svd_rank)
+
+        if self._square_frequencies:
+            omega_squared = (np.conj(omega_rshp) * omega_rshp).astype("float")
+            label = "$|\omega|^{2}$"
         else:
-            svd_rank = self._svd_rank
+            omega_squared = np.abs(omega_rshp.imag.astype("float"))
+            label = "$|\omega|$"
 
         for ncomponent, component in enumerate(range(self._n_components)):
             ax.plot(
                 self._time_means_array,
                 np.where(
-                    omega_classes == component,
+                    self._omega_classes == component,
                     omega_squared.reshape((n_slides, svd_rank)),
                     np.nan,
                 ),
                 color=colors[ncomponent % len(colors)],
             )
-        ax.set_ylabel("$|\omega|^{2}$")
+        ax.set_ylabel(label)
         ax.set_xlabel("Time")
-        ax.set_title("$|\omega|^2$ Spectrum (Moving Window)")
+        ax.set_title("$\omega$ Time Series")
 
         return fig, ax
 
@@ -531,10 +581,10 @@ class CostsDMD:
 
     def scale_reconstruction(
         self,
-        omega_classes,
-        cluster_centroids,
         suppress_growth=True,
         include_means=True,
+        magnitude_threshold=False,
+        data=None,
     ):
         """Reconstruct the sliding mrDMD into the constituent components.
 
@@ -572,7 +622,7 @@ class CostsDMD:
             w = self._modes_array[k]
             b = self._amplitudes_array[k]
             omega = np.atleast_2d(self._omega_array[k]).T
-            classification = omega_classes[k]
+            classification = self._omega_classes[k]
 
             if suppress_growth:
                 omega[omega.real > 0] = 1j * omega[omega.real > 0].imag
@@ -587,7 +637,7 @@ class CostsDMD:
             xr_sep_window = np.zeros(
                 (self._n_components, self._n_data_vars, self._window_length)
             )
-            for j in np.unique(omega_classes):
+            for j in np.unique(self._omega_classes):
                 xr_sep_window[j, :, :] = np.linalg.multi_dot(
                     [
                         w[:, classification == j],
@@ -597,7 +647,7 @@ class CostsDMD:
                 )
 
                 # Add the constant offset to the lowest frequency cluster.
-                if include_means and (j == np.argmin(cluster_centroids)):
+                if include_means and (j == np.argmin(self._cluster_centroids)):
                     xr_sep_window[j, :, :] += c
                 xr_sep_window[j, :, :] = xr_sep_window[j, :, :] * recon_filter
 
@@ -616,4 +666,113 @@ class CostsDMD:
 
         xr_sep = xr_sep / xn
 
+        if magnitude_threshold:
+            if data is None:
+                raise ValueError(
+                    "The data must be provided when doing a magnitude cut-off of modes."
+                )
+            xr_sep = self.threshold_modes(data, xr_sep)
+
         return xr_sep
+
+    def threshold_modes(self, data, xr_sep):
+        """Remove frequency bands that do not contribute significantly to the magnitude of the reconstruction."""
+
+        # Remove scales that do not contribute significantly to the magnitude of the signal
+        n = np.nanmedian(np.abs(xr_sep.real), axis=(1, 2))
+        magnitude_threshold = np.nanmedian(np.abs(data.real)) / 10
+
+        # Trim frequencies bands that do not meet the magnitude threshold.
+        xr_sep = xr_sep[n > magnitude_threshold, ::]
+        self._cluster_centroids = self._cluster_centroids[
+            n > magnitude_threshold
+        ]
+
+        return xr_sep
+
+    def scale_separation(
+        self,
+        scale_reconstruction_kwargs=None,
+    ):
+        """Separate the lowest frequency band from the high frequency bands.
+
+        The lowest frequency band should contain the window means and can be passed on as the data for the next
+        decomposition level. The high frequencies should have frequencies shorter than 1 / window_length.
+
+        """
+
+        if scale_reconstruction_kwargs is None:
+            scale_reconstruction_kwargs = {}
+
+        xr_sep = self.scale_reconstruction(**scale_reconstruction_kwargs)
+        xr_low_frequency = xr_sep[0, :, :]
+        xr_high_frequency = xr_sep[1:, :, :].sum(axis=0)
+
+        return xr_low_frequency, xr_high_frequency
+
+    def plot_scale_separation(self, data, scale_reconstruction_kwargs=None):
+        """Plot the scale-separated low and high frequency bands."""
+        xr_low_frequency, xr_high_frequency = self.scale_separation(
+            data=data, **scale_reconstruction_kwargs
+        )
+
+        fig, axes = plt.subplots(3, 1, sharex=True, figsize=(10, 8))
+
+        ax = axes[0]
+        ax.pcolormesh(data, cmap="RdBu_r", vmin=-2, vmax=2)
+        ax.set_title(
+            "Input Data at decomposition window length = {}".format(
+                self._window_length
+            )
+        )
+
+        ax = axes[2]
+        ax.set_title("Reconstruction, high frequency")
+        ax.pcolormesh(xr_high_frequency, cmap="RdBu_r", vmin=-2, vmax=2)
+        ax.set_ylabel("Space (-)")
+        ax.set_xlabel("Time (-)")
+
+        ax = axes[1]
+        ax.set_title("Reconstruction, low frequency")
+        ax.pcolormesh(xr_low_frequency, cmap="RdBu_r", vmin=-2, vmax=2)
+        ax.set_ylabel("Space (-)")
+        ax.set_xlabel("Time (-)")
+
+        fig.tight_layout()
+
+    def plot_reconstructions(
+        self, data, plot_period=False, scale_reconstruction_kwargs=None
+    ):
+        if scale_reconstruction_kwargs is None:
+            scale_reconstruction_kwargs = {}
+
+        xr_sep = self.scale_reconstruction(
+            data=data, **scale_reconstruction_kwargs
+        )
+
+        fig, axes = plt.subplots(
+            len(self._cluster_centroids) + 1, 1, sharex=True, figsize=(10, 10)
+        )
+
+        ax = axes[0]
+        ax.pcolormesh(data.real, cmap="RdBu_r", vmin=-2, vmax=2)
+        ax.set_ylabel("Space (-)")
+        ax.set_xlabel("Time (-)")
+        ax.set_title("Input Data")
+
+        for n_cluster, cluster in enumerate(self._cluster_centroids):
+            if plot_period:
+                x = 2 * np.pi / cluster
+                title = "Reconstruction, central period={:.2f}"
+            else:
+                x = cluster
+                title = "Reconstruction, central eig={:.2f}"
+
+            ax = axes[n_cluster + 1]
+            xr_scale = xr_sep[n_cluster, :, :]
+            ax.pcolormesh(xr_scale, cmap="RdBu_r", vmin=-2, vmax=2)
+            ax.set_ylabel("Space (-)")
+            ax.set_xlabel("Time (-)")
+            ax.set_title(title.format(x))
+
+        fig.tight_layout()
