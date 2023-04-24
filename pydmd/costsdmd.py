@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 class CostsDMD:
-    """Coherent Spatio-Temporal Scale Separation with DMD
+    """Coherent Spatio-Temporal Scale Separation with DMD.
 
     :param window_length: Length of the analysis window in number of time steps.
     :type window_length: int
@@ -26,7 +26,7 @@ class CostsDMD:
         previous iteration) through the `cluster_centroids` keyword. Default is False.
     :type initialize_artificially: bool
     :param pydmd_kwargs: Keyword arguments to pass onto the BOPDMD object.
-    :type global_svd: dict
+    :type pydmd_kwargs: dict
     :param cluster_centroids: Cluster centroids from a previous fitting iteration to
         use for the initial guess of the eigenvalues. Should only be the imaginary
         component.
@@ -41,10 +41,22 @@ class CostsDMD:
     :param max_rank: Maximum svd_rank allowed when the svd_rank is found through rank
         truncation (i.e., svd_rank=0).
     :type max_rank: int
-    :param use_kmean_freqs:
+    :param use_kmean_freqs: Flag specifying if the BOPDMD fit should use initial values
+        taken from cluster centroids, e.g., from a previoius iteration.
     :type use_kmean_freqs: bool
-    :param init_alpha:
+    :param init_alpha: Initial guess for the eigenvalues provided to BOPDMD. Must be equal
+        to the `svd_rank`.
     :type init_alpha: numpy array
+    :param max_rank: Maximum allowed `svd_rank`. Overrides the optimal rank truncation if
+        `svd_rank=0`.
+    :type max_rank: int
+    :param n_components: Number of frequency bands to use for clustering.
+    :type n_components: int
+    :param force_even_eigs: Flag specifying if the `svd_rank` should be forced to be even.
+    :type force_even_eigs: bool
+    :param reset_alpha_init: Flag specifying if the initial eigenvalue guess should be reset
+        between windows.
+    :type reset_alpha_init: bool
     """
 
     def __init__(
@@ -92,6 +104,7 @@ class CostsDMD:
         self._cluster_centroids = None
         self._omega_classes = None
 
+        # Specify default keywords to hand to BOPDMD.
         if pydmd_kwargs is None:
             self._pydmd_kwargs = {
                 "eig_sort": "imag",
@@ -107,6 +120,74 @@ class CostsDMD:
                 "proj_basis", None
             )
             self._pydmd_kwargs["use_proj"] = pydmd_kwargs.get("use_proj", False)
+
+    @property
+    def svd_rank(self):
+        """
+        :return: the rank used for the svd truncation.
+        :rtype: int or float
+        """
+        return self._svd_rank
+
+    @property
+    def modes_array(self):
+        if not hasattr(self, "_modes_array"):
+            raise ValueError("You need to call fit before")
+        return self._modes_array
+
+    @property
+    def amplitudes_array(self):
+        if not hasattr(self, "_amplitudes_array"):
+            raise ValueError("You need to call fit first.")
+        return self._amplitudes_array
+
+    @property
+    def omega_array(self):
+        if not hasattr(self, "_omega_array"):
+            raise ValueError("You need to call fit first.")
+        return self._omega_array
+
+    @property
+    def time_array(self):
+        if not hasattr(self, "_time_array"):
+            raise ValueError("You need to call fit first.")
+        return self._time_array
+
+    @property
+    def window_means_array(self):
+        if not hasattr(self, "_window_means_array"):
+            raise ValueError("You need to call fit first.")
+        return self._window_means_array
+
+    @property
+    def t_starts_array(self):
+        if not hasattr(self, "_t_starts_array"):
+            raise ValueError("You need to call fit first.")
+        return self._t_starts_array
+
+    @property
+    def time_means_array(self):
+        if not hasattr(self, "_time_means_array"):
+            raise ValueError("You need to call fit first.")
+        return self._time_means_array
+
+    @property
+    def n_components(self):
+        if not hasattr(self, "_n_components"):
+            raise ValueError("You need to call `cluster_omega()` first.")
+        return self._n_components
+
+    @property
+    def cluster_centroids(self):
+        if not hasattr(self, "_cluster_centroids"):
+            raise ValueError("You need to call `cluster_omega()` first.")
+        return self._cluster_centroids
+
+    @property
+    def omega_classes(self):
+        if not hasattr(self, "_omega_classes"):
+            raise ValueError("You need to call `cluster_omega()` first.")
+        return self._omega_classes
 
     def _compute_svd_rank(self, data, svd_rank=None):
         def omega(x):
@@ -211,74 +292,6 @@ class CostsDMD:
         n_time_steps = np.shape(data)[1]
         n_data_vars = np.shape(data)[0]
         return n_time_steps, n_data_vars
-
-    @property
-    def svd_rank(self):
-        """
-        :return: the rank used for the svd truncation.
-        :rtype: int or float
-        """
-        return self._svd_rank
-
-    @property
-    def modes_array(self):
-        if not hasattr(self, "_modes_array"):
-            raise ValueError("You need to call fit before")
-        return self._modes_array
-
-    @property
-    def amplitudes_array(self):
-        if not hasattr(self, "_amplitudes_array"):
-            raise ValueError("You need to call fit first.")
-        return self._amplitudes_array
-
-    @property
-    def omega_array(self):
-        if not hasattr(self, "_omega_array"):
-            raise ValueError("You need to call fit first.")
-        return self._omega_array
-
-    @property
-    def time_array(self):
-        if not hasattr(self, "_time_array"):
-            raise ValueError("You need to call fit first.")
-        return self._time_array
-
-    @property
-    def window_means_array(self):
-        if not hasattr(self, "_window_means_array"):
-            raise ValueError("You need to call fit first.")
-        return self._window_means_array
-
-    @property
-    def t_starts_array(self):
-        if not hasattr(self, "_t_starts_array"):
-            raise ValueError("You need to call fit first.")
-        return self._t_starts_array
-
-    @property
-    def time_means_array(self):
-        if not hasattr(self, "_time_means_array"):
-            raise ValueError("You need to call fit first.")
-        return self._time_means_array
-
-    @property
-    def n_components(self):
-        if not hasattr(self, "_n_components"):
-            raise ValueError("You need to call `cluster_omega()` first.")
-        return self._n_components
-
-    @property
-    def cluster_centroids(self):
-        if not hasattr(self, "_cluster_centroids"):
-            raise ValueError("You need to call `cluster_omega()` first.")
-        return self._cluster_centroids
-
-    @property
-    def omega_classes(self):
-        if not hasattr(self, "_omega_classes"):
-            raise ValueError("You need to call `cluster_omega()` first.")
-        return self._omega_classes
 
     def fit(
         self,
@@ -719,7 +732,9 @@ class CostsDMD:
 
         return xr_low_frequency, xr_high_frequency
 
-    def plot_scale_separation(self, data, scale_reconstruction_kwargs=None):
+    def plot_scale_separation(
+        self, data, scale_reconstruction_kwargs=None, plot_residual=False
+    ):
         """Plot the scale-separated low and high frequency bands."""
         if scale_reconstruction_kwargs is None:
             scale_reconstruction_kwargs = {}
@@ -731,7 +746,10 @@ class CostsDMD:
             scale_reconstruction_kwargs
         )
 
-        fig, axes = plt.subplots(3, 1, sharex=True, figsize=(10, 8))
+        if plot_residual:
+            fig, axes = plt.subplots(4, 1, sharex=True, figsize=(6, 4))
+        else:
+            fig, axes = plt.subplots(3, 1, sharex=True, figsize=(6, 4))
 
         ax = axes[0]
         ax.pcolormesh(data, cmap="RdBu_r", vmin=-2, vmax=2)
@@ -740,23 +758,36 @@ class CostsDMD:
                 self._window_length
             )
         )
+        ax = axes[1]
+        ax.set_title("Reconstruction, low frequency")
+        ax.pcolormesh(xr_low_frequency, cmap="RdBu_r", vmin=-2, vmax=2)
+        ax.set_ylabel("Space (-)")
 
         ax = axes[2]
         ax.set_title("Reconstruction, high frequency")
         ax.pcolormesh(xr_high_frequency, cmap="RdBu_r", vmin=-2, vmax=2)
         ax.set_ylabel("Space (-)")
-        ax.set_xlabel("Time (-)")
 
-        ax = axes[1]
-        ax.set_title("Reconstruction, low frequency")
-        ax.pcolormesh(xr_low_frequency, cmap="RdBu_r", vmin=-2, vmax=2)
-        ax.set_ylabel("Space (-)")
-        ax.set_xlabel("Time (-)")
+        if plot_residual:
+            ax = axes[3]
+            ax.set_title("Residual")
+            ax.pcolormesh(
+                data - xr_high_frequency - xr_low_frequency,
+                cmap="RdBu_r",
+                vmin=-2,
+                vmax=2,
+            )
+            ax.set_ylabel("Space (-)")
 
+        axes[-1].set_xlabel("Time (-)")
         fig.tight_layout()
 
     def plot_reconstructions(
-        self, data, plot_period=False, scale_reconstruction_kwargs=None
+        self,
+        data,
+        plot_period=False,
+        scale_reconstruction_kwargs=None,
+        plot_residual=False,
     ):
         if scale_reconstruction_kwargs is None:
             scale_reconstruction_kwargs = {}
@@ -764,15 +795,18 @@ class CostsDMD:
         xr_sep = self.scale_reconstruction(scale_reconstruction_kwargs)
 
         fig, axes = plt.subplots(
-            len(self._cluster_centroids) + 1, 1, sharex=True, figsize=(10, 10)
+            len(self._cluster_centroids) + 1, 1, sharex=True, figsize=(6, 6)
         )
 
         ax = axes[0]
         ax.pcolormesh(data.real, cmap="RdBu_r", vmin=-2, vmax=2)
         ax.set_ylabel("Space (-)")
         ax.set_xlabel("Time (-)")
-        ax.set_title("Input Data")
-
+        ax.set_title(
+            "Input Data at decomposition window length = {}".format(
+                self._window_length
+            )
+        )
         for n_cluster, cluster in enumerate(self._cluster_centroids):
             if plot_period:
                 x = 2 * np.pi / cluster
@@ -785,7 +819,18 @@ class CostsDMD:
             xr_scale = xr_sep[n_cluster, :, :]
             ax.pcolormesh(xr_scale, cmap="RdBu_r", vmin=-2, vmax=2)
             ax.set_ylabel("Space (-)")
-            ax.set_xlabel("Time (-)")
             ax.set_title(title.format(x))
 
+        if plot_residual:
+            ax = axes[-1]
+            ax.set_title("Residual")
+            ax.pcolormesh(
+                data - xr_sep.sum(axis=0),
+                cmap="RdBu_r",
+                vmin=-2,
+                vmax=2,
+            )
+            ax.set_ylabel("Space (-)")
+
+        axes[-1].set_xlabel("Time (-)")
         fig.tight_layout()
