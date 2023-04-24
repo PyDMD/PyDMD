@@ -147,6 +147,8 @@ jobs:
         for dir in $(ls -d tutorial*/); do
           if [[ $dir != tutorial5* ]]
             then
-            jupyter nbconvert --to notebook --execute ${dir}*.ipynb
+            cd $dir
+            jupyter nbconvert --to notebook --execute *.ipynb
+            cd ..
           fi
         done
