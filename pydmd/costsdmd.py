@@ -795,7 +795,10 @@ class CostsDMD:
         xr_sep = self.scale_reconstruction(scale_reconstruction_kwargs)
 
         fig, axes = plt.subplots(
-            len(self._cluster_centroids) + 1, 1, sharex=True, figsize=(6, 6)
+            len(self._cluster_centroids) + 1,
+            1,
+            sharex=True,
+            figsize=(6, 1.5 * len(self._cluster_centroids) + 1),
         )
 
         ax = axes[0]
