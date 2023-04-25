@@ -551,48 +551,13 @@ class CostsDMD:
 
         return fig, ax
 
-    def global_reconstruction(
-        self,
-    ):
-        # Container for the reconstructed time series
-        glbl_reconstruction = np.zeros(
-            (self._n_data_vars, self._n_time_steps)
-        ).astype("complex128")
-
-        # Count the number of windows contributing to each step
-        xn = np.zeros(self._n_time_steps)
-
-        for k in range(self._n_slides):
-            # Extract out the DMD fit for this window.
-            w = self._modes_array[k]
-            b = self._amplitudes_array[k]
-            omega = np.atleast_2d(self._omega_array[k]).T
-            c = np.atleast_2d(self._window_means_array[k]).T
-
-            # Compute each segment starting at t=0
-            t = self._time_array[k]
-            t_start = self._t_starts_array[k]
-            t = t - t_start
-
-            # Perform the global reconstruction.
-            recon_window = (
-                np.linalg.multi_dot([w, np.diag(b), np.exp(omega * t)]) + c
-            )
-
-            if k == self._n_slides - 1 and self._n_slide_last_window > 0:
-                window_indices = slice(-self._window_length, None)
-            else:
-                window_indices = slice(
-                    k * self._step_size,
-                    k * self._step_size + self._window_length,
-                )
-            glbl_reconstruction[:, window_indices] += recon_window
-            xn[window_indices] += 1
-
-        # Weight xr so all steps are on equal footing
-        glbl_reconstruction = glbl_reconstruction / xn
-
-        return glbl_reconstruction
+    def global_reconstruction(self, kwargs=None):
+        """Helper function for generating the global reconstruction."""
+        if kwargs is None:
+            kwargs = {}
+        xr_sep = self.scale_reconstruction(**kwargs)
+        x_global_recon = xr_sep.sum(axis=0)
+        return x_global_recon
 
     def scale_reconstruction(
         self,
