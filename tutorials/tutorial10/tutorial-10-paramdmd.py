@@ -326,7 +326,7 @@ visualize_multiple(
 )
 print("Truth")
 visualize_multiple(
-    result,
+    testing_snapshots,
     testing_params_labels,
     figsize=(20, 2.5),
     labels_func=labels_func,
