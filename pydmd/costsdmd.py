@@ -103,6 +103,7 @@ class CostsDMD:
         self._t_starts_array = None
         self._cluster_centroids = None
         self._omega_classes = None
+        self._square_frequencies = None
 
         # Specify default keywords to hand to BOPDMD.
         if pydmd_kwargs is None:
@@ -488,7 +489,7 @@ class CostsDMD:
 
         return self
 
-    def plot_omega_squared_histogram(self):
+    def plot_omega_histogram(self):
 
         # Reshape the omega array into a 1d array
         omega_array = self.omega_array
