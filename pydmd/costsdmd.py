@@ -2,6 +2,7 @@ import numpy as np
 from pydmd.bopdmd import BOPDMD
 import scipy
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 
 
@@ -488,6 +489,35 @@ class CostsDMD:
         self._trimmed = False
 
         return self
+
+    def cluster_hyperparameter_sweep(
+        self, n_components_range=None, square_frequencies=False
+    ):
+        """Performs a hyperparameter search for the number of components in the kmeans clustering."""
+        if n_components_range is None:
+            n_components_range = np.arange(self.svd_rank // 4, self.svd_rank)
+        score = np.zeros_like(n_components_range, float)
+
+        # Reshape the omega array into a 1d array
+        omega_array = self.omega_array
+        n_slides = omega_array.shape[0]
+        svd_rank = omega_array.shape[1]
+        omega_rshp = omega_array.reshape(n_slides * svd_rank)
+        if square_frequencies:
+            omega_squared = (np.conj(omega_rshp) * omega_rshp).astype("float")
+        else:
+            omega_squared = np.abs(omega_rshp.imag.astype("float"))
+
+        for nind, n in enumerate(n_components_range):
+            _ = self.cluster_omega(n_components=n, square_frequencies=False)
+
+            classes_reshape = self.omega_classes.reshape(n_slides * svd_rank)
+
+            score[nind] = silhouette_score(
+                np.atleast_2d(omega_squared).T, np.atleast_2d(classes_reshape).T
+            )
+
+        return n_components_range[np.argmax(score)]
 
     def plot_omega_histogram(self):
 
