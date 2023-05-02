@@ -4,6 +4,7 @@ import scipy
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
+import xarray as xr
 
 
 class CostsDMD:
@@ -334,6 +335,10 @@ class CostsDMD:
             )
             svd_rank_pre_allocate = self._svd_rank
         elif not self._global_svd and self._svd_rank > 0:
+            if self._force_even_eigs and self._svd_rank % 2:
+                raise ValueError(
+                    "svd_rank is odd, but force_even_eigs is True."
+                )
             svd_rank_pre_allocate = self._compute_svd_rank(
                 data, svd_rank=self._svd_rank
             )
@@ -383,14 +388,7 @@ class CostsDMD:
                 if k // 50 == k / 50:
                     print("{} of {}".format(k, self._n_slides))
 
-            # Get the window indices and data.
-            sample_start = self._step_size * k
-            if k == self._n_slides - 1 and self._n_slide_last_window > 0:
-                sample_slice = slice(-self._window_length, None)
-            else:
-                sample_slice = slice(
-                    sample_start, sample_start + self._window_length
-                )
+            sample_slice = self.get_window_indices(k)
             data_window = data[:, sample_slice]
             original_time_window = time[:, sample_slice]
             time_window_mean = np.mean(original_time_window)
@@ -414,7 +412,7 @@ class CostsDMD:
                     data_window, svd_rank=self._svd_rank
                 )
                 # Force svd rank to be even to allow for conjugate pairs.
-                if _svd_rank % 2:
+                if self._force_even_eigs and _svd_rank % 2:
                     _svd_rank += 1
                 # Force svd rank to not exceed a user specified amount.
                 if self._max_rank is not None:
@@ -446,6 +444,21 @@ class CostsDMD:
                 # Otherwise use the eigenvalues from this window to seed the next window.
                 elif self._use_last_freq:
                     optdmd.init_alpha = optdmd.eigs
+
+    def get_window_indices(self, k):
+        """
+
+        @return:
+        """
+        # Get the window indices and data.
+        sample_start = self._step_size * k
+        if k == self._n_slides - 1 and self._n_slide_last_window > 0:
+            sample_slice = slice(-self._window_length, None)
+        else:
+            sample_slice = slice(
+                sample_start, sample_start + self._window_length
+            )
+        return sample_slice
 
     def cluster_omega(
         self, n_components, kmeans_kwargs=None, square_frequencies=True
@@ -833,3 +846,61 @@ class CostsDMD:
 
         axes[-1].set_xlabel("Time (-)")
         fig.tight_layout()
+
+        return fig, axes
+
+    def to_xarray(self):
+        """Build an xarray dataset from the fitted CoSTS object.
+
+        The CoSTS object is converted to an xarray dataset, which allows
+        saving the computationally expensive results, e.g., between iterations.
+
+        The reconstructed data are not included since their size can rapidly
+        explode to unexpected sizes. e.g., a 30MB dataset, decomposed at 6
+        levels with an average number of frequency bands across decomposition
+        levels equal to 8 becomes 1.3GB once reconstructed for each band.
+
+        """
+        ds = xr.Dataset(
+            {
+                "omega": (("window_time_means", "rank"), self.omega_array),
+                "omega_classes": (
+                    ("window_time_means", "rank"),
+                    self.omega_classes,
+                ),
+                "amplitudes": (
+                    ("window_time_means", "rank"),
+                    self.amplitudes_array,
+                ),
+                "modes": (
+                    ("window_time_means", "space", "rank"),
+                    self.modes_array,
+                ),
+                "window_means": (
+                    ("window_time_means", "space"),
+                    self.window_means_array,
+                ),
+                "cluster_centroids": (
+                    "frequency_band",
+                    self._cluster_centroids,
+                ),
+            },
+            coords={
+                "window_time_means": self.time_means_array,
+                "slide": ("window_time_means", np.arange(self._n_slides)),
+                "rank": np.arange(self.svd_rank),
+                "space": np.arange(self._n_data_vars),
+                "frequency_band": np.arange(self.n_components),
+            },
+            attrs={
+                "svd_rank": self.svd_rank,
+                "square_frequencies": self._square_frequencies,
+                "n_slides": self._n_slides,
+                "window_length": self._window_length,
+                "num_frequency_bands": self.n_components,
+                "n_data_vars": self._n_data_vars,
+                "n_time_steps": self._n_time_steps,
+            },
+        )
+
+        return ds
