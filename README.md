@@ -7,14 +7,14 @@
     <a href="https://doi.org/10.21105/joss.00530" target="_blank">
         <img alt="JOSS DOI" src="http://joss.theoj.org/papers/10.21105/joss.00530/status.svg">
     </a>
-    <a href="https://github.com/mathLab/PyDMD/blob/master/LICENSE" target="_blank">
+    <a href="https://github.com/PyDMD/PyDMD/blob/master/LICENSE" target="_blank">
         <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square">
     </a>
     <a href="https://badge.fury.io/py/pydmd"  target="_blank">
         <img alt="PyPI version" src="https://badge.fury.io/py/pydmd.svg">
     </a>
-    <a href="https://github.com/mathLab/PyDMD/actions/workflows/deploy_after_push.yml" target="_blank">
-        <img alt="CI Status" src="https://github.com/mathLab/PyDMD/actions/workflows/deploy_after_push.yml/badge.svg">
+    <a href="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml" target="_blank">
+        <img alt="CI Status" src="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml/badge.svg">
     </a>
     <a href="https://www.codacy.com/gh/mathLab/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Coverage">
       <img src="https://app.codacy.com/project/badge/Coverage/c36adbea2e4a44eb8c0e4505b75e8245"/>
@@ -47,7 +47,7 @@
 **PyDMD** is a Python package that uses **Dynamic Mode Decomposition** for a data-driven model simplification based on spatiotemporal coherent structures.
 
 Dynamic Mode Decomposition (DMD) is a model reduction algorithm developed by Schmid (see "Dynamic mode decomposition of numerical and experimental data"). Since then has emerged as a powerful tool for analyzing the dynamics of nonlinear systems. DMD relies only on the high-fidelity measurements, like experimental data and numerical simulations, so it is an equation-free algorithm. Its popularity is also due to the fact that it does not make any assumptions about the underlying system. See Kutz ("Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems") for a comprehensive overview of the algorithm and its connections to the Koopman-operator analysis, initiated in Koopman ("Hamiltonian systems and transformation in Hilbert space"), along with examples in computational fluid dynamics.
-
+mathLab
 In the last years many variants arose, such as multiresolution DMD, compressed DMD, forward backward DMD, higher order DMD, and physics-informed DMD among others, in order to deal with noisy data, big dataset, or spurius data for example. We implemented in Python the majority of the DMD extensions currently present in the literature with a user friendly interface. We also provide many tutorials that show all the characteristics of the software. See the [**Examples**](#examples) section below and the [**Tutorials**](tutorials/README.md) to have an idea of the potential of this package.
 
 <p align="center">
@@ -73,7 +73,7 @@ To uninstall the package:
 ### Installing from source
 The official distribution is on GitHub, and you can clone the repository using
 ```bash
-> git clone https://github.com/mathLab/PyDMD
+> git clone https://github.com/PyDMD/PyDMD
 ```
 
 To install the package just type:
@@ -99,7 +99,7 @@ The generated html can be found in `docs/build/html`. Open up the `index.html` y
 
 ## Testing
 
-We are using GitHub actions for Continuous Integration. You can check the current status [here](https://github.com/mathLab/PyDMD/actions).
+We are using GitHub actions for Continuous Integration. You can check the current status [here](https://github.com/PyDMD/PyDMD/actions).
 
 To run tests locally (`pytest` is required):
 
@@ -188,8 +188,8 @@ We warmly thank all the contributors that have supported PyDMD!
 Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIBUTING.md) and the [Tutorials for Developers](tutorials#tutorials-for-developers) before starting to play!
 
 
-<a href="https://github.com/mathLab/PyDMD/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=mathLab/PyDMD" />
+<a href="https://github.com/PyDMD/PyDMD/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=PyDMD/PyDMD" />
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
