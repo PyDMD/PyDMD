@@ -39,9 +39,8 @@
 * [How to cite](#how-to-cite)
 	* [References](#references)
 	* [Recent works with PyDMD](#recent-works-with-pydmd)
-* [Authors and contributors](#authors-and-contributors)
-* [How to contribute](#how-to-contribute)
-	* [Submitting a patch](#submitting-a-patch)
+* [Developers and contributors](#developers-and-contributors)
+* [Funding](#funding)
 * [License](#license)
 
 ## Description
@@ -178,8 +177,13 @@ Here there is a list of the scientific works involving **PyDMD** you can consult
 
 * Tezzele. *Data-driven parameter and model order reduction for industrial optimisation problems with applications in naval engineering*, PhD Thesis. 2021. [[Iris](http://hdl.handle.net/20.500.11767/124569)].
 
-## Contributing
-We warmly thank all the contributors that have supported PyDMD! The financial support of the [AROMA-CFD ERC CoG project](https://people.sissa.it/~grozza/aroma-cfd/) project is also gratefully acknowledged.
+## Developers and contributors
+The main developers are 
+<p align="center">
+    <img src="readme/main_developers.png" width="800" />
+</p>
+
+We warmly thank all the contributors that have supported PyDMD!
 
 Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIBUTING.md) and the [Tutorials for Developers](tutorials#tutorials-for-developers) before starting to play!
 
@@ -189,6 +193,18 @@ Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIB
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
+
+
+## Funding
+A significant part of PyDMD has been written either as a by-product for other projects people were funded for, or by people on university-funded positions. There are probably many of such projects that have led to some development of PyDMD. We are very grateful for this support!
+
+Beyond this, PyDMD has also been supported by some dedicated projects that have allowed us to work on extensions, documentation, training and dissemination that would otherwise not have been possible. In particular, we acknowledge the following sources of support with great gratitude:
+
+* [H2020 ERC CoG 2015 AROMA-CFD project 681447](https://people.sissa.it/~grozza/aroma-cfd/), P.I. Professor [Gianluigi Rozza](https://people.sissa.it/~grozza) at [SISSA mathLab](https://mathlab.sissa.it/).
+* FSE HEaD project [Bulbous Bow Shape Optimization through Reduced Order Modelling](https://mathlab.sissa.it/project/ottimizzazione-di-forme-prodiere-e-poppiere-di-carena-mediante-luso-di-algoritmi-parametrici), FVG, Italy.
+<p align="center">
+    <img src="readme/logos_funding.png" width="800" />
+</p>
 
 ## License
 

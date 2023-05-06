@@ -83,8 +83,11 @@ jobs:
     - name: Create the new documentation
       uses: ammaraskar/sphinx-action@master
       with:
-        pre-build-command: "python -m pip install pip .[test] -U"
+        pre-build-command: "python -m -U pip install pip .[docs]"
         docs-folder: "docs/"
+    - name: Gather tutorials
+      run: |
+        cp docs/source/_tutorials/* docs/build/html
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
