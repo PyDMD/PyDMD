@@ -87,7 +87,7 @@ To uninstall the package type:
 ```
 
 ## Documentation
-**PyDMD** uses [Sphinx](http://www.sphinx-doc.org/en/stable/) for code documentation. You can view the documentation online [here](http://mathlab.github.io/PyDMD/). To build the html version of the docs locally simply:
+**PyDMD** uses [Sphinx](http://www.sphinx-doc.org/en/stable/) for code documentation. You can view the documentation online [here](http://pydmd.github.io/PyDMD/). To build the html version of the docs locally simply:
 
 ```bash
 > cd docs
