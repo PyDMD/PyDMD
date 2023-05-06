@@ -19,8 +19,7 @@ import numpy as np
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from .utils import compute_svd
-from .rdmd import compute_rank
+from .utils import compute_svd, compute_rank
 from .snapshots import Snapshots
 
 
