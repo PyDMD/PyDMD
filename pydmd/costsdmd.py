@@ -508,7 +508,9 @@ class CostsDMD:
     ):
         """Performs a hyperparameter search for the number of components in the kmeans clustering."""
         if n_components_range is None:
-            n_components_range = np.arange(self.svd_rank // 4, self.svd_rank)
+            n_components_range = np.arange(
+                np.max((self.svd_rank // 4, 2)), self.svd_rank
+            )
         score = np.zeros_like(n_components_range, float)
 
         # Reshape the omega array into a 1d array
@@ -742,7 +744,12 @@ class CostsDMD:
         return xr_low_frequency, xr_high_frequency
 
     def plot_scale_separation(
-        self, data, scale_reconstruction_kwargs=None, plot_residual=False
+        self,
+        data,
+        scale_reconstruction_kwargs=None,
+        plot_residual=False,
+        fig_kwargs=None,
+        plot_kwargs=None,
     ):
         """Plot the scale-separated low and high frequency bands."""
         if scale_reconstruction_kwargs is None:
@@ -755,13 +762,24 @@ class CostsDMD:
             scale_reconstruction_kwargs
         )
 
+        if fig_kwargs is None:
+            fig_kwargs = {}
+        fig_kwargs["sharex"] = fig_kwargs.get("sharex", True)
+        fig_kwargs["figsize"] = fig_kwargs.get("figsize", (6, 4))
+
+        if plot_kwargs is None:
+            plot_kwargs = {}
+        plot_kwargs["vmin"] = plot_kwargs.get("vmin", -np.abs(data).max())
+        plot_kwargs["vmax"] = plot_kwargs.get("vmax", np.abs(data).max())
+        plot_kwargs["cmap"] = plot_kwargs.get("cmap", "RdBu_r")
+
         if plot_residual:
-            fig, axes = plt.subplots(4, 1, sharex=True, figsize=(6, 4))
+            fig, axes = plt.subplots(4, 1, **fig_kwargs)
         else:
-            fig, axes = plt.subplots(3, 1, sharex=True, figsize=(6, 4))
+            fig, axes = plt.subplots(3, 1, **fig_kwargs)
 
         ax = axes[0]
-        ax.pcolormesh(data, cmap="RdBu_r", vmin=-2, vmax=2)
+        ax.pcolormesh(data, **plot_kwargs)
         ax.set_title(
             "Input Data at decomposition window length = {}".format(
                 self._window_length
@@ -769,22 +787,19 @@ class CostsDMD:
         )
         ax = axes[1]
         ax.set_title("Reconstruction, low frequency")
-        ax.pcolormesh(xr_low_frequency, cmap="RdBu_r", vmin=-2, vmax=2)
+        ax.pcolormesh(xr_low_frequency, **plot_kwargs)
         ax.set_ylabel("Space (-)")
 
         ax = axes[2]
         ax.set_title("Reconstruction, high frequency")
-        ax.pcolormesh(xr_high_frequency, cmap="RdBu_r", vmin=-2, vmax=2)
+        ax.pcolormesh(xr_high_frequency, **plot_kwargs)
         ax.set_ylabel("Space (-)")
 
         if plot_residual:
             ax = axes[3]
             ax.set_title("Residual")
             ax.pcolormesh(
-                data - xr_high_frequency - xr_low_frequency,
-                cmap="RdBu_r",
-                vmin=-2,
-                vmax=2,
+                data - xr_high_frequency - xr_low_frequency, **plot_kwargs
             )
             ax.set_ylabel("Space (-)")
 
@@ -797,21 +812,35 @@ class CostsDMD:
         plot_period=False,
         scale_reconstruction_kwargs=None,
         plot_residual=False,
+        fig_kwargs=None,
+        plot_kwargs=None,
     ):
         if scale_reconstruction_kwargs is None:
             scale_reconstruction_kwargs = {}
 
         xr_sep = self.scale_reconstruction(scale_reconstruction_kwargs)
 
+        if fig_kwargs is None:
+            fig_kwargs = {}
+        fig_kwargs["sharex"] = fig_kwargs.get("sharex", True)
+        fig_kwargs["figsize"] = fig_kwargs.get(
+            "figsize", (6, 1.5 * len(self._cluster_centroids) + 1)
+        )
+
+        if plot_kwargs is None:
+            plot_kwargs = {}
+        plot_kwargs["vmin"] = plot_kwargs.get("vmin", -np.abs(data).max())
+        plot_kwargs["vmax"] = plot_kwargs.get("vmax", np.abs(data).max())
+        plot_kwargs["cmap"] = plot_kwargs.get("cmap", "RdBu_r")
+
         fig, axes = plt.subplots(
             len(self._cluster_centroids) + 1,
             1,
-            sharex=True,
-            figsize=(6, 1.5 * len(self._cluster_centroids) + 1),
+            **fig_kwargs,
         )
 
         ax = axes[0]
-        ax.pcolormesh(data.real, cmap="RdBu_r", vmin=-2, vmax=2)
+        ax.pcolormesh(data.real, **plot_kwargs)
         ax.set_ylabel("Space (-)")
         ax.set_xlabel("Time (-)")
         ax.set_title(
@@ -829,19 +858,14 @@ class CostsDMD:
 
             ax = axes[n_cluster + 1]
             xr_scale = xr_sep[n_cluster, :, :]
-            ax.pcolormesh(xr_scale, cmap="RdBu_r", vmin=-2, vmax=2)
+            ax.pcolormesh(xr_scale, **plot_kwargs)
             ax.set_ylabel("Space (-)")
             ax.set_title(title.format(x))
 
         if plot_residual:
             ax = axes[-1]
             ax.set_title("Residual")
-            ax.pcolormesh(
-                data - xr_sep.sum(axis=0),
-                cmap="RdBu_r",
-                vmin=-2,
-                vmax=2,
-            )
+            ax.pcolormesh(data - xr_sep.sum(axis=0), **plot_kwargs)
             ax.set_ylabel("Space (-)")
 
         axes[-1].set_xlabel("Time (-)")
