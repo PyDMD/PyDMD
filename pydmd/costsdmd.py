@@ -100,12 +100,12 @@ class CostsDMD:
         self._time_array = None
         self._modes_array = None
         self._omega_array = None
-        self._time_means_array = None
         self._amplitudes_array = None
-        self._t_starts_array = None
         self._cluster_centroids = None
         self._omega_classes = None
         self._square_frequencies = None
+        self._window_means_array = None
+        self._non_integer_n_slide = None
 
         # Specify default keywords to hand to BOPDMD.
         if pydmd_kwargs is None:
@@ -161,18 +161,6 @@ class CostsDMD:
         if not hasattr(self, "_window_means_array"):
             raise ValueError("You need to call fit first.")
         return self._window_means_array
-
-    @property
-    def t_starts_array(self):
-        if not hasattr(self, "_t_starts_array"):
-            raise ValueError("You need to call fit first.")
-        return self._t_starts_array
-
-    @property
-    def time_means_array(self):
-        if not hasattr(self, "_time_means_array"):
-            raise ValueError("You need to call fit first.")
-        return self._time_means_array
 
     @property
     def n_components(self):
@@ -321,7 +309,9 @@ class CostsDMD:
         )
         if n_slide_last_window > 0:
             self._n_slides += 1
-        self._n_slide_last_window = n_slide_last_window
+            self._non_integer_n_slide = True
+        else:
+            self._non_integer_n_slide = False
 
         # Build the projection basis if using a global svd.
         if self._global_svd:
@@ -364,8 +354,6 @@ class CostsDMD:
             (self._n_slides, svd_rank_pre_allocate), np.complex128
         )
         self._window_means_array = np.zeros((self._n_slides, self._n_data_vars))
-        self._t_starts_array = np.zeros(self._n_slides)
-        self._time_means_array = np.zeros(self._n_slides)
 
         # Get initial values for the eigenvalues.
         self._init_alpha = self._build_initizialization()
@@ -391,7 +379,6 @@ class CostsDMD:
             sample_slice = self.get_window_indices(k)
             data_window = data[:, sample_slice]
             original_time_window = time[:, sample_slice]
-            time_window_mean = np.mean(original_time_window)
 
             # All windows are fit with the time array reset to start at t=0.
             t_start = original_time_window[:, 0]
@@ -432,8 +419,6 @@ class CostsDMD:
             ] = optdmd.amplitudes
             self._window_means_array[k, :] = c.flatten()
             self._time_array[k, :] = original_time_window
-            self._time_means_array[k] = time_window_mean
-            self._t_starts_array[k] = t_start
 
             # Reset optdmd between iterations
             if not self._global_svd:
@@ -446,13 +431,16 @@ class CostsDMD:
                     optdmd.init_alpha = optdmd.eigs
 
     def get_window_indices(self, k):
-        """
+        """Returns the window indices for slide `k`.
+
+        Handles non-integer number of slides by making the last slide
+        correspond to `slice(-window_length, None)`.
 
         @return:
         """
         # Get the window indices and data.
         sample_start = self._step_size * k
-        if k == self._n_slides - 1 and self._n_slide_last_window > 0:
+        if k == self._n_slides - 1 and self._non_integer_n_slide:
             sample_slice = slice(-self._window_length, None)
         else:
             sample_slice = slice(
@@ -583,7 +571,7 @@ class CostsDMD:
 
         for ncomponent, component in enumerate(range(self._n_components)):
             ax.plot(
-                self._time_means_array,
+                np.mean(self.time_array, axis=1),
                 np.where(
                     self._omega_classes == component,
                     omega_squared.reshape((n_slides, svd_rank)),
@@ -655,9 +643,9 @@ class CostsDMD:
 
             c = np.atleast_2d(self._window_means_array[k]).T
 
-            # Compute each segment of xr starting at "t = 0"
+            # Compute each segment of the reconstructed data starting at "t = 0"
             t = self._time_array[k]
-            t_start = self._t_starts_array[k]
+            t_start = t.min()
             t = t - t_start
 
             xr_sep_window = np.zeros(
@@ -677,7 +665,7 @@ class CostsDMD:
                     xr_sep_window[j, :, :] += c
                 xr_sep_window[j, :, :] = xr_sep_window[j, :, :] * recon_filter
 
-                if k == self._n_slides - 1 and self._n_slide_last_window > 0:
+                if k == self._n_slides - 1 and self._non_integer_n_slide:
                     window_indices = slice(-self._window_length, None)
                 else:
                     window_indices = slice(
@@ -910,11 +898,16 @@ class CostsDMD:
                 ),
             },
             coords={
-                "window_time_means": self.time_means_array,
+                "window_time_means": np.mean(self.time_array, axis=1),
                 "slide": ("window_time_means", np.arange(self._n_slides)),
                 "rank": np.arange(self.svd_rank),
                 "space": np.arange(self._n_data_vars),
                 "frequency_band": np.arange(self.n_components),
+                "window_index": np.arange(self._window_length),
+                "time": (
+                    ("window_time_means", "window_index"),
+                    self.time_array,
+                ),
             },
             attrs={
                 "svd_rank": self.svd_rank,
@@ -924,7 +917,33 @@ class CostsDMD:
                 "num_frequency_bands": self.n_components,
                 "n_data_vars": self._n_data_vars,
                 "n_time_steps": self._n_time_steps,
+                "step_size": self._step_size,
+                "non_integer_n_slide": self._non_integer_n_slide,
             },
         )
 
         return ds
+
+    def from_xarray(self, ds):
+        """Convert xarray Dataset into a fitted CoSTS object
+
+        @return:
+        """
+
+        self._omega_array = ds.omega.values
+        self._omega_classes = ds.omega_classes
+        self._amplitudes_array = ds.amplitudes.values
+        self._modes_array = ds.modes.values
+        self._window_means_array = ds.window_means.values
+        self._cluster_centroids = ds.cluster_centroids.values
+        self._time_array = ds.time.values
+        self._n_slides = ds.attrs["n_slides"]
+        self._svd_rank = ds.attrs["svd_rank"]
+        self._n_data_vars = ds.attrs["n_data_vars"]
+        self._n_time_steps = ds.attrs["n_time_steps"]
+        self._n_components = ds.attrs["num_frequency_bands"]
+        self._non_integer_n_slide = ds.attrs["non_integer_n_slide"]
+        self._step_size = ds.attrs["step_size"]
+        self._window_length = ds.attrs["window_length"]
+
+        return self
