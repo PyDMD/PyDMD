@@ -48,30 +48,65 @@ class HOEDMDOperator(DMDOperator):
         )
         self._Atilde = None
 
-    def compute_operator(self, Psi, d):
+    def compute_operator(self, Psi, d, alg_type):
         """
         Compute the low-rank operator.
 
         :param numpy.ndarray Psi: the time-delay data matrix containing the snapshots x0,..x{n} by column.
         :param int d: order in HOEDMD.
+        :param string alg_type: Algorithm type in HOEDMD. Default is 'stls'.
         :return: the (truncated) left-singular vectors matrix, the (truncated)
             singular values array, the (truncated) right-singular vectors
             matrix of Px.
         :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
         """
         m = Psi.shape[0] // (d + 1)
-        P, _, _ = compute_svd(Psi, svd_rank=self._svd_rank)  # solve for tlsq
-        Px = P[:-d, :]
-        Py = P[d:, :]
-        M, omega, N = compute_svd(Px, svd_rank=self._svd_rank)  # solve for dmd
-        o_inv = np.reciprocal(omega)
-        atilde = np.linalg.multi_dot([N * o_inv, M.T.conj(), Py])
+        if alg_type == "stls":
+            P, _, _ = compute_svd(
+                Psi, svd_rank=self._svd_rank
+            )  # solve for tlsq
+            Px = P[:-d, :]
+            Py = P[d:, :]
+            M, omega, N = compute_svd(
+                Px, svd_rank=self._svd_rank
+            )  # solve for dmd
+            o_inv = np.reciprocal(omega)
+            atilde = np.linalg.multi_dot([N * o_inv, M.T.conj(), Py])
 
-        self._Atilde = atilde
-        self._compute_eigenquantities()
-        self._compute_modes(P[m : 2 * m, :], M, o_inv, N)
+            self._Atilde = atilde
+            self._compute_eigenquantities()
+            U = self.eigenvectors_r
+            V = self.eigenvectors_l
+            inprodUV = self.eigenvalues.conj() * ((U.conj() * V).sum(0))
+            U = P[m : 2 * m, :].dot(U)
+            V = np.linalg.multi_dot([(M * o_inv), N.T.conj(), V])
+            self._compute_modes(U, V, inprodUV)
 
-        return M, omega, N
+        elif alg_type == "nosvd":
+            Gxx = np.dot(Psi[:-d, :].T.conj(), Psi[:-d, :])
+            Gxy = np.dot(Psi[:-d, :].T.conj(), Psi[d:, :])
+            Gpp = np.dot(Psi[m * d :, :].T.conj(), Psi[m * d :, :])
+            sigma, Q = np.linalg.eig(Gxx + Gpp)
+            ind = np.sort(-sigma)
+            sigma = sigma(ind)
+            Q = Q[:, ind[: self._svd_rank]]
+            L = scipy.linalg.cholesky(Q.T.conj() * Gxx * Q, lower=True)
+            atilde = np.linalg.solve(
+                L.T.conj(), np.linalg.solve(L, Q.T.conj() * Gxy * Q)
+            )
+            self._Atilde = atilde
+            self._compute_eigenquantities()
+            U = self.eigenvectors_r
+            V = self.eigenvectors_l
+            inprodUV = self.eigenvalues.conj() * ((U.conj() * V).sum(0))
+            U = Psi[m : 2 * m, :] * (Q * U)
+            V = Psi[: m * d, :] * (
+                Q * np.linalg.solve(L.T.conj(), np.linalg.solve(L, V))
+            )
+            self._compute_modes(U, V, inprodUV)
+
+        else:
+            raise ValueError("Invalid value for alg_type: {}".format(alg_type))
 
     @property
     def eigenvectors_r(self):
@@ -98,31 +133,6 @@ class HOEDMDOperator(DMDOperator):
 
         if self._rescale_mode is None:
             Ahat = self._Atilde
-        # elif isinstance(self._rescale_mode, np.ndarray):
-        #     if len(self._rescale_mode) != self.as_numpy_array.shape[0]:
-        #         raise ValueError(
-        #             """Scaling by an invalid number of
-        #                 coefficients"""
-        #         )
-        #     scaling_factors_array = self._rescale_mode
-
-        #     factors_inv_sqrt = np.diag(np.power(scaling_factors_array, -0.5))
-        #     factors_sqrt = np.diag(np.power(scaling_factors_array, 0.5))
-
-        #     # if an index is 0, we get inf when taking the reciprocal
-        #     for idx, item in enumerate(scaling_factors_array):
-        #         if item == 0:
-        #             factors_inv_sqrt[idx] = 0
-
-        #     Ahat = np.linalg.multi_dot(
-        #         [factors_inv_sqrt, self.as_numpy_array, factors_sqrt]
-        #     )
-        # else:
-        #     raise ValueError(
-        #         "Invalid value for rescale_mode: {} of type {}".format(
-        #             self._rescale_mode, type(self._rescale_mode)
-        #         )
-        #     )
 
         (
             self._eigenvalues,
@@ -169,36 +179,24 @@ class HOEDMDOperator(DMDOperator):
             self._eigenvectors_r = np.array([vec for vec in b]).T
             self._eigenvectors_l = np.array([vec for vec in c]).T
 
-    def _compute_modes(self, P1, M, o_inv, N):
+    def _compute_modes(self, U, V, inprodUV):
         """
         Private method that computes eigenvalues and eigenvectors of the
         high-dimensional operator (stored in self.modes and self.Lambda).
 
-        :param numpy.ndarray P1: projector of right eigenvectors from high-dimensional to original space.
+        :param numpy.ndarray U: right eigenvectors from high-dimensional to original space.
+        :param numpy.ndarray V: left eigenvectors from high-dimensional to original space.
+        :param numpy.ndarray inprodUV: inner product of right eigenvectors and left eigenvectors from high-dimensional to original space.
         """
-
-        if self._rescale_mode is None:
-            Utilde = self._eigenvectors_r
-            Vtilde = self._eigenvectors_l
-
-        # compute the eigenvectors of the high-dimensional operator
-        U = P1.dot(Utilde)
-
-        # compute the left eigenvectors of the high-dimensional operator
-        vhat = np.linalg.multi_dot([(M * o_inv), N.T.conj(), Vtilde])
 
         # normalization
         unorms = np.linalg.norm(U, axis=0)
-        high_dimensional_eigenvectors = U / unorms
-        vhat = (
-            vhat
-            * unorms
-            / (self._eigenvalues.conj() * ((U.conj() * vhat).sum(0)))
-        )  # need to check
+        U = U / unorms
+        V = V * unorms / inprodUV  # need to check
 
-        self._modes = high_dimensional_eigenvectors
+        self._modes = U
         self._Lambda = self.eigenvalues
-        self._Vhat = vhat
+        self._Vhat = V
 
 
 class HOEDMD(DMDBase):
@@ -229,6 +227,7 @@ class HOEDMD(DMDBase):
     def __init__(
         self,
         svd_rank=0,
+        alg_type="stls",
         tlsq_rank=0,
         exact=False,
         opt=False,
@@ -248,6 +247,7 @@ class HOEDMD(DMDBase):
         )
         self._d = d
         self._ho_snapshots = None
+        self._alg_type = alg_type
         self._Atilde = HOEDMDOperator(
             svd_rank=svd_rank,
             rescale_mode=rescale_mode,
@@ -334,7 +334,9 @@ Expected at least d."""
         ).snapshots
 
         # compute HOEDMD
-        self.operator.compute_operator(self._ho_snapshots, self.d)
+        self.operator.compute_operator(
+            self._ho_snapshots, self.d, self._alg_type
+        )
 
         # Default timesteps
         self._set_initial_time_dictionary(
