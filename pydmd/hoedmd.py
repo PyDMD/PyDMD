@@ -60,7 +60,7 @@ class HOEDMDOperator(DMDOperator):
         :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
         """
         m = Psi.shape[0] // (d + 1)
-        P, _, _ = compute_svd(Psi, svd_rank=self._tlsq_rank)  # solve for tlsq
+        P, _, _ = compute_svd(Psi, svd_rank=self._svd_rank)  # solve for tlsq
         Px = P[:-d, :]
         Py = P[d:, :]
         M, omega, N = compute_svd(Px, svd_rank=self._svd_rank)  # solve for dmd
@@ -69,7 +69,7 @@ class HOEDMDOperator(DMDOperator):
 
         self._Atilde = atilde
         self._compute_eigenquantities()
-        self._compute_modes(P[:m, :], M, o_inv, N)
+        self._compute_modes(P[m : 2 * m, :], M, o_inv, N)
 
         return M, omega, N
 
@@ -185,10 +185,10 @@ class HOEDMDOperator(DMDOperator):
         U = P1.dot(Utilde)
 
         # compute the left eigenvectors of the high-dimensional operator
-        vhat = np.linalg.multi_dot((M * o_inv), N.T.conj(), Vtilde)
+        vhat = np.linalg.multi_dot([(M * o_inv), N.T.conj(), Vtilde])
 
         # normalization
-        unorms = np.linalg.norm(U, axis=1)
+        unorms = np.linalg.norm(U, axis=0)
         high_dimensional_eigenvectors = U / unorms
         vhat = (
             vhat
