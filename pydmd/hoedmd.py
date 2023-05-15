@@ -3,7 +3,6 @@ Derived module from dmdbase.py for higher order edmd.
 As a reference consult this work by Weiyang and Jie:
 https://doi.org/10.1137/21M1463665
 """
-from __future__ import division
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view as swv
@@ -12,6 +11,7 @@ from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .snapshots import Snapshots
 from .utils import compute_svd
+
 
 class HOEDMDOperator(DMDOperator):
     """
@@ -48,7 +48,6 @@ class HOEDMDOperator(DMDOperator):
         )
         self._Atilde = None
 
-
     def compute_operator(self, Psi, d):
         """
         Compute the low-rank operator.
@@ -60,26 +59,26 @@ class HOEDMDOperator(DMDOperator):
             matrix of Px.
         :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
         """
-        m = Psi.shape[0] // (d+1)
-        P, _, _ = compute_svd(Psi, svd_rank=self._tlsq_rank) # solve for tlsq
-        Px = P[:-d,:]
-        Py = P[d:,:]
-        M, omega, N = compute_svd(Px, svd_rank=self._svd_rank) # solve for dmd
+        m = Psi.shape[0] // (d + 1)
+        P, _, _ = compute_svd(Psi, svd_rank=self._tlsq_rank)  # solve for tlsq
+        Px = P[:-d, :]
+        Py = P[d:, :]
+        M, omega, N = compute_svd(Px, svd_rank=self._svd_rank)  # solve for dmd
         o_inv = np.reciprocal(omega)
         atilde = np.linalg.multi_dot([N * o_inv, M.T.conj(), Py])
 
         self._Atilde = atilde
         self._compute_eigenquantities()
-        self._compute_modes(P[:m,:],M, o_inv, N)
+        self._compute_modes(P[:m, :], M, o_inv, N)
 
         return M, omega, N
-    
+
     @property
     def eigenvectors_r(self):
         if not hasattr(self, "_eigenvectors_r"):
             raise ValueError("You need to call fit before")
         return self._eigenvectors_r
-    
+
     @property
     def eigenvectors_l(self):
         if not hasattr(self, "_eigenvectors_l"):
@@ -124,8 +123,12 @@ class HOEDMDOperator(DMDOperator):
         #             self._rescale_mode, type(self._rescale_mode)
         #         )
         #     )
-        
-        self._eigenvalues, self._eigenvectors_r, self._eigenvectors_l = scipy.linalg.eig(Ahat,left=True)
+
+        (
+            self._eigenvalues,
+            self._eigenvectors_r,
+            self._eigenvectors_l,
+        ) = scipy.linalg.eig(Ahat, left=True)
 
         if self._sorted_eigs is not False and self._sorted_eigs is not None:
             if self._sorted_eigs == "abs":
@@ -152,7 +155,14 @@ class HOEDMDOperator(DMDOperator):
             # transpose to associate each row (former column) to an
             # eigenvalue before sorting
             a, b, c = zip(
-                *sorted(zip(self._eigenvalues, self._eigenvectors_r.T, self._eigenvectors_l.T), key=k)
+                *sorted(
+                    zip(
+                        self._eigenvalues,
+                        self._eigenvectors_r.T,
+                        self._eigenvectors_l.T,
+                    ),
+                    key=k,
+                )
             )
             self._eigenvalues = np.array([eig for eig in a])
             # we restore the original condition (eigenvectors in columns)
@@ -180,11 +190,16 @@ class HOEDMDOperator(DMDOperator):
         # normalization
         unorms = np.linalg.norm(U, axis=1)
         high_dimensional_eigenvectors = U / unorms
-        vhat = vhat * unorms / (self._eigenvalues.conj()*((U.conj()*vhat).sum(0))) # need to check
+        vhat = (
+            vhat
+            * unorms
+            / (self._eigenvalues.conj() * ((U.conj() * vhat).sum(0)))
+        )  # need to check
 
         self._modes = high_dimensional_eigenvectors
         self._Lambda = self.eigenvalues
         self._Vhat = vhat
+
 
 class HOEDMD(DMDBase):
     """
@@ -214,7 +229,7 @@ class HOEDMD(DMDBase):
     def __init__(
         self,
         svd_rank=0,
-        tlsq_rank = 0,
+        tlsq_rank=0,
         exact=False,
         opt=False,
         rescale_mode=None,
@@ -225,7 +240,7 @@ class HOEDMD(DMDBase):
     ):
         super().__init__(
             svd_rank=svd_rank,
-            tlsq_rank = tlsq_rank,
+            tlsq_rank=tlsq_rank,
             exact=exact,
             opt=opt,
             rescale_mode=rescale_mode,
@@ -245,7 +260,7 @@ class HOEDMD(DMDBase):
     def d(self):
         """The new order for spatial dimension of the input snapshots."""
         return self._d
-    
+
     @property
     def ho_snapshots(self):
         """
@@ -280,7 +295,7 @@ class HOEDMD(DMDBase):
                    [3],
                    [4],
                    [5]])
-            
+
             >>> dmd = HOEDMD(d=2)
             >>> a = np.array([1,2,3,4,5,6]).reshape(2,3)
             >>> a
@@ -294,10 +309,9 @@ class HOEDMD(DMDBase):
                    [3],
                    [6]])
         """
-        return(
-            (swv(X, (X.shape[0],self.d + 1))).T.reshape(-1, X.shape[1] - self.d)
+        return (swv(X, (X.shape[0], self.d + 1))).T.reshape(
+            -1, X.shape[1] - self.d
         )
-
 
     def fit(self, X):
         """
@@ -326,8 +340,8 @@ Expected at least d."""
         self._set_initial_time_dictionary(
             {"t0": 0, "tend": n_samples - 1, "dt": 1}
         )
-        
-        # compute amplitudes 
-        self._b = self.operator.Vhat.T.conj() * self._ho_snapshots[:-self.d,1]
+
+        # compute amplitudes
+        self._b = self.operator.Vhat.T.conj() * self._ho_snapshots[: -self.d, 1]
 
         return self
