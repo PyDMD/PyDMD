@@ -33,6 +33,7 @@ class HOEDMDOperator(DMDOperator):
     def __init__(
         self,
         svd_rank,
+        exact,
         rescale_mode,
         forward_backward,
         sorted_eigs,
@@ -40,7 +41,7 @@ class HOEDMDOperator(DMDOperator):
     ):
         super().__init__(
             svd_rank=svd_rank,
-            exact=True,
+            exact=exact,
             rescale_mode=rescale_mode,
             forward_backward=forward_backward,
             sorted_eigs=sorted_eigs,
@@ -131,8 +132,7 @@ class HOEDMDOperator(DMDOperator):
         Private method that computes eigenvalues and eigenvectors(both right and left) of the low-dimensional operator
         """
 
-        if self._rescale_mode is None:
-            Ahat = self._Atilde
+        Ahat = self._Atilde
 
         (
             self._eigenvalues,
@@ -228,12 +228,12 @@ class HOEDMD(DMDBase):
         self,
         svd_rank=0,
         alg_type="stls",
+        d=1,
         tlsq_rank=0,
         exact=False,
         opt=False,
         rescale_mode=None,
         forward_backward=False,
-        d=1,
         sorted_eigs=False,
         tikhonov_regularization=None,
     ):
@@ -243,13 +243,16 @@ class HOEDMD(DMDBase):
             exact=exact,
             opt=opt,
             rescale_mode=rescale_mode,
+            forward_backward=forward_backward,
             sorted_eigs=sorted_eigs,
+            tikhonov_regularization=tikhonov_regularization,
         )
         self._d = d
         self._ho_snapshots = None
         self._alg_type = alg_type
         self._Atilde = HOEDMDOperator(
             svd_rank=svd_rank,
+            exact=exact,
             rescale_mode=rescale_mode,
             forward_backward=forward_backward,
             sorted_eigs=sorted_eigs,
