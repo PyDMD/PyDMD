@@ -80,7 +80,9 @@ class DMDOperator:
 
         VV = linalg_module.dot(V, V.conj().swapaxes(-1, -2))
         identity = linalg_module.to(VV, np.identity(VV.shape[-1]))
-        self._dmd_phase_space_error = linalg_module.matrix_norm(linalg_module.dot(Y, identity - VV))
+        self._dmd_phase_space_error = linalg_module.matrix_norm(
+            linalg_module.dot(Y, identity - VV)
+        )
 
         if self._tikhonov_regularization is not None:
             self._norm_X = linalg_module.matrix_norm(X)
@@ -118,8 +120,12 @@ class DMDOperator:
         :rtype: numpy.ndarray
         """
         linalg_module = build_linalg_module(self._Atilde)
-        snapshot_lowrank_modal_coefficients = linalg_module.to(self._Atilde, snapshot_lowrank_modal_coefficients)
-        return linalg_module.dot(self._Atilde, snapshot_lowrank_modal_coefficients)
+        snapshot_lowrank_modal_coefficients = linalg_module.to(
+            self._Atilde, snapshot_lowrank_modal_coefficients
+        )
+        return linalg_module.dot(
+            self._Atilde, snapshot_lowrank_modal_coefficients
+        )
 
     @property
     def eigenvalues(self):
@@ -204,7 +210,9 @@ class DMDOperator:
                     """Scaling by an invalid number of
                         coefficients"""
                 )
-            scaling_factors = linalg_module.to(self.as_array, self._rescale_mode)
+            scaling_factors = linalg_module.to(
+                self.as_array, self._rescale_mode
+            )
             factors_inv_sqrt = linalg_module.diag_matrix(
                 1 / linalg_module.pow(scaling_factors, 0.5)
             )
@@ -215,8 +223,12 @@ class DMDOperator:
             # if an index is 0, we get inf when taking the reciprocal
             factors_inv_sqrt[..., scaling_factors == 0] = 0
 
-            factors_sqrt, factors_inv_sqrt = linalg_module.to(self.as_array, factors_sqrt, factors_inv_sqrt)
-            Ahat = linalg_module.multi_dot((factors_inv_sqrt, self.as_array, factors_sqrt))
+            factors_sqrt, factors_inv_sqrt = linalg_module.to(
+                self.as_array, factors_sqrt, factors_inv_sqrt
+            )
+            Ahat = linalg_module.multi_dot(
+                (factors_inv_sqrt, self.as_array, factors_sqrt)
+            )
         else:
             raise ValueError(
                 "Invalid value for rescale_mode: {} of type {}".format(
@@ -235,14 +247,15 @@ class DMDOperator:
             elif self._sorted_eigs == "real":
                 sort_mask = linalg_module.argsort(eigs)
             else:
-                raise ValueError(f"Invalid value for sorted_eigs: {self._sorted_eigs}")
-            
+                raise ValueError(
+                    f"Invalid value for sorted_eigs: {self._sorted_eigs}"
+                )
+
             self._eigenvalues = eigs[sort_mask]
             self._eigenvectors = eigenvecs[:, sort_mask]
         else:
             self._eigenvalues = eigs
             self._eigenvectors = eigenvecs
-            
 
     def _compute_modes(self, Y, U, Sigma, V):
         """
@@ -261,7 +274,9 @@ class DMDOperator:
         else:
             # compute W as shown in arXiv:1409.5496 (section 2.4)
             factors = linalg_module.to(self.eigenvectors, self._rescale_mode)
-            factors_sqrt = linalg_module.diag_matrix(linalg_module.pow(factors, 0.5))
+            factors_sqrt = linalg_module.diag_matrix(
+                linalg_module.pow(factors, 0.5)
+            )
             W = linalg_module.dot(factors_sqrt, self.eigenvectors)
 
         # compute the eigenvectors of the high-dimensional operator

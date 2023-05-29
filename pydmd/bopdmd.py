@@ -19,8 +19,7 @@ import numpy as np
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from .utils import compute_svd
-from .rdmd import compute_rank
+from .utils import compute_svd, compute_rank
 from .snapshots import Snapshots
 
 
@@ -28,6 +27,9 @@ class BOPDMDOperator(DMDOperator):
     """
     BOP-DMD operator.
 
+    :param compute_A: Flag that determines whether or not to compute the full
+        Koopman operator A.
+    :type compute_A: bool
     :param use_proj: Flag that determines the type of computation to perform.
         If True, fit input data projected onto the first svd_rank POD modes or
         columns of proj_basis if provided. If False, fit the full input data.
@@ -95,8 +97,10 @@ class BOPDMDOperator(DMDOperator):
         Default is False, don't print information.
     :type verbose: bool
     """
+
     def __init__(
         self,
+        compute_A,
         use_proj,
         init_alpha,
         proj_basis,
@@ -111,8 +115,9 @@ class BOPDMDOperator(DMDOperator):
         tol=1e-6,
         eps_stall=1e-12,
         use_fulljac=True,
-        verbose=False
+        verbose=False,
     ):
+        self._compute_A = compute_A
         self._use_proj = use_proj
         self._init_alpha = init_alpha
         self._proj_basis = proj_basis
@@ -128,17 +133,17 @@ class BOPDMDOperator(DMDOperator):
             tol,
             eps_stall,
             use_fulljac,
-            verbose
+            verbose,
         )
         self._varpro_opts_warn()
 
         self._modes = None
         self._eigenvalues = None
+        self._modes_std = None
         self._eigenvalues_std = None
         self._amplitudes_std = None
         self._Atilde = None
         self._A = None
-
 
     @property
     def varpro_opts(self):
@@ -150,7 +155,6 @@ class BOPDMDOperator(DMDOperator):
         """
         return self._varpro_opts
 
-
     @property
     def A(self):
         """
@@ -159,10 +163,15 @@ class BOPDMDOperator(DMDOperator):
         :return: the full Koopman operator A.
         :rtype: numpy.ndarray
         """
+        if not self._compute_A:
+            msg = (
+                "A not computed during fit. "
+                "Set parameter compute_A = True to compute A."
+            )
+            raise ValueError(msg)
         if self._A is None:
             raise ValueError("You need to call fit before")
         return self._A
-
 
     @property
     def amplitudes_std(self):
@@ -174,7 +183,6 @@ class BOPDMDOperator(DMDOperator):
         """
         return self._amplitudes_std
 
-
     @property
     def eigenvalues_std(self):
         """
@@ -185,6 +193,15 @@ class BOPDMDOperator(DMDOperator):
         """
         return self._eigenvalues_std
 
+    @property
+    def modes_std(self):
+        """
+        Get the modes standard deviation.
+
+        :return: modes standard deviation.
+        :rtype: numpy.ndarray
+        """
+        return self._modes_std
 
     def _varpro_opts_warn(self):
         """
@@ -194,12 +211,12 @@ class BOPDMDOperator(DMDOperator):
         """
         # Generate dictionary of recommended value range for each parameter.
         rec_ranges = OrderedDict()
-        rec_ranges["init_lambda"] = [0.0, 1e+16]
+        rec_ranges["init_lambda"] = [0.0, 1e16]
         rec_ranges["maxlam"] = [0, 200]
-        rec_ranges["lamup"] = [1.0, 1e+16]
+        rec_ranges["lamup"] = [1.0, 1e16]
         rec_ranges["use_levmarq"] = [-np.inf, np.inf]
-        rec_ranges["maxiter"] = [0, 1e+12]
-        rec_ranges["tol"] = [0.0, 1e+16]
+        rec_ranges["maxiter"] = [0, 1e12]
+        rec_ranges["tol"] = [0.0, 1e16]
         rec_ranges["eps_stall"] = [-np.inf, 1.0]
         rec_ranges["use_fulljac"] = [-np.inf, np.inf]
         rec_ranges["verbose"] = [-np.inf, np.inf]
@@ -211,14 +228,17 @@ class BOPDMDOperator(DMDOperator):
                 raise ValueError("Invalid variable projection option given.")
 
             if opt_value < opt_min:
-                msg = "Option {} with value {} is less than {}, " \
-                      "which is not recommended."
+                msg = (
+                    "Option {} with value {} is less than {}, "
+                    "which is not recommended."
+                )
                 warnings.warn(msg.format(opt_name, opt_value, opt_min))
             elif opt_value > opt_max:
-                msg = "Option {} with value {} is greater than {}, " \
-                      "which is not recommended."
+                msg = (
+                    "Option {} with value {} is greater than {}, "
+                    "which is not recommended."
+                )
                 warnings.warn(msg.format(opt_name, opt_value, opt_max))
-
 
     def _exp_function(self, alpha, t):
         """
@@ -232,7 +252,6 @@ class BOPDMDOperator(DMDOperator):
         :rtype: numpy.ndarray
         """
         return np.exp(np.outer(t, alpha))
-
 
     def _exp_function_deriv(self, alpha, t, i):
         """
@@ -256,7 +275,6 @@ class BOPDMDOperator(DMDOperator):
             (A, (np.arange(m), np.full(m, fill_value=i))), shape=(m, n)
         )
 
-
     def _compute_irank_svd(self, X, tolrank):
         """
         Helper function that computes and returns the SVD of X with a rank
@@ -277,7 +295,6 @@ class BOPDMDOperator(DMDOperator):
         S = np.diag(s[:irank])
         Vh = Vh[:irank]
         return U, S, Vh
-
 
     def _bag(self, H, trial_size):
         """
@@ -307,19 +324,25 @@ class BOPDMDOperator(DMDOperator):
         elif trial_size >= 1 and isinstance(trial_size, int):
             batch_size = trial_size
         else:
-            msg = "Invalid trial_size parameter. trial_size must be either " \
-                  "a positive integer or a float between 0 and 1."
+            msg = (
+                "Invalid trial_size parameter. trial_size must be either "
+                "a positive integer or a float between 0 and 1."
+            )
             raise ValueError(msg)
 
         # Throw an error if the batch size is too large or too small.
         if batch_size > H.shape[0]:
-            msg = "Error bagging the input data. Please ensure that the " \
-                  "trial_size parameter is small enough for bagging."
+            msg = (
+                "Error bagging the input data. Please ensure that the "
+                "trial_size parameter is small enough for bagging."
+            )
             raise ValueError(msg)
 
         if batch_size == 0:
-            msg = "Error bagging the input data. Please ensure that the " \
-                  "trial_size parameter is large enough for bagging."
+            msg = (
+                "Error bagging the input data. Please ensure that the "
+                "trial_size parameter is large enough for bagging."
+            )
             raise ValueError(msg)
 
         # Obtain and return subset of the data.
@@ -328,7 +351,6 @@ class BOPDMDOperator(DMDOperator):
             np.random.choice(all_inds, size=batch_size, replace=False)
         )
         return H[subset_inds], subset_inds
-
 
     def _variable_projection(self, H, t, init_alpha, Phi, dPhi):
         """
@@ -364,6 +386,7 @@ class BOPDMDOperator(DMDOperator):
         Computational Optimization and Applications 54.3 (2013): 579-593
         by Dianne P. O'Leary and Bert W. Rust.
         """
+
         def compute_residual(alpha):
             """
             Helper function that, given alpha, and using H, t, Phi as they are
@@ -383,8 +406,17 @@ class BOPDMDOperator(DMDOperator):
         IA = len(init_alpha)
 
         # Unpack all variable projection parameters stored in varpro_opts.
-        (init_lambda, maxlam, lamup, use_levmarq,
-            maxiter, tol, eps_stall, use_fulljac, verbose) = self._varpro_opts
+        (
+            init_lambda,
+            maxlam,
+            lamup,
+            use_levmarq,
+            maxiter,
+            tol,
+            eps_stall,
+            use_fulljac,
+            verbose,
+        ) = self._varpro_opts
 
         # Initialize values.
         tolrank = M * np.finfo(float).eps
@@ -395,8 +427,8 @@ class BOPDMDOperator(DMDOperator):
 
         # Initialize storage.
         all_error = np.zeros(maxiter)
-        djac_matrix = np.zeros((M*IS, IA), dtype="complex")
-        rjac = np.zeros((2*IA, IA), dtype="complex")
+        djac_matrix = np.zeros((M * IS, IA), dtype="complex")
+        rjac = np.zeros((2 * IA, IA), dtype="complex")
         scales = np.zeros(IA)
 
         for itr in range(maxiter):
@@ -425,8 +457,9 @@ class BOPDMDOperator(DMDOperator):
 
             # Loop to determine lambda (the step-size parameter).
             rhs_temp = np.copy(residual.ravel(order="F"))[:, None]
-            q_out, djac_out, j_pvt = qr(djac_matrix,
-                                        mode="economic", pivoting=True)
+            q_out, djac_out, j_pvt = qr(
+                djac_matrix, mode="economic", pivoting=True
+            )
             ij_pvt = np.arange(IA)
             ij_pvt = ij_pvt[j_pvt]
             rjac[:IA] = np.triu(djac_out[:IA])
@@ -458,13 +491,17 @@ class BOPDMDOperator(DMDOperator):
 
             # Check actual improvement vs predicted improvement.
             actual_improvement = error - error_0
-            pred_improvement = 0.5 * np.linalg.multi_dot(
-                [delta_0.conj().T, djac_matrix.conj().T, rhs_temp]).real
+            pred_improvement = (
+                0.5
+                * np.linalg.multi_dot(
+                    [delta_0.conj().T, djac_matrix.conj().T, rhs_temp]
+                ).real
+            )
             improvement_ratio = actual_improvement / pred_improvement
 
             if error_0 < error:
                 # Rescale lambda based on the improvement ratio.
-                _lambda *= max(1/3, 1 - (2*improvement_ratio - 1) ** 3)
+                _lambda *= max(1 / 3, 1 - (2 * improvement_ratio - 1) ** 3)
                 alpha, B, residual, error = alpha_0, B_0, residual_0, error_0
             else:
                 # Increase lambda until something works.
@@ -481,8 +518,10 @@ class BOPDMDOperator(DMDOperator):
                 # Terminate if no appropriate step length was found.
                 if error_0 >= error:
                     if verbose:
-                        msg = "Failed to find appropriate step length at " \
-                              "iteration {}. Current error {}."
+                        msg = (
+                            "Failed to find appropriate step length at "
+                            "iteration {}. Current error {}."
+                        )
                         warnings.warn(msg.format(itr, error))
                     return B, alpha
 
@@ -499,13 +538,17 @@ class BOPDMDOperator(DMDOperator):
                 return B, alpha
 
             # Terminate if a stall is detected.
-            if (itr > 0 and
-                all_error[itr-1] - all_error[itr] < eps_stall*all_error[itr-1]
+            if (
+                itr > 0
+                and all_error[itr - 1] - all_error[itr]
+                < eps_stall * all_error[itr - 1]
             ):
                 if verbose:
-                    msg = "Stall detected: error reduced by less than {} " \
-                          "times the error at the previous step. " \
-                          "Iteration {}. Current error {}."
+                    msg = (
+                        "Stall detected: error reduced by less than {} "
+                        "times the error at the previous step. "
+                        "Iteration {}. Current error {}."
+                    )
                     warnings.warn(msg.format(eps_stall, itr, error))
                 return B, alpha
 
@@ -513,12 +556,13 @@ class BOPDMDOperator(DMDOperator):
 
         # Failed to meet tolerance in maxiter steps.
         if verbose:
-            msg = "Failed to reach tolerance after maxiter = {} iterations. " \
-                  "Current error {}."
+            msg = (
+                "Failed to reach tolerance after maxiter = {} iterations. "
+                "Current error {}."
+            )
             warnings.warn(msg.format(maxiter, error))
 
         return B, alpha
-
 
     def _single_trial_compute_operator(self, H, t, init_alpha):
         """
@@ -553,10 +597,12 @@ class BOPDMDOperator(DMDOperator):
             )
 
         # Compute the full system matrix A.
-        A = np.linalg.multi_dot([w, np.diag(e), np.linalg.pinv(w)])
+        if self._compute_A:
+            A = np.linalg.multi_dot([w, np.diag(e), np.linalg.pinv(w)])
+        else:
+            A = None
 
         return w, e, b, Atilde, A
-
 
     def compute_operator(self, H, t):
         """
@@ -583,13 +629,16 @@ class BOPDMDOperator(DMDOperator):
             return b_0
 
         # Perform BOP-DMD.
-        # Initialize bagging result storage.
-        all_w = np.empty((self._num_trials, *w_0.shape), dtype="complex")
-        all_e = np.empty((self._num_trials, *e_0.shape), dtype="complex")
-        all_b = np.empty((self._num_trials, *b_0.shape), dtype="complex")
+        # Initialize storage for values needed for stat computations.
+        w_sum = np.zeros(w_0.shape, dtype="complex")
+        e_sum = np.zeros(e_0.shape, dtype="complex")
+        b_sum = np.zeros(b_0.shape, dtype="complex")
+        w_sum2 = np.zeros(w_0.shape, dtype="complex")
+        e_sum2 = np.zeros(e_0.shape, dtype="complex")
+        b_sum2 = np.zeros(b_0.shape, dtype="complex")
 
         # Perform num_trials many trials of optimized dmd.
-        for i in range(self._num_trials):
+        for _ in range(self._num_trials):
             H_i, subset_inds = self._bag(H, self._trial_size)
             w_i, e_i, b_i, _, _ = self._single_trial_compute_operator(
                 H_i, t[subset_inds], e_0
@@ -619,30 +668,47 @@ class BOPDMDOperator(DMDOperator):
             else:
                 raise ValueError("Provided eig_sort method is not supported.")
 
-            all_w[i] = w_i[:, sorted_inds]
-            all_e[i] = e_i[sorted_inds]
-            all_b[i] = b_i[sorted_inds]
+            # Add to iterative sums.
+            w_sum += w_i[:, sorted_inds]
+            e_sum += e_i[sorted_inds]
+            b_sum += b_i[sorted_inds]
 
-        # Compute and use the average optimized dmd results.
-        self._modes = np.mean(all_w, axis=0)
-        self._eigenvalues = np.mean(all_e, axis=0)
+            # Add to iterative sums of squares.
+            w_sum2 += np.abs(w_i[:, sorted_inds]) ** 2
+            e_sum2 += np.abs(e_i[sorted_inds]) ** 2
+            b_sum2 += np.abs(b_i[sorted_inds]) ** 2
 
-        # Compute Atilde and A using the average optimized dmd results.
+        # Compute the BOP-DMD statistics.
+        w_mu = w_sum / self._num_trials
+        e_mu = e_sum / self._num_trials
+        b_mu = b_sum / self._num_trials
+        w_std = np.sqrt(np.abs(w_sum2 / self._num_trials - np.abs(w_mu) ** 2))
+        e_std = np.sqrt(np.abs(e_sum2 / self._num_trials - np.abs(e_mu) ** 2))
+        b_std = np.sqrt(np.abs(b_sum2 / self._num_trials - np.abs(b_mu) ** 2))
+
+        # Save the BOP-DMD statistics.
+        self._modes = w_mu
+        self._eigenvalues = e_mu
+        self._modes_std = w_std
+        self._eigenvalues_std = e_std
+        self._amplitudes_std = b_std
+
+        # Compute Atilde using the average optimized dmd results.
         w_proj = self._proj_basis.conj().T.dot(self._modes)
         self._Atilde = np.linalg.multi_dot(
             [w_proj, np.diag(self._eigenvalues), np.linalg.pinv(w_proj)]
         )
-        self._A = np.linalg.multi_dot(
-            [self._modes,
-             np.diag(self._eigenvalues),
-             np.linalg.pinv(self._modes)]
-        )
+        # Compute A if requested.
+        if self._compute_A:
+            self._A = np.linalg.multi_dot(
+                [
+                    self._modes,
+                    np.diag(self._eigenvalues),
+                    np.linalg.pinv(self._modes),
+                ]
+            )
 
-        # Compute and save the standard deviation of the optimized dmd results.
-        self._eigenvalues_std = np.std(all_e, axis=0)
-        self._amplitudes_std = np.std(all_b, axis=0)
-
-        return np.mean(all_b, axis=0)
+        return b_mu
 
 
 class BOPDMD(DMDBase):
@@ -656,6 +722,11 @@ class BOPDMD(DMDBase):
         to reach the 'energy' specified by `svd_rank`; if -1, the method does
         not compute truncation.
     :type svd_rank: int or float
+    :param compute_A: Flag that determines whether or not to compute the full
+        Koopman operator A. Default is False, do not compute the full operator.
+        Note that the full operator is potentially prohibitively expensive to
+        compute.
+    :type compute_A: bool
     :param use_proj: Flag that determines the type of computation to perform.
         If True, fit input data projected onto the first svd_rank POD modes or
         columns of proj_basis if provided. If False, fit the full input data.
@@ -698,17 +769,21 @@ class BOPDMD(DMDBase):
         for each parameter.
     :type varpro_opts_dict: dict
     """
-    def __init__(self,
+
+    def __init__(
+        self,
         svd_rank=0,
+        compute_A=False,
         use_proj=True,
         init_alpha=None,
         proj_basis=None,
         num_trials=0,
         trial_size=0.2,
         eig_sort="auto",
-        varpro_opts_dict=None
+        varpro_opts_dict=None,
     ):
         self._svd_rank = svd_rank
+        self._compute_A = compute_A
         self._use_proj = use_proj
         self._init_alpha = init_alpha
         self._proj_basis = proj_basis
@@ -737,6 +812,14 @@ class BOPDMD(DMDBase):
         return self._svd_rank
 
     @property
+    def compute_A(self):
+        """
+        :return: flag that determines whether to compute the full operator A.
+        :rtype: bool
+        """
+        return self._compute_A
+
+    @property
     def use_proj(self):
         """
         :return: flag that determines whether to fit projected or full data.
@@ -751,8 +834,10 @@ class BOPDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         if self._init_alpha is None:
-            msg = "fit() hasn't been called " \
-                  "and no initial value for alpha has been given."
+            msg = (
+                "fit() hasn't been called "
+                "and no initial value for alpha has been given."
+            )
             raise RuntimeError(msg)
         return self._init_alpha
 
@@ -763,8 +848,10 @@ class BOPDMD(DMDBase):
         :rtype: numpy.ndarray
         """
         if self._proj_basis is None:
-            msg = "fit() hasn't been called " \
-                  "and no projection basis has been given."
+            msg = (
+                "fit() hasn't been called "
+                "and no projection basis has been given."
+            )
             raise RuntimeError(msg)
         return self._proj_basis
 
@@ -827,6 +914,35 @@ class BOPDMD(DMDBase):
         t_omega = np.exp(np.outer(self.eigs, self._time))
         return np.diag(self.amplitudes).dot(t_omega)
 
+    @property
+    def amplitudes_std(self):
+        """
+        Get the amplitudes standard deviation.
+
+        :return: amplitudes standard deviation.
+        :rtype: numpy.ndarray
+        """
+        return self.operator.amplitudes_std
+
+    @property
+    def eigenvalues_std(self):
+        """
+        Get the eigenvalues standard deviation.
+
+        :return: eigenvalues standard deviation.
+        :rtype: numpy.ndarray
+        """
+        return self.operator.eigenvalues_std
+
+    @property
+    def modes_std(self):
+        """
+        Get the modes standard deviation.
+
+        :return: modes standard deviation.
+        :rtype: numpy.ndarray
+        """
+        return self.operator.modes_std
 
     def print_varpro_opts(self):
         """
@@ -836,8 +952,17 @@ class BOPDMD(DMDBase):
         if self._Atilde is None:
             raise ValueError("You need to call fit before")
 
-        opt_names = ["init_lambda", "maxlam", "lamup", "use_levmarq",
-            "maxiter","tol", "eps_stall", "use_fulljac", "verbose"]
+        opt_names = [
+            "init_lambda",
+            "maxlam",
+            "lamup",
+            "use_levmarq",
+            "maxiter",
+            "tol",
+            "eps_stall",
+            "use_fulljac",
+            "verbose",
+        ]
         print("VARIABLE PROJECTION OPTIONS:")
         print("============================")
         for name, value in zip(opt_names, self.operator.varpro_opts):
@@ -845,7 +970,6 @@ class BOPDMD(DMDBase):
                 print(name + ":\t\t" + str(value))
             else:
                 print(name + ":\t" + str(value))
-
 
     def _initialize_alpha(self):
         """
@@ -878,7 +1002,6 @@ class BOPDMD(DMDBase):
 
         return np.linalg.eig(Atilde)[0]
 
-
     def fit(self, X, t):
         """
         Compute the Optimized Dynamic Mode Decomposition.
@@ -900,36 +1023,43 @@ class BOPDMD(DMDBase):
         # Check that the number of snapshots in the data matrix X matches the
         # number of time points in the time vector t.
         if self.snapshots.shape[1] != len(self._time):
-            msg = "The number of columns in the data matrix X must match " \
-                  "the number of time points in the time vector t."
+            msg = (
+                "The number of columns in the data matrix X must match "
+                "the number of time points in the time vector t."
+            )
             raise ValueError(msg)
 
         # Compute the rank of the fit.
-        self._svd_rank = compute_rank(self.snapshots, self._svd_rank)
+        self._svd_rank = int(compute_rank(self.snapshots, self._svd_rank))
 
         # Set/check the projection basis.
         if self._proj_basis is None and self._use_proj:
             self._proj_basis = compute_svd(self.snapshots, self._svd_rank)[0]
         elif self._proj_basis is None and not self._use_proj:
             self._proj_basis = compute_svd(self.snapshots, -1)[0]
-        elif (not isinstance(self._proj_basis, np.ndarray)
-              or self._proj_basis.ndim != 2
-              or self._proj_basis.shape[1] != self._svd_rank):
+        elif (
+            not isinstance(self._proj_basis, np.ndarray)
+            or self._proj_basis.ndim != 2
+            or self._proj_basis.shape[1] != self._svd_rank
+        ):
             msg = "proj_basis must be a 2D np.ndarray with {} columns."
             raise ValueError(msg.format(self._svd_rank))
 
         # Set/check the initial guess for the continuous-time DMD eigenvalues.
         if self._init_alpha is None:
             self._init_alpha = self._initialize_alpha()
-        elif (not isinstance(self._init_alpha, np.ndarray)
-              or self._init_alpha.ndim > 1
-              or len(self._init_alpha) != self._svd_rank):
+        elif (
+            not isinstance(self._init_alpha, np.ndarray)
+            or self._init_alpha.ndim > 1
+            or len(self._init_alpha) != self._svd_rank
+        ):
             msg = "init_alpha must be a 1D np.ndarray with {} entries."
             raise ValueError(msg.format(self._svd_rank))
 
         # Build the BOP-DMD operator now that the initial alpha and
         # the projection basis have been defined.
         self._Atilde = BOPDMDOperator(
+            self._compute_A,
             self._use_proj,
             self._init_alpha,
             self._proj_basis,
@@ -948,6 +1078,7 @@ class BOPDMD(DMDBase):
         # Fit the data.
         self._b = self.operator.compute_operator(snp.T, self._time)
 
+        return self
 
     def forecast(self, t):
         """
@@ -969,22 +1100,21 @@ class BOPDMD(DMDBase):
 
         # If variance information has been recorded, use it.
         if self.operator.eigenvalues_std is not None:
-
             # Compute num_trials many forecasts.
             all_x = np.empty(
                 (self._num_trials, self.snapshots.shape[0], len(t)),
-                dtype="complex"
+                dtype="complex",
             )
 
             for k in range(self._num_trials):
                 # Draw eigenvalues and amplitudes from random distribution.
                 eigs_k = self.eigs + np.multiply(
                     np.random.randn(*self.eigs.shape),
-                    self.operator.eigenvalues_std
+                    self.operator.eigenvalues_std,
                 )
                 b_k = self.amplitudes + np.multiply(
                     np.random.randn(*self.amplitudes.shape),
-                    self.operator.amplitudes_std
+                    self.operator.amplitudes_std,
                 )
                 # Compute forecast using average modes and eigs_k, b_k.
                 all_x[k] = np.linalg.multi_dot(
@@ -996,8 +1126,10 @@ class BOPDMD(DMDBase):
 
         # If no variance information, simply compute a standard forecast.
         x = np.linalg.multi_dot(
-            [self.modes,
-             np.diag(self.amplitudes),
-             np.exp(np.outer(self.eigs, t))]
+            [
+                self.modes,
+                np.diag(self.amplitudes),
+                np.exp(np.outer(self.eigs, t)),
+            ]
         )
         return x

@@ -4,6 +4,7 @@ from numpy.random import normal
 
 # Import matplotlib and set related parameters.
 import matplotlib.pyplot as plt
+
 fig_width = 12
 
 # Import SciPy utility functions for linear dynamical systems.
@@ -18,7 +19,6 @@ from pydmd import DMD, OptDMD
 
 
 def harmonic_oscillators(N=10, omega=0.1, alpha=0.2, gamma=0.05, dt=1.0):
-
     """
     This function builds the discrete-time model of a chain of N coupled
     weakly damped harmonic oscillators. All oscillators are identical to
@@ -52,9 +52,11 @@ def harmonic_oscillators(N=10, omega=0.1, alpha=0.2, gamma=0.05, dt=1.0):
     from scipy.sparse import diags, identity, bmat, block_diag
 
     # Build the stiffness matrix.
-    K_ii = np.ones((N,)) * (omega**2/2.0 + alpha)  # Self-coupling.
-    K_ij = np.ones((N-1,)) * (-alpha/2.0)  # Nearest-neighbor coupling.
-    K = diags([K_ij, K_ii, K_ij], offsets=[-1, 0, 1])  # Assembles the stiffness matrix.
+    K_ii = np.ones((N,)) * (omega**2 / 2.0 + alpha)  # Self-coupling.
+    K_ij = np.ones((N - 1,)) * (-alpha / 2.0)  # Nearest-neighbor coupling.
+    K = diags(
+        [K_ij, K_ii, K_ij], offsets=[-1, 0, 1]
+    )  # Assembles the stiffness matrix.
 
     # Build the friction matrix.
     G = gamma * identity(N)
@@ -63,13 +65,13 @@ def harmonic_oscillators(N=10, omega=0.1, alpha=0.2, gamma=0.05, dt=1.0):
     A = bmat([[None, identity(N)], [-K, -G]])
 
     # Build the control matrix.
-    B = bmat([[0*identity(N)], [identity(N)]])
+    B = bmat([[0 * identity(N)], [identity(N)]])
 
     # Build the observation matrix.
-    C = identity(2*N)
+    C = identity(2 * N)
 
     # Build the feedthrough matrix.
-    D = bmat([[0*identity(N)], [0*identity(N)]])
+    D = bmat([[0 * identity(N)], [0 * identity(N)]])
 
     # SciPy continuous-time LTI object.
     sys = lti(A.toarray(), B.toarray(), C.toarray(), D.toarray())
@@ -90,7 +92,6 @@ t, _, x_train = dlsim(dsys, np.zeros((2000, dsys.inputs)), x0=x0_train)
 
 
 def plot_training_dataset(t, x_train):
-
     """
     This is a simple utility function to plot the time-series forming our training dataset.
 
@@ -105,16 +106,18 @@ def plot_training_dataset(t, x_train):
     """
 
     # Setup the figure.
-    fig, axes = plt.subplots(1, 2, sharex=True, figsize=(fig_width, fig_width/6))
+    fig, axes = plt.subplots(
+        1, 2, sharex=True, figsize=(fig_width, fig_width / 6)
+    )
 
     # Plot the oscillators' positions.
-    axes[0].plot(t, x_train[:, :dsys.inputs], alpha=0.5)
+    axes[0].plot(t, x_train[:, : dsys.inputs], alpha=0.5)
 
     # Add decorators.
     axes[0].set_ylabel(r"$q_i[k]$")
 
     # Plot the oscillators'velocities.
-    axes[1].plot(t, x_train[:, dsys.inputs:], alpha=0.5)
+    axes[1].plot(t, x_train[:, dsys.inputs :], alpha=0.5)
 
     # Add decorators.
     axes[1].set(xlim=(t.min(), t.max()), xlabel=r"k", ylabel=r"$p_i[k]$")
@@ -125,8 +128,8 @@ def plot_training_dataset(t, x_train):
 plot_training_dataset(t, x_train)
 plt.show()
 
-def rank_sensitvity(dsys, x_train, n_test=100):
 
+def rank_sensitvity(dsys, x_train, n_test=100):
     """
     This function using the generated training dataset to fit DMD and OptDMD models of increasing rank.
     It also computes the test error on an ensemble of testing dataset to get a better estimation of the
@@ -169,8 +172,7 @@ def rank_sensitvity(dsys, x_train, n_test=100):
     #  Split the training data into input/output snapshots.
     y_train, X_train = x_train[:, 1:], x_train[:, :-1]
 
-    for rank in range(1, dsys.A.shape[0]+1):
-
+    for rank in range(1, dsys.A.shape[0] + 1):
         # Fit the DMD model (Schmid's algorithm)
         dmd = DMD(svd_rank=rank).fit(x_train)
 
@@ -182,8 +184,8 @@ def rank_sensitvity(dsys, x_train, n_test=100):
         y_predict_opt = optdmd.predict(X_train)
 
         # Compute the one-step ahead prediction error.
-        dmd_train_error.append(norm(y_predict_dmd-y_train)/norm(y_train))
-        optdmd_train_error.append(norm(y_predict_opt-y_train)/norm(y_train))
+        dmd_train_error.append(norm(y_predict_dmd - y_train) / norm(y_train))
+        optdmd_train_error.append(norm(y_predict_opt - y_train) / norm(y_train))
 
         # Evaluate the error on test data.
         dmd_error, optdmd_error = list(), list()
@@ -202,8 +204,8 @@ def rank_sensitvity(dsys, x_train, n_test=100):
             y_predict_opt = optdmd.predict(X_test)
 
             # Compute the one-step ahead prediction error.
-            dmd_error.append(norm(y_predict_dmd-y_test)/norm(y_test))
-            optdmd_error.append(norm(y_predict_opt-y_test)/norm(y_test))
+            dmd_error.append(norm(y_predict_dmd - y_test) / norm(y_test))
+            optdmd_error.append(norm(y_predict_opt - y_test) / norm(y_test))
 
         # Store the error for rank i DMD.
         dmd_test_error.append(np.asarray(dmd_error))
@@ -216,11 +218,17 @@ def rank_sensitvity(dsys, x_train, n_test=100):
     dmd_train_error = np.asarray(dmd_train_error)
     optdmd_train_error = np.asarray(optdmd_train_error)
 
-    return dmd_train_error, dmd_test_error, optdmd_train_error, optdmd_test_error
+    return (
+        dmd_train_error,
+        dmd_test_error,
+        optdmd_train_error,
+        optdmd_test_error,
+    )
 
 
-def plot_rank_sensitivity(dmd_train_error, dmd_test_error, optdmd_train_error, optdmd_test_error):
-
+def plot_rank_sensitivity(
+    dmd_train_error, dmd_test_error, optdmd_train_error, optdmd_test_error
+):
     """
     Simple utility function to plot the results from the rank sensitivity analysis.
 
@@ -243,10 +251,12 @@ def plot_rank_sensitivity(dmd_train_error, dmd_test_error, optdmd_train_error, o
     """
 
     # Generate figure.
-    fig, axes = plt.subplots(1, 2, figsize=(fig_width, fig_width/4), sharex=True, sharey=True)
+    fig, axes = plt.subplots(
+        1, 2, figsize=(fig_width, fig_width / 4), sharex=True, sharey=True
+    )
 
     # Misc.
-    rank = np.arange(1, dmd_test_error.shape[0]+1)
+    rank = np.arange(1, dmd_test_error.shape[0] + 1)
 
     #####
     #         TRAINING ERROR
@@ -258,7 +268,9 @@ def plot_rank_sensitivity(dmd_train_error, dmd_test_error, optdmd_train_error, o
     axes[0].plot(rank, optdmd_train_error, ls="--")
     # Add decorators.
     axes[0].set(
-        xlabel=r"Rank of the DMD model", ylabel=r"Normalized error", title=r"Training dataset"
+        xlabel=r"Rank of the DMD model",
+        ylabel=r"Normalized error",
+        title=r"Training dataset",
     )
     axes[0].grid(True)
 
@@ -275,7 +287,9 @@ def plot_rank_sensitivity(dmd_train_error, dmd_test_error, optdmd_train_error, o
         alpha=0.25,
     )
     # Plot the OptDMD error.
-    axes[1].plot(rank, np.mean(optdmd_test_error, axis=1), ls="--", label=r"Optimal DMD")
+    axes[1].plot(
+        rank, np.mean(optdmd_test_error, axis=1), ls="--", label=r"Optimal DMD"
+    )
     axes[1].fill_between(
         rank,
         np.mean(optdmd_test_error, axis=1) + np.std(optdmd_test_error, axis=1),
@@ -284,9 +298,10 @@ def plot_rank_sensitivity(dmd_train_error, dmd_test_error, optdmd_train_error, o
     )
     # Add decorators.
     axes[1].set(
-        xlim=(0, rank.max()), xlabel=r"Rank of the DMD model",
+        xlim=(0, rank.max()),
+        xlabel=r"Rank of the DMD model",
         ylim=(0, 1),
-        title=r"Testing dataset"
+        title=r"Testing dataset",
     )
     axes[1].grid(True)
     axes[1].legend(loc=0)
@@ -298,7 +313,10 @@ def plot_rank_sensitivity(dmd_train_error, dmd_test_error, optdmd_train_error, o
 output = rank_sensitvity(dsys, x_train.T)
 
 # Keep for later use.
-long_time_series_optdmd_train, long_time_series_optdmd_test = output[2], output[3]
+long_time_series_optdmd_train, long_time_series_optdmd_test = (
+    output[2],
+    output[3],
+)
 
 # Plot the results.
 plot_rank_sensitivity(*output)
@@ -318,7 +336,10 @@ plt.show()
 output = rank_sensitvity(dsys, x_train.T)
 
 # Keep for later use.
-short_time_series_optdmd_train, short_time_series_optdmd_test = output[2], output[3]
+short_time_series_optdmd_train, short_time_series_optdmd_test = (
+    output[2],
+    output[3],
+)
 
 # Plot the results.
 plot_rank_sensitivity(*output)
@@ -326,8 +347,8 @@ plt.show()
 
 # ## Case 3 : Fitting a DMD model using an ensemble of trajectories
 
-def generate_ensemble_time_series(dsys, n_traj, len_traj):
 
+def generate_ensemble_time_series(dsys, n_traj, len_traj):
     """
     Utility function to generate a training dataset formed by an ensemble of time-series.
 
@@ -370,7 +391,6 @@ def generate_ensemble_time_series(dsys, n_traj, len_traj):
 
 
 def rank_sensitvity_bis(dsys, X, Y, n_test=100):
-
     """
     Same as before but for the ensemble training. Note that no DMD model is fitted, only OptDMD.
     """
@@ -378,8 +398,7 @@ def rank_sensitvity_bis(dsys, X, Y, n_test=100):
     optdmd_train_error, optdmd_test_error = list(), list()
 
     # Fit a DMD model for each possible rank.
-    for rank in range(1, dsys.A.shape[0]+1):
-
+    for rank in range(1, dsys.A.shape[0] + 1):
         # Fit the DMD model (optimal closed-form solution)
         optdmd = OptDMD(svd_rank=rank, factorization="svd").fit(X, Y)
 
@@ -387,7 +406,7 @@ def rank_sensitvity_bis(dsys, X, Y, n_test=100):
         y_predict_opt = optdmd.predict(X)
 
         # Compute the one-step ahead prediction error.
-        optdmd_train_error.append(norm(y_predict_opt-Y)/norm(Y))
+        optdmd_train_error.append(norm(y_predict_opt - Y) / norm(Y))
 
         # Evaluate the error on test data.
         optdmd_error = list()
@@ -405,7 +424,7 @@ def rank_sensitvity_bis(dsys, X, Y, n_test=100):
             y_predict_opt = optdmd.predict(X_test)
 
             # Compute the one-step ahead prediction error.
-            optdmd_error.append(norm(y_predict_opt-y_test)/norm(y_test))
+            optdmd_error.append(norm(y_predict_opt - y_test) / norm(y_test))
 
         # Store the error for rank i DMD.
         optdmd_test_error.append(np.asarray(optdmd_error))
@@ -418,20 +437,24 @@ def rank_sensitvity_bis(dsys, X, Y, n_test=100):
 
 
 def plot_rank_sensitivity_bis(
-    short_time_series_optdmd_train, short_time_series_optdmd_test,
-    long_time_series_optdmd_train, long_time_series_optdmd_test,
-    optdmd_train_error, optdmd_test_error
+    short_time_series_optdmd_train,
+    short_time_series_optdmd_test,
+    long_time_series_optdmd_train,
+    long_time_series_optdmd_test,
+    optdmd_train_error,
+    optdmd_test_error,
 ):
-
     """
     Same as before for this second rank sensitivity analysis.
     """
 
     # Generate figure.
-    fig, axes = plt.subplots(1, 2, figsize=(fig_width, fig_width/4), sharey=True, sharex=True)
+    fig, axes = plt.subplots(
+        1, 2, figsize=(fig_width, fig_width / 4), sharey=True, sharex=True
+    )
 
     # Misc.
-    rank = np.arange(1, optdmd_train_error.shape[0]+1)
+    rank = np.arange(1, optdmd_train_error.shape[0] + 1)
 
     #####
     #          TRAINING ERROR
@@ -446,9 +469,11 @@ def plot_rank_sensitivity_bis(
 
     # Add decorators.
     axes[0].set(
-        xlim=(0, rank.max()), ylim=(0, 1),
-        xlabel=r"Rank of the DMD model", ylabel=r"Normalized error",
-        title=r"Training dataset"
+        xlim=(0, rank.max()),
+        ylim=(0, 1),
+        xlabel=r"Rank of the DMD model",
+        ylabel=r"Normalized error",
+        title=r"Training dataset",
     )
     axes[0].grid(True)
 
@@ -457,20 +482,32 @@ def plot_rank_sensitivity_bis(
     #####
 
     # Testing error for the model fitted with a short time-series.
-    axes[1].plot(rank, np.mean(short_time_series_optdmd_test, axis=1), label=r"Short time-series")
+    axes[1].plot(
+        rank,
+        np.mean(short_time_series_optdmd_test, axis=1),
+        label=r"Short time-series",
+    )
     axes[1].fill_between(
         rank,
-        np.mean(short_time_series_optdmd_test, axis=1) + np.std(short_time_series_optdmd_test, axis=1),
-        np.mean(short_time_series_optdmd_test, axis=1) - np.std(short_time_series_optdmd_test, axis=1),
+        np.mean(short_time_series_optdmd_test, axis=1)
+        + np.std(short_time_series_optdmd_test, axis=1),
+        np.mean(short_time_series_optdmd_test, axis=1)
+        - np.std(short_time_series_optdmd_test, axis=1),
         alpha=0.25,
     )
 
     # Testing error for the model fitted with a long time-series.
-    axes[1].plot(rank, np.mean(long_time_series_optdmd_test, axis=1), label=r"Long time-series")
+    axes[1].plot(
+        rank,
+        np.mean(long_time_series_optdmd_test, axis=1),
+        label=r"Long time-series",
+    )
     axes[1].fill_between(
         rank,
-        np.mean(long_time_series_optdmd_test, axis=1) + np.std(long_time_series_optdmd_test, axis=1),
-        np.mean(long_time_series_optdmd_test, axis=1) - np.std(long_time_series_optdmd_test, axis=1),
+        np.mean(long_time_series_optdmd_test, axis=1)
+        + np.std(long_time_series_optdmd_test, axis=1),
+        np.mean(long_time_series_optdmd_test, axis=1)
+        - np.std(long_time_series_optdmd_test, axis=1),
         alpha=0.25,
     )
 
@@ -485,8 +522,10 @@ def plot_rank_sensitivity_bis(
 
     # Add decorators.
     axes[1].set(
-        xlim=(0, rank.max()), ylim=(0, 1),
-        xlabel=r"Rank of the DMD model", title=r"Testing dataset"
+        xlim=(0, rank.max()),
+        ylim=(0, 1),
+        xlabel=r"Rank of the DMD model",
+        title=r"Testing dataset",
     )
     axes[1].grid(True)
     axes[1].legend(loc=0)
@@ -504,9 +543,12 @@ X, Y = generate_ensemble_time_series(dsys, n_traj, len_traj)
 optdmd_train_error, optdmd_test_error = rank_sensitvity_bis(dsys, X, Y)
 
 plot_rank_sensitivity_bis(
-    short_time_series_optdmd_train, short_time_series_optdmd_test,
-    long_time_series_optdmd_train, long_time_series_optdmd_test,
-    optdmd_train_error, optdmd_test_error
+    short_time_series_optdmd_train,
+    short_time_series_optdmd_test,
+    long_time_series_optdmd_train,
+    long_time_series_optdmd_test,
+    optdmd_train_error,
+    optdmd_test_error,
 )
 plt.show()
 
@@ -520,9 +562,12 @@ X, Y = generate_ensemble_time_series(dsys, n_traj, len_traj)
 optdmd_train_error, optdmd_test_error = rank_sensitvity_bis(dsys, X, Y)
 
 plot_rank_sensitivity_bis(
-    short_time_series_optdmd_train, short_time_series_optdmd_test,
-    long_time_series_optdmd_train, long_time_series_optdmd_test,
-    optdmd_train_error, optdmd_test_error
+    short_time_series_optdmd_train,
+    short_time_series_optdmd_test,
+    long_time_series_optdmd_train,
+    long_time_series_optdmd_test,
+    optdmd_train_error,
+    optdmd_test_error,
 )
 plt.show()
 

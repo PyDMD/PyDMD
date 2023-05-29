@@ -10,45 +10,7 @@ Systems, 18, 2019.
 import numpy as np
 
 from .cdmd import CDMD
-from pydmd.linalg import build_linalg_module
-
-
-def compute_rank(X, svd_rank=0):
-    """
-    Rank computation for the truncated Singular Value Decomposition.
-    :param numpy.ndarray X: the matrix to decompose.
-    :param svd_rank: the rank for the truncation; If 0, the method computes
-        the optimal rank and uses it for truncation; if positive interger,
-        the method uses the argument for the truncation; if float between 0
-        and 1, the rank is the number of the biggest singular values that
-        are needed to reach the 'energy' specified by `svd_rank`; if -1,
-        the method does not compute truncation. Default is 0.
-    :type svd_rank: int or float
-    :return: the computed rank truncation.
-    :rtype: int
-    References:
-    Gavish, Matan, and David L. Donoho, The optimal hard threshold for
-    singular values is, IEEE Transactions on Information Theory 60.8
-    (2014): 5040-5053.
-    """
-    U, s, _ = np.linalg.svd(X, full_matrices=False)
-
-    def omega(x):
-        return 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
-
-    if svd_rank == 0:
-        beta = np.divide(*sorted(X.shape))
-        tau = np.median(s) * omega(beta)
-        rank = np.sum(s > tau)
-    elif 0 < svd_rank < 1:
-        cumulative_energy = np.cumsum(s**2 / (s**2).sum())
-        rank = np.searchsorted(cumulative_energy, svd_rank) + 1
-    elif svd_rank >= 1 and isinstance(svd_rank, int):
-        rank = min(svd_rank, U.shape[1])
-    else:
-        rank = X.shape[1]
-
-    return rank
+from .utils import compute_rank
 
 
 class RDMD(CDMD):
@@ -68,6 +30,7 @@ class RDMD(CDMD):
         considerable improvements.
     :type power_iters: int
     """
+
     def __init__(
         self,
         rand_mat=None,
@@ -79,7 +42,7 @@ class RDMD(CDMD):
         rescale_mode=None,
         forward_backward=False,
         sorted_eigs=False,
-        tikhonov_regularization=None
+        tikhonov_regularization=None,
     ):
         super().__init__(
             svd_rank=svd_rank,
@@ -89,7 +52,7 @@ class RDMD(CDMD):
             rescale_mode=rescale_mode,
             forward_backward=forward_backward,
             sorted_eigs=sorted_eigs,
-            tikhonov_regularization=tikhonov_regularization
+            tikhonov_regularization=tikhonov_regularization,
         )
         self._svd_rank = svd_rank
         self._oversampling = oversampling
@@ -120,7 +83,9 @@ class RDMD(CDMD):
         # Perform power iterations.
         for _ in range(self._power_iters):
             Q = linalg_module.qr_reduced(Y)[0]
-            Z = linalg_module.qr_reduced(linalg_module.dot(self.snapshots.conj().swapaxes(-1, -2), Q))[0]
+            Z = linalg_module.qr_reduced(
+                linalg_module.dot(self.snapshots.conj().swapaxes(-1, -2), Q)
+            )[0]
             Y = linalg_module.dot(self.snapshots, Z)
 
         # Orthonormalize the sampling matrix.

@@ -172,7 +172,6 @@ class DMDBase:
         sorted_eigs=False,
         tikhonov_regularization=None,
     ):
-
         self._Atilde = DMDOperator(
             svd_rank=svd_rank,
             exact=exact,
@@ -206,7 +205,7 @@ class DMDBase:
             self.dmd_time["t0"],
             self.dmd_time["tend"] + self.dmd_time["dt"],
             self.dmd_time["dt"],
-            device=linalg_module.device(self.snapshots)
+            device=linalg_module.device(self.snapshots),
         )
 
     @property
@@ -222,7 +221,7 @@ class DMDBase:
             self.original_time["t0"],
             self.original_time["tend"] + self.original_time["dt"],
             self.original_time["dt"],
-            device=linalg_module.device(self.snapshots)
+            device=linalg_module.device(self.snapshots),
         )
 
     @property
@@ -480,8 +479,7 @@ class DMDBase:
         """
         if hasattr(self, "_b") and self._b is not None:
             self._modes_activation_bitmask_proxy = ActivationBitmaskProxy(
-                self.operator,
-                self._b
+                self.operator, self._b
             )
 
     def __getitem__(self, key):
@@ -672,14 +670,22 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         P = linalg_module.multiply_elementwise(a, b)
 
         if self._exact:
-            vsm = linalg_module.multi_dot((vander, self.snapshots.conj().swapaxes(-1, -2), self.modes))
+            vsm = linalg_module.multi_dot(
+                (vander, self.snapshots.conj().swapaxes(-1, -2), self.modes)
+            )
             q = linalg_module.extract_diagonal(vsm).conj()
         else:
-            _, s, V = compute_svd(self.snapshots[..., :-1], self.modes.shape[-1])
+            _, s, V = compute_svd(
+                self.snapshots[..., :-1], self.modes.shape[-1]
+            )
 
             s_conj = linalg_module.diag_matrix(s).conj()
-            s_conj, V, vander = linalg_module.to(self.operator.eigenvectors, s_conj, V, vander)
-            vVse = linalg_module.multi_dot((vander[..., :-1], V, s_conj, self.operator.eigenvectors))
+            s_conj, V, vander = linalg_module.to(
+                self.operator.eigenvectors, s_conj, V, vander
+            )
+            vVse = linalg_module.multi_dot(
+                (vander[..., :-1], V, s_conj, self.operator.eigenvectors)
+            )
             q = linalg_module.extract_diagonal(vVse).conj()
 
         return P, q

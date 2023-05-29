@@ -12,7 +12,7 @@
 # In[1]:
 
 
-get_ipython().run_line_magic('matplotlib', 'inline')
+get_ipython().run_line_magic("matplotlib", "inline")
 import matplotlib.pyplot as plt
 import numpy as np
 import time
@@ -22,7 +22,7 @@ from pydmd.plotter import plot_eigs
 
 
 # Now, we create our toy dataset: we evaluate a nonlinear function in equispaced points, in order to simulate a temporal signal. Here our function:
-# 
+#
 # $
 # f(t) = \cos(t)\sin(\cos(t)) + \cos(\frac{t}{5})
 # $
@@ -31,7 +31,7 @@ from pydmd.plotter import plot_eigs
 
 
 def myfunc(x):
-    return np.cos(x)*np.sin(np.cos(x)) + np.cos(x*.2)
+    return np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
 
 
 # Because we trust in the DMD power, we add a bit of noise and we plot our function:
@@ -42,7 +42,7 @@ def myfunc(x):
 x = np.linspace(0, 10, 64)
 y = myfunc(x)
 snapshots = y
-plt.plot(x, snapshots, '.')
+plt.plot(x, snapshots, ".")
 plt.show()
 
 
@@ -75,13 +75,18 @@ plot_eigs(hodmd)
 # In[7]:
 
 
-hodmd.original_time['dt'] = hodmd.dmd_time['dt'] = x[1] - x[0]
-hodmd.original_time['t0'] = hodmd.dmd_time['t0'] = x[0]
-hodmd.original_time['tend'] = hodmd.dmd_time['tend'] = x[-1]
+hodmd.original_time["dt"] = hodmd.dmd_time["dt"] = x[1] - x[0]
+hodmd.original_time["t0"] = hodmd.dmd_time["t0"] = x[0]
+hodmd.original_time["tend"] = hodmd.dmd_time["tend"] = x[-1]
 
-plt.plot(hodmd.original_timesteps, snapshots, '.', label='snapshots')
-plt.plot(hodmd.original_timesteps, y, '-', label='original function')
-plt.plot(hodmd.dmd_timesteps, hodmd.reconstructed_data[0].real, '--', label='DMD output')
+plt.plot(hodmd.original_timesteps, snapshots, ".", label="snapshots")
+plt.plot(hodmd.original_timesteps, y, "-", label="original function")
+plt.plot(
+    hodmd.dmd_timesteps,
+    hodmd.reconstructed_data[0].real,
+    "--",
+    label="DMD output",
+)
 plt.legend()
 plt.show()
 
@@ -91,41 +96,61 @@ plt.show()
 # In[8]:
 
 
-hodmd.dmd_time['tend'] = 50
+hodmd.dmd_time["tend"] = 50
 
 fig = plt.figure(figsize=(15, 5))
-plt.plot(hodmd.original_timesteps, snapshots, '.', label='snapshots')
-plt.plot(np.linspace(0, 50, 128), myfunc(np.linspace(0, 50, 128)), '-', label='original function')
-plt.plot(hodmd.dmd_timesteps, hodmd.reconstructed_data[0].real, '--', label='DMD output')
+plt.plot(hodmd.original_timesteps, snapshots, ".", label="snapshots")
+plt.plot(
+    np.linspace(0, 50, 128),
+    myfunc(np.linspace(0, 50, 128)),
+    "-",
+    label="original function",
+)
+plt.plot(
+    hodmd.dmd_timesteps,
+    hodmd.reconstructed_data[0].real,
+    "--",
+    label="DMD output",
+)
 plt.legend()
 plt.show()
 
 
 # The reconstruction is perfect. Also when time is far away from the snapshots.
-# 
+#
 # We can check what happens  if we add some noise.
 
 # In[10]:
 
 
-noise_range = [.01, .05, .1, .2]
+noise_range = [0.01, 0.05, 0.1, 0.2]
 fig = plt.figure(figsize=(15, 10))
 future = 20
 
 for id_plot, i in enumerate(noise_range, start=1):
     snapshots = y + np.random.uniform(-i, i, size=y.shape)
     hodmd = HODMD(svd_rank=0, exact=True, opt=True, d=30).fit(snapshots[None])
-    hodmd.original_time['dt'] = hodmd.dmd_time['dt'] = x[1] - x[0]
-    hodmd.original_time['t0'] = hodmd.dmd_time['t0'] = x[0]
-    hodmd.original_time['tend'] = hodmd.dmd_time['tend'] = x[-1]
-    hodmd.dmd_time['tend'] = 20
-    
+    hodmd.original_time["dt"] = hodmd.dmd_time["dt"] = x[1] - x[0]
+    hodmd.original_time["t0"] = hodmd.dmd_time["t0"] = x[0]
+    hodmd.original_time["tend"] = hodmd.dmd_time["tend"] = x[-1]
+    hodmd.dmd_time["tend"] = 20
+
     plt.subplot(2, 2, id_plot)
-    plt.plot(hodmd.original_timesteps, snapshots, '.', label='snapshots')
-    plt.plot(np.linspace(0, future, 128), myfunc(np.linspace(0, future, 128)), '-', label='original function')
-    plt.plot(hodmd.dmd_timesteps, hodmd.reconstructed_data[0].real, '--', label='DMD output')
+    plt.plot(hodmd.original_timesteps, snapshots, ".", label="snapshots")
+    plt.plot(
+        np.linspace(0, future, 128),
+        myfunc(np.linspace(0, future, 128)),
+        "-",
+        label="original function",
+    )
+    plt.plot(
+        hodmd.dmd_timesteps,
+        hodmd.reconstructed_data[0].real,
+        "--",
+        label="DMD output",
+    )
     plt.legend()
-    plt.title('Noise [{} - {}]'.format(-i, i))
+    plt.title("Noise [{} - {}]".format(-i, i))
 plt.show()
 
 

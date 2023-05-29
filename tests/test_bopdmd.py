@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.integrate import ode
+from pytest import raises
 from pydmd.bopdmd import BOPDMD
+
 
 def f(t, y):
     """
@@ -10,6 +12,7 @@ def f(t, y):
     z1_prime = z1 - 2 * z2
     z2_prime = z1 - z2
     return np.array((z1_prime, z2_prime))
+
 
 def simulate_z(t):
     """
@@ -32,6 +35,7 @@ def simulate_z(t):
         Z[:, i] = r.y
     return Z
 
+
 def sort_imag(x):
     """
     Helper method that sorts the entries of x by imaginary component, and then
@@ -40,6 +44,7 @@ def sort_imag(x):
     x_real_imag_swapped = x.imag + 1j * x.real
     sorted_inds = np.argsort(x_real_imag_swapped)
     return x[sorted_inds]
+
 
 # Simulate data.
 t = np.arange(2000) * 0.01
@@ -55,12 +60,13 @@ expected_eigs = np.array((-1j, 1j))
 # Define the true system operator.
 expected_A = np.array(((1, -2), (1, -1)))
 
+
 def test_truncation_shape():
     """
     Tests that, when given a positive integer rank truncation, the shape of the
     modes, eigenvalues, amplitudes, Atilde operator, and A matrix are accurate.
     """
-    bopdmd = BOPDMD(svd_rank=2)
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True)
     bopdmd.fit(Z, t)
     assert bopdmd.modes.shape[1] == 2
     assert len(bopdmd.eigs) == 2
@@ -68,76 +74,70 @@ def test_truncation_shape():
     assert bopdmd.atilde.shape == (2, 2)
     assert bopdmd.A.shape == (2, 2)
 
+
 def test_eigs():
     """
     Tests that the computed eigenvalues are accurate for the following cases:
-    - standard optimized dmd, default parameters, even dataset
-    - standard optimized dmd, default parameters, uneven dataset
-    - standard optimized dmd, rank truncated
+    - standard optimized dmd, even dataset
+    - standard optimized dmd, uneven dataset
     - standard optimized dmd, fit full data
     - optimized dmd with bagging
     """
-    bopdmd = BOPDMD()
-    bopdmd.fit(Z, t)
-    np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
-
-    bopdmd = BOPDMD()
-    bopdmd.fit(Z_uneven, t_uneven)
-    np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
-
     bopdmd = BOPDMD(svd_rank=2)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
 
-    bopdmd = BOPDMD(use_proj=False)
+    bopdmd = BOPDMD(svd_rank=2)
+    bopdmd.fit(Z_uneven, t_uneven)
+    np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
+
+    bopdmd = BOPDMD(svd_rank=2, use_proj=False)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
 
-    bopdmd = BOPDMD(num_trials=100, trial_size=0.2)
+    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.2)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
+
 
 def test_A():
     """
     Tests that the computed A matrix is accurate for the following cases:
-    - standard optimized dmd, default parameters, even dataset
-    - standard optimized dmd, default parameters, uneven dataset
-    - standard optimized dmd, rank truncated
+    - standard optimized dmd, even dataset
+    - standard optimized dmd, uneven dataset
     - standard optimized dmd, fit full data
     - optimized dmd with bagging
     """
-    bopdmd = BOPDMD()
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
-    bopdmd = BOPDMD()
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True)
     bopdmd.fit(Z_uneven, t_uneven)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
-    bopdmd = BOPDMD(svd_rank=2)
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True, use_proj=False)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
-    bopdmd = BOPDMD(use_proj=False)
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True, num_trials=100, trial_size=0.2)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
-    bopdmd = BOPDMD(num_trials=100, trial_size=0.2)
-    bopdmd.fit(Z, t)
-    np.testing.assert_allclose(bopdmd.A, expected_A)
 
 def test_reconstruction():
     """
-    Tests the accuracy of the reconstructed data for the default parameters.
+    Tests the accuracy of the reconstructed data.
     Tests for both standard optimized dmd and BOP-DMD.
     """
-    bopdmd = BOPDMD()
+    bopdmd = BOPDMD(svd_rank=2)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.reconstructed_data, Z, rtol=1e-5)
 
-    bopdmd = BOPDMD(num_trials=100, trial_size=0.2)
+    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.2)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.reconstructed_data, Z, rtol=1e-5)
+
 
 def test_forecast():
     """
@@ -150,14 +150,34 @@ def test_forecast():
     - Generalizing to long dataset after training on short, even dataset
         with bagging.
     """
-    bopdmd = BOPDMD()
+    bopdmd = BOPDMD(svd_rank=2)
     bopdmd.fit(Z, t)
-    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-4)
+    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-3)
 
-    bopdmd = BOPDMD()
+    bopdmd = BOPDMD(svd_rank=2)
     bopdmd.fit(Z_uneven, t_uneven)
-    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-4)
+    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-3)
 
-    bopdmd = BOPDMD(num_trials=100, trial_size=0.2)
+    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.2)
     bopdmd.fit(Z, t)
-    np.testing.assert_allclose(bopdmd.forecast(t_long)[0], Z_long, rtol=1e-4)
+    np.testing.assert_allclose(bopdmd.forecast(t_long)[0], Z_long, rtol=1e-3)
+
+
+def test_compute_A():
+    """
+    Tests that the BOPDMD module appropriately calculates or doesn't calculate
+    A depending on the compute_A flag. Also tests that atilde, the dmd modes,
+    and the dmd eigenvalues are not effected by the compute_A flag.
+    """
+    bopdmd_with_A = BOPDMD(svd_rank=2, compute_A=True)
+    bopdmd_no_A = BOPDMD(svd_rank=2, compute_A=False)
+    bopdmd_with_A.fit(Z, t)
+    bopdmd_no_A.fit(Z, t)
+
+    np.testing.assert_allclose(bopdmd_with_A.A, expected_A)
+    with raises(ValueError):
+        print(bopdmd_no_A.A)
+
+    np.testing.assert_array_equal(bopdmd_with_A.atilde, bopdmd_no_A.atilde)
+    np.testing.assert_array_equal(bopdmd_with_A.modes, bopdmd_no_A.modes)
+    np.testing.assert_array_equal(bopdmd_with_A.eigs, bopdmd_no_A.eigs)

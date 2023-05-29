@@ -29,7 +29,10 @@ def test_truncation_shape(X):
 def test_Atilde_shape(X):
     dmd = CDMD(svd_rank=3)
     dmd.fit(X=X)
-    assert dmd.operator.as_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
+    assert dmd.operator.as_array.shape == (
+        dmd.operator._svd_rank,
+        dmd.operator._svd_rank,
+    )
 
 
 @pytest.mark.parametrize("X", data_backends)

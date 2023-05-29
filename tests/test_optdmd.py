@@ -9,19 +9,19 @@ from pydmd.optdmd import OptDMD
 # the following data: f1 + f2 where
 # f1 = lambda x,t: sech(x+3)*(1.*np.exp(1j*2.3*t))
 # f2 = lambda x,t: (sech(x)*np.tanh(x))*(2.*np.exp(1j*2.8*t))
-sample_data = np.load('tests/test_datasets/input_sample.npy')
+sample_data = np.load("tests/test_datasets/input_sample.npy")
 
 
 def create_noisy_data():
-    mu = 0.
-    sigma = 0.  # noise standard deviation
+    mu = 0.0
+    sigma = 0.0  # noise standard deviation
     m = 100  # number of snapshot
     noise = np.random.normal(mu, sigma, m)  # gaussian noise
-    A = np.array([[1., 1.], [-1., 2.]])
+    A = np.array([[1.0, 1.0], [-1.0, 2.0]])
     A /= np.sqrt(3)
     n = 2
     X = np.zeros((n, m))
-    X[:, 0] = np.array([0.5, 1.])
+    X[:, 0] = np.array([0.5, 1.0])
     # evolve the system and perturb the data with noise
     for k in range(1, m):
         X[:, k] = A.dot(X[:, k - 1])
@@ -37,50 +37,67 @@ def test_shape_1():
     optdmd.fit(X=sample_data)
     assert optdmd.modes.shape[1] == sample_data.shape[1] - 1
 
+
 def test_shape_2():
     optdmd = OptDMD(svd_rank=-1)
     optdmd.fit(X=sample_data[:, :-1], Y=sample_data[:, 1:])
-    assert optdmd.modes.shape[1] == sample_data.shape[1]-1
+    assert optdmd.modes.shape[1] == sample_data.shape[1] - 1
+
 
 def test_truncation_shape():
     optdmd = OptDMD(svd_rank=3)
     optdmd.fit(X=sample_data)
     assert optdmd.modes.shape[1] == 3
 
+
 def test_rank():
     optdmd = OptDMD(svd_rank=0.9)
     optdmd.fit(X=sample_data)
     assert len(optdmd.eigs) == 2
 
+
 def test_Atilde_shape():
     optdmd = OptDMD(svd_rank=3)
     optdmd.fit(X=sample_data)
-    assert optdmd.operator.as_array.shape == (optdmd.operator._svd_rank, optdmd.operator._svd_rank)
+    assert optdmd.operator.as_array.shape == (
+        optdmd.operator._svd_rank,
+        optdmd.operator._svd_rank,
+    )
+
 
 def test_Atilde_values():
     optdmd = OptDMD(svd_rank=2)
     optdmd.fit(X=sample_data)
     exact_atilde = np.array(
-        [[-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
-            [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j]])
-    np.testing.assert_allclose(np.linalg.eigvals(exact_atilde), np.linalg.eigvals(optdmd.operator.as_array))
+        [
+            [-0.70558526 + 0.67815084j, 0.22914898 + 0.20020143j],
+            [0.10459069 + 0.09137814j, -0.57730040 + 0.79022994j],
+        ]
+    )
+    np.testing.assert_allclose(
+        np.linalg.eigvals(exact_atilde),
+        np.linalg.eigvals(optdmd.operator.as_array),
+    )
+
 
 def test_eigs_1():
     optdmd = OptDMD(svd_rank=-1)
     optdmd.fit(X=sample_data)
     assert len(optdmd.eigs) == 14
 
+
 def test_eigs_2():
     optdmd = OptDMD(svd_rank=5)
     optdmd.fit(X=sample_data)
     assert len(optdmd.eigs) == 5
 
+
 def test_eigs_3():
     optdmd = OptDMD(svd_rank=2)
     optdmd.fit(X=sample_data)
-    expected_eigs = np.array([
-        -8.09016994e-01 + 5.87785252e-01j, -4.73868662e-01 + 8.80595532e-01j
-    ])
+    expected_eigs = np.array(
+        [-8.09016994e-01 + 5.87785252e-01j, -4.73868662e-01 + 8.80595532e-01j]
+    )
     np.testing.assert_almost_equal(optdmd.eigs, expected_eigs, decimal=6)
 
     # def test_dynamics_1():
@@ -174,6 +191,7 @@ def test_eigs_3():
     #     np.testing.assert_almost_equal(dmd.dynamics, expected_data, decimal=6)
     #
 
+
 def test_bitmask_not_implemented():
     with raises(RuntimeError):
         optdmd = OptDMD(svd_rank=2)
@@ -183,6 +201,7 @@ def test_bitmask_not_implemented():
         optdmd = OptDMD(svd_rank=2)
         optdmd.fit(X=sample_data)
         optdmd.modes_activation_bitmask = None
+
 
 def test_getitem_not_implemented():
     with raises(RuntimeError):

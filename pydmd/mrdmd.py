@@ -9,7 +9,6 @@ from copy import deepcopy
 from functools import partial
 
 import numpy as np
-from past.utils import old_div
 
 from .dmd_modes_tuner import select_modes
 from .dmdbase import DMDBase
@@ -488,7 +487,9 @@ Expected one item per level, got {} out of {} levels.""".format(
             )
 
         def slow_modes(dmd, rho):
-            return linalg_module.abs(linalg_module.log(dmd.eigs)) < rho * 2 * np.pi
+            return (
+                linalg_module.abs(linalg_module.log(dmd.eigs)) < rho * 2 * np.pi
+            )
 
         X = linalg_module.new_array(self.snapshots)
         for level in self.dmd_tree.levels:
@@ -499,7 +500,7 @@ Expected one item per level, got {} out of {} levels.""".format(
                 current_dmd = self.dmd_tree[level, leaf]
                 current_dmd.fit(x, batch=batch)
 
-                rho = old_div(float(self.max_cycles), x.shape[-1])
+                rho = self.max_cycles / x.shape[1]
                 slow_modes_selector = partial(slow_modes, rho=rho)
 
                 select_modes(current_dmd, slow_modes_selector)
@@ -508,7 +509,8 @@ Expected one item per level, got {} out of {} levels.""".format(
                 tuple(
                     self.dmd_tree[level, leaf].reconstructed_data
                     for leaf in self.dmd_tree.index_leaves(level)
-                ), axis=-1
+                ),
+                axis=-1,
             )
             X = X - linalg_module.to(X, newX)
 

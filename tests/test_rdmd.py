@@ -17,17 +17,23 @@ def test_shape(X):
     dmd.fit(X=[d for d in X.T])
     assert dmd.modes.shape[1] == X.shape[1] - 1
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_truncation_shape(X):
     dmd = RDMD(svd_rank=3)
     dmd.fit(X=X)
     assert dmd.modes.shape[1] == 3
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_Atilde_shape(X):
     dmd = RDMD(svd_rank=3)
     dmd.fit(X=X)
-    assert dmd.operator.as_array.shape == (dmd.operator._svd_rank, dmd.operator._svd_rank)
+    assert dmd.operator.as_array.shape == (
+        dmd.operator._svd_rank,
+        dmd.operator._svd_rank,
+    )
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_eigs_1(X):
@@ -35,25 +41,32 @@ def test_eigs_1(X):
     dmd.fit(X=X)
     assert len(dmd.eigs) == 14
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_eigs_2(X):
     dmd = RDMD(svd_rank=5)
     dmd.fit(X=X)
     assert len(dmd.eigs) == 5
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_eigs_3(X):
     dmd = RDMD(svd_rank=2)
     dmd.fit(X=X)
     expected_eigs = np.array(
-        [-0.47386866 + 0.88059553j, -0.80901699 + 0.58778525j])
-    assert_allclose(sorted(np.array(dmd.eigs)), sorted(np.array(expected_eigs)), atol=1.e-6)
+        [-0.47386866 + 0.88059553j, -0.80901699 + 0.58778525j]
+    )
+    assert_allclose(
+        sorted(np.array(dmd.eigs)), sorted(np.array(expected_eigs)), atol=1.0e-6
+    )
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_dynamics_1(X):
     dmd = RDMD(svd_rank=5)
     dmd.fit(X=X)
     assert dmd.dynamics.shape == (5, X.shape[1])
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_reconstructed_data(X):
@@ -62,12 +75,14 @@ def test_reconstructed_data(X):
     dmd_data = dmd.reconstructed_data
     assert_allclose(dmd_data, X)
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_original_time(X):
     dmd = RDMD(svd_rank=2)
     dmd.fit(X=X)
-    expected_dict = {'dt': 1, 't0': 0, 'tend': 14}
+    expected_dict = {"dt": 1, "t0": 0, "tend": 14}
     assert dmd.original_time == expected_dict
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_original_timesteps(X):
@@ -75,30 +90,34 @@ def test_original_timesteps(X):
     dmd.fit(X=X)
     assert_allclose(dmd.original_timesteps, np.arange(X.shape[1]))
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_dmd_time_1(X):
     dmd = RDMD(svd_rank=2)
     dmd.fit(X=X)
-    expected_dict = {'dt': 1, 't0': 0, 'tend': 14}
+    expected_dict = {"dt": 1, "t0": 0, "tend": 14}
     assert dmd.dmd_time == expected_dict
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_dmd_time_2(X):
     dmd = RDMD()
     dmd.fit(X=X)
-    dmd.dmd_time['t0'] = 10
-    dmd.dmd_time['tend'] = 14
+    dmd.dmd_time["t0"] = 10
+    dmd.dmd_time["tend"] = 14
     expected_data = X[:, -5:]
     assert_allclose(dmd.reconstructed_data, expected_data)
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_dmd_time_3(X):
     dmd = RDMD()
     dmd.fit(X=X)
-    dmd.dmd_time['t0'] = 8
-    dmd.dmd_time['tend'] = 11
+    dmd.dmd_time["t0"] = 8
+    dmd.dmd_time["tend"] = 11
     expected_data = X[:, 8:12]
     assert_allclose(dmd.reconstructed_data, expected_data)
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_rdmd_matrix(X):
@@ -107,21 +126,25 @@ def test_rdmd_matrix(X):
     error_norm = np.linalg.norm(dmd.reconstructed_data - X, 1)
     assert error_norm < 1e-10
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_sorted_eigs_default(X):
     dmd = RDMD()
     assert dmd.operator._sorted_eigs == False
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_sorted_eigs_param(X):
-    dmd = RDMD(sorted_eigs='real')
-    assert dmd.operator._sorted_eigs == 'real'
+    dmd = RDMD(sorted_eigs="real")
+    assert dmd.operator._sorted_eigs == "real"
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_get_bitmask_default(X):
     dmd = RDMD()
     dmd.fit(X=X)
     assert np.all(dmd.modes_activation_bitmask)
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_set_bitmask(X):
@@ -135,17 +158,20 @@ def test_set_bitmask(X):
     assert not dmd.modes_activation_bitmask[0]
     assert np.all(dmd.modes_activation_bitmask[1:])
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_not_fitted_get_bitmask_raises(X):
     dmd = RDMD()
     with raises(RuntimeError):
         print(dmd.modes_activation_bitmask)
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_not_fitted_set_bitmask_raises(X):
     dmd = RDMD()
     with raises(RuntimeError):
         dmd.modes_activation_bitmask = np.full(3, True, dtype=bool)
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_raise_wrong_dtype_bitmask(X):
@@ -154,6 +180,7 @@ def test_raise_wrong_dtype_bitmask(X):
     with raises(RuntimeError):
         dmd.modes_activation_bitmask = np.full(3, 0.1)
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_fitted(X):
     dmd = RDMD()
@@ -161,20 +188,22 @@ def test_fitted(X):
     dmd.fit(X=X)
     assert dmd.fitted
 
+
 @pytest.mark.parametrize("X", data_backends)
 def test_bitmask_amplitudes(X):
     dmd = RDMD()
     dmd.fit(X=X)
 
     old_n_amplitudes = dmd.amplitudes.shape[0]
-    retained_amplitudes = np.delete(dmd.amplitudes, [0,-1])
+    retained_amplitudes = np.delete(dmd.amplitudes, [0, -1])
 
     new_bitmask = np.full(dmd.amplitudes.shape[0], True, dtype=bool)
-    new_bitmask[[0,-1]] = False
+    new_bitmask[[0, -1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
     assert dmd.amplitudes.shape[0] == old_n_amplitudes - 2
     assert_allclose(dmd.amplitudes, retained_amplitudes)
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_bitmask_eigs(X):
@@ -182,14 +211,15 @@ def test_bitmask_eigs(X):
     dmd.fit(X=X)
 
     old_n_eigs = dmd.eigs.shape[0]
-    retained_eigs = np.delete(dmd.eigs, [0,-1])
+    retained_eigs = np.delete(dmd.eigs, [0, -1])
 
     new_bitmask = np.full(dmd.amplitudes.shape[0], True, dtype=bool)
-    new_bitmask[[0,-1]] = False
+    new_bitmask[[0, -1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
     assert dmd.eigs.shape[0] == old_n_eigs - 2
     assert_allclose(dmd.eigs, retained_eigs)
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_bitmask_modes(X):
@@ -197,14 +227,15 @@ def test_bitmask_modes(X):
     dmd.fit(X=X)
 
     old_n_modes = dmd.modes.shape[1]
-    retained_modes = np.delete(dmd.modes, [0,-1], axis=1)
+    retained_modes = np.delete(dmd.modes, [0, -1], axis=1)
 
     new_bitmask = np.full(dmd.amplitudes.shape[0], True, dtype=bool)
-    new_bitmask[[0,-1]] = False
+    new_bitmask[[0, -1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
     assert dmd.modes.shape[1] == old_n_modes - 2
     assert_allclose(dmd.modes, retained_modes)
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_getitem_modes(X):
@@ -212,25 +243,26 @@ def test_getitem_modes(X):
     dmd.fit(X=X)
     old_n_modes = dmd.modes.shape[1]
 
-    assert dmd[[0,-1]].modes.shape[1] == 2
-    assert_allclose(dmd[[0,-1]].modes, dmd.modes[:,[0,-1]])
+    assert dmd[[0, -1]].modes.shape[1] == 2
+    assert_allclose(dmd[[0, -1]].modes, dmd.modes[:, [0, -1]])
 
     assert dmd.modes.shape[1] == old_n_modes
 
     assert dmd[1::2].modes.shape[1] == old_n_modes // 2
-    assert_allclose(dmd[1::2].modes, dmd.modes[:,1::2])
+    assert_allclose(dmd[1::2].modes, dmd.modes[:, 1::2])
 
     assert dmd.modes.shape[1] == old_n_modes
 
-    assert dmd[[1,3]].modes.shape[1] == 2
-    assert_allclose(dmd[[1,3]].modes, dmd.modes[:,[1,3]])
+    assert dmd[[1, 3]].modes.shape[1] == 2
+    assert_allclose(dmd[[1, 3]].modes, dmd.modes[:, [1, 3]])
 
     assert dmd.modes.shape[1] == old_n_modes
 
     assert dmd[2].modes.shape[1] == 1
-    assert_allclose(np.squeeze(dmd[2].modes), dmd.modes[:,2])
+    assert_allclose(np.squeeze(dmd[2].modes), dmd.modes[:, 2])
 
     assert dmd.modes.shape[1] == old_n_modes
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_getitem_raises(X):
@@ -238,11 +270,12 @@ def test_getitem_raises(X):
     dmd.fit(X=X)
 
     with raises(ValueError):
-        dmd[[0,1,1,0,1]]
+        dmd[[0, 1, 1, 0, 1]]
     with raises(ValueError):
         dmd[[True, True, False, True]]
     with raises(ValueError):
         dmd[1.0]
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_reconstructed_data_with_bitmask(X):
@@ -250,10 +283,11 @@ def test_reconstructed_data_with_bitmask(X):
     dmd.fit(X=X)
 
     new_bitmask = np.full(dmd.amplitudes.shape[0], True, dtype=bool)
-    new_bitmask[[0,-1]] = False
+    new_bitmask[[0, -1]] = False
     dmd.modes_activation_bitmask = new_bitmask
 
     assert dmd.reconstructed_data is not None
+
 
 @pytest.mark.parametrize("X", data_backends)
 def test_correct_amplitudes(X):

@@ -3,17 +3,17 @@
 
 # # Sparsity-Promoting Dynamic Mode Decomposition
 # In this tutorial we present a variant of DMD called *Sparsity-Promoting* DMD. The algorithm differs from the original one in the way it computes DMD modes amplitudes, since SpDMD "promotes" combinations of amplitudes with an high number of amplitudes set to 0. Such a quality of DMD amplitudes (and of matrix in general) is called *sparsity*. The parameter $\gamma$ controls how much sparsity is promoted.
-# 
+#
 # SpDMD has been presented in *Sparsity-promoting dynamic mode decomposition* by *Jovanovic* et al. The algorithm uses ADMM (check *Distributed optimization and statistical learning via the alternating
 # direction method of multipliers* by *Boyd* et al), an iterative algorithm used to solve optimization problems.
-# 
+#
 # First of all, we import the modules needed for this tutorial.
 
 # In[1]:
 
 
 import numpy as np
-from pydmd import SpDMD,DMD
+from pydmd import SpDMD, DMD
 import matplotlib.pyplot as plt
 
 
@@ -22,17 +22,17 @@ import matplotlib.pyplot as plt
 # In[49]:
 
 
-gammas = [1.e-3,2,10,20,30,50,100,1000]
+gammas = [1.0e-3, 2, 10, 20, 30, 50, 100, 1000]
 
 
 # As $\gamma \to 0$, SpDMD approaches to standard DMD algorithm, which does not impose sparsity in the result.
-# 
+#
 # We now load a dataset related to an heat conductivity problem:
 
 # In[37]:
 
 
-X = np.load('data/heat_90.npy')
+X = np.load("data/heat_90.npy")
 X.shape
 
 
@@ -41,7 +41,7 @@ X.shape
 # In[63]:
 
 
-spdmd_list = [SpDMD(svd_rank=30,gamma=gm,rho=1.e4).fit(X) for gm in gammas]
+spdmd_list = [SpDMD(svd_rank=30, gamma=gm, rho=1.0e4).fit(X) for gm in gammas]
 std_dmd = DMD(svd_rank=30).fit(X)
 
 
@@ -50,7 +50,7 @@ std_dmd = DMD(svd_rank=30).fit(X)
 # In[68]:
 
 
-SpDMD(svd_rank=30,gamma=10,rho=1.e2,verbose=False).fit(X);
+SpDMD(svd_rank=30, gamma=10, rho=1.0e2, verbose=False).fit(X)
 
 
 # You can control the number of iterations with the parameter `rho` of the constructor of the class `SpDMD`. The optimal value for this parameter may differ for different problems:
@@ -58,8 +58,8 @@ SpDMD(svd_rank=30,gamma=10,rho=1.e2,verbose=False).fit(X);
 # In[69]:
 
 
-SpDMD(svd_rank=30,gamma=10,rho=1.e4).fit(X)
-SpDMD(svd_rank=30,gamma=10,rho=1).fit(X);
+SpDMD(svd_rank=30, gamma=10, rho=1.0e4).fit(X)
+SpDMD(svd_rank=30, gamma=10, rho=1).fit(X)
 
 
 # The maximum number of iterations of ADMM is $10^4$ by default, and can be tuned with the parameter `max_iterations` of the constructor of the class `SpDMD`.
@@ -70,16 +70,16 @@ SpDMD(svd_rank=30,gamma=10,rho=1).fit(X);
 # In[65]:
 
 
-plt.figure(figsize=(20,5))
+plt.figure(figsize=(20, 5))
 
 plt.plot(gammas, [np.count_nonzero(dmd.amplitudes) for dmd in spdmd_list])
 
 plt.grid()
-plt.xscale('log')
+plt.xscale("log")
 
-plt.title('Non-zero amplitudes')
-plt.xlabel('$\gamma$')
-plt.ylabel('#non-zero amplitudes')
+plt.title("Non-zero amplitudes")
+plt.xlabel("$\gamma$")
+plt.ylabel("#non-zero amplitudes")
 
 plt.show()
 
@@ -90,15 +90,15 @@ plt.show()
 
 
 # plot amplitudes
-plt.figure(figsize=(20,5))
+plt.figure(figsize=(20, 5))
 
-for gm,a in zip(gammas,map(lambda dmd: dmd.amplitudes, spdmd_list)):
-    plt.plot(a.real, label='$\gamma = $ {}'.format(gm))
+for gm, a in zip(gammas, map(lambda dmd: dmd.amplitudes, spdmd_list)):
+    plt.plot(a.real, label="$\gamma = $ {}".format(gm))
 
 plt.grid()
 plt.legend()
 
-plt.title('DMD amplitudes (real part)')
+plt.title("DMD amplitudes (real part)")
 
 plt.show()
 
@@ -111,22 +111,22 @@ plt.show()
 
 time = 2
 
-plt.figure(figsize=(20,14.5))
+plt.figure(figsize=(20, 14.5))
 
-plt.subplot(3,4,1)
-plt.pcolormesh(X[:,time].reshape(21,21))
-plt.title('Original')
+plt.subplot(3, 4, 1)
+plt.pcolormesh(X[:, time].reshape(21, 21))
+plt.title("Original")
 
 for idx, gm, dmd in zip(range(len(gammas)), gammas, spdmd_list):
-    plt.subplot(3,4,idx+2)
-    plt.pcolormesh(dmd.reconstructed_data.real[:,time].reshape(21,21))
-    
-    plt.title('$\gamma =$ {}'.format(gm))
-    
-plt.subplot(3,4,len(gammas)+2)
-plt.pcolormesh(std_dmd.reconstructed_data.real[:,time].reshape(21,21))
-plt.title('Standard DMD')
-    
+    plt.subplot(3, 4, idx + 2)
+    plt.pcolormesh(dmd.reconstructed_data.real[:, time].reshape(21, 21))
+
+    plt.title("$\gamma =$ {}".format(gm))
+
+plt.subplot(3, 4, len(gammas) + 2)
+plt.pcolormesh(std_dmd.reconstructed_data.real[:, time].reshape(21, 21))
+plt.title("Standard DMD")
+
 plt.show()
 
 
@@ -135,21 +135,27 @@ plt.show()
 
 time = 2
 
-plt.figure(figsize=(20,15))
+plt.figure(figsize=(20, 15))
 
 for idx, gm, dmd in zip(range(len(gammas)), gammas, spdmd_list):
-    plt.subplot(3,3,idx+1)
-    
-    plt.pcolormesh(dmd.reconstructed_data.real[:,time].reshape(21,21) - X[:,time].real.reshape(21,21))
+    plt.subplot(3, 3, idx + 1)
+
+    plt.pcolormesh(
+        dmd.reconstructed_data.real[:, time].reshape(21, 21)
+        - X[:, time].real.reshape(21, 21)
+    )
     plt.colorbar()
-    
-    plt.title('$\gamma =$ {}'.format(gm))
-    
-plt.subplot(3,3,len(gammas)+1)
-plt.pcolormesh(std_dmd.reconstructed_data.real[:,time].reshape(21,21) - X[:,time].real.reshape(21,21))
+
+    plt.title("$\gamma =$ {}".format(gm))
+
+plt.subplot(3, 3, len(gammas) + 1)
+plt.pcolormesh(
+    std_dmd.reconstructed_data.real[:, time].reshape(21, 21)
+    - X[:, time].real.reshape(21, 21)
+)
 plt.colorbar()
-plt.title('Standard DMD')
-    
+plt.title("Standard DMD")
+
 plt.show()
 
 
@@ -165,39 +171,40 @@ plt.show()
 def relative_error(got, expected):
     return np.linalg.norm(got - expected) / np.linalg.norm(expected)
 
+
 def absolute_error(got, expected):
     return np.linalg.norm(got - expected)
 
+
 # gather data about absolute/relative error
 errors = []
-dmds = [*spdmd_list,std_dmd]
+dmds = [*spdmd_list, std_dmd]
 for dmd in dmds:
     e = []
     rec = dmd.reconstructed_data
-    
+
     for time in range(X.shape[1]):
-        e.append(absolute_error(rec[:,time], X[:,time]))
-    
+        e.append(absolute_error(rec[:, time], X[:, time]))
+
     errors.append(e)
 errors = np.array(errors)
 
 # plot the results
-plt.figure(figsize=(20,5))
+plt.figure(figsize=(20, 5))
 
-plt.plot(errors[-1], label='Standard DMD')
+plt.plot(errors[-1], label="Standard DMD")
 
-for gm,err in zip(gammas, errors):
-    plt.plot(err, label='$\gamma =$ {}'.format(gm))
-    
+for gm, err in zip(gammas, errors):
+    plt.plot(err, label="$\gamma =$ {}".format(gm))
+
 plt.legend()
 plt.grid()
 
-plt.yscale('log')
-plt.ylim(bottom=1.e-9)
+plt.yscale("log")
+plt.ylim(bottom=1.0e-9)
 
-plt.xlabel('Time')
-plt.ylabel('Absolute error')
-plt.title('Absolute error over time')
+plt.xlabel("Time")
+plt.ylabel("Absolute error")
+plt.title("Absolute error over time")
 
 plt.show()
-

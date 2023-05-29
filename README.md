@@ -7,14 +7,14 @@
     <a href="https://doi.org/10.21105/joss.00530" target="_blank">
         <img alt="JOSS DOI" src="http://joss.theoj.org/papers/10.21105/joss.00530/status.svg">
     </a>
-    <a href="https://github.com/mathLab/PyDMD/blob/master/LICENSE" target="_blank">
+    <a href="https://github.com/PyDMD/PyDMD/blob/master/LICENSE" target="_blank">
         <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square">
     </a>
     <a href="https://badge.fury.io/py/pydmd"  target="_blank">
         <img alt="PyPI version" src="https://badge.fury.io/py/pydmd.svg">
     </a>
-    <a href="https://github.com/mathLab/PyDMD/actions/workflows/ci.yml" target="_blank">
-        <img alt="Build Status" src="https://github.com/mathLab/PyDMD/actions/workflows/ci.yml/badge.svg">
+    <a href="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml" target="_blank">
+        <img alt="CI Status" src="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml/badge.svg">
     </a>
     <a href="https://www.codacy.com/gh/mathLab/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Coverage">
       <img src="https://app.codacy.com/project/badge/Coverage/c36adbea2e4a44eb8c0e4505b75e8245"/>
@@ -39,9 +39,8 @@
 * [How to cite](#how-to-cite)
 	* [References](#references)
 	* [Recent works with PyDMD](#recent-works-with-pydmd)
-* [Authors and contributors](#authors-and-contributors)
-* [How to contribute](#how-to-contribute)
-	* [Submitting a patch](#submitting-a-patch)
+* [Developers and contributors](#developers-and-contributors)
+* [Funding](#funding)
 * [License](#license)
 
 ## Description
@@ -49,11 +48,8 @@
 
 Dynamic Mode Decomposition (DMD) is a model reduction algorithm developed by Schmid (see "Dynamic mode decomposition of numerical and experimental data"). Since then has emerged as a powerful tool for analyzing the dynamics of nonlinear systems. DMD relies only on the high-fidelity measurements, like experimental data and numerical simulations, so it is an equation-free algorithm. Its popularity is also due to the fact that it does not make any assumptions about the underlying system. See Kutz ("Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems") for a comprehensive overview of the algorithm and its connections to the Koopman-operator analysis, initiated in Koopman ("Hamiltonian systems and transformation in Hilbert space"), along with examples in computational fluid dynamics.
 
-In the last years many variants arose, such as multiresolution DMD, compressed DMD, forward backward DMD, and higher order DMD among others, in order to deal with noisy data, big dataset, or spurious data for example.
+In the last years many variants arose, such as multiresolution DMD, compressed DMD, forward backward DMD, higher order DMD, and physics-informed DMD among others, in order to deal with noisy data, big dataset, or spurius data for example. We implemented in Python the majority of the DMD extensions currently present in the literature with a user friendly interface. We also provide many tutorials that show all the characteristics of the software. See the [**Examples**](#examples) section below and the [**Tutorials**](tutorials/README.md) to have an idea of the potential of this package.
 
-In PyDMD we implemented the majority of the variants mentioned above with a user friendly interface. See the [**Examples**](#examples) section below and the [**Tutorials**](tutorials/README.md) to have an idea of the potential of this package.
-
-The research in the field is growing both in computational fluid dynamic and in structural mechanics, due to the equation-free nature of the model.
 <p align="center">
     <img src="readme/pydmd_capabilities.png" width="800" />
 </p>
@@ -77,7 +73,7 @@ To uninstall the package:
 ### Installing from source
 The official distribution is on GitHub, and you can clone the repository using
 ```bash
-> git clone https://github.com/mathLab/PyDMD
+> git clone https://github.com/PyDMD/PyDMD
 ```
 
 To install the package just type:
@@ -85,14 +81,13 @@ To install the package just type:
 > pip install -e .
 ```
 
-To uninstall the package you have to rerun the installation and record the installed files in order to remove them:
-
+To uninstall the package type:
 ```bash
 > pip uninstall pydmd
 ```
 
 ## Documentation
-**PyDMD** uses [Sphinx](http://www.sphinx-doc.org/en/stable/) for code documentation. You can view the documentation online [here](http://mathlab.github.io/PyDMD/). To build the html version of the docs locally simply:
+**PyDMD** uses [Sphinx](http://www.sphinx-doc.org/en/stable/) for code documentation. You can view the documentation online [here](http://pydmd.github.io/PyDMD/). To build the html version of the docs locally simply:
 
 ```bash
 > cd docs
@@ -104,7 +99,7 @@ The generated html can be found in `docs/build/html`. Open up the `index.html` y
 
 ## Testing
 
-We are using GitHub actions for Continuous Integration. You can check the current status [here](https://github.com/mathLab/PyDMD/actions).
+We are using GitHub actions for Continuous Integration. You can check the current status [here](https://github.com/PyDMD/PyDMD/actions).
 
 To run tests locally (`pytest` is required):
 
@@ -182,59 +177,34 @@ Here there is a list of the scientific works involving **PyDMD** you can consult
 
 * Tezzele. *Data-driven parameter and model order reduction for industrial optimisation problems with applications in naval engineering*, PhD Thesis. 2021. [[Iris](http://hdl.handle.net/20.500.11767/124569)].
 
-## Authors and contributors
-**PyDMD** is currently developed and mantained at [SISSA mathLab](http://mathlab.sissa.it/) by
-* [Nicola Demo](mailto:demo.nicola@gmail.com)
-* [Marco Tezzele](mailto:marcotez@gmail.com)
-* [Francesco Andreuzzi](mailto:andreuzzi.francesco@gmail.com)
+## Developers and contributors
+The main developers are 
+<p align="center">
+    <img src="readme/main_developers.png" width="800" />
+</p>
+
+We warmly thank all the contributors that have supported PyDMD!
+
+Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIBUTING.md) and the [Tutorials for Developers](tutorials#tutorials-for-developers) before starting to play!
 
 
-under the supervision of [Prof. Gianluigi Rozza](mailto:gianluigi.rozza@sissa.it).
+<a href="https://github.com/PyDMD/PyDMD/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=PyDMD/PyDMD" />
+</a>
 
-Contact us by email for further information or questions about **PyDMD**, or suggest pull requests. Contributions improving either the code or the documentation are welcome!
+Made with [contrib.rocks](https://contrib.rocks).
 
 
-## How to contribute
-We'd love to accept your patches and contributions to this project. There are just a few small guidelines you need to follow.
+## Funding
+A significant part of PyDMD has been written either as a by-product for other projects people were funded for, or by people on university-funded positions. There are probably many of such projects that have led to some development of PyDMD. We are very grateful for this support!
 
-### Submitting a patch
+Beyond this, PyDMD has also been supported by some dedicated projects that have allowed us to work on extensions, documentation, training and dissemination that would otherwise not have been possible. In particular, we acknowledge the following sources of support with great gratitude:
 
-  1. It's generally best to start by opening a new issue describing the bug or
-     feature you're intending to fix.  Even if you think it's relatively minor,
-     it's helpful to know what people are working on.  Mention in the initial
-     issue that you are planning to work on that bug or feature so that it can
-     be assigned to you.
-
-  2. Follow the normal process of [forking][] the project, and setup a new
-     branch to work in.  It's important that each group of changes be done in
-     separate branches in order to ensure that a pull request only includes the
-     commits related to that bug or feature.
-
-  3. To ensure properly formatted code, please make sure to use 4
-     spaces to indent the code. The easy way is to run on your bash the provided
-     script: ./code_formatter.sh. You should also run [pylint][] over your code.
-     It's not strictly necessary that your code be completely "lint-free",
-     but this will help you find common style issues.
-
-  4. Any significant changes should almost always be accompanied by tests.  The
-     project already has good test coverage, so look at some of the existing
-     tests if you're unsure how to go about it. We're using [coveralls][] that
-     is an invaluable tools for seeing which parts of your code aren't being
-     exercised by your tests.
-
-  5. Do your best to have [well-formed commit messages][] for each change.
-     This provides consistency throughout the project, and ensures that commit
-     messages are able to be formatted properly by various git tools.
-
-  6. Finally, push the commits to your fork and submit a [pull request][]. Please,
-     remember to rebase properly in order to maintain a clean, linear git history.
-
-[forking]: https://help.github.com/articles/fork-a-repo
-[pylint]: https://www.pylint.org/
-[coveralls]: https://coveralls.io
-[well-formed commit messages]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
-[pull request]: https://help.github.com/articles/creating-a-pull-request
-
+* [H2020 ERC CoG 2015 AROMA-CFD project 681447](https://people.sissa.it/~grozza/aroma-cfd/), P.I. Professor [Gianluigi Rozza](https://people.sissa.it/~grozza) at [SISSA mathLab](https://mathlab.sissa.it/).
+* FSE HEaD project [Bulbous Bow Shape Optimization through Reduced Order Modelling](https://mathlab.sissa.it/project/ottimizzazione-di-forme-prodiere-e-poppiere-di-carena-mediante-luso-di-algoritmi-parametrici), FVG, Italy.
+<p align="center">
+    <img src="readme/logos_funding.png" width="800" />
+</p>
 
 ## License
 

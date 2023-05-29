@@ -6,11 +6,14 @@ Reference:
 with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.
 """
 import numpy as np
-from past.utils import old_div
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from pydmd.linalg import assert_same_linalg_type, build_linalg_module, cast_as_array
+from pydmd.linalg import (
+    assert_same_linalg_type,
+    build_linalg_module,
+    cast_as_array,
+)
 from .snapshots import Snapshots
 from .utils import compute_svd, compute_tlsq
 
@@ -38,11 +41,14 @@ class DMDControlOperator(DMDOperator):
     """
 
     def __init__(self, svd_rank, svd_rank_omega, tlsq_rank):
-        super(DMDControlOperator, self).__init__(svd_rank=svd_rank, exact=True,
-                                                 rescale_mode=None,
-                                                 forward_backward=False,
-                                                 sorted_eigs=False,
-                                                 tikhonov_regularization=None)
+        super(DMDControlOperator, self).__init__(
+            svd_rank=svd_rank,
+            exact=True,
+            rescale_mode=None,
+            forward_backward=False,
+            sorted_eigs=False,
+            tikhonov_regularization=None,
+        )
         self._svd_rank_omega = svd_rank_omega
         self._tlsq_rank = tlsq_rank
 
@@ -137,15 +143,28 @@ class DMDBUnknownOperator(DMDControlOperator):
 
         Ur, _, _ = compute_svd(Y, self._svd_rank)
 
-        self._Atilde = linalg_module.multi_dot((Ur.T.conj(), Y, Vp,
-                                            linalg_module.diag_matrix(1 / sp),
-                                            Up1.T.conj(), Ur))
+        self._Atilde = linalg_module.multi_dot(
+            (
+                Ur.T.conj(),
+                Y,
+                Vp,
+                linalg_module.diag_matrix(1 / sp),
+                Up1.T.conj(),
+                Ur,
+            )
+        )
         self._compute_eigenquantities()
         self._compute_modes(Y, sp, Vp, Up1, Ur)
 
-        Btilde = linalg_module.multi_dot((Ur.T.conj(), Y, Vp,
-                                      linalg_module.diag_matrix(1 / sp),
-                                      Up2.T.conj()))
+        Btilde = linalg_module.multi_dot(
+            (
+                Ur.T.conj(),
+                Y,
+                Vp,
+                linalg_module.diag_matrix(1 / sp),
+                Up2.T.conj(),
+            )
+        )
 
         return Ur, linalg_module.dot(Ur, Btilde)
 
@@ -155,9 +174,16 @@ class DMDBUnknownOperator(DMDControlOperator):
         high-dimensional operator (stored in self.modes and self.Lambda).
         """
         linalg_module = build_linalg_module(Y)
-        self._modes = linalg_module.multi_dot((Y, Vp, linalg_module.diag_matrix(1 / sp),
-                                           Up1.T.conj(), Ur,
-                                           self.eigenvectors))
+        self._modes = linalg_module.multi_dot(
+            (
+                Y,
+                Vp,
+                linalg_module.diag_matrix(1 / sp),
+                Up1.T.conj(),
+                Ur,
+                self.eigenvectors,
+            )
+        )
         self._Lambda = self.eigenvalues
 
 
@@ -186,15 +212,15 @@ class DMDc(DMDBase):
         `svd_rank` parameter description above.
     :type svd_rank_omega: int or float
     """
-    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1):
 
+    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1):
         # we're going to initialize Atilde when we know if B is known
         self._Atilde = None
         # remember the arguments for when we'll need them
         self._dmd_operator_kwargs = {
-            'svd_rank': svd_rank,
-            'svd_rank_omega': svd_rank_omega,
-            'tlsq_rank': tlsq_rank
+            "svd_rank": svd_rank,
+            "svd_rank_omega": svd_rank_omega,
+            "tlsq_rank": tlsq_rank,
         }
 
         self._opt = opt
@@ -251,15 +277,21 @@ class DMDc(DMDBase):
 
         if controlin.shape[-1] != self.dynamics.shape[-1] - 1:
             raise RuntimeError(
-                'The number of control inputs and the number of snapshots to '
-                'reconstruct has to be the same'
+                "The number of control inputs and the number of snapshots to "
+                "reconstruct has to be the same"
             )
 
         linalg_module = build_linalg_module(self.eigs)
-        eigs = linalg_module.pow(self.eigs,
-                        old_div(self.dmd_time['dt'], self.original_time['dt']))
-        A = linalg_module.multi_dot((self.modes, linalg_module.diag_matrix(eigs),
-                                 linalg_module.pinv(self.modes)))
+        eigs = linalg_module.pow(
+            self.eigs, self.dmd_time["dt"] // self.original_time["dt"]
+        )
+        A = linalg_module.multi_dot(
+            (
+                self.modes,
+                linalg_module.diag_matrix(eigs),
+                linalg_module.pinv(self.modes),
+            )
+        )
 
         data = [self.snapshots[:, 0]]
         expected_shape = data[0].shape
@@ -310,12 +342,15 @@ class DMDc(DMDBase):
             assert_same_linalg_type(X, self._controlin)
             self._Atilde = DMDBUnknownOperator(**self._dmd_operator_kwargs)
             self._basis, self._B = self.operator.compute_operator(
-                X, Y, self._controlin)
+                X, Y, self._controlin
+            )
         else:
             assert_same_linalg_type(X, self._controlin, B)
             self._B = linalg_module.to(X, B)
             self._Atilde = DMDBKnownOperator(**self._dmd_operator_kwargs)
-            self._basis, _, _ = self.operator.compute_operator(X, Y, self._B, self._controlin)
+            self._basis, _, _ = self.operator.compute_operator(
+                X, Y, self._B, self._controlin
+            )
 
         self._b = self._compute_amplitudes()
 

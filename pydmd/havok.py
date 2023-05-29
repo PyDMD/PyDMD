@@ -20,6 +20,7 @@ class HAVOK(HankelDMD):
     """
     Hankel alternative view of Koopman (HAVOK) analysis
     """
+
     def __init__(
         self,
         svd_rank=0,
@@ -62,7 +63,7 @@ class HAVOK(HankelDMD):
         """
         if self._embeddings is None:
             raise RuntimeError("fit() not called")
-        return self._embeddings[:,:-1]
+        return self._embeddings[:, :-1]
 
     @property
     def forcing_input(self):
@@ -74,7 +75,7 @@ class HAVOK(HankelDMD):
         """
         if self._embeddings is None:
             raise RuntimeError("fit() not called")
-        return self._embeddings[:,-1]
+        return self._embeddings[:, -1]
 
     @property
     def A(self):
@@ -120,9 +121,7 @@ class HAVOK(HankelDMD):
         return np.concatenate((X[0, :], X[1:, -1]))
 
     def reconstructions_of_timeindex(self, timeindex=None):
-        raise NotImplementedError(
-            "This function is not compatible with HAVOK."
-        )
+        raise NotImplementedError("This function is not compatible with HAVOK.")
 
     @property
     def reconstructed_data(self):
@@ -134,7 +133,7 @@ class HAVOK(HankelDMD):
         #
         # Note that we define the output y to be the state x.
         havok_system = signal.StateSpace(
-            self.A, self.B, np.eye(self._r-1), 0*self.B
+            self.A, self.B, np.eye(self._r - 1), 0 * self.B
         )
 
         # Using the system defined above, compute the output of the system,
@@ -145,18 +144,20 @@ class HAVOK(HankelDMD):
         reconstructed_v = signal.lsim(
             havok_system,
             U=self.forcing_input,
-            T=self.dmd_timesteps[:len(self.forcing_input)],
-            X0=self.linear_embeddings[0, :]
+            T=self.dmd_timesteps[: len(self.forcing_input)],
+            X0=self.linear_embeddings[0, :],
         )[1]
 
         # Compute a reconstruction of the original data x by first recomputing
         # the hankel matrix with the reconstructed V matrix and then recovering
         # a 1-D time-series from the computed hankel matrix.
-        reconstructed_hankel_matrix = np.linalg.multi_dot([
-            self._svd_modes[:, :-1],
-            np.diag(self._svd_amps[:-1]),
-            reconstructed_v.conj().T
-        ])
+        reconstructed_hankel_matrix = np.linalg.multi_dot(
+            [
+                self._svd_modes[:, :-1],
+                np.diag(self._svd_amps[:-1]),
+                reconstructed_v.conj().T,
+            ]
+        )
 
         return self._dehankel(reconstructed_hankel_matrix)
 

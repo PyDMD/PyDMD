@@ -3,10 +3,14 @@ Module for DMD plotting.
 """
 from os.path import splitext
 
+import warnings
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pydmd import MrDMD
+from .hankeldmd import HankelDMD
+from .bopdmd import BOPDMD
 
 mpl.rcParams["figure.max_open_warning"] = 0
 
@@ -241,9 +245,7 @@ def plot_eigs_mrdmd(
 
     if not level:
         cmap = plt.get_cmap("viridis")
-        colors = [
-            cmap(i) for i in np.linspace(0, 1, len(dmd.dmd_tree.levels))
-        ]
+        colors = [cmap(i) for i in np.linspace(0, 1, len(dmd.dmd_tree.levels))]
 
         points = []
         for l in dmd.dmd_tree.levels:
@@ -299,10 +301,7 @@ def plot_eigs_mrdmd(
     if level:
         labels = [f"Eigenvalues - level {level}"]
     else:
-        labels = [
-            f"Eigenvalues - level {i}"
-            for i in range(dmd.max_level)
-        ]
+        labels = [f"Eigenvalues - level {i}" for i in range(dmd.max_level)]
 
     if show_unit_circle:
         points += [unit_circle]
@@ -310,7 +309,6 @@ def plot_eigs_mrdmd(
 
     ax.add_artist(plt.legend(points, labels, loc="best"))
     plt.show()
-
 
 
 def plot_modes_2D(
@@ -522,4 +520,189 @@ def plot_snapshots_2D(
             plt.close(fig)
 
     if not filename:
+        plt.show()
+
+
+def plot_summary(
+    dmd,
+    snapshots_shape=None,
+    index_modes=None,
+    filename=None,
+    order="C",
+    figsize=(12, 8),
+    mode_colors=None,
+):
+    """
+    Generate a 3x3 summarizing plot that contains the following components:
+    - the singular value spectrum of the data
+    - the discrete-time and continuous-time dmd eigenvalues
+    - the three dmd modes specified by the index_modes parameter
+    - the dynamics corresponding with each plotted mode
+    Eigenvalues, modes, and dynamics are ordered according to the magnitude of
+    their corresponding amplitude value. Singular values and eigenvalues that
+    are associated with plotted modes and dynamics are also highlighted.
+
+    :param dmd: DMD instance.
+    :type dmd: pydmd.DMDBase
+    :param snapshots_shape: Shape of the snapshots. If not provided, snapshots
+        and modes are assumed to be 1D and the data snapshot length is used.
+    :type snapshots_shape: int or tuple(int,int)
+    :param index_modes: The indices of the modes to plot. By default, the first
+        three leading modes are plotted.
+    :type index_modes: list
+    :param filename: If specified, the plot is saved at `filename`.
+    :type filename: str
+    :param order: Read the elements of snapshots using this index order,
+        and place the elements into the reshaped array using this index order.
+        It has to be the same used to store the snapshot. "C" means to
+        read/write the elements using C-like index order, with the last axis
+        index changing fastest, back to the first axis index changing slowest.
+        "F" means to read/write the elements using Fortran-like index order,
+        with the first index changing fastest, and the last index changing
+        slowest. Note that the "C" and "F" options take no account of the
+        memory layout of the underlying array, and only refer to the order of
+        indexing. "A" means to read/write the elements in Fortran-like index
+        order if a is Fortran contiguous in memory, C-like order otherwise.
+        "C" is used by default.
+    :type order: {"C", "F", "A"}
+    :param figsize: Tuple in inches defining the figure size.
+        Deafult is (12,8).
+    :type figsize: tuple(int,int)
+    :param mode_colors: List of strings defining the colors used to denote
+        eigenvalue, mode, dynamics associations. The first three colors are
+        used to highlight the singular values and eigenvalues associated with
+        the plotted modes and dynamics, while the fourth color is used to
+        denote all other singular values and eigenvalues. Default colors are
+        ["r","b","g","gray"].
+    :type mode_colors: list(str,str,str,str)
+    """
+    if dmd.modes is None:
+        raise ValueError(
+            "The modes have not been computed."
+            "You have to perform the fit method."
+        )
+
+    if snapshots_shape is None:
+        snapshots_shape = (len(dmd.snapshots),)
+    elif isinstance(snapshots_shape, int):
+        snapshots_shape = (snapshots_shape,)
+    elif not isinstance(snapshots_shape, tuple) or len(snapshots_shape) != 2:
+        raise ValueError("snapshots_shape must be an int or a 2D tuple.")
+
+    if len(dmd.eigs) < 3:
+        # Even if index_modes is provided, override it if there are fewer than
+        # three modes available. Alert the user of this plot alteration.
+        warnings.warn(
+            "Provided dmd model has less than 3 modes."
+            "Plotting all available modes."
+        )
+        index_modes = list(range(len(dmd.eigs)))
+    elif index_modes is None:
+        index_modes = list(range(3))
+    elif not isinstance(index_modes, list) or len(index_modes) > 3:
+        raise ValueError("index_modes must be a list of length at most 3.")
+    elif np.any(np.array(index_modes) >= 50):
+        raise ValueError("Cannot view past the 50th mode.")
+
+    if mode_colors is None:
+        mode_colors = ["r", "b", "g", "gray"]
+
+    # Order the DMD eigenvalues, modes, and dynamics according to amplitude.
+    mode_order = np.argsort(-np.abs(dmd.amplitudes))
+    lead_eigs = dmd.eigs[mode_order]
+    lead_modes = dmd.modes[:, mode_order]
+    lead_dynamics = dmd.dynamics[mode_order]
+    if isinstance(dmd, BOPDMD):
+        # BOPDMD computes continuous-time eigenvalues.
+        lead_eigs = np.exp(lead_eigs)
+
+    # Compute the singular values of the data matrix.
+    if isinstance(dmd, HankelDMD):
+        # Use time-delay data matrix to compute singular values.
+        snp = dmd.ho_snapshots
+    else:
+        # Use input data matrix to compute singular values.
+        snp = dmd.snapshots
+    s = np.linalg.svd(snp, full_matrices=False, compute_uv=False)
+    # Compute the percent of data variance captured by each singular value.
+    s_var = s * (100 / np.sum(s))
+
+    # Generate the summarizing plot.
+    fig, (eig_axes, mode_axes, dynamics_axes) = plt.subplots(
+        3, 3, figsize=figsize, dpi=200
+    )
+
+    # Plot 1: Plot the singular value spectrum (plot at most 50 values).
+    s_var_plot = s_var[:50]
+    eig_axes[0].set_title("Singular Values")
+    eig_axes[0].set_ylabel("% variance")
+    t = np.arange(len(s_var_plot)) + 1
+    eig_axes[0].plot(t, s_var_plot, "o", c=mode_colors[-1], ms=8, mec="k")
+    for i, idx in enumerate(index_modes):
+        eig_axes[0].plot(
+            t[idx], s_var_plot[idx], "o", c=mode_colors[i], ms=8, mec="k"
+        )
+
+    # Plots 2-3: Plot the eigenvalues (discrete-time and continuous-time).
+    # Scale marker sizes to reflect the amount of variance captured.
+    max_marker_size = 10
+    ms_vals = max_marker_size * np.sqrt(s_var / s_var[0])
+    for i, ax in enumerate(eig_axes[1:]):
+        # Plot the complex plane axes.
+        ax.axvline(x=0, c="k", lw=1)
+        ax.axhline(y=0, c="k", lw=1)
+        ax.set_xlabel("Real")
+        ax.set_ylabel("Imag")
+        ax.axis("equal")
+        # Plot 2: Plot the discrete-time eigenvalues with the unit circle.
+        if i == 0:
+            ax.set_title("Discrete-time Eigenvalues")
+            eigs = lead_eigs
+            t = np.linspace(0, 2 * np.pi, 100)
+            ax.plot(np.cos(t), np.sin(t), c="tab:blue", ls="--")
+        # Plot 3: Plot the continuous-time eigenvalues
+        else:
+            ax.set_title("Continuous-time Eigenvalues")
+            eigs = np.log(lead_eigs)
+        # Plot the eigenvalues.
+        for idx, eig in enumerate(eigs):
+            if idx in index_modes:
+                color = mode_colors[index_modes.index(idx)]
+            else:
+                color = mode_colors[-1]
+            ax.plot(eig.real, eig.imag, "o", c=color, ms=ms_vals[idx])
+
+    # Plots 4-6: Plot the DMD modes.
+    for i, idx in enumerate(index_modes):
+        ax = mode_axes[i]
+        ax.set_title(f"Mode {idx + 1}", c=mode_colors[i], fontsize=15)
+        # Plot modes in 1D.
+        if len(snapshots_shape) == 1:
+            ax.plot(lead_modes[:, idx].real, c="tab:orange")
+        # Plot modes in 2D.
+        else:
+            mode = lead_modes[:, idx].reshape(*snapshots_shape, order=order)
+            # Multiply by factor of 0.9 to intensify the plotted image.
+            vmax = 0.9 * np.abs(mode.real).max()
+            im = ax.imshow(mode.real, vmax=vmax, vmin=-vmax, cmap="bwr")
+            # Align the colorbar with the plotted image.
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="3%", pad=0.05)
+            fig.colorbar(im, cax=cax)
+
+    # Plots 7-9: Plot the DMD mode dynamics.
+    for i, idx in enumerate(index_modes):
+        ax = dynamics_axes[i]
+        ax.set_title("Mode Dynamics", c=mode_colors[i], fontsize=12)
+        ax.plot(lead_dynamics[idx].real)
+        ax.set_xlabel("Time")
+
+    # Padding between elements.
+    plt.tight_layout()
+
+    # Save plot if filename is provided.
+    if filename:
+        plt.savefig(filename)
+        plt.close(fig)
+    else:
         plt.show()
