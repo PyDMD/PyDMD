@@ -7,7 +7,6 @@ import pickle
 from copy import copy, deepcopy
 
 import numpy as np
-from past.utils import old_div
 
 from .dmdoperator import DMDOperator
 from pydmd.linalg import build_linalg_module
@@ -288,10 +287,9 @@ class DMDBase:
         temp = linalg_module.repeat(
             self.eigs[..., None], self.dmd_timesteps.shape[0], axis=-1
         )
-        tpow = old_div(
-            self.dmd_timesteps - self.original_time["t0"],
-            self.original_time["dt"],
-        )
+        tpow = (
+            self.dmd_timesteps - self.original_time["t0"]
+        ) / self.original_time["dt"]
 
         # The new formula is x_(k+j) = \Phi \Lambda^k \Phi^(-1) x_j.
         # Since j is fixed, for a given snapshot "u" we have the following
