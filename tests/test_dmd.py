@@ -219,6 +219,7 @@ def test_dmd_time_4():
     )
     np.testing.assert_almost_equal(dmd.dynamics, expected_data, decimal=6)
 
+
 def test_dmd_time_5():
     """
     Let us check that the timestep is actually reduced and not rounded to
