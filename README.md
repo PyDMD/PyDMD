@@ -38,7 +38,7 @@
 * [Awards](#awards)
 * [How to cite](#how-to-cite)
 	* [References](#references)
-	* [Recent works with PyDMD](#recent-works-with-pydmd)
+	* [Recent works using PyDMD](#recent-works-using-pydmd)
 * [Developers and contributors](#developers-and-contributors)
 * [Funding](#funding)
 * [License](#license)
@@ -158,24 +158,9 @@ To implement the various versions of the DMD algorithm we follow these works:
 * Andreuzzi, Demo, Rozza. *A dynamic mode decomposition extension for the forecasting of parametric dynamical systems*. 2021.  [[arXiv](https://arxiv.org/pdf/2110.09155)] [[bibitem](readme/Andreuzzi2021.bib)].
 * Jovanović, Schmid, Nichols *Sparsity-promoting dynamic mode decomposition*. 2014.  [[arXiv](https://arxiv.org/abs/1309.4165)] [[bibitem](readme/Jovanovic2014.bib)].
 
-### Recent works with PyDMD
-Here there is a list of the scientific works involving **PyDMD** you can consult and/or cite. If you want to add one, please open a PR.
+### Recent works using PyDMD
+You can find a list of the scientific works using **PyDMD** [here](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=5544023489671534143).
 
-* Tezzele, Demo, Rozza. *A non-intrusive approach for proper orthogonal decomposition modal coefficients reconstruction through active subspaces*. Comptes Rendus de l'Academie des Sciences DataBEST 2019 Special Issue. [[arXiv](https://arxiv.org/abs/1907.12777)] .
-
-* Tezzele, Demo, Rozza. *Shape Optimization through Proper Orthogonal Decomposition with Interpolation and Dynamic Mode Decomposition Enhanced by Active Subspaces*. In The Proceedings of VIII International Conference on Computational Methods in Marine Engineering, pages 122–133, 2019. [[DOI](https://congress.cimne.com/marine2019/frontal/Doc/EbookMarine2019.pdf)] [[arXiv](https://arxiv.org/abs/1905.05483)].
-
-* Tezzele, Demo, Mola, Rozza. *An integrated data-driven computational pipeline with model order reduction for industrial and applied mathematics*. Submitted, 2018. [[arXiv](https://arxiv.org/abs/1810.12364)].
-
-* Demo, Tezzele, Gustin, Lavini, Rozza. *Shape optimization by means of proper orthogonal decomposition and dynamic mode decomposition*. In Technology and Science for the Ships of the Future: Proceedings of NAV 2018: 19th International Conference on Ship & Maritime Research, 2018. [[DOI](https://doi.org/10.3233/978-1-61499-870-9-212)] [[arXiv](https://arxiv.org/abs/1803.07368)].
-
-* Tezzele, Demo, Gadalla, Mola, Rozza. *Model Order Reduction by means of Active Subspaces and Dynamic Mode Decomposition for Parametric Hull Shape Design Hydrodynamics*. In Technology and Science for the Ships of the Future: Proceedings of NAV 2018: 19th International Conference on Ship & Maritime Research, 2018. [[DOI](https://doi.org/10.3233/978-1-61499-870-9-569)] [[arXiv](https://arxiv.org/abs/1803.07377)].
-
-* Demo, Tezzele, Mola, Rozza. *An efficient shape parametrisation by free-form deformation enhanced by active subspace for hull hydrodynamic ship design problems in open source environment*. 2018. [[arXiv](https://arxiv.org/abs/1801.06369)].
-
-* Tezzele, Demo, Stabile, Mola, Rozza. *Enhancing CFD predictions in shape design problems by model and parameter space reduction*. 2020. [[arXiv](https://arxiv.org/abs/2001.05237)].
-
-* Tezzele. *Data-driven parameter and model order reduction for industrial optimisation problems with applications in naval engineering*, PhD Thesis. 2021. [[Iris](http://hdl.handle.net/20.500.11767/124569)].
 
 ## Developers and contributors
 The main developers are 
