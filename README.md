@@ -30,7 +30,6 @@
 ## Table of contents
 * [Description](#description)
 * [Dependencies and installation](#dependencies-and-installation)
-* [Testing](#testing)
 * [Examples and Tutorials](#examples-and-tutorials)
 * [Awards](#awards)
 * [References](#references)
@@ -71,16 +70,6 @@ and then install the package in [development mode](https://setuptools.pypa.io/en
 
 ### Dependencies
 The core features of **PyDMD** depend on `numpy` and `scipy`. In order to use the plotting functionalities you will also need `matplotlib`.
-
-## Testing
-
-We are using GitHub actions for Continuous Integration. You can check the current status [here](https://github.com/PyDMD/PyDMD/actions).
-
-To run tests locally (`pytest` is required):
-
-```bash
-> pytest
-```
 
 ## Examples and Tutorials
 You can find useful tutorials on how to use the package in the [tutorials](tutorials/README.md) folder.
