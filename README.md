@@ -4,6 +4,9 @@
   </a>
 </p>
 <p align="center">
+    <a href="http://pydmd.github.io/PyDMD" target="_blank">
+        <img alt="Docs" src="https://img.shields.io/badge/PyDMD-docs-blue"/>
+    </a>
     <a href="https://doi.org/10.21105/joss.00530" target="_blank">
         <img alt="JOSS DOI" src="http://joss.theoj.org/papers/10.21105/joss.00530/status.svg">
     </a>
@@ -24,24 +27,15 @@
     </a>
 </p>
 
-
-**PyDMD**: Python Dynamic Mode Decomposition
-
 ## Table of contents
 * [Description](#description)
 * [Dependencies and installation](#dependencies-and-installation)
-	* [Installing via PIP](#installing-via-pip)
-	* [Installing from source](#installing-from-source)
-* [Documentation](#documentation)
 * [Testing](#testing)
 * [Examples and Tutorials](#examples-and-tutorials)
 * [Awards](#awards)
-* [How to cite](#how-to-cite)
-	* [References](#references)
-	* [Recent works using PyDMD](#recent-works-using-pydmd)
+* [References](#references)
 * [Developers and contributors](#developers-and-contributors)
 * [Funding](#funding)
-* [License](#license)
 
 ## Description
 **PyDMD** is a Python package designed for **Dynamic Mode Decomposition (DMD)**, a data-driven method used for analyzing and extracting spatiotemporal coherent structures from time-varying datasets. It provides a comprehensive and user-friendly interface for performing DMD analysis, making it a valuable tool for researchers, engineers, and data scientists working in various fields.
@@ -56,48 +50,27 @@ PyDMD promotes ease of use and customization, providing a well-documented API wi
     <img src="readme/pydmd_capabilities.png" width="800" />
 </p>
 
-
-
 ## Dependencies and installation
-**PyDMD** requires `numpy`, `scipy`, `matplotlib`, `sphinx` (for the documentation) and `pytest` (for local test). The code is tested for Python 3, while compatibility of Python 2 is not guaranteed anymore. It can be installed using `pip` or directly from the source code.
 
 ### Installing via PIP
-Mac and Linux users can install pre-built binary packages using pip.
-To install the package just type:
+PyDMD is available on [PyPI](https://pypi.org/project/pydmd), therefore you can install the latest released version with:
 ```bash
 > pip install pydmd
 ```
-To uninstall the package:
-```bash
-> pip uninstall pydmd
-```
 
 ### Installing from source
-The official distribution is on GitHub, and you can clone the repository using
+To install the bleeding edge version, clone this repository with:
 ```bash
 > git clone https://github.com/PyDMD/PyDMD
 ```
 
-To install the package just type:
+and then install the package in [development mode](https://setuptools.pypa.io/en/latest/userguide/development_mode.html):
 ```bash
 > pip install -e .
 ```
 
-To uninstall the package type:
-```bash
-> pip uninstall pydmd
-```
-
-## Documentation
-**PyDMD** uses [Sphinx](http://www.sphinx-doc.org/en/stable/) for code documentation. You can view the documentation online [here](http://pydmd.github.io/PyDMD/). To build the html version of the docs locally simply:
-
-```bash
-> cd docs
-> make html
-```
-
-The generated html can be found in `docs/build/html`. Open up the `index.html` you find there to browse.
-
+### Dependencies
+The core features of **PyDMD** depend on `numpy` and `scipy`. In order to use the plotting functionalities you will also need `matplotlib`.
 
 ## Testing
 
@@ -127,26 +100,7 @@ Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/t
 
 First prize winner in **DSWeb 2019 Contest** _Tutorials on Dynamical Systems Software_ (Junior Faculty Category). You can read the winner tutorial (PDF format) in the [tutorials](tutorials/tutorial_dsweb.pdf) folder.
 
-## How to cite
-If you use this package in your publications please cite the package as follows:
-
-Demo et al., (2018). PyDMD: Python Dynamic Mode Decomposition. Journal of Open Source Software, 3(22), 530, https://doi.org/10.21105/joss.00530
-
-Or if you use LaTeX:
-```tex
-@article{demo18pydmd,
-  Author = {Demo, Nicola and Tezzele, Marco and Rozza, Gianluigi},
-  Title = {{PyDMD: Python Dynamic Mode Decomposition}},
-  Journal = {The Journal of Open Source Software},
-  Volume = {3},
-  Number = {22},
-  Pages = {530},
-  Year = {2018},
-  Doi = {https://doi.org/10.21105/joss.00530}
-}
-```
-
-### References
+## References
 To implement the various versions of the DMD algorithm we follow these works:
 
 * Kutz, Brunton, Brunton, Proctor. *Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems*. SIAM Other Titles in Applied Mathematics, 2016. [[DOI](https://doi.org/10.1137/1.9781611974508)] [[bibitem](readme/Kutz2016_1.bib)].
@@ -163,7 +117,6 @@ To implement the various versions of the DMD algorithm we follow these works:
 ### Recent works using PyDMD
 You can find a list of the scientific works using **PyDMD** [here](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=5544023489671534143).
 
-
 ## Developers and contributors
 The main developers are 
 <p align="center">
@@ -174,13 +127,17 @@ We warmly thank all the contributors that have supported PyDMD!
 
 Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIBUTING.md) and the [Tutorials for Developers](tutorials#tutorials-for-developers) before starting to play!
 
-
 <a href="https://github.com/PyDMD/PyDMD/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=PyDMD/PyDMD" />
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
 
+### Testing
+We use `pytest` to run our unit tests. You can run the whole test suite by using the following command in the base directory of the repository:
+```bash
+pytest
+```
 
 ## Funding
 A significant part of PyDMD has been written either as a by-product for other projects people were funded for, or by people on university-funded positions. There are probably many of such projects that have led to some development of PyDMD. We are very grateful for this support!
@@ -192,7 +149,3 @@ Beyond this, PyDMD has also been supported by some dedicated projects that have 
 <p align="center">
     <img src="readme/logos_funding.png" width="800" />
 </p>
-
-## License
-
-See the [LICENSE](LICENSE.rst) file for license rights and limitations (MIT).
