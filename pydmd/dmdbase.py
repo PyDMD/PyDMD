@@ -1,11 +1,8 @@
 """
 Base module for the DMD: `fit` method must be implemented in inherited classes
 """
-from __future__ import division
-
 import pickle
 from copy import copy, deepcopy
-from os.path import splitext
 
 import numpy as np
 
