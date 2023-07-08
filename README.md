@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="http://mathlab.github.io/PyDMD/" target="_blank" >
+  <a href="http://pydmd.github.io/PyDMD/" target="_blank" >
     <img alt="Python Dynamic Mode Decomposition" src="readme/logo_PyDMD.png" width="200" />
   </a>
 </p>
@@ -19,10 +19,10 @@
     <a href="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml" target="_blank">
         <img alt="CI Status" src="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml/badge.svg">
     </a>
-    <a href="https://www.codacy.com/gh/mathLab/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Coverage">
+    <a href="https://www.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=PyDMD/PyDMD&amp;utm_campaign=Badge_Coverage">
       <img src="https://app.codacy.com/project/badge/Coverage/c36adbea2e4a44eb8c0e4505b75e8245"/>
     </a>
-    <a href="https://www.codacy.com/gh/mathLab/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Grade">
+    <a href="https://www.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=PyDMD/PyDMD&amp;utm_campaign=Badge_Grade">
       <img src="https://app.codacy.com/project/badge/Grade/c36adbea2e4a44eb8c0e4505b75e8245"/>
     </a>
 </p>
