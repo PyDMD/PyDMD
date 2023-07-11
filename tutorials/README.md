@@ -20,6 +20,7 @@ An additional PDF tutorial ([DSWeb contest winner](https://dsweb.siam.org/The-Ma
 | Tutorial12&#160;[[.ipynb](tutorial12/tutorial-12-cdmd.ipynb),&#160;[.py](tutorial12/tutorial-12-cdmd.py)]                                                                                 | cDMD for background modeling                                       | `pydmd.CDMD`          |
 | Tutorial13&#160;[[.ipynb](tutorial13/tutorial-13-subspacedmd.ipynb),&#160;[.py](tutorial13/tutorial-13-subspacedmd.py)]                                                                   | SubspaceDMD for locating eigenvalues of stochastic systems         | `pydmd.SubspaceDMD`   |
 | Tutorial14&#160;[[.ipynb](tutorial14/tutorial-14-bop-dmd.ipynb),&#160;[.py](tutorial14/tutorial-14-bop-dmd.py),&#160;[.html](http://pydmd.github.io/PyDMD/tutorial14-bop-dmd.html)]     | Comparison between Bagging-/ Optimized DMD and exact DMD | `pydmd.bopdmd`        |
+| Tutorial15&#160;[[.ipynb](tutorial15/tutorial-15-pidmd.ipynb),&#160;[.py](tutorial15/tutorial-15-pidmd.py),&#160;[.html](http://pydmd.github.io/PyDMD/tutorial15-pidmd.html)]     | Physics-informed DMD for manifold enforcement | `pydmd.pidmd`        |
 
 
 
