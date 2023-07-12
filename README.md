@@ -20,10 +20,10 @@
         <img alt="CI Status" src="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml/badge.svg">
     </a>
     <a href="https://www.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=PyDMD/PyDMD&amp;utm_campaign=Badge_Coverage" target="_blank">
-      <img src="https://app.codacy.com/project/badge/Coverage/c36adbea2e4a44eb8c0e4505b75e8245"/>
+      <img src="https://app.codacy.com/project/badge/Coverage/3d8b278a835e402c86cac9625bb4912f"/>
     </a>
-    <a href="https://www.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=PyDMD/PyDMD&amp;utm_campaign=Badge_Grade" target="_blank">
-      <img src="https://app.codacy.com/project/badge/Grade/c36adbea2e4a44eb8c0e4505b75e8245"/>
+    <a href="https://app.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade" target="_blank">
+      <img alt="Codacy Badge" src="https://app.codacy.com/project/badge/Grade/3d8b278a835e402c86cac9625bb4912f"/>
     </a>
     <a href="https://github.com/ambv/black" target="_blank">
       <img alt="black code style" src="https://img.shields.io/badge/code%20style-black-000000.svg"/>
