@@ -34,6 +34,9 @@
 </p>
 
 ## Table of contents
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/863924af608845ee834f767c82848b84)](https://app.codacy.com/gh/PyDMD/PyDMD?utm_source=github.com&utm_medium=referral&utm_content=PyDMD/PyDMD&utm_campaign=Badge_Grade)
+
 * [Description](#description)
 * [Dependencies and installation](#dependencies-and-installation)
 * [Examples and Tutorials](#examples-and-tutorials)
