@@ -103,7 +103,7 @@ class CostsDMD:
         self._amplitudes_array = None
         self._cluster_centroids = None
         self._omega_classes = None
-        self._square_frequencies = None
+        self._transform_method = None
         self._window_means_array = None
         self._non_integer_n_slide = None
 
@@ -449,19 +449,22 @@ class CostsDMD:
         return sample_slice
 
     def cluster_omega(
-        self, n_components, kmeans_kwargs=None, square_frequencies=True
+        self, n_components, kmeans_kwargs=None, transform_method=None
     ):
-
         # Reshape the omega array into a 1d array
         omega_array = self.omega_array
         n_slides = omega_array.shape[0]
         svd_rank = omega_array.shape[1]
         omega_rshp = omega_array.reshape(n_slides * svd_rank)
 
-        if square_frequencies:
-            omega_squared = (np.conj(omega_rshp) * omega_rshp).astype("float")
+        # Apply a transformation to omega to (maybe) better separate frequency bands
+        if transform_method == "squared":
+            omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
+        elif transform_method == "log10":
+            omega_transform = np.log10(np.abs(omega_array.imag.astype("float")))
         else:
-            omega_squared = np.abs(omega_rshp.imag.astype("float"))
+            transform_method = "absolute_value"
+            omega_transform = np.abs(omega_rshp.imag.astype("float"))
 
         if kmeans_kwargs is None:
             random_state = 0
@@ -470,7 +473,7 @@ class CostsDMD:
                 "random_state": random_state,
             }
         kmeans = KMeans(n_clusters=n_components, **kmeans_kwargs)
-        omega_classes = kmeans.fit_predict(np.atleast_2d(omega_squared).T)
+        omega_classes = kmeans.fit_predict(np.atleast_2d(omega_transform).T)
         omega_classes = omega_classes.reshape(n_slides, svd_rank)
         cluster_centroids = kmeans.cluster_centers_.flatten()
 
@@ -484,7 +487,7 @@ class CostsDMD:
         # Assign the results to the object.
         self._cluster_centroids = cluster_centroids
         self._omega_classes = omega_classes
-        self._square_frequencies = square_frequencies
+        self._transform_method = transform_method
         self._n_components = n_components
         self._class_values = np.unique(omega_classes)[idx]
         self._trimmed = False
@@ -492,7 +495,7 @@ class CostsDMD:
         return self
 
     def cluster_hyperparameter_sweep(
-        self, n_components_range=None, square_frequencies=False
+        self, n_components_range=None, transform_method=None
     ):
         """Performs a hyperparameter search for the number of components in the kmeans clustering."""
         if n_components_range is None:
@@ -506,42 +509,56 @@ class CostsDMD:
         n_slides = omega_array.shape[0]
         svd_rank = omega_array.shape[1]
         omega_rshp = omega_array.reshape(n_slides * svd_rank)
-        if square_frequencies:
-            omega_squared = (np.conj(omega_rshp) * omega_rshp).astype("float")
+
+        # Apply a transformation to omega to (maybe) better separate frequency bands
+        if transform_method == "squared":
+            omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
+        elif transform_method == "log10":
+            omega_transform = np.log10(np.abs(omega_array.imag.astype("float")))
         else:
-            omega_squared = np.abs(omega_rshp.imag.astype("float"))
+            omega_transform = np.abs(omega_rshp.imag.astype("float"))
 
         for nind, n in enumerate(n_components_range):
-            _ = self.cluster_omega(n_components=n, square_frequencies=False)
+            _ = self.cluster_omega(n_components=n, transform_method=False)
 
             classes_reshape = self.omega_classes.reshape(n_slides * svd_rank)
 
             score[nind] = silhouette_score(
-                np.atleast_2d(omega_squared).T, np.atleast_2d(classes_reshape).T
+                np.atleast_2d(omega_transform).T,
+                np.atleast_2d(classes_reshape).T,
             )
 
         return n_components_range[np.argmax(score)]
 
     def plot_omega_histogram(self):
-
         # Reshape the omega array into a 1d array
         omega_array = self.omega_array
         n_slides = omega_array.shape[0]
         svd_rank = omega_array.shape[1]
         omega_rshp = omega_array.reshape(n_slides * svd_rank)
 
-        if self._square_frequencies:
-            omega_squared = (np.conj(omega_rshp) * omega_rshp).astype("float")
+        hist_kwargs = {"bins": 64}
+        # Apply a transformation to omega to (maybe) better separate frequency bands
+        if self._transform_method == "squared":
+            omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
             label = "$|\omega|^{2}$"
+        elif self._transform_method == "log10":
+            omega_rshp = np.abs(omega_rshp.imag)
+            omega_transform = np.log10(np.abs(omega_array.imag.astype("float")))
+            label = "$log_{10}(|\omega|)$"
+            hist_kwargs["bins"] = np.linspace(
+                np.min(np.log10(omega_transform[omega_rshp > 0])),
+                np.max(np.log10(omega_transform[omega_rshp > 0])),
+            )
         else:
-            omega_squared = np.abs(omega_rshp.imag.astype("float"))
+            omega_transform = np.abs(omega_rshp.imag.astype("float"))
             label = "$|\omega|$"
 
         cluster_centroids = self._cluster_centroids
 
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
         fig, ax = plt.subplots(1, 1)
-        ax.hist(omega_squared, bins=64)
+        ax.hist(omega_transform, **hist_kwargs)
         ax.set_xlabel(label)
         ax.set_ylabel("Count")
         ax.set_title("$\omega$ Spectrum & k-Means Centroids")
@@ -562,11 +579,15 @@ class CostsDMD:
         svd_rank = omega_array.shape[1]
         omega_rshp = omega_array.reshape(n_slides * svd_rank)
 
-        if self._square_frequencies:
-            omega_squared = (np.conj(omega_rshp) * omega_rshp).astype("float")
+        # Apply a transformation to omega to (maybe) better separate frequency bands
+        if self._transform_method == "squared":
+            omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
             label = "$|\omega|^{2}$"
+        elif self._transform_method == "log10":
+            omega_transform = np.log10(np.abs(omega_array.imag.astype("float")))
+            label = "$log_{10}(|\omega|)$"
         else:
-            omega_squared = np.abs(omega_rshp.imag.astype("float"))
+            omega_transform = np.abs(omega_rshp.imag.astype("float"))
             label = "$|\omega|$"
 
         for ncomponent, component in enumerate(range(self._n_components)):
@@ -574,7 +595,7 @@ class CostsDMD:
                 np.mean(self.time_array, axis=1),
                 np.where(
                     self._omega_classes == component,
-                    omega_squared.reshape((n_slides, svd_rank)),
+                    omega_transform.reshape((n_slides, svd_rank)),
                     np.nan,
                 ),
                 color=colors[ncomponent % len(colors)],
@@ -691,7 +712,8 @@ class CostsDMD:
 
     def threshold_modes(self, data, xr_sep):
         """Remove frequency bands that do not contribute significantly to the magnitude of the reconstruction."""
-
+        # @ToDo: rename truncate and return the object or remove since it relies on
+        #  poorly understood thresholds.
         if not self._trimmed:
             # Remove scales that do not contribute significantly to the magnitude of the signal
             n = np.nanmedian(np.abs(xr_sep.real), axis=(1, 2))
@@ -911,7 +933,7 @@ class CostsDMD:
             },
             attrs={
                 "svd_rank": self.svd_rank,
-                "square_frequencies": self._square_frequencies,
+                "square_frequencies": self._transform_method,
                 "n_slides": self._n_slides,
                 "window_length": self._window_length,
                 "num_frequency_bands": self.n_components,
