@@ -10,8 +10,7 @@ on:
 jobs:
   export_tutorials:
   
-    permissions:
-      contents: write
+    permissions: write-all
     
     runs-on: ubuntu-latest
         
