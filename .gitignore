@@ -9,7 +9,7 @@ pydmd\.egg-info/**
 
 **/\.ipynb_checkpoints/**
 **/SegTrackv2.zip
-**/SegTractv2/**
+**/SegTrackv2/**
 
 # Vscode
 .vscode/**
