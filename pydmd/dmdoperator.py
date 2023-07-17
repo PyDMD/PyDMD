@@ -90,10 +90,8 @@ class DMDOperator:
                 msg = "Casting atilde from np.complex256 to np.complex128"
                 logging.info(msg)
 
-        if (isinstance(self._rescale_mode, str) and
-                self._rescale_mode == "auto"):
+        if isinstance(self._rescale_mode, str) and self._rescale_mode == "auto":
             self._rescale_mode = s
-
 
         self._Atilde = atilde
         self._compute_eigenquantities()
