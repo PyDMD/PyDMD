@@ -9,6 +9,10 @@ on:
 
 jobs:
   export_tutorials:
+  
+    permissions:
+      contents: write
+    
     runs-on: ubuntu-latest
         
     steps:
