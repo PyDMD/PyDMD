@@ -13,7 +13,7 @@
 #
 # First we will download the data, [SegTrackV2](https://web.engr.oregonstate.edu/~lif/SegTrack2/dataset.html) from Oregon State. This is an older binary segmentation dataset that offers a good test bed for this method. This cell could take some seconds to execute since it downloads and unzips a compressed file of size 200MB.
 
-# In[ ]:
+# In[1]:
 
 
 import os
@@ -29,7 +29,7 @@ else:
     print("Data already present")
 
 
-# In[ ]:
+# In[2]:
 
 
 from pydmd import CDMD, DMD
@@ -53,7 +53,7 @@ from typing import Tuple
 
 # We peak at the data to examine the amount of frames per object video. Note that the videos with small number frames will most likely have poor results. It is recommended to use the 'Frog' and 'Worm' videos.
 
-# In[ ]:
+# In[3]:
 
 
 videos = sorted(os.listdir("SegTrackv2/JPEGImages"))[1:]
@@ -74,7 +74,7 @@ df = df[df.Name.isin(valid)]
 display(df)
 
 
-# In[ ]:
+# In[4]:
 
 
 OBJ = "frog"  # Change this to desired object
@@ -84,7 +84,7 @@ assert OBJ in df["Name"].to_list(), "Object not found in dataset"
 # ## Methods needed for the tutorial
 # Below we define (and comment) some methods which we're going to use later on.
 
-# In[ ]:
+# In[5]:
 
 
 def get_video_dmd(
@@ -447,7 +447,7 @@ def play_video_removed(
 #
 # The parameter `interval` is the delay (in ms) between frames. For shorter videos, use a higher interval.
 
-# In[ ]:
+# In[6]:
 
 
 """
@@ -457,7 +457,7 @@ change interval based on video size
 play_video(OBJ, interval=10)
 
 
-# In[ ]:
+# In[7]:
 
 
 # show gt video
@@ -470,7 +470,7 @@ play_gt_video(OBJ, interval=10)
 #
 # Recall that each column of our matrix will be a frame in the video and unless we have a long video, the system will be overdetermined. Note that in the paper the authors use an optimization scheme to decide on the number of modes; we are going to choose it emprically.
 
-# In[ ]:
+# In[8]:
 
 
 use_noise = False
@@ -479,7 +479,7 @@ video, shape = get_video_dmd(OBJ, use_noise, noise)  # get video
 print(f"Condition number of video matrix is {np.linalg.cond(video): .3f}")
 
 
-# In[ ]:
+# In[9]:
 
 
 comp = True  # use compressed DMD
@@ -494,7 +494,7 @@ else:
     dmd = DMD(svd_rank=svd_rank, opt=optim).fit(video)
 
 
-# In[ ]:
+# In[10]:
 
 
 modes = dmd.reconstructed_data.T.reshape(video.shape[1], shape[0], shape[1])
@@ -506,7 +506,7 @@ modes = np.abs(modes)  # deal with complex values
 bg = np.zeros_like(modes[0, :, :])
 
 
-# In[ ]:
+# In[11]:
 
 
 fig, axes = plt.subplots(5, 5, figsize=(16, 16))
@@ -528,7 +528,7 @@ plt.show()
 
 # We plot the background:
 
-# In[ ]:
+# In[12]:
 
 
 bg /= K
@@ -539,7 +539,7 @@ plt.show()
 
 # And an example frame:
 
-# In[ ]:
+# In[13]:
 
 
 tmp = get_video(OBJ)
@@ -556,7 +556,7 @@ plt.show()
 #
 # We can also visualize the eigenvalues, modes, and dynamics of our video computed from DMD.
 
-# In[ ]:
+# In[14]:
 
 
 video_removed = get_video_removed(tmp, bg).clip(0, 1)
@@ -567,7 +567,7 @@ video_removed.shape, gt.shape
 
 # We compute `mIoU` and `F1` as a function of threshold value, takes a bit to run.
 
-# In[ ]:
+# In[15]:
 
 
 thresholds = np.linspace(0, 1, 10)
@@ -581,7 +581,7 @@ for thresh in thresholds:
 
 # We plot the results:
 
-# In[ ]:
+# In[16]:
 
 
 plt.figure(figsize=(20, 5))
@@ -605,7 +605,7 @@ plt.show()
 
 # We now plot the video with the background removed. You can try playing with the threshold, keep in mind that it shoud remain inside $[0,1]$:
 
-# In[ ]:
+# In[17]:
 
 
 # show binary output or not, if False thresh doesn't matter
@@ -615,7 +615,7 @@ play_video_removed(bg, OBJ, mask=use_mask, thresh=0.03)
 
 # We print the distances from the unit circle of the first 6 eigenvalues in `dmd.eigs`, and plot all.
 
-# In[ ]:
+# In[18]:
 
 
 for idx, eig in enumerate(dmd.eigs[:6]):
@@ -628,7 +628,7 @@ plot_eigs(dmd, show_axes=True, show_unit_circle=True)
 
 # We also plot the first 6 modes and dynamics. The modes are hard to disentangle when SVD rank is larger than 3 but we can see the slow varying dynamic, which is our background mode!
 
-# In[ ]:
+# In[19]:
 
 
 plt.figure(figsize=(20, 8))

@@ -11,8 +11,7 @@ from numpy.fft import fft, ifft, fft2
 from scipy import sparse
 from scipy.linalg import block_diag, rq
 
-from .utils import compute_svd
-from .rdmd import compute_rank
+from .utils import compute_svd, compute_rank
 
 
 def compute_unitary(X, Y, svd_rank):
@@ -111,14 +110,14 @@ def compute_symmetric(X, Y, svd_rank, skew_symmetric=False):
     C = np.linalg.multi_dot([U.conj().T, Y, V])
     r = compute_rank(X, svd_rank)
     if skew_symmetric:
-        atilde = 1j * np.diag(np.diagonal(C).imag / s)
+        atilde = 1j * np.diag(np.diagonal(C).imag / s)[:r, :r]
         for i in range(r):
             for j in range(i + 1, r):
                 atilde[i, j] = -s[i] * np.conj(C[j, i]) + s[j] * C[i, j]
                 atilde[i, j] /= s[i] ** 2 + s[j] ** 2
         atilde += -atilde.conj().T - 1j * np.diag(np.diag(atilde.imag))
     else:  # symmetric
-        atilde = np.diag(np.diagonal(C).real / s)
+        atilde = np.diag(np.diagonal(C).real / s)[:r, :r]
         for i in range(r):
             for j in range(i + 1, r):
                 atilde[i, j] = s[i] * np.conj(C[j, i]) + s[j] * C[i, j]
