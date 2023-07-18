@@ -134,6 +134,22 @@ class CostsDMD:
         return self._svd_rank
 
     @property
+    def window_length(self):
+        """
+        :return: the length of the windows used for this decomposition level.
+        :rtype: int or float
+        """
+        return self._window_length
+
+    @property
+    def n_slides(self):
+        """
+        :return: number of window slides for this decomposition level.
+        :rtype: int
+        """
+        return self._n_slides
+
+    @property
     def modes_array(self):
         if not hasattr(self, "_modes_array"):
             raise ValueError("You need to call fit before")
