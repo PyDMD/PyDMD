@@ -241,7 +241,7 @@ class PiDMD(DMD):
         - "uppertriangular"
         - "lowertriangular"
         - "diagonal"
-        - "symmetric",
+        - "symmetric"
         - "skewsymmetric"
         - "toeplitz"
         - "hankel"

@@ -20,10 +20,10 @@
         <img alt="CI Status" src="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml/badge.svg">
     </a>
     <a href="https://www.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=PyDMD/PyDMD&amp;utm_campaign=Badge_Coverage" target="_blank">
-      <img src="https://app.codacy.com/project/badge/Coverage/c36adbea2e4a44eb8c0e4505b75e8245"/>
+      <img src="https://app.codacy.com/project/badge/Coverage/3d8b278a835e402c86cac9625bb4912f"/>
     </a>
-    <a href="https://www.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=PyDMD/PyDMD&amp;utm_campaign=Badge_Grade" target="_blank">
-      <img src="https://app.codacy.com/project/badge/Grade/c36adbea2e4a44eb8c0e4505b75e8245"/>
+    <a href="https://app.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade" target="_blank">
+      <img alt="Codacy Badge" src="https://app.codacy.com/project/badge/Grade/3d8b278a835e402c86cac9625bb4912f"/>
     </a>
     <a href="https://github.com/ambv/black" target="_blank">
       <img alt="black code style" src="https://img.shields.io/badge/code%20style-black-000000.svg"/>
@@ -43,6 +43,7 @@
 * [Funding](#funding)
 
 ## Description
+
 **PyDMD** is a Python package designed for **Dynamic Mode Decomposition (DMD)**, a data-driven method used for analyzing and extracting spatiotemporal coherent structures from time-varying datasets. It provides a comprehensive and user-friendly interface for performing DMD analysis, making it a valuable tool for researchers, engineers, and data scientists working in various fields.
 
 With PyDMD, users can easily decompose complex, high-dimensional datasets into a set of coherent spatial and temporal modes, capturing the underlying dynamics and extracting important features. The package implements both standard DMD algorithms and advanced variations, enabling users to choose the most suitable method for their specific needs. These extensions allow to deal with noisy data, big dataset, control variables, or to impose physical structures.
