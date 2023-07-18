@@ -181,3 +181,63 @@ def test_compute_A():
     np.testing.assert_array_equal(bopdmd_with_A.atilde, bopdmd_no_A.atilde)
     np.testing.assert_array_equal(bopdmd_with_A.modes, bopdmd_no_A.modes)
     np.testing.assert_array_equal(bopdmd_with_A.eigs, bopdmd_no_A.eigs)
+
+
+def test_eig_constraints_errors():
+    """
+    Tests that the BOPDMD module correctly throws an error upon initialization
+    in each of the following cases:
+    - eig_constraints is a string rather than a set of strings
+    - eig_constraints contains an invalid constraint argument
+        (either alone or along with another constraint argument)
+    - eig_constraints contains the invalid combination "stable"+"imag"
+        (either alone or along with the extra argument "conjugate_pairs")
+    """
+    with raises(ValueError):
+        bopdmd = BOPDMD(eig_constraints="stable")
+
+    with raises(ValueError):
+        bopdmd = BOPDMD(eig_constraints={"stablee"})
+
+    with raises(ValueError):
+        bopdmd = BOPDMD(eig_constraints={"stablee", "imag"})
+
+    with raises(ValueError):
+        bopdmd = BOPDMD(eig_constraints={"stable", "imag"})
+
+    with raises(ValueError):
+        bopdmd = BOPDMD(eig_constraints={"stable", "imag", "conjugate_pairs"})
+
+
+def test_eig_constraints():
+    """
+    Tests that the BOPDMD module correctly enforces that eigenvalues...
+    - lie in the left half plane when eig_constraints contains "stable".
+    - lie on the imaginary axis when eig_constraints contains "imag".
+    - are present with their complex conjugate when eig_constraints
+        contains "conjugate_pairs".
+    Eigenvalue constraint combinations are also tested.
+    """
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints={"stable"})
+    bopdmd.fit(Z, t)
+    assert np.all(bopdmd.eigs.real <= 0.0)
+
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints={"imag"})
+    bopdmd.fit(Z, t)
+    assert np.all(bopdmd.eigs.real == 0.0)
+
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints={"conjugate_pairs"})
+    bopdmd.fit(Z, t)
+    assert bopdmd.eigs[0].real == bopdmd.eigs[1].real
+    assert bopdmd.eigs[0].imag == -bopdmd.eigs[1].imag
+
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints={"stable", "conjugate_pairs"})
+    bopdmd.fit(Z, t)
+    assert np.all(bopdmd.eigs.real <= 0.0)
+    assert bopdmd.eigs[0].real == bopdmd.eigs[1].real
+    assert bopdmd.eigs[0].imag == -bopdmd.eigs[1].imag
+
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints={"imag", "conjugate_pairs"})
+    bopdmd.fit(Z, t)
+    assert np.all(bopdmd.eigs.real == 0.0)
+    assert bopdmd.eigs[0].imag == -bopdmd.eigs[1].imag
