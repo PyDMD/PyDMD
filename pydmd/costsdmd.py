@@ -1,6 +1,6 @@
 import numpy as np
 from pydmd.bopdmd import BOPDMD
-from .utils import compute_rank
+from .utils import compute_rank, compute_svd
 import scipy
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
@@ -184,8 +184,9 @@ class CostsDMD:
     def _build_proj_basis(self, data, svd_rank=None):
         self._svd_rank = compute_rank(data, svd_rank=svd_rank)
         # Recover the first r modes of the global svd
-        u, _, _ = scipy.linalg.svd(data, full_matrices=False)
-        return u[:, : self._svd_rank]
+        # u, _, _ = scipy.linalg.svd(data, full_matrices=False)
+        u, _, _ = compute_svd(data, svd_rank=svd_rank)
+        return u
 
     def _build_initizialization(self):
         """Method for making initial guess of DMD eigenvalues."""
