@@ -1,5 +1,6 @@
 import numpy as np
 from pydmd.bopdmd import BOPDMD
+from .utils import compute_rank
 import scipy
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
@@ -180,28 +181,8 @@ class CostsDMD:
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._omega_classes
 
-    def _compute_svd_rank(self, data, svd_rank=None):
-        def omega(x):
-            return 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
-
-        U, s, _ = np.linalg.svd(data, full_matrices=False)
-
-        if svd_rank == 0:
-            beta = np.divide(*sorted(data.shape))
-            tau = np.median(s) * omega(beta)
-            svd_rank = np.sum(s > tau)
-        elif 0 < svd_rank < 1:
-            cumulative_energy = np.cumsum(s**2 / (s**2).sum())
-            svd_rank = np.searchsorted(cumulative_energy, svd_rank) + 1
-        elif svd_rank >= 1 and isinstance(svd_rank, (int, np.integer)):
-            svd_rank = min(svd_rank, self._n_data_vars)
-        else:
-            svd_rank = self._n_data_vars
-
-        return svd_rank
-
     def _build_proj_basis(self, data, svd_rank=None):
-        self._svd_rank = self._compute_svd_rank(data, svd_rank=svd_rank)
+        self._svd_rank = compute_rank(data, svd_rank=svd_rank)
         # Recover the first r modes of the global svd
         u, _, _ = scipy.linalg.svd(data, full_matrices=False)
         return u[:, : self._svd_rank]
@@ -320,9 +301,7 @@ class CostsDMD:
             self._pydmd_kwargs["use_proj"] = self._pydmd_kwargs.get(
                 "use_proj", False
             )
-            self._svd_rank = self._compute_svd_rank(
-                data, svd_rank=self._svd_rank
-            )
+            self._svd_rank = compute_rank(data, svd_rank=self._svd_rank)
             svd_rank_pre_allocate = self._svd_rank
         elif not self._global_svd and self._svd_rank > 0:
             if self._force_even_eigs and self._svd_rank % 2:
@@ -333,9 +312,7 @@ class CostsDMD:
                 raise ValueError(
                     "Rank is larger than the data spatial dimension."
                 )
-            svd_rank_pre_allocate = self._compute_svd_rank(
-                data, svd_rank=self._svd_rank
-            )
+            svd_rank_pre_allocate = compute_rank(data, svd_rank=self._svd_rank)
         # If not using a global svd or a specified svd_rank, local u from each window is
         # used instead. The optimal svd_rank may change when using the locally optimal
         # svd_rank. To deal with this situation in the pre-allocation we give the
@@ -399,9 +376,7 @@ class CostsDMD:
             if not self._global_svd:
                 # Get the svd rank for this window. Uses rank truncation when svd_rank is
                 # not fixed, i.e. svd_rank = 0, otherwise uses the specified rank.
-                _svd_rank = self._compute_svd_rank(
-                    data_window, svd_rank=self._svd_rank
-                )
+                _svd_rank = compute_rank(data_window, svd_rank=self._svd_rank)
                 # Force svd rank to be even to allow for conjugate pairs.
                 if self._force_even_eigs and _svd_rank % 2:
                     _svd_rank += 1
