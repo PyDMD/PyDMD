@@ -60,10 +60,10 @@ class BOPDMDOperator(DMDOperator):
         variance.
     :type eig_sort: {"real", "imag", "abs", "auto"}
     :param eig_constraints: Set containing desired DMD operator eigenvalue
-        constraints. Currently available constraints are "stable", which
+        constraints. Currently available constraints are `"stable"`, which
         constrains eigenvalues to the left half of the complex plane,
-        "imag", which constrains eigenvalues to the imaginary axis, and
-        "conjugate_pairs", which enforces that eigenvalues are always
+        `"imag"`, which constrains eigenvalues to the imaginary axis, and
+        `"conjugate_pairs"`, which enforces that eigenvalues are always
         present with their complex conjugate. Note that constraints may be
         combined if valid.
     :type eig_constraints: set(str)
@@ -814,10 +814,10 @@ class BOPDMD(DMDBase):
         variance. Default is "auto".
     :type eig_sort: {"real", "imag", "abs", "auto"}
     :param eig_constraints: Set containing desired DMD operator eigenvalue
-        constraints. Currently available constraints are "stable", which
+        constraints. Currently available constraints are `"stable"`, which
         constrains eigenvalues to the left half of the complex plane,
-        "imag", which constrains eigenvalues to the imaginary axis, and
-        "conjugate_pairs", which enforces that eigenvalues are always
+        `"imag"`, which constrains eigenvalues to the imaginary axis, and
+        `"conjugate_pairs"`, which enforces that eigenvalues are always
         present with their complex conjugate. Note that constraints may be
         combined if valid.
     :type eig_constraints: set(str)
