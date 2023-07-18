@@ -329,6 +329,10 @@ class CostsDMD:
                 raise ValueError(
                     "svd_rank is odd, but force_even_eigs is True."
                 )
+            if self._svd_rank > self._n_data_vars:
+                raise ValueError(
+                    "Rank is larger than the data spatial dimension."
+                )
             svd_rank_pre_allocate = self._compute_svd_rank(
                 data, svd_rank=self._svd_rank
             )
