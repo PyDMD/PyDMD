@@ -64,7 +64,7 @@ class BOPDMDOperator(DMDOperator):
         constrains eigenvalues to the left half of the complex plane,
         "imag", which constrains eigenvalues to the imaginary axis, and
         "conjugate_pairs", which enforces that eigenvalues are always
-        present with their complex conugate. Note that constraints may be
+        present with their complex conjugate. Note that constraints may be
         combined if valid.
     :type eig_constraints: set(str)
     :param init_lambda: Initial value used for the regularization parameter in
@@ -818,7 +818,7 @@ class BOPDMD(DMDBase):
         constrains eigenvalues to the left half of the complex plane,
         "imag", which constrains eigenvalues to the imaginary axis, and
         "conjugate_pairs", which enforces that eigenvalues are always
-        present with their complex conugate. Note that constraints may be
+        present with their complex conjugate. Note that constraints may be
         combined if valid.
     :type eig_constraints: set(str)
     :param varpro_opts_dict: Dictionary containing the desired parameter values
