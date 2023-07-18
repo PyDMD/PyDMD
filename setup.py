@@ -15,7 +15,7 @@ KEYWORDS = "dynamic-mode-decomposition dmd"
 
 REQUIRED = ["numpy", "scipy", "matplotlib"]
 EXTRAS_REQUIRE = {
-    "costs": ["scikit-learn", "xarray"],
+    "costs": ["scikit-learn", "xarray", "h5netcdf"],
 }
 
 EXTRAS = {
