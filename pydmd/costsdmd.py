@@ -913,7 +913,7 @@ class CostsDMD:
             },
             attrs={
                 "svd_rank": self.svd_rank,
-                "square_frequencies": self._transform_method,
+                "omega_transformation": self._transform_method,
                 "n_slides": self._n_slides,
                 "window_length": self._window_length,
                 "num_frequency_bands": self.n_components,
