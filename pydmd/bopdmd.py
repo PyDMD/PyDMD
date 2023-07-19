@@ -1182,7 +1182,7 @@ class BOPDMD(DMDBase):
     def forecast(self, t):
         """
         Predict the output X given the input time t using the fitted DMD model.
-        If model has been fitted using multiple enssembles, an average
+        If model has been fitted using multiple ensembles, an average
         prediction and its variance is returned.
 
         :param t: the input time vector.
