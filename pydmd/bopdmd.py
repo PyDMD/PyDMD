@@ -275,8 +275,8 @@ class BOPDMDOperator(DMDOperator):
                 new_eigs.append(eigenvalues_sorted[ind_single].real)
                 eigenvalues_sorted = np.delete(eigenvalues_sorted, ind_single)
             for i in range(num_pair):
-                eig1 = eigenvalues_sorted[2*i]
-                eig2 = eigenvalues_sorted[2*i+1]
+                eig1 = eigenvalues_sorted[2 * i]
+                eig2 = eigenvalues_sorted[2 * i + 1]
                 real_comp = (eig1.real + eig2.real) / 2
                 imag_comp = (abs(eig1.imag) + abs(eig2.imag)) / 2
                 new_eigs.append(real_comp + 1j * imag_comp)
