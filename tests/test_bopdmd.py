@@ -194,19 +194,19 @@ def test_eig_constraints_errors():
         (either alone or along with the extra argument "conjugate_pairs")
     """
     with raises(ValueError):
-        bopdmd = BOPDMD(eig_constraints="stable")
+        BOPDMD(eig_constraints="stable")
 
     with raises(ValueError):
-        bopdmd = BOPDMD(eig_constraints={"stablee"})
+        BOPDMD(eig_constraints={"stablee"})
 
     with raises(ValueError):
-        bopdmd = BOPDMD(eig_constraints={"stablee", "imag"})
+        BOPDMD(eig_constraints={"stablee", "imag"})
 
     with raises(ValueError):
-        bopdmd = BOPDMD(eig_constraints={"stable", "imag"})
+        BOPDMD(eig_constraints={"stable", "imag"})
 
     with raises(ValueError):
-        bopdmd = BOPDMD(eig_constraints={"stable", "imag", "conjugate_pairs"})
+        BOPDMD(eig_constraints={"stable", "imag", "conjugate_pairs"})
 
 
 def test_eig_constraints():
