@@ -862,11 +862,10 @@ class BOPDMD(DMDBase):
             self._varpro_opts_dict = varpro_opts_dict
 
         if eig_constraints is None:
-            self._eig_constraints = set()
+            eig_constraints = set()
         elif not isinstance(eig_constraints, set):
             raise ValueError("eig_constraints must be a set.")
-        else:
-            self._eig_constraints = eig_constraints
+        self._eig_constraints = eig_constraints
         self._check_eig_constraints()
 
         self._snapshots_holder = None
