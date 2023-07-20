@@ -5,32 +5,38 @@
 </p>
 <p align="center">
     <a href="http://pydmd.github.io/PyDMD" target="_blank">
-        <img alt="Docs" src="https://img.shields.io/badge/PyDMD-docs-blue"/>
+        <img alt="Docs" src="https://img.shields.io/badge/PyDMD-docs-blue?style=for-the-badge"/>
     </a>
     <a href="https://doi.org/10.21105/joss.00530" target="_blank">
-        <img alt="JOSS DOI" src="http://joss.theoj.org/papers/10.21105/joss.00530/status.svg">
+        <img alt="JOSS DOI" src="https://img.shields.io/badge/JOSS-10.21105/joss.00530-blue?style=for-the-badge">
     </a>
     <a href="https://github.com/PyDMD/PyDMD/blob/master/LICENSE" target="_blank">
-        <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square">
+        <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge">
     </a>
-    <a href="https://badge.fury.io/py/pydmd"  target="_blank">
-        <img alt="PyPI version" src="https://badge.fury.io/py/pydmd.svg">
+    <a href="https://pypi.org/project/pydmd/"  target="_blank">
+        <img alt="PyPI version" src="https://img.shields.io/pypi/v/pydmd?style=for-the-badge">
     </a>
+    <br>
     <a href="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml" target="_blank">
-        <img alt="CI Status" src="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml/badge.svg">
+        <img alt="CI Status" src="https://img.shields.io/github/actions/workflow/status/PyDMD/PyDMD/deploy_after_push.yml?style=for-the-badge">
     </a>
     <a href="https://www.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=PyDMD/PyDMD&amp;utm_campaign=Badge_Coverage" target="_blank">
-      <img src="https://app.codacy.com/project/badge/Coverage/3d8b278a835e402c86cac9625bb4912f"/>
+      <img src="https://img.shields.io/codacy/coverage/3d8b278a835e402c86cac9625bb4912f/master?style=for-the-badge"/>
     </a>
     <a href="https://app.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade" target="_blank">
-      <img alt="Codacy Badge" src="https://app.codacy.com/project/badge/Grade/3d8b278a835e402c86cac9625bb4912f"/>
+      <img alt="Codacy Badge" src="https://img.shields.io/codacy/grade/3d8b278a835e402c86cac9625bb4912f?style=for-the-badge"/>
     </a>
     <a href="https://github.com/ambv/black" target="_blank">
-      <img alt="black code style" src="https://img.shields.io/badge/code%20style-black-000000.svg"/>
+      <img alt="black code style" src="https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge"/>
     </a>
+    <br>
     <a href="#developers-and-contributors">
-      <img alt="All Contributors" src="https://img.shields.io/badge/all_contributors-24-orange.svg"/>
+      <img alt="All Contributors" src="https://img.shields.io/badge/all_contributors-24-orange.svg?style=for-the-badge"/>
     </a>
+    <a href="#stargazers">
+      <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/PyDMD/PyDMD?style=for-the-badge">
+    </a>
+
 </p>
 
 ## Table of contents
