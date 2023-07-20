@@ -852,7 +852,6 @@ class BOPDMD(DMDBase):
         self._num_trials = num_trials
         self._trial_size = trial_size
         self._eig_sort = eig_sort
-        self._eig_constraints = eig_constraints
 
         if varpro_opts_dict is None:
             self._varpro_opts_dict = {}
