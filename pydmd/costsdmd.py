@@ -756,6 +756,8 @@ class CostsDMD:
         plot_residual=False,
         fig_kwargs=None,
         plot_kwargs=None,
+        hf_plot_kwargs=None,
+        plot_contours=False,
     ):
         """Plot the scale-separated low and high frequency bands."""
         if scale_reconstruction_kwargs is None:
@@ -777,7 +779,17 @@ class CostsDMD:
             plot_kwargs = {}
         plot_kwargs["vmin"] = plot_kwargs.get("vmin", -np.abs(data).max())
         plot_kwargs["vmax"] = plot_kwargs.get("vmax", np.abs(data).max())
-        plot_kwargs["cmap"] = plot_kwargs.get("cmap", "RdBu_r")
+        plot_kwargs["cmap"] = plot_kwargs.get("cmap", "cividis")
+
+        if hf_plot_kwargs is None:
+            hf_plot_kwargs = {}
+        hf_plot_kwargs["vmin"] = hf_plot_kwargs.get(
+            "vmin", -np.abs(xr_high_frequency).max()
+        )
+        hf_plot_kwargs["vmax"] = hf_plot_kwargs.get(
+            "vmax", np.abs(xr_high_frequency).max()
+        )
+        hf_plot_kwargs["cmap"] = hf_plot_kwargs.get("cmap", "RdBu_r")
 
         if plot_residual:
             fig, axes = plt.subplots(4, 1, **fig_kwargs)
@@ -786,6 +798,8 @@ class CostsDMD:
 
         ax = axes[0]
         ax.pcolormesh(data, **plot_kwargs)
+        if plot_contours:
+            ax.contour(data, colors=["k"])
         ax.set_title(
             "Input Data at decomposition window length = {}".format(
                 self._window_length
@@ -794,23 +808,27 @@ class CostsDMD:
         ax = axes[1]
         ax.set_title("Reconstruction, low frequency")
         ax.pcolormesh(xr_low_frequency, **plot_kwargs)
+        if plot_contours:
+            ax.contour(data, colors=["k"])
         ax.set_ylabel("Space (-)")
 
         ax = axes[2]
         ax.set_title("Reconstruction, high frequency")
-        ax.pcolormesh(xr_high_frequency, **plot_kwargs)
+        ax.pcolormesh(xr_high_frequency, **hf_plot_kwargs)
         ax.set_ylabel("Space (-)")
 
         if plot_residual:
             ax = axes[3]
             ax.set_title("Residual")
             ax.pcolormesh(
-                data - xr_high_frequency - xr_low_frequency, **plot_kwargs
+                data - xr_high_frequency - xr_low_frequency, **hf_plot_kwargs
             )
             ax.set_ylabel("Space (-)")
 
         axes[-1].set_xlabel("Time (-)")
         fig.tight_layout()
+
+        return fig, axes
 
     def plot_reconstructions(
         self,
@@ -820,6 +838,8 @@ class CostsDMD:
         plot_residual=False,
         fig_kwargs=None,
         plot_kwargs=None,
+        hf_plot_kwargs=None,
+        plot_contours=False,
     ):
         if scale_reconstruction_kwargs is None:
             scale_reconstruction_kwargs = {}
@@ -833,20 +853,40 @@ class CostsDMD:
             "figsize", (6, 1.5 * len(self._cluster_centroids) + 1)
         )
 
+        # Low frequency and input data often require separate plotting parameters.
         if plot_kwargs is None:
             plot_kwargs = {}
         plot_kwargs["vmin"] = plot_kwargs.get("vmin", -np.abs(data).max())
         plot_kwargs["vmax"] = plot_kwargs.get("vmax", np.abs(data).max())
-        plot_kwargs["cmap"] = plot_kwargs.get("cmap", "RdBu_r")
+        plot_kwargs["cmap"] = plot_kwargs.get("cmap", "cividis")
 
+        # High frequency components often require separate plotting parameters.
+        if hf_plot_kwargs is None:
+            hf_plot_kwargs = {}
+        hf_plot_kwargs["vmin"] = hf_plot_kwargs.get(
+            "vmin", -np.abs(xr_sep[1:, :, :]).max()
+        )
+        hf_plot_kwargs["vmax"] = hf_plot_kwargs.get(
+            "vmax", np.abs(xr_sep[1:, :, :]).max()
+        )
+        hf_plot_kwargs["cmap"] = hf_plot_kwargs.get("cmap", "RdBu_r")
+
+        # Determine the number of plotting elements, which changes depending on if the
+        # residual is included.
+        if plot_residual:
+            num_plot_elements = len(self._cluster_centroids) + 2
+        else:
+            num_plot_elements = len(self._cluster_centroids) + 1
         fig, axes = plt.subplots(
-            len(self._cluster_centroids) + 1,
+            num_plot_elements,
             1,
             **fig_kwargs,
         )
 
         ax = axes[0]
         ax.pcolormesh(data.real, **plot_kwargs)
+        if plot_contours:
+            ax.contour(data.real, colors=["k"])
         ax.set_ylabel("Space (-)")
         ax.set_xlabel("Time (-)")
         ax.set_title(
@@ -864,14 +904,19 @@ class CostsDMD:
 
             ax = axes[n_cluster + 1]
             xr_scale = xr_sep[n_cluster, :, :]
-            ax.pcolormesh(xr_scale, **plot_kwargs)
+            if n_cluster == 0:
+                ax.pcolormesh(xr_scale, **plot_kwargs)
+                if plot_contours:
+                    ax.contour(xr_scale, colors=["k"])
+            else:
+                ax.pcolormesh(xr_scale, **hf_plot_kwargs)
             ax.set_ylabel("Space (-)")
             ax.set_title(title.format(x))
 
         if plot_residual:
             ax = axes[-1]
             ax.set_title("Residual")
-            ax.pcolormesh(data - xr_sep.sum(axis=0), **plot_kwargs)
+            ax.pcolormesh(data - xr_sep.sum(axis=0), **hf_plot_kwargs)
             ax.set_ylabel("Space (-)")
 
         axes[-1].set_xlabel("Time (-)")
