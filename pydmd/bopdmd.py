@@ -594,8 +594,9 @@ class BOPDMDOperator(DMDOperator):
             # Update termination status and terminate if converged or stalled.
             converged = error < tol
             error_reduction = all_error[itr - 1] - all_error[itr]
-            stalled = ((itr > 0) and
-                       (error_reduction < eps_stall * all_error[itr - 1]))
+            stalled = (itr > 0) and (
+                error_reduction < eps_stall * all_error[itr - 1]
+            )
 
             if converged:
                 if verbose:
