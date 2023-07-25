@@ -277,6 +277,15 @@ class CostsDMD:
 
         return lv_kern
 
+    @staticmethod
+    def build_kern(window_length):
+        recon_filter_sd = window_length / 8
+        recon_filter = np.exp(
+            -((np.arange(window_length) - (window_length + 1) / 2) ** 2)
+            / recon_filter_sd**2
+        )
+        return recon_filter
+
     def _data_shape(self, data):
         n_time_steps = np.shape(data)[1]
         n_data_vars = np.shape(data)[0]
@@ -640,14 +649,15 @@ class CostsDMD:
 
         # Convolve each windowed reconstruction with a gaussian filter.
         # Std dev of gaussian filter
-        recon_filter_sd = self._window_length / 8
-        recon_filter = np.exp(
-            -(
-                (np.arange(self._window_length) - (self._window_length + 1) / 2)
-                ** 2
-            )
-            / recon_filter_sd**2
-        )
+        recon_filter = self.build_kern(self._window_length)
+        # recon_filter_sd = self._window_length / 8
+        # recon_filter = np.exp(
+        #     -(
+        #         (np.arange(self._window_length) - (self._window_length + 1) / 2)
+        #         ** 2
+        #     )
+        #     / recon_filter_sd**2
+        # )
 
         for k in range(self._n_slides):
             w = self._modes_array[k]
@@ -707,11 +717,13 @@ class CostsDMD:
         return xr_sep
 
     def threshold_modes(self, data, xr_sep):
-        """Remove frequency bands that do not contribute significantly to the magnitude of the reconstruction."""
+        """Remove frequency bands that do not contribute significantly to the magnitude
+        of the reconstruction."""
         # @ToDo: rename truncate and return the object or remove since it relies on
         #  poorly understood thresholds.
         if not self._trimmed:
-            # Remove scales that do not contribute significantly to the magnitude of the signal
+            # Remove scales that do not contribute significantly to the magnitude of
+            # the signal
             n = np.nanmedian(np.abs(xr_sep.real), axis=(1, 2))
             magnitude_threshold = np.nanmedian(np.abs(data.real)) / 100
 
@@ -735,8 +747,9 @@ class CostsDMD:
     ):
         """Separate the lowest frequency band from the high frequency bands.
 
-        The lowest frequency band should contain the window means and can be passed on as the data for the next
-        decomposition level. The high frequencies should have frequencies shorter than 1 / window_length.
+        The lowest frequency band should contain the window means and can be passed on
+        as the data for the next decomposition level. The high frequencies should have
+        frequencies shorter than 1 / window_length.
 
         """
 
