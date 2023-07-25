@@ -1,7 +1,7 @@
 import numpy as np
 from pydmd.bopdmd import BOPDMD
 from .utils import compute_rank, compute_svd
-import scipy
+import copy
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
@@ -623,8 +623,6 @@ class CostsDMD:
         self,
         suppress_growth=True,
         include_means=True,
-        magnitude_threshold=False,
-        data=None,
     ):
         """Reconstruct the sliding mrDMD into the constituent components.
 
@@ -633,7 +631,6 @@ class CostsDMD:
         at the edge of the window. Note that this will leave the beginning
         and end of time series prone to larger errors. A best practice is
         to cut off `window_length` from each end before further analysis.
-
 
         suppress_growth:
         Kill positive real components of frequencies
@@ -650,19 +647,14 @@ class CostsDMD:
         # Convolve each windowed reconstruction with a gaussian filter.
         # Std dev of gaussian filter
         recon_filter = self.build_kern(self._window_length)
-        # recon_filter_sd = self._window_length / 8
-        # recon_filter = np.exp(
-        #     -(
-        #         (np.arange(self._window_length) - (self._window_length + 1) / 2)
-        #         ** 2
-        #     )
-        #     / recon_filter_sd**2
-        # )
 
         for k in range(self._n_slides):
+            window_indices = self.get_window_indices(k)
+
             w = self._modes_array[k]
             b = self._amplitudes_array[k]
-            omega = np.atleast_2d(self._omega_array[k]).T
+            # @ToDo: global flag for suppressing growth?
+            omega = copy.deepcopy(np.atleast_2d(self._omega_array[k]).T)
             classification = self._omega_classes[k]
 
             if suppress_growth:
@@ -692,13 +684,6 @@ class CostsDMD:
                     xr_sep_window[j, :, :] += c
                 xr_sep_window[j, :, :] = xr_sep_window[j, :, :] * recon_filter
 
-                if k == self._n_slides - 1 and self._non_integer_n_slide:
-                    window_indices = slice(-self._window_length, None)
-                else:
-                    window_indices = slice(
-                        k * self._step_size,
-                        k * self._step_size + self._window_length,
-                    )
                 xr_sep[j, :, window_indices] = (
                     xr_sep[j, :, window_indices] + xr_sep_window[j, :, :]
                 )
@@ -706,38 +691,6 @@ class CostsDMD:
             xn[window_indices] += recon_filter
 
         xr_sep = xr_sep / xn
-
-        if magnitude_threshold:
-            if data is None:
-                raise ValueError(
-                    "The data must be provided when doing a magnitude cut-off of modes."
-                )
-            xr_sep = self.threshold_modes(data, xr_sep)
-
-        return xr_sep
-
-    def threshold_modes(self, data, xr_sep):
-        """Remove frequency bands that do not contribute significantly to the magnitude
-        of the reconstruction."""
-        # @ToDo: rename truncate and return the object or remove since it relies on
-        #  poorly understood thresholds.
-        if not self._trimmed:
-            # Remove scales that do not contribute significantly to the magnitude of
-            # the signal
-            n = np.nanmedian(np.abs(xr_sep.real), axis=(1, 2))
-            magnitude_threshold = np.nanmedian(np.abs(data.real)) / 100
-
-            # Trim frequencies bands that do not meet the magnitude threshold.
-            xr_sep = xr_sep[n > magnitude_threshold, ::]
-            self._cluster_centroids = self._cluster_centroids[
-                n > magnitude_threshold
-            ]
-            num_modes_to_keep = np.sum(n > magnitude_threshold)
-            self._class_values = self._class_values[
-                self._class_values < num_modes_to_keep
-            ]
-
-            self._trimmed = True
 
         return xr_sep
 
@@ -775,9 +728,6 @@ class CostsDMD:
         """Plot the scale-separated low and high frequency bands."""
         if scale_reconstruction_kwargs is None:
             scale_reconstruction_kwargs = {}
-        scale_reconstruction_kwargs["data"] = scale_reconstruction_kwargs.get(
-            "data", data
-        )
 
         xr_low_frequency, xr_high_frequency = self.scale_separation(
             scale_reconstruction_kwargs
