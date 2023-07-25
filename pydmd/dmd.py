@@ -46,20 +46,28 @@ class DMD(DMDBase):
     :type tikhonov_regularization: int or float
     """
 
-    def fit(self, X):
+    def fit(self, X, Y=None):
         """
         Compute the Dynamic Modes Decomposition to the input data.
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
+        :param Y: left-hand side input snapshots such that Y=AX.
+            If not provided, snapshots from X are used for the left-hand side.
+        :type Y: numpy.ndarray or iterable
         """
         self._reset()
 
         self._snapshots_holder = Snapshots(X)
 
-        n_samples = self.snapshots.shape[1]
-        X = self.snapshots[:, :-1]
-        Y = self.snapshots[:, 1:]
+        if Y is None:
+            n_samples = self.snapshots.shape[1]
+            X = self.snapshots[:, :-1]
+            Y = self.snapshots[:, 1:]
+        else:
+            self._snapshots_holder_y = Snapshots(Y)
+            X = self.snapshots
+            Y = self._snapshots_holder_y.snapshots
 
         X, Y = compute_tlsq(X, Y, self._tlsq_rank)
         self._svd_modes, _, _ = self.operator.compute_operator(X, Y)

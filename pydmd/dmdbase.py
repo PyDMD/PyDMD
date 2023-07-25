@@ -191,6 +191,7 @@ class DMDBase:
 
         self._b = None  # amplitudes
         self._snapshots_holder = None
+        self._snapshots_holder_y = None
 
         self._modes_activation_bitmask_proxy = None
 
@@ -620,6 +621,7 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         self._modes_activation_bitmask_proxy = None
         self._b = None
         self._snapshots_holder = None
+        self._snapshots_holder_y = None
 
     def save(self, fname):
         """
