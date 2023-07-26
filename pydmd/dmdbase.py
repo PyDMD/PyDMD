@@ -345,6 +345,18 @@ class DMDBase:
         return None
 
     @property
+    def snapshots_y(self):
+        """
+        Get the input left-hand side data (space flattened) if given.
+
+        :return: matrix that contains the flattened left-hand side snapshots.
+        :rtype: numpy.ndarray
+        """
+        if self._snapshots_holder_y:
+            return self._snapshots_holder_y.snapshots
+        return None
+
+    @property
     def snapshots_shape(self):
         """
         Get the original input snapshot shape.
@@ -674,13 +686,19 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
                 )
             )
         else:
-            _, s, V = compute_svd(self.snapshots[:, :-1], self.modes.shape[-1])
+            if self._snapshots_holder_y:
+                X = self.snapshots
+            else:
+                X = self.snapshots[:, :-1]
+
+            n = X.shape[1]
+            _, s, V = compute_svd(X, self.modes.shape[-1])
 
             q = np.conj(
                 np.diag(
                     np.linalg.multi_dot(
                         [
-                            vander[:, :-1],
+                            vander[:, :n],
                             V,
                             np.diag(s).conj(),
                             self.operator.eigenvectors,

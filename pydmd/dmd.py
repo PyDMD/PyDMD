@@ -52,22 +52,22 @@ class DMD(DMDBase):
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
-        :param Y: left-hand side input snapshots such that Y=AX.
-            If not provided, snapshots from X are used for the left-hand side.
+        :param Y: additional input snapshots such that Y=AX.
+            If not provided, snapshots from X are used.
         :type Y: numpy.ndarray or iterable
         """
         self._reset()
-
         self._snapshots_holder = Snapshots(X)
+        n_samples = self.snapshots.shape[1]
 
         if Y is None:
-            n_samples = self.snapshots.shape[1]
             X = self.snapshots[:, :-1]
             Y = self.snapshots[:, 1:]
         else:
             self._snapshots_holder_y = Snapshots(Y)
+            self._compare_data_shapes()
             X = self.snapshots
-            Y = self._snapshots_holder_y.snapshots
+            Y = self.snapshots_y
 
         X, Y = compute_tlsq(X, Y, self._tlsq_rank)
         self._svd_modes, _, _ = self.operator.compute_operator(X, Y)
@@ -92,3 +92,8 @@ class DMD(DMDBase):
         return np.linalg.multi_dot(
             [self.modes, np.diag(self.eigs), pinv(self.modes), X]
         )
+
+    def _compare_data_shapes(self):
+        if ((self._snapshots_holder and self._snapshots_holder_y)
+            and self.snapshots.shape != self.snapshots_y.shape):
+            raise ValueError("X and Y input data must be the same shape.")
