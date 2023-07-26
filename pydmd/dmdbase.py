@@ -691,8 +691,8 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
             else:
                 X = self.snapshots[:, :-1]
 
-            n = X.shape[1]
             _, s, V = compute_svd(X, self.modes.shape[-1])
+            n = X.shape[1]
 
             q = np.conj(
                 np.diag(
@@ -746,12 +746,14 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
 
     def _compare_data_shapes(self):
         """
-        Method that ensures that the data inputs X and Y are the same shape,
-        if provided. Throws an error if the shapes do not agree.
+        Method that ensures that the data inputs X and Y are the same shape
+        if provided separately. Throws an error if the shapes do not agree.
         """
-        if ((self._snapshots_holder and self._snapshots_holder_y)
-            and self.snapshots.shape != self.snapshots_y.shape):
+        if (self._snapshots_holder and self._snapshots_holder_y) and (
+            self.snapshots.shape != self.snapshots_y.shape
+        ):
             raise ValueError("X and Y input data must be the same shape.")
+
 
 class DMDTimeDict(dict):
     def __setitem__(self, key, value):
