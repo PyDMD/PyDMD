@@ -59,6 +59,14 @@ class BOPDMDOperator(DMDOperator):
         previously-mentioned sorting methods is chosen depending on eigenvalue
         variance.
     :type eig_sort: {"real", "imag", "abs", "auto"}
+    :param eig_constraints: Set containing desired DMD operator eigenvalue
+        constraints. Currently available constraints are `"stable"`, which
+        constrains eigenvalues to the left half of the complex plane,
+        `"imag"`, which constrains eigenvalues to the imaginary axis, and
+        `"conjugate_pairs"`, which enforces that eigenvalues are always
+        present with their complex conjugate. Note that constraints may be
+        combined if valid.
+    :type eig_constraints: set(str)
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
         Note: Larger lambda values make the method more like gradient descent.
@@ -107,6 +115,7 @@ class BOPDMDOperator(DMDOperator):
         num_trials,
         trial_size,
         eig_sort,
+        eig_constraints,
         init_lambda=1.0,
         maxlam=52,
         lamup=2.0,
@@ -124,6 +133,7 @@ class BOPDMDOperator(DMDOperator):
         self._num_trials = num_trials
         self._trial_size = trial_size
         self._eig_sort = eig_sort
+        self._eig_constraints = eig_constraints
         self._varpro_opts = (
             init_lambda,
             maxlam,
@@ -239,6 +249,48 @@ class BOPDMDOperator(DMDOperator):
                     "which is not recommended."
                 )
                 warnings.warn(msg.format(opt_name, opt_value, opt_max))
+
+    def _push_eigenvalues(self, eigenvalues):
+        """
+        Helper function that constrains the given eigenvalues according to
+        the arguments found in self._eig_constraints. If no constraints were
+        given, this function simply returns the given eigenvalues sorted
+        according to real part and then imaginary part to break ties.
+
+        :param eigenvalues: Vector of original eigenvalues.
+        :type eigenvalues: numpy.ndarray
+        :return: Vector of constrained eigenvalues.
+        :rtype: numpy.ndarray
+        """
+        if "conjugate_pairs" in self._eig_constraints:
+            eigenvalues_sorted = np.sort(eigenvalues)
+            num_eigs = len(eigenvalues)
+            num_pair = num_eigs // 2
+            new_eigs = []
+            # If given an odd number of eigenvalues, find the eigenvalue with
+            # the smallest imaginary part and take it to be a real eigenvalue.
+            if num_eigs % 2 == 1:
+                imag_magnitudes = np.abs(eigenvalues_sorted.imag)
+                ind_single = np.argmin(imag_magnitudes)
+                new_eigs.append(eigenvalues_sorted[ind_single].real)
+                eigenvalues_sorted = np.delete(eigenvalues_sorted, ind_single)
+            for i in range(num_pair):
+                eig1 = eigenvalues_sorted[2 * i]
+                eig2 = eigenvalues_sorted[2 * i + 1]
+                real_comp = (eig1.real + eig2.real) / 2
+                imag_comp = (abs(eig1.imag) + abs(eig2.imag)) / 2
+                new_eigs.append(real_comp + 1j * imag_comp)
+                new_eigs.append(real_comp - 1j * imag_comp)
+
+            eigenvalues = np.array(new_eigs)
+
+        if "stable" in self._eig_constraints:
+            right_half = eigenvalues.real > 0.0
+            eigenvalues[right_half] = 1j * eigenvalues[right_half].imag
+        elif "imag" in self._eig_constraints:
+            eigenvalues = 1j * eigenvalues.imag
+
+        return np.sort(eigenvalues)
 
     def _exp_function(self, alpha, t):
         """
@@ -421,7 +473,7 @@ class BOPDMDOperator(DMDOperator):
         # Initialize values.
         tolrank = M * np.finfo(float).eps
         _lambda = init_lambda
-        alpha = np.copy(init_alpha)
+        alpha = self._push_eigenvalues(init_alpha)
         B, residual, error = compute_residual(alpha)
         U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
@@ -483,6 +535,7 @@ class BOPDMDOperator(DMDOperator):
                 delta = delta[ij_pvt]
                 # Compute the updated alpha vector.
                 alpha_updated = alpha.ravel() + delta.ravel()
+                alpha_updated = self._push_eigenvalues(alpha_updated)
                 return delta, alpha_updated
 
             # Take a step using our initial step size init_lambda.
@@ -760,6 +813,14 @@ class BOPDMD(DMDBase):
         previously-mentioned sorting methods is chosen depending on eigenvalue
         variance. Default is "auto".
     :type eig_sort: {"real", "imag", "abs", "auto"}
+    :param eig_constraints: Set containing desired DMD operator eigenvalue
+        constraints. Currently available constraints are `"stable"`, which
+        constrains eigenvalues to the left half of the complex plane,
+        `"imag"`, which constrains eigenvalues to the imaginary axis, and
+        `"conjugate_pairs"`, which enforces that eigenvalues are always
+        present with their complex conjugate. Note that constraints may be
+        combined if valid.
+    :type eig_constraints: set(str)
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
         `init_lambda`, `maxlam`, `lamup`, `use_levmarq`, `maxiter`, `tol`,
@@ -780,6 +841,7 @@ class BOPDMD(DMDBase):
         num_trials=0,
         trial_size=0.2,
         eig_sort="auto",
+        eig_constraints=None,
         varpro_opts_dict=None,
     ):
         self._svd_rank = svd_rank
@@ -797,6 +859,13 @@ class BOPDMD(DMDBase):
             raise ValueError("varpro_opts_dict must be a dict.")
         else:
             self._varpro_opts_dict = varpro_opts_dict
+
+        if eig_constraints is None:
+            eig_constraints = set()
+        elif not isinstance(eig_constraints, set):
+            raise ValueError("eig_constraints must be a set.")
+        self._eig_constraints = eig_constraints
+        self._check_eig_constraints()
 
         self._snapshots_holder = None
         self._time = None
@@ -952,6 +1021,16 @@ class BOPDMD(DMDBase):
         """
         return self.operator.modes_std
 
+    @property
+    def eig_constraints(self):
+        """
+        Get the eigenvalue constraints.
+
+        :return: eigenvalue constraints.
+        :rtype: set(str)
+        """
+        return self._eig_constraints
+
     def print_varpro_opts(self):
         """
         Prints a formatted information string that displays all chosen
@@ -978,6 +1057,23 @@ class BOPDMD(DMDBase):
                 print(name + ":\t\t" + str(value))
             else:
                 print(name + ":\t" + str(value))
+
+    def _check_eig_constraints(self):
+        """
+        Function that verifies that the set self._eig_constraints (1) does
+        not contain an unsupported constraint class, and (2) does not contain
+        an invalid combination of eigenvalue constraints.
+        """
+        valid_constraints = {"stable", "imag", "conjugate_pairs"}
+        invalid_combos = [{"stable", "imag"}]
+
+        if len(self._eig_constraints.difference(valid_constraints)) != 0:
+            raise ValueError("Invalid eigenvalue constraint provided.")
+
+        for invalid_combo_set in invalid_combos:
+            if invalid_combo_set.issubset(self._eig_constraints):
+                msg = "Invalid eigenvalue constraint combination provided."
+                raise ValueError(msg)
 
     def _initialize_alpha(self):
         """
@@ -1074,6 +1170,7 @@ class BOPDMD(DMDBase):
             self._num_trials,
             self._trial_size,
             self._eig_sort,
+            self._eig_constraints,
             **self._varpro_opts_dict
         )
 
@@ -1091,7 +1188,7 @@ class BOPDMD(DMDBase):
     def forecast(self, t):
         """
         Predict the output X given the input time t using the fitted DMD model.
-        If model has been fitted using multiple enssembles, an average
+        If model has been fitted using multiple ensembles, an average
         prediction and its variance is returned.
 
         :param t: the input time vector.
