@@ -92,8 +92,3 @@ class DMD(DMDBase):
         return np.linalg.multi_dot(
             [self.modes, np.diag(self.eigs), pinv(self.modes), X]
         )
-
-    def _compare_data_shapes(self):
-        if ((self._snapshots_holder and self._snapshots_holder_y)
-            and self.snapshots.shape != self.snapshots_y.shape):
-            raise ValueError("X and Y input data must be the same shape.")

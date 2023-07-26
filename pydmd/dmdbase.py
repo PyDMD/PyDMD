@@ -744,6 +744,14 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
 
         return a
 
+    def _compare_data_shapes(self):
+        """
+        Method that ensures that the data inputs X and Y are the same shape,
+        if provided. Throws an error if the shapes do not agree.
+        """
+        if ((self._snapshots_holder and self._snapshots_holder_y)
+            and self.snapshots.shape != self.snapshots_y.shape):
+            raise ValueError("X and Y input data must be the same shape.")
 
 class DMDTimeDict(dict):
     def __setitem__(self, key, value):
