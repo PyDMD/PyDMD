@@ -477,6 +477,10 @@ class BOPDMDOperator(DMDOperator):
         B, residual, error = compute_residual(alpha)
         U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
+        # Initialize termination flags.
+        converged = False
+        stalled = False
+
         # Initialize storage.
         all_error = np.zeros(maxiter)
         djac_matrix = np.zeros((M * IS, IA), dtype="complex")
@@ -548,7 +552,7 @@ class BOPDMDOperator(DMDOperator):
                 0.5
                 * np.linalg.multi_dot(
                     [delta_0.conj().T, djac_matrix.conj().T, rhs_temp]
-                ).real
+                )[0].real
             )
             improvement_ratio = actual_improvement / pred_improvement
 
@@ -564,19 +568,20 @@ class BOPDMDOperator(DMDOperator):
                     B_0, residual_0, error_0 = compute_residual(alpha_0)
 
                     if error_0 < error:
-                        alpha, B = alpha_0, B_0
-                        residual, error = residual_0, error_0
                         break
 
-                # Terminate if no appropriate step length was found.
+                # Terminate if no appropriate step length was found...
                 if error_0 >= error:
                     if verbose:
                         msg = (
                             "Failed to find appropriate step length at "
                             "iteration {}. Current error {}."
                         )
-                        warnings.warn(msg.format(itr, error))
+                        print(msg.format(itr, error))
                     return B, alpha
+
+                # ...otherwise, update and proceed.
+                alpha, B, residual, error = alpha_0, B_0, residual_0, error_0
 
             # Record the current error.
             all_error[itr] = error
@@ -586,23 +591,26 @@ class BOPDMDOperator(DMDOperator):
                 update_msg = "Step {} Error {} Lambda {}"
                 print(update_msg.format(itr, error, _lambda))
 
-            # Terminate if the tolerance is met.
-            if error < tol:
+            # Update termination status and terminate if converged or stalled.
+            converged = error < tol
+            error_reduction = all_error[itr - 1] - all_error[itr]
+            stalled = (itr > 0) and (
+                error_reduction < eps_stall * all_error[itr - 1]
+            )
+
+            if converged:
+                if verbose:
+                    print("Convergence reached!")
                 return B, alpha
 
-            # Terminate if a stall is detected.
-            if (
-                itr > 0
-                and all_error[itr - 1] - all_error[itr]
-                < eps_stall * all_error[itr - 1]
-            ):
+            if stalled:
                 if verbose:
                     msg = (
                         "Stall detected: error reduced by less than {} "
                         "times the error at the previous step. "
                         "Iteration {}. Current error {}."
                     )
-                    warnings.warn(msg.format(eps_stall, itr, error))
+                    print(msg.format(eps_stall, itr, error))
                 return B, alpha
 
             U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
@@ -613,7 +621,7 @@ class BOPDMDOperator(DMDOperator):
                 "Failed to reach tolerance after maxiter = {} iterations. "
                 "Current error {}."
             )
-            warnings.warn(msg.format(maxiter, error))
+            print(msg.format(maxiter, error))
 
         return B, alpha
 
