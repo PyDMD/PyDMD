@@ -3,5 +3,5 @@ from pydmd.linalg.linalg_utils import (
     is_array,
     cast_as_array,
     assert_same_linalg_type,
-    no_torch
+    no_torch,
 )

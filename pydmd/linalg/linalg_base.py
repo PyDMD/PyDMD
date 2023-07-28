@@ -196,5 +196,3 @@ class LinalgBase:
     @classmethod
     def vander(cls, X, N, increasing):
         raise NotImplementedError
-
-

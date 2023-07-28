@@ -185,7 +185,9 @@ Expected at least d."""
 
         # Compute hankel matrix for the input data
         linalg_module = build_linalg_module(self.snapshots)
-        hankel_matrix = linalg_module.pseudo_hankel_matrix(self.snapshots, self._d)
+        hankel_matrix = linalg_module.pseudo_hankel_matrix(
+            self.snapshots, self._d
+        )
 
         # Take SVD of the hankel matrix
         # Save the resulting U, s, and V for future reconstructions

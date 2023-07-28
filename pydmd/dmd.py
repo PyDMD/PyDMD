@@ -82,9 +82,13 @@ class DMD(DMDBase):
         :rtype: numpy.ndarray
         """
         assert_same_linalg_type(X, self.modes)
-        
+
         linalg_module = build_linalg_module(X)
         return linalg_module.multi_dot(
-            (self.modes, linalg_module.diag_matrix(self.eigs),
-                linalg_module.pinv(self.modes), X)
+            (
+                self.modes,
+                linalg_module.diag_matrix(self.eigs),
+                linalg_module.pinv(self.modes),
+                X,
+            )
         )

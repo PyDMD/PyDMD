@@ -207,7 +207,7 @@ class LinalgNumPy(LinalgBase):
     @classmethod
     def to(cls, reference, *args):
         args = tuple(arg.astype(reference.dtype) for arg in args)
-        
+
         if len(args) == 1:
             return args[0]
         return args
