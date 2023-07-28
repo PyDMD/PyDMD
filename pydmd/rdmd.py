@@ -17,10 +17,10 @@ class RDMD(CDMD):
     """
     Randomized Dynamic Mode Decomposition
 
-    :param rand_mat: The random test matrix that will be used when executing
+    :param test_matrix: The random test matrix that will be used when executing
         the Randomized QB Decomposition. If not provided, the `svd_rank` and
         `oversampling` parameters will be used to compute the random matrix.
-    :type rand_mat: numpy.ndarray
+    :type test_matrix: numpy.ndarray
     :param oversampling: Number of additional samples (beyond the desired rank)
         to use when computing the random test matrix. Note that values {5,10}
         tend to be sufficient.
@@ -33,7 +33,7 @@ class RDMD(CDMD):
 
     def __init__(
         self,
-        rand_mat=None,
+        test_matrix=None,
         oversampling=10,
         power_iters=2,
         svd_rank=0,
@@ -57,7 +57,7 @@ class RDMD(CDMD):
         self._svd_rank = svd_rank
         self._oversampling = oversampling
         self._power_iters = power_iters
-        self._rand_mat = rand_mat
+        self._test_matrix = test_matrix
 
     def _compress_snapshots(self):
         """
@@ -71,14 +71,16 @@ class RDMD(CDMD):
         linalg_module = build_linalg_module(self.snapshots)
 
         # Define the random test matrix if not provided.
-        if self._rand_mat is None:
+        if self._test_matrix is None:
             m = self.snapshots.shape[-1]
             r = compute_rank(self.snapshots, self._svd_rank)
-            self._rand_mat = np.random.randn(m, r + self._oversampling)
-            self._rand_mat = linalg_module.to(self.snapshots, self._rand_mat)
+            self._test_matrix = np.random.randn(m, r + self._oversampling)
+            self._test_matrix = linalg_module.to(
+                self.snapshots, self._test_matrix
+            )
 
         # Compute sampling matrix.
-        Y = linalg_module.dot(self.snapshots, self._rand_mat)
+        Y = linalg_module.dot(self.snapshots, self._test_matrix)
 
         # Perform power iterations.
         for _ in range(self._power_iters):

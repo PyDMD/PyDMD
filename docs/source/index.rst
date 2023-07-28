@@ -11,11 +11,13 @@ Python Dynamic Mode Decomposition.
 
 Description
 --------------------
-PyDMD is a Python package that uses Dynamic Mode Decomposition for a data-driven model simplification based on spatiotemporal coherent structures.
+PyDMD PyDMD is a Python package designed for Dynamic Mode Decomposition (DMD), a data-driven method used for analyzing and extracting spatiotemporal coherent structures from time-varying datasets. It provides a comprehensive and user-friendly interface for performing DMD analysis, making it a valuable tool for researchers, engineers, and data scientists working in various fields.
 
-Dynamic Mode Decomposition (DMD) is a model reduction algorithm developed by Schmid (see "Dynamic mode decomposition of numerical and experimental data"). Since then has emerged as a powerful tool for analyzing the dynamics of nonlinear systems. DMD relies only on the high-fidelity measurements, like experimental data and numerical simulations, so it is an equation-free algorithm. Its popularity is also due to the fact that it does not make any assumptions about the underlying system. See Kutz ("Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems") for a comprehensive overview of the algorithm and its connections to the Koopman-operator analysis, initiated in Koopman ("Hamiltonian systems and transformation in Hilbert space"), along with examples in computational fluid dynamics.
+With PyDMD, users can easily decompose complex, high-dimensional datasets into a set of coherent spatial and temporal modes, capturing the underlying dynamics and extracting important features. The package implements both standard DMD algorithms and advanced variations, enabling users to choose the most suitable method for their specific needs. These extensions allow to deal with noisy data, big dataset, control variables, or to impose physical structures.
 
-In the last years many variants arose, such as multiresolution DMD, compressed DMD, forward backward DMD, higher order DMD, and physics-informed DMD among others, in order to deal with noisy data, big dataset, or spurius data for example. We implemented in Python the majority of the DMD extensions currently present in the literature with a user friendly interface. We also provide many tutorials that show all the characteristics of the software.
+PyDMD offers a seamless integration with the scientific Python ecosystem, leveraging popular libraries such as NumPy and SciPy for efficient numerical computations and data manipulation. It also offers a variety of visualization tools, including mode reconstruction, energy spectrum analysis, and time evolution plotting. These capabilities enable users to gain insights into the dominant modes of the system, identify significant features, and understand the temporal evolution of the dynamics.
+
+PyDMD promotes ease of use and customization, providing a well-documented API with intuitive function names and clear parameter descriptions. The package is actively maintained and updated, ensuring compatibility with the latest Python versions and incorporating user feedback to improve functionality and performance. We provide many tutorials showing the characteristics of the software. 
 
 .. image:: _static/pydmd_capabilities.png
    :width: 700 px
@@ -28,8 +30,7 @@ PyDMD requires requires numpy, scipy, matplotlib, future, sphinx (for the docume
 
 Installing via PIP
 ^^^^^^^^^^^^^^^^^^^^^^^^
-Mac and Linux users can install pre-built binary packages using pip.
-To install the package just type:
+PyDMD is available on PyPI, therefore you can install the latest released version with:
 ::
 
     pip install pydmd
@@ -45,17 +46,12 @@ Installing from source
 The official distribution is on GitHub, and you can clone the repository using
 ::
 
-    git clone https://github.com/mathLab/PyDMD
+    git clone https://github.com/PyDMD/PyDMD
 
 To install the package just type:
 ::
 
     pip install -e .
-
-To uninstall the package type:
-::
-
-    pip uninstall pydmd
 
 
 Developer's Guide
@@ -102,6 +98,14 @@ To implement the various versions of the DMD algorithm we follow these works:
 - Kutz, Fu, Brunton. Multiresolution Dynamic Mode Decomposition. SIAM Journal on Applied Dynamical Systems, 2016.
 - Erichson, Brunton, Kutz. Compressed dynamic mode decomposition for background modeling. Journal of Real-Time Image Processing, 2016.
 - Le Clainche, Vega. Higher Order Dynamic Mode Decomposition. Journal on Applied Dynamical Systems, 2017.
+
+
+
+Funding
+--------------------
+A significant part of PyDMD has been written either as a by-product for other projects people were funded for, or by people on university-funded positions. There are probably many of such projects that have led to some development of PyDMD. We are very grateful for this support!
+
+Beyond this, PyDMD has also been supported by some dedicated projects that have allowed us to work on extensions, documentation, training and dissemination that would otherwise not have been possible. In particular, we acknowledge the following sources of support with great gratitude: H2020 ERC CoG 2015 AROMA-CFD project 681447 (P.I. Gianluigi Rozza), and the FSE HEaD project Bulbous Bow Shape Optimization through Reduced Order Modelling.
 
 
 Indices and tables
