@@ -21,8 +21,11 @@ argument.
 - SubspaceDMD
 
 ### TODO
+
+- BOPDMD
 - HAVOK
 - OptDMD
+- PIDMD
 - SPDMD
 
 Some more refined DMD variants (e.g. `MrDMD`, `HODMD`) do not support backpropagation. This is caused
