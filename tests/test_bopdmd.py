@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.integrate import solve_ivp
+from scipy.integrate import ode
 from pytest import raises
 from pydmd.bopdmd import BOPDMD
 
