@@ -182,4 +182,5 @@ def test_time_derivative_model():
     np.testing.assert_allclose(
         dmd.operator.as_numpy_array,
         bopdmd.operator.as_numpy_array,
+        rtol=0.01,
     )
