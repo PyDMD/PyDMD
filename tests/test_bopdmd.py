@@ -4,22 +4,36 @@ from pytest import raises
 from pydmd.bopdmd import BOPDMD
 
 
+def f(t, y):
+    """
+    y'(t) = f(t, y)
+    """
+    z1, z2 = y
+    z1_prime = z1 - 2 * z2
+    z2_prime = z1 - z2
+    return np.array((z1_prime, z2_prime))
+
+
 def simulate_z(t):
     """
     Given a time vector t = t1, t2, ..., evaluates and returns the snapshots
     z(t1), z(t2), ... as columns of the matrix Z via explicit Runge-Kutta.
+
     Simulates data z given by the system of ODEs
         z' = Az
     where A = [1 -2; 1 -1] and z_0 = [1, 0.1].
     """
-
-    def ode_sys(t, z):
-        z1, z2 = z
-        return [z1 - 2 * z2, z1 - z2]
-
-    sol = solve_ivp(ode_sys, [t[0], t[-1]], [1.0, 0.1], t_eval=t)
-
-    return sol.y
+    z_0 = np.array((1.0, 0.1))
+    Z = np.empty((2, len(t)))
+    Z[:, 0] = z_0
+    r = ode(f).set_integrator("dopri5")
+    r.set_initial_value(z_0, t[0])
+    for i, t_i in enumerate(t):
+        if i == 0:
+            continue
+        r.integrate(t_i)
+        Z[:, i] = r.y
+    return Z
 
 
 def sort_imag(x):
