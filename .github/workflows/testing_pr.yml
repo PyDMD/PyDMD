@@ -73,7 +73,7 @@ jobs:
         
     - name: Run black formatter on PyDMD source code
       run: |
-        black --check pydmd/
+        black --check pydmd/ utils/ tests/ setup.py
         if [[ $? -ne "0" ]]; then
           echo "Source code needs re-formatting"
           exit 1
