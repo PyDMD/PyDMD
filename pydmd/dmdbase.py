@@ -692,13 +692,12 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
                 X = self.snapshots[:, :-1]
 
             _, s, V = compute_svd(X, self.modes.shape[-1])
-            n = X.shape[1]
 
             q = np.conj(
                 np.diag(
                     np.linalg.multi_dot(
                         [
-                            vander[:, :n],
+                            vander[:, :X.shape[1]],
                             V,
                             np.diag(s).conj(),
                             self.operator.eigenvectors,
