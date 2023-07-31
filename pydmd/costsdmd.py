@@ -198,6 +198,11 @@ class CostsDMD:
         return self._omega_classes
 
     @staticmethod
+    def relative_error(x_est, x_true):
+        """Helper function for calculating the relative error."""
+        return np.linalg.norm(x_est - x_true) / np.linalg.norm(x_true)
+
+    @staticmethod
     def build_windows(data, window_length, step_size, integer_windows=False):
         """Calculate how many times to slide the window across the data."""
 
