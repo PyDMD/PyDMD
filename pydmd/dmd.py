@@ -64,8 +64,8 @@ class DMD(DMDBase):
             X = self.snapshots[:, :-1]
             Y = self.snapshots[:, 1:]
         else:
+            self._compare_data_shapes(Snapshots(Y).snapshots)
             self._snapshots_holder_y = Snapshots(Y)
-            self._compare_data_shapes()
             X = self.snapshots
             Y = self.snapshots_y
 
