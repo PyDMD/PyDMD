@@ -697,7 +697,7 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
                 np.diag(
                     np.linalg.multi_dot(
                         [
-                            vander[:, :X.shape[1]],
+                            vander[:, : X.shape[1]],
                             V,
                             np.diag(s).conj(),
                             self.operator.eigenvectors,
