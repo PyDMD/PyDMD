@@ -748,10 +748,10 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         Method that ensures that the data inputs X and Y are the same shape
         if provided separately. Throws an error if the shapes do not agree.
         """
-        if self.snapshots_shape != y_snapshots.shape:
+        if self.snapshots.shape != y_snapshots.shape:
             msg = "X {} and Y {} input data must be the same shape."
             raise ValueError(
-                msg.format(self.snapshots_shape, y_snapshots.shape)
+                msg.format(self.snapshots.shape, y_snapshots.shape)
             )
 
 
