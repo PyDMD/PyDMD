@@ -16,21 +16,14 @@ class Version:
         self.date_patch = date_patch
 
     def __str__(self):
+        version_string = f"{self.major}.{self.minor}.{self.patch}"
         if self.date_patch:
-            version_string = "{}.{}.{}.{}".format(
-                self.major, self.minor, self.patch, self.date_patch
-            )
-        else:
-            version_string = "{}.{}.{}".format(
-                self.major,
-                self.minor,
-                self.patch,
-            )
+            version_string = f"{version_string}.{self.date_patch}"
         return version_string
 
 
 def get_version():
-    with open(meta_file, "r") as fp:
+    with open(meta_file, "r", encoding="UTF-8") as fp:
         content = fp.read()
 
     try:
@@ -44,13 +37,13 @@ def get_version():
 
 
 def set_version(version):
-    with open(meta_file, "r") as fp:
+    with open(meta_file, "r", encoding="UTF-8") as fp:
         content = fp.read()
 
     line_string = '__version__ = "{}"'.format(version)
     text_after = re.sub('__version__.*=.*"(.+?)"', line_string, content)
 
-    with open(meta_file, "w") as fp:
+    with open(meta_file, "w", encoding="UTF-8") as fp:
         fp.write(text_after)
 
 
