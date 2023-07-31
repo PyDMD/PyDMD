@@ -752,7 +752,7 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         if (self._snapshots_holder and self._snapshots_holder_y) and (
             self.snapshots.shape != self.snapshots_y.shape
         ):
-            raise ValueError("X and Y input data must be the same shape.")
+            raise ValueError(f"X {X.shape} and Y {Y.shape} input data must be the same shape.")
 
 
 class DMDTimeDict(dict):
