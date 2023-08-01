@@ -7,8 +7,6 @@ decomposition for stochastic Koopman analysis." Physical Review E 96.3 (2017):
 033310.
 """
 
-import numpy as np
-
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
 from .utils import compute_svd
