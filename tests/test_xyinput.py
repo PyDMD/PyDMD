@@ -41,10 +41,9 @@ def differentiate(X, dt):
 
 
 # Simulate ODE system data.
-dt = 0.01
-t = np.arange(2000) * dt
+t = np.arange(2000) * 0.01
 Z = simulate_z(t)
-Z_dot = differentiate(Z, dt)
+Z_dot = differentiate(Z, t[1] - t[0])
 
 # Additionally re-obtain DMD testing data.
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
@@ -79,24 +78,30 @@ def assert_equal_models(dmd, dmd_true, rtol=1e-07, atol=0):
 
 
 def test_shape_error_1():
-    # Checks that an error is thrown when X and Y
-    # don't contain the same number of snapshots.
+    """
+    Checks that an error is thrown when X and Y
+    don't contain the same number of snapshots.
+    """
     dmd = DMD()
     with raises(ValueError):
         dmd.fit(X=sample_data, Y=sample_data[:, 1:])
 
 
 def test_shape_error_2():
-    # Checks that an error is thrown when the
-    # snapshots in X and Y aren't the same size.
+    """
+    Checks that an error is thrown when the
+    snapshots in X and Y aren't the same size.
+    """
     dmd = DMD()
     with raises(ValueError):
         dmd.fit(X=sample_data, Y=sample_data[1:])
 
 
 def test_time_dicts():
-    # Checks that the default time dictionaries contain 0, 1, ..., m-1
-    # when data matrices X, Y containing m snapshots each are given.
+    """
+    Checks that the default time dictionaries contain 0, 1, ..., m-1
+    when data matrices X, Y containing m snapshots each are given.
+    """
     dmd = DMD()
     dmd.fit(X=sample_data_1, Y=sample_data_2)
     expected_dict = {"dt": 1, "t0": 0, "tend": 13}
@@ -105,8 +110,10 @@ def test_time_dicts():
 
 
 def test_equal_models_default():
-    # Checks that a DMD model given X=data, Y=None is qualitatively the same as
-    # a DMD model given X=data[:, :-1], Y=data[:, 1:] using default parameters.
+    """
+    Checks that a DMD model given X=data, Y=None is qualitatively the same as
+    a DMD model given X=data[:, :-1], Y=data[:, 1:] using default parameters.
+    """
     dmd = DMD(svd_rank=2)
     dmd.fit(X=sample_data)
 
@@ -117,8 +124,10 @@ def test_equal_models_default():
 
 
 def test_equal_models_exact():
-    # Checks that a DMD model given X=data, Y=None is qualitatively the same as
-    # a DMD model given X=data[:, :-1], Y=data[:, 1:] using exact=True.
+    """
+    Checks that a DMD model given X=data, Y=None is qualitatively the same as
+    a DMD model given X=data[:, :-1], Y=data[:, 1:] using exact=True.
+    """
     dmd = DMD(svd_rank=2, exact=True)
     dmd.fit(X=sample_data)
 
@@ -129,8 +138,10 @@ def test_equal_models_exact():
 
 
 def test_equal_models_opt():
-    # Checks that a DMD model given X=data, Y=None is almost qualitatively the
-    # same as a DMD model given X=data[:, :-1], Y=data[:, 1:] using opt=True.
+    """
+    Checks that a DMD model given X=data, Y=None is almost qualitatively the
+    same as a DMD model given X=data[:, :-1], Y=data[:, 1:] using opt=True.
+    """
     dmd = DMD(svd_rank=2, opt=True)
     dmd.fit(X=sample_data)
 
@@ -141,8 +152,10 @@ def test_equal_models_opt():
 
 
 def test_equal_models_opt_exact():
-    # Checks that a DMD model given X=data, Y=None is qualitatively the same as
-    # a model given X=data[:, :-1], Y=data[:, 1:] using opt=True, exact=True.
+    """
+    Checks that a DMD model given X=data, Y=None is qualitatively the same as
+    a model given X=data[:, :-1], Y=data[:, 1:] using opt=True, exact=True.
+    """
     dmd = DMD(svd_rank=2, opt=True, exact=True)
     dmd.fit(X=sample_data)
 
@@ -153,8 +166,10 @@ def test_equal_models_opt_exact():
 
 
 def test_time_shifted_model():
-    # Checks that a DMD model fitted with X=data, Y=shifted(data) and missing
-    # data is able to recover the diagnostics obtained using all of the data.
+    """
+    Checks that a DMD model fitted with X=data, Y=shifted(data) and missing
+    data is able to recover the diagnostics obtained using all of the data.
+    """
     uneven_indices = np.delete(np.arange(len(t)), np.arange(1000)[1::2])
     uneven_indices = uneven_indices[:-1]
 
@@ -171,8 +186,10 @@ def test_time_shifted_model():
 
 
 def test_time_derivative_model():
-    # Checks that a DMD model given X=data, Y=derivative(data) yields
-    # the same operator as a BOPDMD model given the same data set.
+    """
+    Checks that a DMD model given X=data, Y=derivative(data) yields
+    the same operator as a BOPDMD model given the same data set.
+    """
     dmd = DMD(svd_rank=2)
     dmd.fit(X=Z, Y=Z_dot)
 
