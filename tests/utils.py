@@ -7,6 +7,14 @@ from pydmd.linalg import build_linalg_module
 np.random.seed(10)
 
 
+def fit_reconstruct(dmd):
+    def func(X):
+        batch = X.ndim == 3
+        return dmd.fit(X, batch=batch).reconstructed_data
+
+    return func
+
+
 def numpyfy(X):
     if torch.is_tensor(X):
         return X.detach().resolve_conj().numpy()
@@ -66,7 +74,7 @@ def setup_backends(data=None, filters=None):
 
 
 def setup_linalg_module_backends(filters=None):
-    # TODO: we expect things like `new_array` to go on GPU 
+    # TODO: we expect things like `new_array` to go on GPU
     # automatically
     return [
         build_linalg_module(param.values[0])

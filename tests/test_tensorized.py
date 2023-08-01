@@ -14,8 +14,7 @@ from pydmd import (
 )
 import numpy as np
 
-from .utils import assert_allclose, setup_backends, noisy_data
-from .test_backprop import fit_reconstruct
+from .utils import assert_allclose, setup_backends, noisy_data, fit_reconstruct
 from .test_mrdmd import create_data as create_mrdmd_data
 
 torch.autograd.set_detect_anomaly(True)
