@@ -6,7 +6,6 @@ from pydmd import (
     FbDMD,
     HankelDMD,
     HODMD,
-    DMDc,
     CDMD,
     SubspaceDMD,
     RDMD,

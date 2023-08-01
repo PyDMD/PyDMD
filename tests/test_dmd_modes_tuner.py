@@ -65,9 +65,7 @@ def test_select_modes_nullified_indexes():
     dmd.fit(sample_data)
     dmdc = deepcopy(dmd)
 
-    _, cut_indexes = select_modes(
-        dmd, stable_modes, nullify_amplitudes=False, return_indexes=True
-    )
+    _, cut_indexes = select_modes(dmd, stable_modes, return_indexes=True)
     noncut_indexes = list(set(range(len(dmdc.eigs))) - set(cut_indexes))
 
     assert dmd.amplitudes.shape == dmdc[noncut_indexes].amplitudes.shape

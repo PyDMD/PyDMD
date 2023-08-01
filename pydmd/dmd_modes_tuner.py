@@ -442,7 +442,7 @@ class ModesTuner:
             return list(map(deepcopy, self._dmds))
         return deepcopy(self._dmds[0])
 
-    def select(self, criteria, nullify_amplitudes=False, **kwargs):
+    def select(self, criteria, **kwargs):
         r"""
         Select the DMD modes by using the given `criteria`, which can be either
         a string or a function. You can choose pre-packed criteria by passing
@@ -474,11 +474,6 @@ class ModesTuner:
             If `criteria` is a function it must take an instance of DMD as the
             only parameter.
         :type criteria: str or callable
-        :param bool nullify_amplitudes: If `True`, the amplitudes associated
-            with DMD modes to be removed are set to 0, therefore the number of
-            DMD modes remains constant. If `False` (default) DMD modes are
-            actually removed, therefore the number of DMD modes in the instance
-            decreases.
         :param \**kwargs: Parameters passed to the chosen criteria (if
             `criteria` is a string).
         :return ModesTuner: This instance of `ModesTuner` in order to allow
@@ -496,7 +491,7 @@ modes (either a string or a function)"""
             )
 
         for dmd in self._dmds:
-            select_modes(dmd, criteria, nullify_amplitudes=nullify_amplitudes)
+            select_modes(dmd, criteria)
         return self
 
     def stabilize(self, inner_radius, outer_radius=np.inf):
