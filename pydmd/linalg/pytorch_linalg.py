@@ -144,6 +144,12 @@ class LinalgPyTorch(LinalgBase):
         return torch.log(X)
 
     @classmethod
+    def logical_and(cls, X, Y):
+        import torch
+
+        return torch.logical_and(X, Y)
+
+    @classmethod
     def lstsq(cls, X, Y, rcond):
         import torch
 
@@ -228,6 +234,10 @@ class LinalgPyTorch(LinalgBase):
         raise ValueError(
             f"Unsupported array type {type(X)} (first item: {type(X[0])})"
         )
+
+    @classmethod
+    def nonzero(cls, X):
+        return X.nonzero()
 
     @classmethod
     def matrix_norm(cls, X, *args, **kwargs):

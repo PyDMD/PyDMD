@@ -79,6 +79,10 @@ class LinalgBase:
         raise NotImplementedError
 
     @classmethod
+    def logical_and(cls, X, Y):
+        raise NotImplementedError
+
+    @classmethod
     def lstsq(cls, X, Y, rcond):
         raise NotImplementedError
 
@@ -112,6 +116,10 @@ class LinalgBase:
 
     @classmethod
     def new_array(cls, X):
+        raise NotImplementedError
+
+    @classmethod
+    def nonzero(cls, X):
         raise NotImplementedError
 
     @classmethod

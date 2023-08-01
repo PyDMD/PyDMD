@@ -104,6 +104,10 @@ class LinalgNumPy(LinalgBase):
         return np.log(X)
 
     @classmethod
+    def logical_and(cls, X, Y):
+        return np.logical_and(X, Y)
+
+    @classmethod
     def lstsq(cls, X, Y, rcond):
         return np.linalg.lstsq(X, Y, rcond=rcond)[0]
 
@@ -138,6 +142,10 @@ class LinalgNumPy(LinalgBase):
     @classmethod
     def new_array(cls, X):
         return np.array(X)
+
+    @classmethod
+    def nonzero(cls, X):
+        return X.nonzero()[0]
 
     @classmethod
     def matrix_norm(cls, X, *args, **kwargs):
