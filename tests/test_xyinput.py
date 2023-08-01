@@ -6,20 +6,20 @@ from pydmd.dmd import DMD
 from pydmd.bopdmd import BOPDMD
 
 
-def simulate_z(t):
+def simulate_z(t_eval):
     """
-    Given a time vector t = t1, t2, ..., evaluates and returns the snapshots
-    z(t1), z(t2), ... as columns of the matrix Z via explicit Runge-Kutta.
-    Simulates data z given by the system of ODEs
+    Given a time vector t_eval = t1, t2, ..., evaluates and returns the
+    snapshots z(t1), z(t2), ... as columns of the matrix Z via explicit
+    Runge-Kutta. Simulates data z given by the system of ODEs
         z' = Az
     where A = [1 -2; 1 -1] and z_0 = [1, 0.1].
     """
 
-    def ode_sys(t, z):
+    def f(zt, z):
         z1, z2 = z
         return [z1 - 2 * z2, z1 - z2]
 
-    sol = solve_ivp(ode_sys, [t[0], t[-1]], [1.0, 0.1], t_eval=t)
+    sol = solve_ivp(f, [t_eval[0], t_eval[-1]], [1.0, 0.1], t_eval=t_eval)
 
     return sol.y
 
@@ -32,6 +32,7 @@ def differentiate(X, dt):
     """
     if not isinstance(X, np.ndarray) or X.ndim != 2:
         raise ValueError("Please ensure that input data is a 2D array.")
+
     X_prime = np.empty(X.shape)
     X_prime[:, 1:-1] = (X[:, 2:] - X[:, :-2]) / (2 * dt)
     X_prime[:, 0] = (-3 * X[:, 0] + 4 * X[:, 1] - X[:, 2]) / (2 * dt)
