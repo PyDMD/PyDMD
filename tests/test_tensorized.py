@@ -80,11 +80,17 @@ def test_tensorized_fit_rejects_auto_svd_rank(dmd, X):
 @pytest.mark.parametrize("dmd", dmds)
 @pytest.mark.parametrize("X", torch_backends)
 def test_tensorized_reconstructed_data(dmd, X):
-    if isinstance(dmd, (FbDMD, SubspaceDMD)):
+    if isinstance(dmd, (FbDMD, SubspaceDMD)) or dmd._opt:
         pytest.skip()
-    X = torch.stack([X * i for i in range(1, 11)])
     dmd.fit(X=X, batch=True)
     assert_allclose(dmd.reconstructed_data, X)
+
+@pytest.mark.parametrize("dmd", dmds)
+@pytest.mark.parametrize("X", torch_backends)
+def test_tensorized_reconstructed_data_same_as_non_tensorized(dmd, X):
+    X = torch.stack([X * i for i in range(1, 11)])
+    dmd.fit(X=X, batch=True)
+    assert_allclose(dmd.reconstructed_data, [dmd.fit(X=Xi).reconstructed_data for Xi in X])
 
 
 @pytest.mark.parametrize("X", noisy_backends)

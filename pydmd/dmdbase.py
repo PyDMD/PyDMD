@@ -317,7 +317,7 @@ class DMDBase:
 
         if amplitudes_snapshot_index < 0:
             # we take care of negative indexes: -n becomes T - n
-            return tpow - (self.snapshots.shape[1] + amplitudes_snapshot_index)
+            return tpow - (self.snapshots.shape[-1] + amplitudes_snapshot_index)
         else:
             return tpow - amplitudes_snapshot_index
 

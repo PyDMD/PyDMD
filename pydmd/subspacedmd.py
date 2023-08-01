@@ -180,7 +180,7 @@ class SubspaceDMD(DMDBase):
 
         self._snapshots_holder = Snapshots(X, batch=batch)
 
-        n_samples = self.snapshots.shape[1]
+        n_samples = self.snapshots.shape[-1]
         Y0 = self.snapshots[..., :-3]
         Y1 = self.snapshots[..., 1:-2]
         Y2 = self.snapshots[..., 2:-1]
