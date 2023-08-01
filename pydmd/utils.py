@@ -26,13 +26,13 @@ def compute_rank(X, svd_rank=0):
     (2014): 5040-5053.
     """
     linalg_module = build_linalg_module(X)
-    U, s, V = linalg_module.svd(X, full_matrices=False)
+    U, s, _ = linalg_module.svd(X, full_matrices=False)
 
     def omega(x):
         return 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
 
     if svd_rank == 0:
-        small, big = sorted(X.shape)
+        small, big = sorted(X.shape[-2:])
         beta = small / big
         tau = linalg_module.median(s) * omega(beta)
         rank = (s > tau).sum()
