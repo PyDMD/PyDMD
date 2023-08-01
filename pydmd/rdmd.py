@@ -11,6 +11,7 @@ import numpy as np
 
 from .cdmd import CDMD
 from .utils import compute_rank
+from pydmd.linalg import build_linalg_module
 
 
 class RDMD(CDMD):
