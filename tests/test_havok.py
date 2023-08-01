@@ -32,7 +32,9 @@ def generate_lorenz_data(t):
     X = np.empty(len(t))
     X[0] = initial[0]
 
-    return odeint(lorenz_system, initial, t, args=(sigma, rho, beta), tfirst=True)[:, 0]
+    return odeint(
+        lorenz_system, initial, t, args=(sigma, rho, beta), tfirst=True
+    )[:, 0]
 
 
 # Generate chaotic Lorenz System data
@@ -136,7 +138,10 @@ def test_reconstruction():
     error_norm = np.linalg.norm(error) / np.linalg.norm(lorenz_x)
     assert error_norm < 0.6
 
+
 def test_rejects_torch():
     havok = HAVOK(svd_rank=15, d=100)
-    with raises(ValueError, match="PyTorch not supported with this DMD variant"):
+    with raises(
+        ValueError, match="PyTorch not supported with this DMD variant"
+    ):
         havok.fit(torch.ones(1000), dt)
