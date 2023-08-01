@@ -968,7 +968,7 @@ class BOPDMD(DMDBase):
         :return: the reduced Koopman operator A.
         :rtype: numpy.ndarray
         """
-        return self.operator.as_numpy_array
+        return self.operator.as_array
 
     @property
     def A(self):
