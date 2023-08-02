@@ -81,6 +81,7 @@ def test_tensorized_fit_rejects_auto_svd_rank(dmd, X):
 def test_tensorized_reconstructed_data(dmd, X):
     if isinstance(dmd, (FbDMD, SubspaceDMD)) or dmd._opt:
         pytest.skip()
+    X = torch.stack([X * i for i in range(1, 11)])
     dmd.fit(X=X, batch=True)
     assert_allclose(dmd.reconstructed_data, X)
 
