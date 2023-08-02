@@ -1,11 +1,11 @@
 import pytest
 import torch
 from pydmd import (
+    CDMD,
     DMD,
     FbDMD,
     HankelDMD,
     HODMD,
-    CDMD,
     SubspaceDMD,
     RDMD,
 )

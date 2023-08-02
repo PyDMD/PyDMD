@@ -205,7 +205,7 @@ class DMDOperator:
             # scaling isn't required
             Ahat = self._Atilde
         elif is_array(self._rescale_mode):
-            if len(self._rescale_mode) != self.as_array.shape[0]:
+            if len(self._rescale_mode) != self.as_array.shape[-2]:
                 raise ValueError(
                     """Scaling by an invalid number of
                         coefficients"""

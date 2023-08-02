@@ -209,7 +209,7 @@ class CDMD(DMDBase):
         elif self.compression_matrix == "sample":
             C = np.zeros(C_shape)
             C[
-                np.arange(self.snapshots.shape[1]),
+                np.arange(self.snapshots.shape[-1]),
                 np.random.choice(*self.snapshots.shape, replace=False),
             ] = 1.0
 

@@ -283,7 +283,7 @@ class DMDBase:
         """
         linalg_module = build_linalg_module(self.eigs)
         temp = linalg_module.repeat(
-            self.eigs[..., None], self.dmd_timesteps.shape[0], axis=-1
+            self.eigs[..., None], len(self.dmd_timesteps), axis=-1
         )
         tpow = (
             self.dmd_timesteps - self.original_time["t0"]

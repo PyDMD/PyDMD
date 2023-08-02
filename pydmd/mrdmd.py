@@ -500,7 +500,7 @@ Expected one item per level, got {} out of {} levels.""".format(
                 current_dmd = self.dmd_tree[level, leaf]
                 current_dmd.fit(x, batch=batch)
 
-                rho = self.max_cycles / x.shape[1]
+                rho = self.max_cycles / x.shape[-1]
                 slow_modes_selector = partial(slow_modes, rho=rho)
 
                 select_modes(current_dmd, slow_modes_selector)

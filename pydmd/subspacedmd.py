@@ -93,7 +93,7 @@ class SubspaceDMDOperator(DMDOperator):
             W = self.eigenvectors
         elif is_array(self._rescale_mode):
             # compute W as shown in arXiv:1409.5496 (section 2.4)
-            if len(self._rescale_mode) != self.as_array.shape[0]:
+            if len(self._rescale_mode) != self.as_array.shape[-2]:
                 raise ValueError("Scaling by an invalid number of coefficients")
             scaling_factors = linalg_module.to(
                 self.as_array, self._rescale_mode

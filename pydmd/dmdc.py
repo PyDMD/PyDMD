@@ -306,7 +306,7 @@ class DMDc(DMDBase):
 
         return cast_as_array(data).T
 
-    def fit(self, X, I, B=None, batch=False):
+    def fit(self, X, I, B=None):
         """
         Compute the Dynamic Modes Decomposition with control given the original
         snapshots and the control input data. The matrix `B` that controls how
@@ -320,11 +320,10 @@ class DMDc(DMDBase):
         :param numpy.ndarray B: matrix that controls the control input
             influences the system evolution.
         :type B: numpy.ndarray or iterable
-        :param batch: If `True`, the first dimension is dedicated to batching.
         :type batch: bool
         """
         self._reset()
-        self._snapshots_holder = Snapshots(X, batch=batch)
+        self._snapshots_holder = Snapshots(X)
 
         linalg_module = build_linalg_module(X)
         I = np.atleast_2d(np.asarray(I))

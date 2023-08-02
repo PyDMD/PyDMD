@@ -93,7 +93,7 @@ class HankelDMD(DMDBase):
         elif isinstance(reconstruction_method, np.ndarray):
             if (
                 reconstruction_method.ndim > 1
-                or reconstruction_method.shape[0] != d
+                or reconstruction_method.shape[-2] != d
             ):
                 raise ValueError(
                     "The length of the array of weights must be equal to d"
