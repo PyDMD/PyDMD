@@ -1,3 +1,4 @@
+from enum import Enum, auto
 import numpy as np
 import pytest
 import torch
@@ -5,6 +6,12 @@ import torch
 from pydmd.linalg import build_linalg_module
 
 np.random.seed(10)
+
+
+# Available backends for testing
+class Backend(Enum):
+    NUMPY = auto()
+    PYTORCH_CPU = auto()
 
 
 def fit_reconstruct(dmd):
@@ -50,26 +57,31 @@ def noisy_data():
     return X
 
 
-def setup_backends(data=None, filters=None):
+def setup_backends(data=None, exclude: Backend = None):
     if data is None:
         data = sample_data()
 
     if isinstance(data, dict):
         data_backends = {
-            "NumPy": data,
-            "PyTorch CPU": {
+            Backend.NUMPY: data,
+            Backend.PYTORCH_CPU: {
                 key: torch.from_numpy(arr) for key, arr in data.items()
             },
         }
     else:
-        data_backends = {"NumPy": data, "PyTorch CPU": torch.from_numpy(data)}
+        data_backends = {
+            Backend.NUMPY: data,
+            Backend.PYTORCH_CPU: torch.from_numpy(data),
+        }
 
-    if filters is None:
-        filters = set()
+    if exclude is None:
+        exclude = set()
+    if isinstance(exclude, Backend):
+        exclude = set((exclude,))
     return [
-        pytest.param(arr, id=key)
+        pytest.param(arr, id=str(key))
         for key, arr in data_backends.items()
-        if key not in filters
+        if key not in exclude
     ]
 
 

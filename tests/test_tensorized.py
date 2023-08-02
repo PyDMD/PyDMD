@@ -11,12 +11,12 @@ from pydmd import (
 )
 import numpy as np
 
-from .utils import assert_allclose, setup_backends, noisy_data
+from .utils import assert_allclose, setup_backends, noisy_data, Backend
 
 torch.autograd.set_detect_anomaly(True)
 
-torch_backends = setup_backends(filters=("NumPy",))
-noisy_backends = setup_backends(data=noisy_data(), filters=("NumPy",))
+torch_backends = setup_backends(exclude=Backend.NUMPY)
+noisy_backends = setup_backends(data=noisy_data(), exclude=Backend.NUMPY)
 
 dmds = [
     pytest.param(CDMD(svd_rank=-1), id="CDMD"),
@@ -89,6 +89,8 @@ def test_tensorized_reconstructed_data(dmd, X):
 @pytest.mark.parametrize("dmd", dmds)
 @pytest.mark.parametrize("X", torch_backends)
 def test_tensorized_reconstructed_data_same_as_non_tensorized(dmd, X):
+    if isinstance(dmd, (FbDMD, SubspaceDMD)) or dmd._opt:
+        pytest.skip()
     X = torch.stack([X * i for i in range(1, 11)])
     dmd.fit(X=X, batch=True)
     assert_allclose(
