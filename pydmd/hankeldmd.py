@@ -7,7 +7,7 @@ computation of spectral properties of the Koopman operator. SIAM Journal on
 Applied Dynamical Systems, 2017, 16.4: 2096-2126.
 """
 from copy import copy
-from numbers import Number
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -210,7 +210,7 @@ class HankelDMD(DMDBase):
             result = self._first_reconstructions(rec)
         elif self._reconstruction_method == "mean":
             result = linalg_module.nanmean(rec, axis=-2).T
-        elif isinstance(self._reconstruction_method, (np.ndarray, list)):
+        elif isinstance(self._reconstruction_method, Iterable):
             weights = linalg_module.new_array(self._reconstruction_method)
             result = nan_average(rec, weights).T
         else:

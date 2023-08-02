@@ -132,7 +132,7 @@ class DMDBUnknownOperator(DMDControlOperator):
         :rtype: numpy.ndarray, numpy.ndarray
         """
         linalg_module = build_linalg_module(X)
-        snapshots_rows = X.shape[0]
+        snapshots_rows = X.shape[-2]
 
         omega = linalg_module.cat((X, controlin), axis=0)
 
@@ -293,7 +293,7 @@ class DMDc(DMDBase):
             )
         )
 
-        data = [self.snapshots[:, 0]]
+        data = [self.snapshots[..., 0]]
         expected_shape = data[0].shape
 
         for i, u in enumerate(controlin.T):
@@ -330,9 +330,9 @@ class DMDc(DMDBase):
         I = np.atleast_2d(np.asarray(I))
         self._controlin = linalg_module.to(X, I)
 
-        n_samples = self.snapshots.shape[1]
-        X = self.snapshots[:, :-1]
-        Y = self.snapshots[:, 1:]
+        n_samples = self.snapshots.shape[-1]
+        X = self.snapshots[..., :-1]
+        Y = self.snapshots[..., 1:]
 
         self._set_initial_time_dictionary(
             {"t0": 0, "tend": n_samples - 1, "dt": 1}
