@@ -40,7 +40,7 @@ def test_tensorized_snapshots(dmd, X):
     X = torch.stack([X * i for i in range(1, 11)])
     dmd.fit(X=X, batch=True)
     assert dmd.snapshots.shape == X.shape
-    assert_allclose(dmd.snapshots[0], X[0])
+    assert (dmd.snapshots == X).all()
 
 
 @pytest.mark.parametrize(
@@ -85,12 +85,15 @@ def test_tensorized_reconstructed_data(dmd, X):
     dmd.fit(X=X, batch=True)
     assert_allclose(dmd.reconstructed_data, X)
 
+
 @pytest.mark.parametrize("dmd", dmds)
 @pytest.mark.parametrize("X", torch_backends)
 def test_tensorized_reconstructed_data_same_as_non_tensorized(dmd, X):
     X = torch.stack([X * i for i in range(1, 11)])
     dmd.fit(X=X, batch=True)
-    assert_allclose(dmd.reconstructed_data, [dmd.fit(X=Xi).reconstructed_data for Xi in X])
+    assert_allclose(
+        dmd.reconstructed_data, [dmd.fit(X=Xi).reconstructed_data for Xi in X]
+    )
 
 
 @pytest.mark.parametrize("X", noisy_backends)
