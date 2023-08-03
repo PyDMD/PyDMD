@@ -197,46 +197,6 @@ class CostsDMD:
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._omega_classes
 
-    def _build_proj_basis(self, data, svd_rank=None):
-        self._svd_rank = compute_rank(data, svd_rank=svd_rank)
-        # Recover the first r modes of the global svd
-        # u, _, _ = scipy.linalg.svd(data, full_matrices=False)
-        u, _, _ = compute_svd(data, svd_rank=svd_rank)
-        return u
-
-    def _build_initizialization(self):
-        """Method for making initial guess of DMD eigenvalues."""
-
-        # If not initial values are provided return None by default.
-        init_alpha = None
-        # User provided initial eigenvalues.
-        if self._initialize_artificially and self._init_alpha is not None:
-            init_alpha = self._init_alpha
-        # Initial eigenvalue guesses from kmeans clustering.
-        elif (
-            self._initialize_artificially
-            and self._init_alpha is None
-            and self._cluster_centroids is not None
-        ):
-            init_alpha = np.repeat(
-                np.sqrt(self._cluster_centroids) * 1j,
-                int(self._svd_rank / self._n_components),
-            )
-            init_alpha = init_alpha * np.tile(
-                [1, -1], int(self._svd_rank / self._n_components)
-            )
-        # The user accidentally provided both methods of initializing the eigenvalues.
-        elif (
-            self._initialize_artificially
-            and self._init_alpha is not None
-            and self._cluster_centroids is not None
-        ):
-            raise ValueError(
-                "Only one of `init_alpha` and `cluster_centroids` can be provided"
-            )
-
-        return init_alpha
-
     @staticmethod
     def build_windows(data, window_length, step_size, integer_windows=False):
         """Calculate how many times to slide the window across the data."""
@@ -286,10 +246,56 @@ class CostsDMD:
         )
         return recon_filter
 
-    def _data_shape(self, data):
+    @staticmethod
+    def _data_shape(data):
         n_time_steps = np.shape(data)[1]
         n_data_vars = np.shape(data)[0]
         return n_time_steps, n_data_vars
+
+    @staticmethod
+    def relative_error(x_est, x_true):
+        """Helper function for calculating the relative error."""
+        return np.linalg.norm(x_est - x_true) / np.linalg.norm(x_true)
+
+    def _build_proj_basis(self, data, svd_rank=None):
+        self._svd_rank = compute_rank(data, svd_rank=svd_rank)
+        # Recover the first r modes of the global svd
+        # u, _, _ = scipy.linalg.svd(data, full_matrices=False)
+        u, _, _ = compute_svd(data, svd_rank=svd_rank)
+        return u
+
+    def _build_initizialization(self):
+        """Method for making initial guess of DMD eigenvalues."""
+
+        # If not initial values are provided return None by default.
+        init_alpha = None
+        # User provided initial eigenvalues.
+        if self._initialize_artificially and self._init_alpha is not None:
+            init_alpha = self._init_alpha
+        # Initial eigenvalue guesses from kmeans clustering.
+        elif (
+            self._initialize_artificially
+            and self._init_alpha is None
+            and self._cluster_centroids is not None
+        ):
+            init_alpha = np.repeat(
+                np.sqrt(self._cluster_centroids) * 1j,
+                int(self._svd_rank / self._n_components),
+            )
+            init_alpha = init_alpha * np.tile(
+                [1, -1], int(self._svd_rank / self._n_components)
+            )
+        # The user accidentally provided both methods of initializing the eigenvalues.
+        elif (
+            self._initialize_artificially
+            and self._init_alpha is not None
+            and self._cluster_centroids is not None
+        ):
+            raise ValueError(
+                "Only one of `init_alpha` and `cluster_centroids` can be provided"
+            )
+
+        return init_alpha
 
     def fit(
         self,
@@ -466,7 +472,7 @@ class CostsDMD:
         if transform_method == "squared":
             omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
         elif transform_method == "log10":
-            omega_transform = np.log10(np.abs(omega_array.imag.astype("float")))
+            omega_transform = np.log10(np.abs(omega_rshp.imag.astype("float")))
         else:
             transform_method = "absolute_value"
             omega_transform = np.abs(omega_rshp.imag.astype("float"))
@@ -494,8 +500,6 @@ class CostsDMD:
         self._omega_classes = omega_classes
         self._transform_method = transform_method
         self._n_components = n_components
-        self._class_values = np.unique(omega_classes)[idx]
-        self._trimmed = False
 
         return self
 
@@ -519,7 +523,7 @@ class CostsDMD:
         if transform_method == "squared":
             omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
         elif transform_method == "log10":
-            omega_transform = np.log10(np.abs(omega_array.imag.astype("float")))
+            omega_transform = np.log10(np.abs(omega_rshp.imag.astype("float")))
         else:
             omega_transform = np.abs(omega_rshp.imag.astype("float"))
 
@@ -546,18 +550,18 @@ class CostsDMD:
         # Apply a transformation to omega to (maybe) better separate frequency bands
         if self._transform_method == "squared":
             omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
-            label = "$|\omega|^{2}$"
+            label = r"$|\omega|^{2}$"
         elif self._transform_method == "log10":
             omega_rshp = np.abs(omega_rshp.imag)
-            omega_transform = np.log10(np.abs(omega_array.imag.astype("float")))
-            label = "$log_{10}(|\omega|)$"
+            omega_transform = np.log10(np.abs(omega_rshp.imag.astype("float")))
+            label = r"$log_{10}(|\omega|)$"
             hist_kwargs["bins"] = np.linspace(
                 np.min(np.log10(omega_transform[omega_rshp > 0])),
                 np.max(np.log10(omega_transform[omega_rshp > 0])),
             )
         else:
             omega_transform = np.abs(omega_rshp.imag.astype("float"))
-            label = "$|\omega|$"
+            label = r"$|\omega|$"
 
         cluster_centroids = self._cluster_centroids
 
@@ -566,7 +570,7 @@ class CostsDMD:
         ax.hist(omega_transform, **hist_kwargs)
         ax.set_xlabel(label)
         ax.set_ylabel("Count")
-        ax.set_title("$\omega$ Spectrum & k-Means Centroids")
+        ax.set_title(r"$\omega$ Spectrum & k-Means Centroids")
         [
             ax.axvline(c, color=colors[nc % len(colors)])
             for nc, c in enumerate(cluster_centroids)
@@ -587,13 +591,13 @@ class CostsDMD:
         # Apply a transformation to omega to (maybe) better separate frequency bands
         if self._transform_method == "squared":
             omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
-            label = "$|\omega|^{2}$"
+            label = r"$|\omega|^{2}$"
         elif self._transform_method == "log10":
             omega_transform = np.log10(np.abs(omega_array.imag.astype("float")))
-            label = "$log_{10}(|\omega|)$"
+            label = r"$log_{10}(|\omega|)$"
         else:
             omega_transform = np.abs(omega_rshp.imag.astype("float"))
-            label = "$|\omega|$"
+            label = r"$|\omega|$"
 
         for ncomponent, component in enumerate(range(self._n_components)):
             ax.plot(
@@ -607,7 +611,7 @@ class CostsDMD:
             )
         ax.set_ylabel(label)
         ax.set_xlabel("Time")
-        ax.set_title("$\omega$ Time Series")
+        ax.set_title(r"$\omega$ Time Series")
 
         return fig, ax
 
