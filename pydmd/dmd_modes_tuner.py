@@ -2,6 +2,8 @@
 A module which contains several functions to tune (i.e. improve) DMD instances
 through the "manual" modification of DMD modes.
 """
+from .linalg import build_linalg_module
+
 from copy import deepcopy
 from functools import partial
 
@@ -56,19 +58,21 @@ def select_modes(
     if not in_place:
         dmd = deepcopy(dmd)
 
-    selected_indexes = np.where(criteria(dmd))[0]
-
-    all_indexes = set(np.arange(len(dmd.eigs)))
-    cut_indexes = np.array(list(all_indexes - set(selected_indexes)))
-
-    if len(cut_indexes) > 0:
-        tmp = np.array(dmd.modes_activation_bitmask)
-        tmp[cut_indexes] = False
-        dmd.modes_activation_bitmask = tmp
-
+    selected_indexes = criteria(dmd)
+    linalg_module = build_linalg_module(selected_indexes)
     if return_indexes:
-        return dmd, cut_indexes
-    return dmd
+        excluded_indexes = selected_indexes == False
+        cut_indexes = linalg_module.logical_and(
+            excluded_indexes, dmd.modes_activation_bitmask
+        )
+        output = dmd, linalg_module.nonzero(cut_indexes)
+    else:
+        output = dmd
+
+    dmd.modes_activation_bitmask = linalg_module.logical_and(
+        selected_indexes, dmd.modes_activation_bitmask
+    )
+    return output
 
 
 def stabilize_modes(
@@ -115,21 +119,20 @@ def stabilize_modes(
     if not in_place:
         dmd = deepcopy(dmd)
 
-    eigs_module = np.abs(dmd.eigs)
+    linalg_module = build_linalg_module(dmd.eigs)
+    eigs_module = linalg_module.abs(dmd.eigs)
 
     # indexes associated with eigenvalues that must be stabilized
-    fixable_eigs_indexes = np.logical_and(
+    fixable_eigs_indexes = linalg_module.logical_and(
         inner_radius < eigs_module,
         eigs_module < outer_radius,
     )
 
-    dmd.amplitudes[fixable_eigs_indexes] *= np.abs(
-        dmd.eigs[fixable_eigs_indexes]
-    )
-    dmd.eigs[fixable_eigs_indexes] /= np.abs(dmd.eigs[fixable_eigs_indexes])
+    dmd.amplitudes[fixable_eigs_indexes] *= eigs_module[fixable_eigs_indexes]
+    dmd.eigs[fixable_eigs_indexes] /= eigs_module[fixable_eigs_indexes]
 
     if return_indexes:
-        stabilized_indexes = np.where(fixable_eigs_indexes)[0]
+        stabilized_indexes = linalg_module.nonzero(fixable_eigs_indexes)
         return dmd, stabilized_indexes
     return dmd
 
@@ -170,9 +173,10 @@ class ModesSelectors:
         :return np.ndarray: An array of bool, where each "True" index means
             that the corresponding DMD mode is selected.
         """
-        eigs_module = np.abs(dmd.eigs)
+        linalg_module = build_linalg_module(dmd.eigs)
+        eigs_module = linalg_module.abs(dmd.eigs)
 
-        return np.logical_and(
+        return linalg_module.logical_and(
             eigs_module < up_threshold,
             eigs_module > low_threshold,
         )
@@ -314,7 +318,11 @@ and `max_distance_from_unity_outside` can be not `None`"""
             returned by `dmd.dynamics[mode_index]`.
         :return float: the integral contribution of the given DMD mode.
         """
-        return pow(np.linalg.norm(mode), 2) * sum(np.abs(dynamic))
+        linalg_module = build_linalg_module(dynamic)
+        return (
+            linalg_module.pow(linalg_module.matrix_norm(mode), 2)
+            * linalg_module.abs(dynamic).sum()
+        )
 
     @staticmethod
     def _integral_contribution(dmd, n):
@@ -331,21 +339,20 @@ and `max_distance_from_unity_outside` can be not `None`"""
         temp = dmd.dmd_time
         dmd._dmd_time = dmd.original_time
 
-        dynamics = dmd.dynamics
-        modes = dmd.modes
-
         # reset dmd_time
         dmd._dmd_time = temp
 
-        n_of_modes = modes.shape[1]
+        n_of_modes = dmd.modes.shape[-1]
         integral_contributions = [
-            ModesSelectors._compute_integral_contribution(*tp)
-            for tp in zip(modes.T, dynamics)
+            ModesSelectors._compute_integral_contribution(mode, dynamic)
+            for mode, dynamic in zip(dmd.modes.T, dmd.dynamics)
         ]
 
-        indexes_first_n = np.array(integral_contributions).argsort()[-n:]
+        linalg_module = build_linalg_module(dmd.dynamics)
+        integral_contributions = linalg_module.new_array(integral_contributions)
+        indexes_first_n = linalg_module.argsort(integral_contributions)[-n:]
 
-        truefalse_array = np.array([False for _ in range(n_of_modes)])
+        truefalse_array = linalg_module.full(size=n_of_modes, fill_value=False)
         truefalse_array[indexes_first_n] = True
         return truefalse_array
 
