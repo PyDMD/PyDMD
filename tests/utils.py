@@ -85,10 +85,10 @@ def setup_backends(data=None, exclude: Backend = None):
     ]
 
 
-def setup_linalg_module_backends(filters=None):
+def setup_linalg_module_backends(exclude=None):
     # TODO: we expect things like `new_array` to go on GPU
     # automatically
     return [
         build_linalg_module(param.values[0])
-        for param in setup_backends(data=None, filters=filters)
+        for param in setup_backends(data=None, exclude=exclude)
     ]
