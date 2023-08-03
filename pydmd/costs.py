@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import xarray as xr
 
 
-class CostsDMD:
+class COSTS:
     """Coherent Spatio-Temporal Scale Separation with DMD.
 
     :param window_length: Length of the analysis window in number of time steps.
@@ -80,8 +80,6 @@ class CostsDMD:
         n_components=None,
     ):
         self._n_components = n_components
-        self._step_size = step_size
-        self._window_length = window_length
         self._svd_rank = svd_rank
         self._global_svd = global_svd
         self._initialize_artificially = initialize_artificially
@@ -196,6 +194,11 @@ class CostsDMD:
         if not hasattr(self, "_omega_classes"):
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._omega_classes
+
+    @staticmethod
+    def relative_error(x_est, x_true):
+        """Helper function for calculating the relative error."""
+        return np.linalg.norm(x_est - x_true) / np.linalg.norm(x_true)
 
     @staticmethod
     def build_windows(data, window_length, step_size, integer_windows=False):
