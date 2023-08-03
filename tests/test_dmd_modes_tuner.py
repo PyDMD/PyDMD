@@ -914,10 +914,6 @@ def test_modes_tuner_stabilize_multiple_subset():
 
 
 def test_modes_tuner_index_scalar_dmd_raises():
-    def stable_modes(dmd_object):
-        toll = 1e-3
-        return np.abs(np.abs(dmd_object.eigs) - 1) < toll
-
     dmd = DMD(svd_rank=10)
     dmd.fit(sample_data)
 
