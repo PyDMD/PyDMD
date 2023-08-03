@@ -2,21 +2,16 @@ from copy import deepcopy
 
 import numpy as np
 import pytest
-from ezyrb import POD, RBF
 from pytest import raises, param
 
 from pydmd import (
     CDMD,
     DMD,
     HODMD,
-    DMDBase,
     DMDc,
     FbDMD,
     HankelDMD,
-    MrDMD,
-    OptDMD,
     ParametricDMD,
-    SpDMD,
 )
 from pydmd.dmd_modes_tuner import (
     ModesSelectors,
