@@ -462,7 +462,7 @@ Expected one item per level, got {} out of {} levels.""".format(
             for leaf in self.dmd_tree.index_leaves(level):
                 yield level, leaf, self.dmd_tree[level, leaf]
 
-    def fit(self, X, batch=False):
+    def fit(self, X):
         """
         Compute the Dynamic Modes Decomposition to the input data.
 
@@ -471,7 +471,7 @@ Expected one item per level, got {} out of {} levels.""".format(
         """
         self._reset()
 
-        self._snapshots_holder = Snapshots(X, batch=batch)
+        self._snapshots_holder = Snapshots(X)
         linalg_module = build_linalg_module(self.snapshots)
 
         # Redefine max level if it is too big.
@@ -498,7 +498,7 @@ Expected one item per level, got {} out of {} levels.""".format(
 
             for leaf, x in enumerate(Xs):
                 current_dmd = self.dmd_tree[level, leaf]
-                current_dmd.fit(x, batch=batch)
+                current_dmd.fit(x)
 
                 rho = self.max_cycles / x.shape[-1]
                 slow_modes_selector = partial(slow_modes, rho=rho)
