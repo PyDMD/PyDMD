@@ -4,7 +4,7 @@ from pytest import raises
 
 from pydmd import DMD, FbDMD, MrDMD
 
-from .utils import assert_allclose, setup_backends
+from .linalg.utils import assert_allclose, setup_backends
 
 
 def create_data(t_size=1600):

@@ -6,7 +6,7 @@ from pydmd.cdmd import CDMD
 
 from pydmd.cdmd import CDMD
 
-from .utils import assert_allclose, setup_backends
+from .linalg.utils import assert_allclose, setup_backends
 
 data_backends = setup_backends()
 

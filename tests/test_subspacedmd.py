@@ -4,7 +4,7 @@ from pydmd import SubspaceDMD
 from pydmd.subspacedmd import SubspaceDMDOperator
 import pytest
 
-from .utils import setup_backends
+from .linalg.utils import setup_backends
 
 data = np.random.rand(10, 100)
 data_backends = setup_backends(data=data)

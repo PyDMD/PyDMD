@@ -5,7 +5,7 @@ from pytest import raises
 
 from pydmd.dmd import DMD
 
-from .utils import (
+from .linalg.utils import (
     assert_allclose,
     setup_backends,
     sample_data,

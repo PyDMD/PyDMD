@@ -5,7 +5,7 @@ from pytest import raises
 
 from pydmd import DMDc
 
-from .utils import assert_allclose, setup_backends
+from .linalg.utils import assert_allclose, setup_backends
 
 np.random.seed(10)
 

@@ -4,9 +4,9 @@ from pytest import raises
 
 from pydmd import DMD
 from pydmd.dmdbase import DMDBase
-
-from .utils import setup_backends
 from pydmd.snapshots import Snapshots
+
+from .linalg.utils import setup_backends
 
 data_backends = setup_backends()
 

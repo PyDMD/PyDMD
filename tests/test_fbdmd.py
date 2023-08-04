@@ -4,7 +4,7 @@ from pytest import raises
 
 from pydmd.fbdmd import FbDMD
 
-from .utils import assert_allclose, setup_backends, noisy_data
+from .linalg.utils import assert_allclose, setup_backends, noisy_data
 
 data_backends = setup_backends(data=noisy_data())
 input_sample_backends = setup_backends(

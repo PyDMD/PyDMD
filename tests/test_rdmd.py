@@ -6,7 +6,7 @@ from pydmd.rdmd import RDMD
 
 from pydmd.rdmd import RDMD
 
-from .utils import setup_backends, assert_allclose
+from .linalg.utils import setup_backends, assert_allclose
 
 data_backends = setup_backends()
 
