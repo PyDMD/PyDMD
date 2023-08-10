@@ -1082,7 +1082,7 @@ class BOPDMD(DMDBase):
         if isfunction(eig_constraints):
             if self._svd_rank >= 1 and isinstance(self._svd_rank, int):
                 r = self._svd_rank
-            else: # use a dummy rank of 10
+            else:  # use a dummy rank of 10
                 r = 10
 
             try:

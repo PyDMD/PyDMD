@@ -251,6 +251,7 @@ def test_eig_constraints_errors_2():
     - eig_constraints takes multiple arguments
     - eig_constraints changes the shape of the input array
     """
+
     # Function that assumes the input is length 3.
     def bad_func_1(x):
         return np.multiply(x, np.arange(3))
@@ -313,6 +314,7 @@ def test_eig_constraints_2():
         setting eig_constraints={"imag"}
     - is a custom function, the functionality is as expected
     """
+
     def make_stable(x):
         right_half = x.real > 0.0
         x[right_half] = 1j * x[right_half].imag
