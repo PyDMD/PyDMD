@@ -15,6 +15,7 @@ __all__ = [
     "havok",
     "bopdmd",
     "pidmd",
+    "edmd",
 ]
 
 
@@ -36,3 +37,4 @@ from .rdmd import RDMD
 from .havok import HAVOK
 from .bopdmd import BOPDMD
 from .pidmd import PiDMD
+from .edmd import EDMD
