@@ -1074,7 +1074,7 @@ class BOPDMD(DMDBase):
         """
         Function that verifies that...
          - if the given eig_constraints is a function, the function is able to
-         take an np.ndarray and return an np.ndarray
+         take a (n,) numpy.ndarray and return a (n,) numpy.ndarray
          - if the given eig_constraints is a set, it does not contain an
          unsupported constraint class, and does not contain an invalid
          combination of eigenvalue constraints
@@ -1106,7 +1106,7 @@ class BOPDMD(DMDBase):
             if x_dummy.shape != y_dummy.shape:
                 msg = (
                     "eigenvalue constraint function must accept a (n,) "
-                    "np.ndarray as input and output a (n,) np.ndarray."
+                    "numpy.ndarray as input and output a (n,) numpy.ndarray."
                 )
                 raise ValueError(msg)
 

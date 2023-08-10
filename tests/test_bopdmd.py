@@ -245,7 +245,7 @@ def test_eig_constraints():
 def test_eig_constraints_errors_2():
     """
     Tests that the BOPDMD module correctly throws an error upon initialization
-    whenever the eig_constraints is a function and...
+    whenever eig_constraints is a function and...
     - eig_constraints is incompatible with general (n,) numpy.ndarray inputs
     - eig_constraints doesn't return a single numpy.ndarray
     - eig_constraints takes multiple arguments
@@ -310,7 +310,7 @@ def test_eig_constraints_2():
     Tests that if the eig_constraints function...
     - discards positive real parts, the functionality is the same as
         setting eig_constraints={"stable"}
-    - discards real parts, the functionality is the same as
+    - discards all real parts, the functionality is the same as
         setting eig_constraints={"imag"}
     - is a custom function, the functionality is as expected
     """
