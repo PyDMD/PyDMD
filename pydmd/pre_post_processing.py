@@ -22,11 +22,10 @@ class PrePostProcessingDMD:
             return self._pre_processing_fit
 
         if "reconstructed_data" == name:
-            if self._pre_processing_output is None:
-                return self._post_processing(self._dmd.reconstructed_data)
-            return self._post_processing(
-                self._dmd.reconstructed_data, self._pre_processing_output
-            )
+            post_processing_args = (self._dmd.reconstructed_data,)
+            if self._pre_processing_output is not None:
+                post_processing_args += (self._pre_processing_output,)
+            return self._post_processing(*post_processing_args)
 
         return self._dmd.__getattribute__(name)
 
