@@ -72,6 +72,13 @@ class PrePostProcessingDMD:
 
 
 def zero_mean_preprocessing(dmd: DMDBase):
+    """
+    Zero-mean pre-processing.
+
+    :param dmd: DMD instance to be wrapped.
+    :type dmd: DMDBase
+    """
+
     def pre(X):
         mean = np.mean(X)
         X[:] -= mean
