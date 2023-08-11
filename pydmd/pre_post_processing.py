@@ -1,11 +1,48 @@
+"""
+Pre/post-processing capability for DMD instances.
+"""
+
 from typing import Callable
 import numpy as np
 from .dmdbase import DMDBase
 
 
+def _shallow_preprocessing(*args, **kwargs):
+    return None
+
+
+def _identity(*args):
+    # The first item of args is always the output of dmd.reconstructed_data
+    return args[0]
+
+
 class PrePostProcessingDMD:
+    """
+    Pre/post-processing decorator. This class is not thread-safe in case of
+    stateful transformations.
+
+    :param dmd: DMD instance to be decorated.
+    :type dmd: DMDBase
+    :param pre_processing: Pre-processing function, receives positional and
+        keyword arguments passed to `DMDBase.fit()`. The pre-processing should
+        happen in-place (e.g. by modifying directly the array instead of
+        assigning a new reference). The returned value of this function is kept
+        in memory and passed to `post_processing` for stateful pre-processings.
+        By default this is an empty transformation.
+    :type pre_processing: Callable
+    :param post_processing: Post-processing function, receives the result of
+        `DMDBase.reconstructed_data` and the output value of `pre_processing`
+        if not `None`. The returned value is forwarded to the caller of
+        `PrePostProcessingDMD.reconstructed_data`. By default this is the
+        identity function.
+    :type post_processing: Callable
+    """
+
     def __init__(
-        self, dmd: DMDBase, pre_processing: Callable, post_processing: Callable
+        self,
+        dmd: DMDBase,
+        pre_processing: Callable = _shallow_preprocessing,
+        post_processing: Callable = _identity,
     ):
         self._dmd = dmd
         self._pre_processing = pre_processing
