@@ -44,6 +44,13 @@ class PrePostProcessingDMD:
         pre_processing: Callable = _shallow_preprocessing,
         post_processing: Callable = _identity,
     ):
+        if dmd is None:
+            raise ValueError("DMD instance cannot be None")
+        if pre_processing is None:
+            pre_processing = _shallow_preprocessing
+        if post_processing is None:
+            post_processing = _identity
+
         self._dmd = dmd
         self._pre_processing = pre_processing
         self._post_processing = post_processing
