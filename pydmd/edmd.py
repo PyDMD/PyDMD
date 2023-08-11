@@ -7,7 +7,7 @@ A kernel-based method for data-driven koopman spectral analysis,
 J. Comput. Dynam., 2 (2015), pp. 247-265
 - M. O. Williams, I. G. Kevrekidis, and C. W. Rowley,
 A data-driven approximation of the koopman operator: extending
-dynamic mode decomposition, J. Nonlinear Sci., 6 (2015), pp. 1307-1346
+dynamic mode decomposition, J. Nonlinear Sci., 25 (2015), pp. 1307-1346
 """
 import numpy as np
 from sklearn.metrics.pairwise import pairwise_kernels
