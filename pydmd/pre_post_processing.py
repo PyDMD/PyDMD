@@ -1,5 +1,6 @@
 from .dmdbase import DMDBase
 from typing import Callable
+import numpy as np
 
 
 class PrePostProcessingDMD(object):
@@ -32,3 +33,15 @@ class PrePostProcessingDMD(object):
     def _pre_processing_fit(self, *args, **kwargs):
         self._pre_processing_output = self._pre_processing(*args, **kwargs)
         return self._dmd.fit(*args, **kwargs)
+
+
+def zero_mean_preprocessing(dmd: DMDBase):
+    def pre(X):
+        mean = np.mean(X)
+        X[:] -= mean
+        return mean
+
+    def post(X, mean):
+        return X + mean
+
+    return PrePostProcessingDMD(dmd, pre, post)
