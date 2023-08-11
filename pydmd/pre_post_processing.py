@@ -1,15 +1,16 @@
-from .dmdbase import DMDBase
 from typing import Callable
 import numpy as np
+from .dmdbase import DMDBase
 
 
-class PrePostProcessingDMD(object):
+class PrePostProcessingDMD:
     def __init__(
         self, dmd: DMDBase, pre_processing: Callable, post_processing: Callable
     ):
         self._dmd = dmd
         self._pre_processing = pre_processing
         self._post_processing = post_processing
+        self._pre_processing_output = None
 
     def __getattribute__(self, name):
         try:
@@ -23,10 +24,9 @@ class PrePostProcessingDMD(object):
         if "reconstructed_data" == name:
             if self._pre_processing_output is None:
                 return self._post_processing(self._dmd.reconstructed_data)
-            else:
-                return self._post_processing(
-                    self._dmd.reconstructed_data, self._pre_processing_output
-                )
+            return self._post_processing(
+                self._dmd.reconstructed_data, self._pre_processing_output
+            )
 
         return self._dmd.__getattribute__(name)
 

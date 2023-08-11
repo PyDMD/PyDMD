@@ -1,8 +1,8 @@
+import numpy as np
 from pydmd.pre_post_processing import (
     PrePostProcessingDMD,
     zero_mean_preprocessing,
 )
-import numpy as np
 
 
 def test_pre_processing(mocker):
@@ -18,10 +18,10 @@ def test_pre_processing(mocker):
 
     pdmd = PrePostProcessingDMD(dmd, pre, post)
 
-    input = mocker.Mock()
-    pdmd.fit(input)
-    pre.assert_called_once_with(input)
-    dmd.fit.assert_called_once_with(input)
+    X = mocker.Mock()
+    pdmd.fit(X)
+    pre.assert_called_once_with(X)
+    dmd.fit.assert_called_once_with(X)
 
     assert pdmd.reconstructed_data is output
     post.assert_called_once_with(partial_output, preproc_state)
