@@ -29,8 +29,9 @@ class EDMDOperator(DMDOperator):
     :param kernel_function: the kernel function to apply.
     :type kernel_function: {"additive_chi2", "chi2", "linear",
         "poly", "polynomial", "rbf", "laplacian", "sigmoid", "cosine"}
-    :param kernel_params: additional parameters for the `pairwise_kernels`
-        function, including kernel-specific function parameters.
+    :param kernel_params: additional parameters for the
+        `sklearn.metrics.pairwise_kernels` function, including
+        kernel-specific function parameters.
     :type kernel_params: dict
     """
 
@@ -46,9 +47,10 @@ class EDMDOperator(DMDOperator):
         self._kernel_function = kernel_function
         self._kernel_params = kernel_params
         self._eigenvalues = None
+        self._Lambda = None
         self._modes = None
         self._svd_vals = None
-        self._reduced_eigenvectors = None
+        self._eigenvectors = None
 
     @property
     def svd_vals(self):
@@ -59,28 +61,23 @@ class EDMDOperator(DMDOperator):
         return self._svd_vals
 
     @property
-    def reduced_eigenvectors(self):
-        """
-        :return: the eigenvectors of the tranformed forward operator K_hat
-            (see reference for definition of K_hat).
-        :rtype: numpy.ndarray
-        """
-        return self._reduced_eigenvectors
-
-    @property
     def as_numpy_array(self):
-        raise ValueError("Atilde not computed explicitly during EDMD.")
+        """
+        EDMD does not explicitly compute the forward operator or its reduction.
+        Doing so poses risks of prohibitively-large computations...
+        """
+        raise ValueError("Atilde is not computed explicitly during EDMD.")
 
     def compute_operator(self, X, Y):
         """
-        Compute and store the low-rank operator and the full operator A.
+        Compute and store the kernelized EDMD diagnostics.
 
         :param X: matrix containing the right-hand side snapshots by column.
         :type X: numpy.ndarray
         :param Y: matrix containing the left-hand side snapshots by column.
         :type Y: numpy.ndarray
         :return: the (truncated) left-singular vectors matrix of the extended
-            feature matrix, the (truncated) singular values array of the
+            feature matrix, the (truncated) singular values matrix of the
             extended feature matrix, and the eigenvectors of the tranformed
             forward operator K_hat.
         :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
@@ -117,11 +114,12 @@ class EDMDOperator(DMDOperator):
 
         # Set the DMD eigenvalues and modes.
         self._eigenvalues = eigenvalues
+        self._Lambda = eigenvalues
         self._modes = modes
 
         # Store Sigma and V_hat for eigenfunction computations.
         self._svd_vals = np.diag(Sigma)
-        self._reduced_eigenvectors = V_hat
+        self._eigenvectors = V_hat
 
         return Q, Sigma, V_hat
 
@@ -130,8 +128,11 @@ class EDMDOperator(DMDOperator):
         Helper function that computes the eigendecomposition of the Gramian in
         order to obtain the singular vectors Q and singular values Sigma of the
         corresponding feature embedding matrix.
+
         :param numpy.ndarray Gramian: the Gramian matrix.
-        :return:
+        :return: the (truncated) left-singular vectors matrix of the extended
+            feature matrix and the (truncated) singular values matrix of the
+            extended feature matrix.
         :rtype: numpy.ndarray, numpy.ndarray
         """
         G_eigenvalues, G_eigenvectors = np.linalg.eig(Gramian)
@@ -161,6 +162,7 @@ class EDMDOperator(DMDOperator):
         """
         Rank computation for the truncated Singular Value Decomposition given
         only singular values.
+
         :param numpy.ndarray s: the singular values.
         :return: the computed rank truncation.
         :rtype: int
@@ -201,9 +203,12 @@ class EDMD(DMD):
         be needed (check `svd_rank`). Also setting `svd_rank` to a value
         between 0 and 1 may give better results. Default is False.
     :type opt: bool or int
-    :param kernel_function:
-    :type kernel_function: str
-    :param kernel_params:
+    :param kernel_function: the kernel function to apply.
+    :type kernel_function: {"additive_chi2", "chi2", "linear",
+        "poly", "polynomial", "rbf", "laplacian", "sigmoid", "cosine"}
+    :param kernel_params: additional parameters for the
+        `sklearn.metrics.pairwise_kernels` function, including
+        kernel-specific function parameters.
     :type kernel_params: dict
     """
 
@@ -212,7 +217,7 @@ class EDMD(DMD):
         svd_rank=-1,
         tlsq_rank=0,
         opt=False,
-        kernel_function="poly",
+        kernel_function="linear",
         kernel_params=None,
     ):
         if svd_rank == 0:
@@ -232,13 +237,21 @@ class EDMD(DMD):
             opt=opt,
         )
 
+        self._Atilde = EDMDOperator(svd_rank, kernel_function, kernel_params)
+
         self._kernel_function = kernel_function
         self._kernel_params = kernel_params
-
-        self._Atilde = EDMDOperator(svd_rank, kernel_function, kernel_params)
         self._svd_modes = None
 
     def eigenfunctions(self, x):
+        """
+        :param x: array from the original snapshot domain denoting the point
+            at which to compute the EDMD eigenfunctions.
+        :type x: numpy.ndarray
+        :return: array containing all r EDMD eigenfunctions evaluated at the
+            given domain point, where r denotes the rank of the EDMD fit.
+        :rtype: numpy.ndarray
+        """
         if self._svd_modes is None:
             raise ValueError("You need to call fit before")
 
@@ -248,20 +261,22 @@ class EDMD(DMD):
             self._kernel_function,
             **self._kernel_params,
         )
+
         return np.linalg.multi_dot(
             [
                 K_xx,
                 self._svd_modes,
                 np.linalg.pinv(np.diag(self.operator.svd_vals)),
-                self.operator.reduced_eigenvectors,
+                self.operator.eigenvectors,
             ]
         )
 
     def _test_kernel_inputs(self, kernel_function, kernel_params):
         """
-        Helper function that uses a dummy array of data in order to call
-        `pairwise_kernels` using the user-given kernel parameters. Ensures
-        that the given kernel parameters produce valid kernel matrices.
+        Helper function that uses a dummy array of data in order to
+        call `sklearn.metrics.pairwise_kernels` using the user-given
+        kernel parameters. Ensures that the given kernel parameters
+        produce valid kernel matrices.
         """
         x_dummy = np.arange(4).reshape(2, 2)
         try:
