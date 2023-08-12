@@ -45,7 +45,9 @@ def test_eigs():
     of the toy system from the original EDMD paper.
     """
     edmd = EDMD(
-        svd_rank=16, kernel_function="rbf", kernel_params={"gamma": 0.001}
+        svd_rank=16,
+        kernel_function="rbf",
+        kernel_params={"gamma": 0.001},
     )
     edmd.fit(X, Y)
     sorted_inds = np.argsort(-np.abs(edmd.eigs))
@@ -59,7 +61,9 @@ def test_eigenfunctions():
     of the toy system from the original EDMD paper.
     """
     edmd = EDMD(
-        svd_rank=16, kernel_function="rbf", kernel_params={"gamma": 0.001}
+        svd_rank=16,
+        kernel_function="rbf",
+        kernel_params={"gamma": 0.001},
     )
     edmd.fit(X, Y)
 
@@ -90,7 +94,9 @@ def test_reconstruction():
     Test that EDMD can sucessfully reconstruct the forward-time system.
     """
     edmd = EDMD(
-        svd_rank=16, kernel_function="rbf", kernel_params={"gamma": 0.001}
+        svd_rank=16,
+        kernel_function="rbf",
+        kernel_params={"gamma": 0.001},
     )
     edmd.fit(X, Y)
     assert_allclose(edmd.reconstructed_data, X2)
@@ -101,6 +107,7 @@ def test_kernel_errors():
     Test that EDMD throws error upon initialization in the following scenarios:
         - kernel_function is not a string
         - kernel_function is a string, but it's an invalid kernel function
+        - kernel_params isn't a dictionary
         - kernel_params contains an invalid key type
         - kernel_params contains an invalid value type
         - kernel_params contains an entry that's incompatible with the kernel
@@ -112,13 +119,16 @@ def test_kernel_errors():
         EDMD(kernel_function="rbf!")
 
     with raises(ValueError):
+        EDMD(kernel_function="rbf", kernel_params=3)
+
+    with raises(ValueError):
         EDMD(kernel_function="rbf", kernel_params={1: 3})
 
     with raises(ValueError):
         EDMD(kernel_function="rbf", kernel_params={"gamma": "three"})
 
     with raises(ValueError):
-        EDMD(kernel_function="rbf", kernel_params={"gamma": 3, "deg": 5})
+        EDMD(kernel_function="rbf", kernel_params={"gamma": 3, "degree": 5})
 
 
 def test_svd_error():
@@ -131,9 +141,29 @@ def test_svd_error():
 
 def test_atilde_error():
     """
-    Test that EDMD throws error if user asks for the computed operator matrix.
+    Test that EDMD throws error if a user asks for the operator matrix.
     """
     edmd = EDMD(svd_rank=16)
     edmd.fit(X, Y)
     with raises(ValueError):
         _ = edmd.operator.as_numpy_array
+
+
+def test_eigenfunction_error():
+    """
+    Test that EDMD throws an error if a user attempts to either
+    - compute eigenfunctions prior to calling fit, or
+    - compute eigenfunctions using input other than a 1-D numpy array.
+    """
+    edmd = EDMD()
+
+    with raises(ValueError):
+        _ = edmd.eigenfunctions(np.array([1, 1]))
+
+    edmd.fit(X, Y)
+
+    with raises(ValueError):
+        _ = edmd.eigenfunctions([1, 1])
+
+    with raises(ValueError):
+        _ = edmd.eigenfunctions(np.array([1, 1])[None, :])

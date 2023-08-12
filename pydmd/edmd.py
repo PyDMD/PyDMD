@@ -255,6 +255,9 @@ class EDMD(DMD):
         if self._svd_modes is None:
             raise ValueError("You need to call fit before")
 
+        if not isinstance(x, np.ndarray) or np.ndim(x) != 1:
+            raise ValueError("Input x must be a 1-D numpy array.")
+
         K_xx = pairwise_kernels(
             x[None, :],
             self.snapshots.T,
