@@ -1,9 +1,9 @@
 from typing import Dict, Union, List, Tuple
 from functools import partial
 import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view
 from pydmd.dmdbase import DMDBase
 from pydmd.preprocessing import PrePostProcessingDMD
+from pydmd.utils import pseudo_hankel_matrix
 
 _reconstruction_method_type = Union[str, np.ndarray, List, Tuple]
 
@@ -22,7 +22,7 @@ def hankel_preprocessing(
     """
     return PrePostProcessingDMD(
         dmd,
-        partial(_hankel_pre_processing, d=d),
+        partial(_preprocessing, d=d),
         partial(
             _hankel_post_processing,
             d=d,
@@ -31,43 +31,8 @@ def hankel_preprocessing(
     )
 
 
-def _hankel_pre_processing(
-    _: Dict, X: np.ndarray, d: int, **kwargs  # No state
-):
-    """
-    Arrange the snapshot in the matrix `X` into the (pseudo) Hankel
-    matrix. The attribute `d` controls the number of snapshot from `X` in
-    each snapshot of the Hankel matrix.
-
-    :Example:
-
-        >>> import numpy as np
-
-        >>> a = np.array([[1, 2, 3, 4, 5]])
-        >>> _hankel_pre_processing(a, d=2)
-        array([[1, 2, 3, 4],
-               [2, 3, 4, 5]])
-        >>> _hankel_pre_processing(a, d=4)
-        array([[1, 2],
-               [2, 3],
-               [3, 4],
-               [4, 5]])
-
-        >>> a = np.array([1,2,3,4,5,6]).reshape(2,3)
-        array([[1, 2, 3],
-               [4, 5, 6]])
-        >>> _hankel_pre_processing(a, d=2)
-        array([[1, 2],
-               [4, 5],
-               [2, 3],
-               [5, 6]])
-    """
-    return (
-        sliding_window_view(X.T, (d, X.shape[0]))[:, 0]
-        .reshape(X.shape[1] - d + 1, -1)
-        .T,
-        *kwargs.values(),
-    )
+def _preprocessing(_: Dict, X: np.ndarray, d: int, **kwargs):
+    return pseudo_hankel_matrix(X, d), *kwargs.values()
 
 
 def _reconstructions(rec: np.ndarray, d: int):
