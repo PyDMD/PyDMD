@@ -27,16 +27,13 @@ class PrePostProcessingDMD:
     stateful transformations.
 
     :param dmd: DMD instance to be decorated.
-    :type dmd: DMDBase
     :param pre_processing: Pre-processing function, receives a state holder `dict`
         for stateful preprocessing, and positional/keyword arguments passed to
         `DMDBase.fit()`. The returned values from this function are passed exactly
         in the same order to the wrapped DMD instance.
-    :type pre_processing: Callable
     :param post_processing: Post-processing function, receives the state holder
         created during the pre-processing and the value of the reconstructed data
         from the wrapped DMD instance.
-    :type post_processing: Callable
     """
 
     def __init__(

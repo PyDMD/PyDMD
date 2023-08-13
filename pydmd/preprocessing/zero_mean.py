@@ -9,7 +9,6 @@ def zero_mean_preprocessing(dmd: DMDBase):
     Zero-mean pre-processing.
 
     :param dmd: DMD instance to be wrapped.
-    :type dmd: DMDBase
     """
     return PrePostProcessingDMD(dmd, _pre, _post)
 
