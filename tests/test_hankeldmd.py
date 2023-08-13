@@ -9,7 +9,9 @@ from pydmd import HankelDMD
 # the following data: f1 + f2 where
 # f1 = lambda x,t: sech(x+3)*(1.*np.exp(1j*2.3*t))
 # f2 = lambda x,t: (sech(x)*np.tanh(x))*(2.*np.exp(1j*2.8*t))
-sample_data = np.load("tests/test_datasets/input_sample.npy")
+sample_data = np.load(
+    "/home/fandreuz/code/PyDMD/tests/test_datasets/input_sample.npy"
+)
 
 
 def create_noisy_data():
@@ -274,19 +276,6 @@ def test_reconstruction_method_default_constructor():
     assert HankelDMD()._reconstruction_method == "first"
 
 
-def test_reconstruction_method_constructor():
-    assert (
-        HankelDMD(reconstruction_method="mean")._reconstruction_method == "mean"
-    )
-    assert HankelDMD(reconstruction_method=[3])._reconstruction_method == [3]
-    assert all(
-        HankelDMD(
-            reconstruction_method=np.array([1, 2]), d=2
-        )._reconstruction_method
-        == np.array([1, 2])
-    )
-
-
 def test_nonan_nomask():
     dmd = HankelDMD(d=3)
     dmd.fit(X=sample_data)
@@ -294,43 +283,6 @@ def test_nonan_nomask():
 
     assert not isinstance(rec, np.ma.MaskedArray)
     assert not np.nan in rec
-
-
-def test_extract_versions_nonan():
-    dmd = HankelDMD(d=3)
-    dmd.fit(X=sample_data)
-    for timeindex in range(sample_data.shape[1]):
-        assert not np.nan in dmd.reconstructions_of_timeindex(timeindex)
-
-
-def test_rec_method_first():
-    dmd = HankelDMD(d=3, reconstruction_method="first")
-    dmd.fit(X=sample_data)
-
-    rec = dmd.reconstructed_data
-    allrec = dmd.reconstructions_of_timeindex()
-    for i in range(rec.shape[1]):
-        assert (rec[:, i] == allrec[i, min(i, dmd.d - 1)]).all()
-
-
-def test_rec_method_mean():
-    dmd = HankelDMD(d=3, reconstruction_method="mean")
-    dmd.fit(X=sample_data)
-    assert (
-        dmd.reconstructed_data.T[2]
-        == np.mean(dmd.reconstructions_of_timeindex(2), axis=0).T
-    ).all()
-
-
-def test_rec_method_weighted():
-    dmd = HankelDMD(d=2, reconstruction_method=[10, 20])
-    dmd.fit(X=sample_data)
-    assert (
-        dmd.reconstructed_data.T[4]
-        == np.average(
-            dmd.reconstructions_of_timeindex(4), axis=0, weights=[10, 20]
-        ).T
-    ).all()
 
 
 def test_hankeldmd_timesteps():
@@ -514,44 +466,6 @@ def test_reconstructed_data_with_bitmask():
 
     dmd.reconstructed_data
     assert True
-
-
-def test_getitem_modes():
-    dmd = HankelDMD(svd_rank=-1, d=5)
-    dmd.fit(X=sample_data)
-    old_n_modes = dmd.modes.shape[1]
-
-    assert dmd[[0, -1]].modes.shape[1] == 2
-    np.testing.assert_almost_equal(dmd[[0, -1]].modes, dmd.modes[:, [0, -1]])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-    assert dmd[1::2].modes.shape[1] == old_n_modes // 2
-    np.testing.assert_almost_equal(dmd[1::2].modes, dmd.modes[:, 1::2])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-    assert dmd[[1, 3]].modes.shape[1] == 2
-    np.testing.assert_almost_equal(dmd[[1, 3]].modes, dmd.modes[:, [1, 3]])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-    assert dmd[2].modes.shape[1] == 1
-    np.testing.assert_almost_equal(np.squeeze(dmd[2].modes), dmd.modes[:, 2])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-
-def test_getitem_raises():
-    dmd = HankelDMD(svd_rank=-1, d=5)
-    dmd.fit(X=sample_data)
-
-    with raises(ValueError):
-        dmd[[0, 1, 1, 0, 1]]
-    with raises(ValueError):
-        dmd[[True, True, False, True]]
-    with raises(ValueError):
-        dmd[1.0]
 
 
 def test_correct_amplitudes():

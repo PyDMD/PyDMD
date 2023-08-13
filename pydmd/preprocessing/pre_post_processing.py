@@ -49,7 +49,7 @@ class PrePostProcessingDMD:
         if post_processing is None:
             post_processing = _shallow_postprocessing
 
-        self._dmd = dmd
+        self._pre_post_processed_dmd = dmd
         self._pre_processing = pre_processing
         self._post_processing = post_processing
         self._state_holder = None
@@ -65,16 +65,28 @@ class PrePostProcessingDMD:
 
         if "reconstructed_data" == name:
             output = self._post_processing(
-                self._state_holder, self._dmd.reconstructed_data
+                self._state_holder,
+                self._pre_post_processed_dmd.reconstructed_data,
             )
             self._state_holder = None
             return output
 
-        return self._dmd.__getattribute__(name)
+        # This check is needed to allow copy/deepcopy
+        if name != "_pre_post_processed_dmd":
+            return object.__getattribute__(self._pre_post_processed_dmd, name)
+        return None
+
+    @property
+    def modes_activation_bitmask(self):
+        return self._pre_post_processed_dmd.modes_activation_bitmask
+
+    @modes_activation_bitmask.setter
+    def modes_activation_bitmask(self, value):
+        self._pre_post_processed_dmd.modes_activation_bitmask = value
 
     def _pre_processing_fit(self, *args, **kwargs):
         self._state_holder = dict()
         pre_processing_output = tuplify(
             self._pre_processing(self._state_holder, *args, **kwargs)
         )
-        return self._dmd.fit(*pre_processing_output)
+        return self._pre_post_processed_dmd.fit(*pre_processing_output)

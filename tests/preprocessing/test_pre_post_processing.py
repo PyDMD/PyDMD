@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from copy import copy, deepcopy
 from pydmd.preprocessing import PrePostProcessingDMD
 
 _kwargs = {"param1": "value1", "param2": "value2"}
@@ -60,3 +61,17 @@ def test_pre_processing_default_postprocessing(mocker):
     pdmd.fit(X)
 
     assert pdmd.reconstructed_data is partial_output
+
+
+def test_copy(mocker):
+    dmd = mocker.Mock()
+    dmd.fit = mocker.Mock()
+    pdmd = PrePostProcessingDMD(dmd)
+    assert copy(pdmd)._dmd == dmd
+
+
+def test_deepcopy(mocker):
+    dmd = mocker.Mock()
+    dmd.fit = mocker.Mock()
+    pdmd = PrePostProcessingDMD(dmd)
+    assert deepcopy(pdmd)._dmd is not None
