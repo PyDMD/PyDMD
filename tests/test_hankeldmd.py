@@ -9,9 +9,7 @@ from pydmd import HankelDMD
 # the following data: f1 + f2 where
 # f1 = lambda x,t: sech(x+3)*(1.*np.exp(1j*2.3*t))
 # f2 = lambda x,t: (sech(x)*np.tanh(x))*(2.*np.exp(1j*2.8*t))
-sample_data = np.load(
-    "/home/fandreuz/code/PyDMD/tests/test_datasets/input_sample.npy"
-)
+sample_data = np.load("tests/test_datasets/input_sample.npy")
 
 
 def create_noisy_data():
