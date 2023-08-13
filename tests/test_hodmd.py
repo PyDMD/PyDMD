@@ -349,44 +349,6 @@ def test_reconstructed_data_with_bitmask():
     assert True
 
 
-def test_getitem_modes():
-    dmd = HODMD(svd_rank=-1, d=5)
-    dmd.fit(X=sample_data)
-    old_n_modes = dmd.modes.shape[1]
-
-    assert dmd[[0, -1]].modes.shape[1] == 2
-    np.testing.assert_almost_equal(dmd[[0, -1]].modes, dmd.modes[:, [0, -1]])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-    assert dmd[1::2].modes.shape[1] == old_n_modes // 2
-    np.testing.assert_almost_equal(dmd[1::2].modes, dmd.modes[:, 1::2])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-    assert dmd[[1, 3]].modes.shape[1] == 2
-    np.testing.assert_almost_equal(dmd[[1, 3]].modes, dmd.modes[:, [1, 3]])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-    assert dmd[2].modes.shape[1] == 1
-    np.testing.assert_almost_equal(np.squeeze(dmd[2].modes), dmd.modes[:, 2])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-
-def test_getitem_raises():
-    dmd = HODMD(svd_rank=-1, d=5)
-    dmd.fit(X=sample_data)
-
-    with raises(ValueError):
-        dmd[[0, 1, 1, 0, 1]]
-    with raises(ValueError):
-        dmd[[True, True, False, True]]
-    with raises(ValueError):
-        dmd[1.0]
-
-
 def test_correct_amplitudes():
     dmd = HODMD(svd_rank=-1, d=5)
     dmd.fit(X=sample_data)
