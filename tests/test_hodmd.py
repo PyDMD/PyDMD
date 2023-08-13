@@ -130,14 +130,6 @@ def test_dynamics_opt_2():
     assert dmd.dynamics.shape == (4, sample_data.shape[1])
 
 
-def test_reconstructed_data():
-    dmd = HODMD(d=2)
-    dmd.fit(X=sample_data)
-    dmd.reconstructions_of_timeindex(2)
-    dmd_data = dmd.reconstructed_data
-    np.testing.assert_allclose(dmd_data, sample_data)
-
-
 def test_original_time():
     dmd = HODMD(svd_rank=2)
     dmd.fit(X=sample_data)
@@ -249,48 +241,11 @@ def test_nonan_nomask():
     assert not np.nan in rec
 
 
-def test_extract_versions_nonan():
-    dmd = HODMD(d=3)
-    dmd.fit(X=sample_data)
-    for timeindex in range(sample_data.shape[1]):
-        assert not np.nan in dmd.reconstructions_of_timeindex(timeindex)
-
-
-def test_rec_method_first():
-    dmd = HODMD(d=3, reconstruction_method="first")
-    dmd.fit(X=sample_data)
-
-    rec = dmd.reconstructed_data
-    allrec = dmd.reconstructions_of_timeindex()
-    for i in range(rec.shape[1]):
-        assert (rec[:, i] == allrec[i, min(i, dmd.d - 1)]).all()
-
-
-def test_rec_method_mean():
-    dmd = HODMD(d=3, reconstruction_method="mean")
-    dmd.fit(X=sample_data)
-    assert (
-        dmd.reconstructed_data.T[2]
-        == np.mean(dmd.reconstructions_of_timeindex(2), axis=0).T
-    ).all()
-
-
-def test_rec_method_weighted():
-    dmd = HODMD(d=2, svd_rank_extra=-1, reconstruction_method=[10, 20])
-    dmd.fit(X=sample_data)
-    assert (
-        dmd.reconstructed_data.T[4]
-        == np.average(
-            dmd.reconstructions_of_timeindex(4), axis=0, weights=[10, 20]
-        ).T
-    ).all()
-
-
 def test_scalar_func():
     x = np.linspace(0, 10, 64)[None]
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
     # we check that this does not fail
-    dmd = HODMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
+    HODMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
 
 
 def test_get_bitmask_default():

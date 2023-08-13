@@ -93,37 +93,6 @@ class HODMD(HankelDMD):
         self._svd_rank_extra = svd_rank_extra  # TODO improve names
         self.U_extra = None
 
-    def reconstructions_of_timeindex(self, timeindex=None):
-        """
-        Build a collection of all the available versions of the given
-        `timeindex`. The indexing of time instants is the same used for
-        :func:`reconstructed_data`. For each time instant there are at least
-        one and at most `d` versions.  If `timeindex` is `None` the function
-        returns the whole collection, for all the time instants.
-
-        :param int timeindex: The index of the time snapshot.
-        :return: A collection of all the available versions for the requested
-            time instants, represented by a matrix (or tensor).
-            Axes:
-            0. Number of time instants;
-            1. Copies of the snapshot;
-            2. Space dimension of the snapshot.
-            The first axis is omitted if only one single time instant is
-            selected, in this case the output becomes a 2D matrix.
-        :rtype: numpy.ndarray
-        """
-        snapshots = super().reconstructions_of_timeindex(timeindex)
-        if snapshots.ndim == 2:  # single time instant
-            snapshots = self.U_extra.dot(snapshots.T).T
-        elif snapshots.ndim == 3:  # all time instants
-            snapshots = np.array(
-                [self.U_extra.dot(snapshot.T).T for snapshot in snapshots]
-            )
-        else:
-            raise RuntimeError
-
-        return snapshots
-
     def fit(self, X):
         """
         Compute the Dynamic Modes Decomposition to the input data.
