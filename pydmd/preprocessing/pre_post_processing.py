@@ -73,6 +73,9 @@ class PrePostProcessingDMD:
 
         # This check is needed to allow copy/deepcopy
         if name != "_pre_post_processed_dmd":
+            sub_dmd = self._pre_post_processed_dmd
+            if isinstance(sub_dmd, PrePostProcessingDMD):
+                return PrePostProcessingDMD.__getattribute__(sub_dmd, name)
             return object.__getattribute__(self._pre_post_processed_dmd, name)
         return None
 

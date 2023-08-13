@@ -18,5 +18,5 @@ def _pre(state: Dict, X: np.ndarray, **kwargs):
     return X - state["mean"], *kwargs.values()
 
 
-def _post(state: Dict, X: np.ndarray):
+def _post(state: Dict, X: np.ndarray) -> np.ndarray:
     return X + state["mean"]

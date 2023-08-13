@@ -10,8 +10,8 @@ import warnings
 import numpy as np
 
 from .hankeldmd import HankelDMD
-from .utils import compute_svd
 from .snapshots import Snapshots
+from .preprocessing.svd_projection import svd_projection_preprocessing
 
 
 class HODMD(HankelDMD):
@@ -89,9 +89,9 @@ class HODMD(HankelDMD):
             sorted_eigs=sorted_eigs,
             reconstruction_method=reconstruction_method,
         )
-
-        self._svd_rank_extra = svd_rank_extra  # TODO improve names
-        self.U_extra = None
+        self._sub_dmd = svd_projection_preprocessing(
+            self._sub_dmd, svd_rank_extra
+        )
 
     def fit(self, X):
         """
@@ -101,24 +101,8 @@ class HODMD(HankelDMD):
         :type X: numpy.ndarray or iterable
         """
         snapshots_holder = Snapshots(X)
-        snapshots = snapshots_holder.snapshots
 
-        space_dim = snapshots.shape[0]
-        if space_dim == 1:
-            svd_rank_extra = -1
-            warnings.warn(
-                (
-                    f"The parameter 'svd_rank_extra={self._svd_rank_extra}' has "
-                    "been ignored because the given system is a scalar function"
-                )
-            )
-        else:
-            svd_rank_extra = self._svd_rank_extra
-        self.U_extra, _, _ = compute_svd(snapshots, svd_rank_extra)
-
-        snp = self.U_extra.T.dot(snapshots)
-
-        super().fit(snp)
+        super().fit(snapshots_holder.snapshots)
         self._snapshots_holder = snapshots_holder
 
         return self
