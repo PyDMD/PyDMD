@@ -3,8 +3,7 @@ Pre/post-processing capability for DMD instances.
 """
 
 from typing import Callable, Dict
-import numpy as np
-from .dmdbase import DMDBase
+from pydmd.dmdbase import DMDBase
 
 
 def _shallow_preprocessing(state: Dict, *args, **kwargs):
@@ -82,21 +81,3 @@ class PrePostProcessingDMD:
             self._pre_processing(self._state_holder, *args, **kwargs)
         )
         return self._dmd.fit(*pre_processing_output)
-
-
-def zero_mean_preprocessing(dmd: DMDBase):
-    """
-    Zero-mean pre-processing.
-
-    :param dmd: DMD instance to be wrapped.
-    :type dmd: DMDBase
-    """
-
-    def pre(state: Dict, X: np.ndarray, **kwargs):
-        state["mean"] = np.mean(X)
-        return X - state["mean"], *kwargs.values()
-
-    def post(state: Dict, X: np.ndarray):
-        return X + state["mean"]
-
-    return PrePostProcessingDMD(dmd, pre, post)
