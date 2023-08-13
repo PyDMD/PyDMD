@@ -67,11 +67,11 @@ def test_copy(mocker):
     dmd = mocker.Mock()
     dmd.fit = mocker.Mock()
     pdmd = PrePostProcessingDMD(dmd)
-    assert copy(pdmd)._dmd == dmd
+    assert copy(pdmd)._pre_post_processed_dmd == dmd
 
 
 def test_deepcopy(mocker):
     dmd = mocker.Mock()
     dmd.fit = mocker.Mock()
     pdmd = PrePostProcessingDMD(dmd)
-    assert deepcopy(pdmd)._dmd is not None
+    assert deepcopy(pdmd)._pre_post_processed_dmd is not None
