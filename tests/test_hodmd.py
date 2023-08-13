@@ -64,7 +64,7 @@ def test_d():
     dmd = HODMD(svd_rank=-1, d=50, opt=True, exact=True, svd_rank_extra=-1)
     dmd.fit(single_data)
     assert np.allclose(dmd.reconstructed_data, single_data)
-    assert dmd.d == 50
+    assert dmd._d == 50
 
 
 def test_Atilde_values():

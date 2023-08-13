@@ -113,11 +113,6 @@ class HankelDMD(DMDBase):
             sub_dmd, d=d, reconstruction_method=reconstruction_method
         )
 
-    @property
-    def d(self):
-        """The new order for spatial dimension of the input snapshots."""
-        return self._d
-
     def _hankel_first_occurrence(self, time):
         r"""
         For a given `t` such that there is :math:`k \in \mathbb{N}` such that
@@ -134,7 +129,7 @@ class HankelDMD(DMDBase):
         return max(
             0,
             (time - self.original_time["t0"]) // self.dmd_time["dt"]
-            - (self.original_time["t0"] + self.d - 1),
+            - (self.original_time["t0"] + self._d - 1),
         )
 
     def _update_sub_dmd_time(self):
@@ -157,7 +152,7 @@ class HankelDMD(DMDBase):
 
         # we want to return only the requested timesteps
         time_index = min(
-            self.d - 1,
+            self._d - 1,
             int(
                 (self.dmd_time["t0"] - self.original_time["t0"])
                 // self.dmd_time["dt"]
