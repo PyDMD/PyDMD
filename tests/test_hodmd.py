@@ -365,3 +365,10 @@ def test_raises_not_enough_snapshots():
     with raises(ValueError, match="Received only one time snapshot."):
         dmd.fit(np.ones((20, 5)))
     dmd.fit(np.ones((20, 6)))
+
+
+def test_hodmd_1d():
+    dmd = HODMD(svd_rank=-1, d=5)
+    data = np.pi * np.cos(np.linspace(0, 2, 100))[None]
+    dmd.fit(data)
+    np.testing.assert_allclose(data, dmd.reconstructed_data)
