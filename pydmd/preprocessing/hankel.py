@@ -2,7 +2,7 @@ from typing import Dict, Union, List, Tuple
 from functools import partial
 import numpy as np
 from pydmd.dmdbase import DMDBase
-from pydmd.preprocessing import PrePostProcessingDMD
+from pydmd.preprocessing.pre_post_processing import PrePostProcessingDMD
 from pydmd.utils import pseudo_hankel_matrix
 
 _reconstruction_method_type = Union[str, np.ndarray, List, Tuple]

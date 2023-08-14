@@ -6,11 +6,11 @@ from typing import Callable, Dict
 from pydmd.dmdbase import DMDBase
 
 
-def _shallow_preprocessing(state: Dict, *args, **kwargs):
+def _shallow_preprocessing(_: Dict, *args, **kwargs):
     return args + tuple(kwargs.values())
 
 
-def _shallow_postprocessing(state: Dict, *args):
+def _shallow_postprocessing(_: Dict, *args):
     # The first item of args is always the output of dmd.reconstructed_data
     return args[0]
 
