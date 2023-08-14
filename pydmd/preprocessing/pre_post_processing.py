@@ -7,7 +7,7 @@ from pydmd.dmdbase import DMDBase
 
 
 def _shallow_preprocessing(state: Dict, *args, **kwargs):
-    return *args, *kwargs.values()
+    return args + tuple(kwargs.values())
 
 
 def _shallow_postprocessing(state: Dict, *args):
