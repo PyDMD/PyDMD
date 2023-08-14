@@ -68,7 +68,6 @@ class PrePostProcessingDMD:
                 self._state_holder,
                 self._pre_post_processed_dmd.reconstructed_data,
             )
-            self._state_holder = None
             return output
 
         # This check is needed to allow copy/deepcopy

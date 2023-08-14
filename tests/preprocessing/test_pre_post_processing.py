@@ -30,7 +30,7 @@ def test_pre_processing(mocker):
 
     assert pdmd.reconstructed_data is output
     post.assert_called_once_with(mock_dict, partial_output)
-    assert pdmd._state_holder is None
+    assert pdmd._state_holder is not None
 
 
 def test_pre_processing_default_preprocessing(mocker):
