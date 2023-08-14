@@ -92,4 +92,5 @@ class PrePostProcessingDMD:
         pre_processing_output = tuplify(
             self._pre_processing(self._state_holder, *args, **kwargs)
         )
+        print(pre_processing_output)
         return self._pre_post_processed_dmd.fit(*pre_processing_output)

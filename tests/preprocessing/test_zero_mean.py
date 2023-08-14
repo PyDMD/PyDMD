@@ -11,6 +11,7 @@ def test_zero_mean(mocker):
     pdmd.fit(X)
     fit_call_args = dmd.fit.call_args_list
     assert len(fit_call_args) == 1
+    print(fit_call_args[0])
     assert (fit_call_args[0][0][0] == [-1, 0, 1]).all()
 
     dmd.reconstructed_data = np.zeros(3, dtype=float)

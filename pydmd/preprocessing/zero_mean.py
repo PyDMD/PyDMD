@@ -15,7 +15,7 @@ def zero_mean_preprocessing(dmd: DMDBase):
 
 def _pre(state: Dict, X: np.ndarray, **kwargs):
     state["mean"] = np.mean(X)
-    return X - state["mean"], *kwargs.values()
+    return (X - state["mean"],) + tuple(kwargs.values())
 
 
 def _post(state: Dict, X: np.ndarray) -> np.ndarray:

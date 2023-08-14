@@ -32,7 +32,7 @@ def _pre(state: Dict, X: np.ndarray, svd_rank: svd_rank_type, **kwargs):
         )
     state["projection_matrix"], _, _ = compute_svd(X, svd_rank)
 
-    return state["projection_matrix"].T.dot(X), *kwargs.values()
+    return (state["projection_matrix"].T.dot(X),) + tuple(kwargs.values())
 
 
 def _post(state: Dict, X: np.ndarray) -> np.ndarray:

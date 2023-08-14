@@ -32,7 +32,7 @@ def hankel_preprocessing(
 
 
 def _preprocessing(_: Dict, X: np.ndarray, d: int, **kwargs):
-    return pseudo_hankel_matrix(X, d), *kwargs.values()
+    return (pseudo_hankel_matrix(X, d),) + tuple(kwargs.values())
 
 
 def _reconstructions(rec: np.ndarray, d: int):
