@@ -15,7 +15,7 @@ def _shallow_postprocessing(_: Dict, *args):
     return args[0]
 
 
-def tuplify(value):
+def _tuplify(value):
     if isinstance(value, tuple):
         return value
     return (value,)
@@ -89,7 +89,7 @@ class PrePostProcessingDMD:
 
     def _pre_processing_fit(self, *args, **kwargs):
         self._state_holder = dict()
-        pre_processing_output = tuplify(
+        pre_processing_output = _tuplify(
             self._pre_processing(self._state_holder, *args, **kwargs)
         )
         print(pre_processing_output)
