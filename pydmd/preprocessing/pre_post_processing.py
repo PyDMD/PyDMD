@@ -87,7 +87,7 @@ class PrePostProcessingDMD:
         self._pre_post_processed_dmd.modes_activation_bitmask = value
 
     def _pre_processing_fit(self, *args, **kwargs):
-        self._state_holder = {}
+        self._state_holder = dict()
         pre_processing_output = _tuplify(
             self._pre_processing(self._state_holder, *args, **kwargs)
         )
