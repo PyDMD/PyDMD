@@ -10,12 +10,10 @@ Nature Communications, 8, 2017.
 import numpy as np
 from scipy import signal
 
-from .hankeldmd import HankelDMD
 from .snapshots import Snapshots
 from .utils import compute_svd, pseudo_hankel_matrix
 from .dmdbase import DMDBase
 from .dmd import DMD
-from .preprocessing.hankel import hankel_preprocessing
 
 
 class HAVOK(DMDBase):
