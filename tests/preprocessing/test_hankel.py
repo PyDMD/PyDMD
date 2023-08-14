@@ -4,7 +4,6 @@ from pydmd.preprocessing.hankel import (
     _preprocessing,
     _reconstructions,
 )
-from pydmd.utils import pseudo_hankel_matrix
 from pydmd import DMD
 
 sample_data = np.load("tests/test_datasets/input_sample.npy").real
