@@ -1,3 +1,7 @@
+"""
+Zero-mean pre-processing.
+"""
+
 from typing import Dict
 import numpy as np
 from pydmd.dmdbase import DMDBase

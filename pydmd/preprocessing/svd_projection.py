@@ -1,3 +1,7 @@
+"""
+SVD projection pre-processing.
+"""
+
 from typing import Dict, Union
 from functools import partial
 import warnings

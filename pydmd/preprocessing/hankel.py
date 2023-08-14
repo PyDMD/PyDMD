@@ -1,3 +1,7 @@
+"""
+Hankel pre-processing.
+"""
+
 from typing import Dict, Union, List, Tuple
 from functools import partial
 import numpy as np
