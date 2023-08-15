@@ -57,7 +57,7 @@ class PrePostProcessingDMD:
     def __getattribute__(self, name):
         try:
             return object.__getattribute__(self, name)
-        except:
+        except AttributeError:
             pass
 
         if "fit" == name:
