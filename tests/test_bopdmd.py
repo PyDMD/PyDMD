@@ -1,39 +1,38 @@
 import numpy as np
-from scipy.integrate import ode
+from scipy.integrate import solve_ivp
 from pytest import raises
+
 from pydmd.bopdmd import BOPDMD
 
 
-def f(t, y):
+def simulate_z(t_eval):
     """
-    y'(t) = f(t, y)
-    """
-    z1, z2 = y
-    z1_prime = z1 - 2 * z2
-    z2_prime = z1 - z2
-    return np.array((z1_prime, z2_prime))
-
-
-def simulate_z(t):
-    """
-    Given a time vector t = t1, t2, ..., evaluates and returns the snapshots
-    z(t1), z(t2), ... as columns of the matrix Z via explicit Runge-Kutta.
-
+    Given a time vector t_eval = t1, t2, ..., evaluates and returns
+    the snapshots z(t1), z(t2), ... as columns of the matrix Z.
     Simulates data z given by the system of ODEs
         z' = Az
     where A = [1 -2; 1 -1] and z_0 = [1, 0.1].
     """
-    z_0 = np.array((1.0, 0.1))
-    Z = np.empty((2, len(t)))
-    Z[:, 0] = z_0
-    r = ode(f).set_integrator("dopri5")
-    r.set_initial_value(z_0, t[0])
-    for i, t_i in enumerate(t):
-        if i == 0:
-            continue
-        r.integrate(t_i)
-        Z[:, i] = r.y
-    return Z
+
+    def ode_sys(zt, z):
+        z1, z2 = z
+        return [z1 - 2 * z2, z1 - z2]
+
+    # Set integrator keywords to replicate odeint defaults.
+    integrator_keywords = {}
+    integrator_keywords["rtol"] = 1e-12
+    integrator_keywords["method"] = "LSODA"
+    integrator_keywords["atol"] = 1e-12
+
+    sol = solve_ivp(
+        ode_sys,
+        [t_eval[0], t_eval[-1]],
+        [1.0, 0.1],
+        t_eval=t_eval,
+        **integrator_keywords
+    )
+
+    return sol.y
 
 
 def sort_imag(x):
@@ -241,3 +240,99 @@ def test_eig_constraints():
     bopdmd.fit(Z, t)
     assert np.all(bopdmd.eigs.real == 0.0)
     assert bopdmd.eigs[0].imag == -bopdmd.eigs[1].imag
+
+
+def test_eig_constraints_errors_2():
+    """
+    Tests that the BOPDMD module correctly throws an error upon initialization
+    whenever eig_constraints is a function and...
+    - eig_constraints is incompatible with general (n,) numpy.ndarray inputs
+    - eig_constraints doesn't return a single numpy.ndarray
+    - eig_constraints takes multiple arguments
+    - eig_constraints changes the shape of the input array
+    """
+
+    # Function that assumes the input is length 3.
+    def bad_func_1(x):
+        return np.multiply(x, np.arange(3))
+
+    # Function that assumes the input array is at least 2-dimensional.
+    def bad_func_2(x):
+        return x[0, :] + x[1, :]
+
+    # Function that doesn't return an array.
+    def bad_func_3(x):
+        return len(x)
+
+    # Function that returns 2 arrays instead of 1.
+    def bad_func_4(x):
+        return x, 2 * x
+
+    # Function that accepts more than 1 input.
+    def bad_func_5(x, y):
+        return x + y
+
+    # Function that returns an array with a different shape.
+    def bad_func_6(x):
+        return x[:-1]
+
+    # Function that returns an array with an extra dimension.
+    def bad_func_7(x):
+        return x[:, None]
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_1)
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_2)
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_3)
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_4)
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_5)
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_6)
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_7)
+
+    # See that bad_func_1 is fine if the svd_rank is 3.
+    BOPDMD(svd_rank=3, eig_constraints=bad_func_1)
+
+
+def test_eig_constraints_2():
+    """
+    Tests that if the eig_constraints function...
+    - discards positive real parts, the functionality is the same as
+        setting eig_constraints={"stable"}
+    - discards all real parts, the functionality is the same as
+        setting eig_constraints={"imag"}
+    - is a custom function, the functionality is as expected
+    """
+
+    def make_stable(x):
+        right_half = x.real > 0.0
+        x[right_half] = 1j * x[right_half].imag
+        return x
+
+    def make_imag(x):
+        return 1j * x.imag
+
+    def make_real(x):
+        return x.real
+
+    bopdmd1 = BOPDMD(svd_rank=2, eig_constraints={"stable"}).fit(Z, t)
+    bopdmd2 = BOPDMD(svd_rank=2, eig_constraints=make_stable).fit(Z, t)
+    np.testing.assert_array_equal(bopdmd1.eigs, bopdmd2.eigs)
+
+    bopdmd1 = BOPDMD(svd_rank=2, eig_constraints={"imag"}).fit(Z, t)
+    bopdmd2 = BOPDMD(svd_rank=2, eig_constraints=make_imag).fit(Z, t)
+    np.testing.assert_array_equal(bopdmd1.eigs, bopdmd2.eigs)
+
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints=make_real).fit(Z, t)
+    assert np.all(bopdmd.eigs.imag == 0.0)

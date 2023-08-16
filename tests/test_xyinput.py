@@ -8,18 +8,30 @@ from pydmd.bopdmd import BOPDMD
 
 def simulate_z(t_eval):
     """
-    Given a time vector t_eval = t1, t2, ..., evaluates and returns the
-    snapshots z(t1), z(t2), ... as columns of the matrix Z via explicit
-    Runge-Kutta. Simulates data z given by the system of ODEs
+    Given a time vector t_eval = t1, t2, ..., evaluates and returns
+    the snapshots z(t1), z(t2), ... as columns of the matrix Z.
+    Simulates data z given by the system of ODEs
         z' = Az
     where A = [1 -2; 1 -1] and z_0 = [1, 0.1].
     """
 
-    def f(zt, z):
+    def ode_sys(zt, z):
         z1, z2 = z
         return [z1 - 2 * z2, z1 - z2]
 
-    sol = solve_ivp(f, [t_eval[0], t_eval[-1]], [1.0, 0.1], t_eval=t_eval)
+    # Set integrator keywords to replicate odeint defaults.
+    integrator_keywords = {}
+    integrator_keywords["rtol"] = 1e-12
+    integrator_keywords["method"] = "LSODA"
+    integrator_keywords["atol"] = 1e-12
+
+    sol = solve_ivp(
+        ode_sys,
+        [t_eval[0], t_eval[-1]],
+        [1.0, 0.1],
+        t_eval=t_eval,
+        **integrator_keywords
+    )
 
     return sol.y
 
