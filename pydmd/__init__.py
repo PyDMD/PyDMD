@@ -38,3 +38,4 @@ from .havok import HAVOK
 from .bopdmd import BOPDMD
 from .pidmd import PiDMD
 from .edmd import EDMD
+from .preprocessing import PrePostProcessingDMD

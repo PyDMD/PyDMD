@@ -45,14 +45,14 @@ def test_eigs():
     of the toy system from the original EDMD paper.
     """
     edmd = EDMD(
-        svd_rank=16,
-        kernel_function="rbf",
-        kernel_params={"gamma": 0.001},
+        svd_rank=15,
+        kernel_metric="poly",
+        kernel_params={"gamma": 1, "coef0": 1, "degree": 4},
     )
     edmd.fit(X, Y)
     sorted_inds = np.argsort(-np.abs(edmd.eigs))
     edmd_eigs = edmd.eigs[sorted_inds][1:9]
-    assert_allclose(edmd_eigs, eigenvalues_true, rtol=0.005)
+    assert_allclose(edmd_eigs, eigenvalues_true)
 
 
 def test_eigenfunctions():
@@ -61,14 +61,14 @@ def test_eigenfunctions():
     of the toy system from the original EDMD paper.
     """
     edmd = EDMD(
-        svd_rank=16,
-        kernel_function="rbf",
-        kernel_params={"gamma": 0.001},
+        svd_rank=15,
+        kernel_metric="poly",
+        kernel_params={"gamma": 1, "coef0": 1, "degree": 4},
     )
     edmd.fit(X, Y)
 
     # Evaluate eigenfunctions from EDMD along the grid.
-    eigenfunctions = np.empty((16, *X_grid.shape))
+    eigenfunctions = np.empty((15, *X_grid.shape))
     for y_idx, y in enumerate(Y_grid[:, 0]):
         for x_idx, x in enumerate(X_grid[0, :]):
             xy = np.array([x, y])
@@ -86,7 +86,24 @@ def test_eigenfunctions():
     for func, func_true in zip(edmd_eigenfunctions, eigenfunctions_true):
         if np.sign(func[0, 0]) != np.sign(func_true[0, 0]):
             func *= -1
-        assert relative_error(func, func_true) < 0.05
+        assert relative_error(func, func_true) < 1e-6
+
+
+def test_operator():
+    """
+    Test that EDMD can sucessfully recover the true linear operator.
+    Essentially tests that the eigenvalues and modes are correct.
+    """
+    edmd = EDMD(
+        svd_rank=15,
+        kernel_metric="poly",
+        kernel_params={"gamma": 1, "coef0": 1, "degree": 4},
+    )
+    edmd.fit(X, Y)
+    J_est = np.linalg.multi_dot(
+        [edmd.modes, np.diag(edmd.eigs), np.linalg.pinv(edmd.modes)]
+    )
+    assert_allclose(J_est, J, atol=1e-14)
 
 
 def test_reconstruction():
@@ -94,41 +111,33 @@ def test_reconstruction():
     Test that EDMD can sucessfully reconstruct the forward-time system.
     """
     edmd = EDMD(
-        svd_rank=16,
-        kernel_function="rbf",
-        kernel_params={"gamma": 0.001},
+        svd_rank=15,
+        kernel_metric="poly",
+        kernel_params={"gamma": 1, "coef0": 1, "degree": 4},
     )
     edmd.fit(X, Y)
-    assert_allclose(edmd.reconstructed_data, X2)
+    assert_allclose(edmd.reconstructed_data, X2, atol=1e-14)
 
 
 def test_kernel_errors():
     """
     Test that EDMD throws error upon initialization in the following scenarios:
-        - kernel_function is not a string
-        - kernel_function is a string, but it's an invalid kernel function
+        - kernel_metric is invalid
         - kernel_params isn't a dictionary
-        - kernel_params contains an invalid key type
-        - kernel_params contains an invalid value type
-        - kernel_params contains an entry that's incompatible with the kernel
+        - kernel_params contains invalid value types
+        - kernel_params contains entries incompatible with the kernel
     """
     with raises(ValueError):
-        EDMD(kernel_function=1)
+        EDMD(kernel_metric="rbf!")
 
-    with raises(ValueError):
-        EDMD(kernel_function="rbf!")
+    with raises(TypeError):
+        EDMD(kernel_metric="rbf", kernel_params=3)
 
-    with raises(ValueError):
-        EDMD(kernel_function="rbf", kernel_params=3)
+    with raises(TypeError):
+        EDMD(kernel_metric="rbf", kernel_params={"gamma": "three"})
 
-    with raises(ValueError):
-        EDMD(kernel_function="rbf", kernel_params={1: 3})
-
-    with raises(ValueError):
-        EDMD(kernel_function="rbf", kernel_params={"gamma": "three"})
-
-    with raises(ValueError):
-        EDMD(kernel_function="rbf", kernel_params={"gamma": 3, "degree": 5})
+    with raises(TypeError):
+        EDMD(kernel_metric="rbf", kernel_params={"gamma": 3, "degree": 5})
 
 
 def test_svd_error():
@@ -143,10 +152,13 @@ def test_atilde_error():
     """
     Test that EDMD throws error if a user asks for the operator matrix.
     """
-    edmd = EDMD(svd_rank=16)
-    edmd.fit(X, Y)
+    edmd = EDMD().fit(X, Y)
+
     with raises(ValueError):
         _ = edmd.operator.as_numpy_array
+
+    with raises(ValueError):
+        _ = edmd.operator.shape
 
 
 def test_eigenfunction_error():
@@ -156,14 +168,15 @@ def test_eigenfunction_error():
     - compute eigenfunctions using input other than a 1-D numpy array.
     """
     edmd = EDMD()
+    x_dummy = np.array([1, 1])
 
     with raises(ValueError):
-        _ = edmd.eigenfunctions(np.array([1, 1]))
+        edmd.eigenfunctions(x_dummy)
 
     edmd.fit(X, Y)
 
     with raises(ValueError):
-        _ = edmd.eigenfunctions([1, 1])
+        edmd.eigenfunctions([1, 1])
 
     with raises(ValueError):
-        _ = edmd.eigenfunctions(np.array([1, 1])[None, :])
+        edmd.eigenfunctions(x_dummy[None])

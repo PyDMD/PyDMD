@@ -26,8 +26,8 @@ class EDMDOperator(DMDOperator):
         to reach the 'energy' specified by `svd_rank`; if -1, the method does
         not compute truncation.
     :type svd_rank: int or float
-    :param kernel_function: the kernel function to apply.
-    :type kernel_function: {"additive_chi2", "chi2", "linear",
+    :param kernel_metric: the kernel function to apply.
+    :type kernel_metric: {"additive_chi2", "chi2", "linear",
         "poly", "polynomial", "rbf", "laplacian", "sigmoid", "cosine"}
     :param kernel_params: additional parameters for the
         `sklearn.metrics.pairwise_kernels` function, including
@@ -35,7 +35,7 @@ class EDMDOperator(DMDOperator):
     :type kernel_params: dict
     """
 
-    def __init__(self, svd_rank, kernel_function, kernel_params):
+    def __init__(self, svd_rank, kernel_metric, kernel_params):
         super().__init__(
             svd_rank=svd_rank,
             exact=True,
@@ -44,7 +44,7 @@ class EDMDOperator(DMDOperator):
             sorted_eigs=False,
             tikhonov_regularization=None,
         )
-        self._kernel_function = kernel_function
+        self._kernel_metric = kernel_metric
         self._kernel_params = kernel_params
         self._eigenvalues = None
         self._Lambda = None
@@ -84,10 +84,10 @@ class EDMDOperator(DMDOperator):
         """
         # Compute kernel matrices using given snapshots and kernel function.
         G_hat = pairwise_kernels(
-            X.T, X.T, metric=self._kernel_function, **self._kernel_params
+            X.T, X.T, metric=self._kernel_metric, **self._kernel_params
         )
         A_hat = pairwise_kernels(
-            Y.T, X.T, metric=self._kernel_function, **self._kernel_params
+            Y.T, X.T, metric=self._kernel_metric, **self._kernel_params
         )
 
         # Use the Gramian to obtain the singular vectors Q and singular
@@ -203,8 +203,8 @@ class EDMD(DMD):
         be needed (check `svd_rank`). Also setting `svd_rank` to a value
         between 0 and 1 may give better results. Default is False.
     :type opt: bool or int
-    :param kernel_function: the kernel function to apply.
-    :type kernel_function: {"additive_chi2", "chi2", "linear",
+    :param kernel_metric: the kernel function to apply.
+    :type kernel_metric: {"additive_chi2", "chi2", "linear",
         "poly", "polynomial", "rbf", "laplacian", "sigmoid", "cosine"}
     :param kernel_params: additional parameters for the
         `sklearn.metrics.pairwise_kernels` function, including
@@ -217,7 +217,7 @@ class EDMD(DMD):
         svd_rank=-1,
         tlsq_rank=0,
         opt=False,
-        kernel_function="linear",
+        kernel_metric="linear",
         kernel_params=None,
     ):
         if svd_rank == 0:
@@ -226,9 +226,9 @@ class EDMD(DMD):
         if kernel_params is None:
             kernel_params = {}
         elif not isinstance(kernel_params, dict):
-            raise ValueError("kernel_params must be a dict.")
+            raise TypeError("kernel_params must be a dict.")
 
-        self._test_kernel_inputs(kernel_function, kernel_params)
+        self._test_kernel_inputs(kernel_metric, kernel_params)
 
         super().__init__(
             svd_rank=svd_rank,
@@ -237,9 +237,9 @@ class EDMD(DMD):
             opt=opt,
         )
 
-        self._Atilde = EDMDOperator(svd_rank, kernel_function, kernel_params)
+        self._Atilde = EDMDOperator(svd_rank, kernel_metric, kernel_params)
 
-        self._kernel_function = kernel_function
+        self._kernel_metric = kernel_metric
         self._kernel_params = kernel_params
         self._svd_modes = None
 
@@ -261,7 +261,7 @@ class EDMD(DMD):
         K_xx = pairwise_kernels(
             x[None, :],
             self.snapshots.T,
-            self._kernel_function,
+            self._kernel_metric,
             **self._kernel_params,
         )
 
@@ -274,7 +274,7 @@ class EDMD(DMD):
             ]
         )
 
-    def _test_kernel_inputs(self, kernel_function, kernel_params):
+    def _test_kernel_inputs(self, kernel_metric, kernel_params):
         """
         Helper function that uses a dummy array of data in order to
         call `sklearn.metrics.pairwise_kernels` using the user-given
@@ -284,11 +284,11 @@ class EDMD(DMD):
         x_dummy = np.arange(4).reshape(2, 2)
         try:
             pairwise_kernels(
-                x_dummy, x_dummy, metric=kernel_function, **kernel_params
+                x_dummy, x_dummy, metric=kernel_metric, **kernel_params
             )
         except ValueError as e1:
             msg = "Invalid kernel function '{}' given to EDMD model."
-            raise ValueError(msg.format(kernel_function)) from e1
+            raise ValueError(msg.format(kernel_metric)) from e1
         except TypeError as e2:
             msg = "EDMD kernel parameter dictionary contains invalid entries."
             raise TypeError(msg) from e2
