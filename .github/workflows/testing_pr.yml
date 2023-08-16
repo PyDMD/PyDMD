@@ -107,7 +107,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install .[test]
+        pip install -e .[test]
         # Dependencies for tutorials
         pip install jupyter pandas opencv-python ffmpeg-python
         
