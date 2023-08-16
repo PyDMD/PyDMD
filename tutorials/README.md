@@ -22,7 +22,7 @@ An additional PDF tutorial ([DSWeb contest winner](https://dsweb.siam.org/The-Ma
 | Tutorial14&#160;[[.ipynb](tutorial14/tutorial-14-bop-dmd.ipynb),&#160;[.py](tutorial14/tutorial-14-bop-dmd.py),&#160;[.html](http://pydmd.github.io/PyDMD/tutorial14-bop-dmd.html)]     | Comparison between Bagging-/ Optimized DMD and exact DMD | `pydmd.BOPDMD`        |
 | Tutorial15&#160;[[.ipynb](tutorial15/tutorial-15-pidmd.ipynb),&#160;[.py](tutorial15/tutorial-15-pidmd.py),&#160;[.html](http://pydmd.github.io/PyDMD/tutorial15-pidmd.html)]     | Physics-informed DMD for manifold enforcement | `pydmd.PiDMD`        |
 | Tutorial16&#160;[[.ipynb](tutorial16/tutorial-16-rdmd.ipynb),&#160;[.py](tutorial16/tutorial-16-rdmd.py),&#160;[.html](http://pydmd.github.io/PyDMD/tutorial16-rdmd.html)]     | Randomized DMD for greater computation speedup | `pydmd.RDMD`        |
-| Tutorial17&#160;[[.ipynb](tutorial17/tutorial-17-edmd.ipynb),&#160;[.py](tutorial17/tutorial-17-edmd.py),&#160;[.html](http://pydmd.github.io/PyDMD/tutorial17-edmd.html)]     | Extended DMD for nonlinear eigenfunction computation | `pydmd.EDMD`        |
+| Tutorial17&#160;[[.ipynb](tutorial17/tutorial-17-edmd.ipynb),&#160;[.py](tutorial17/tutorial-17-edmd.py),&#160;[.html](http://pydmd.github.io/PyDMD/tutorial17-edmd.html)]     | Extended DMD for nonlinear eigenfunction discovery | `pydmd.EDMD`        |
 
 
 
