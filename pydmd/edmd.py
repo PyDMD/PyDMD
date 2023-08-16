@@ -286,9 +286,10 @@ class EDMD(DMD):
             pairwise_kernels(
                 x_dummy, x_dummy, metric=kernel_metric, **kernel_params
             )
-        except ValueError as e1:
-            msg = "Invalid kernel function '{}' given to EDMD model."
-            raise ValueError(msg.format(kernel_metric)) from e1
-        except TypeError as e2:
-            msg = "EDMD kernel parameter dictionary contains invalid entries."
-            raise TypeError(msg) from e2
+        except Exception as e:
+            msg = (
+                "Invalid kernel parameters given to the EDMD model. "
+                "Please verify that kernel_metric and kernel_params "
+                "are passable to sklearn.metrics.pairwise_kernels."
+            )
+            raise ValueError(msg) from e

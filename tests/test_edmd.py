@@ -133,10 +133,10 @@ def test_kernel_errors():
     with raises(TypeError):
         EDMD(kernel_metric="rbf", kernel_params=3)
 
-    with raises(TypeError):
+    with raises(ValueError):
         EDMD(kernel_metric="rbf", kernel_params={"gamma": "three"})
 
-    with raises(TypeError):
+    with raises(ValueError):
         EDMD(kernel_metric="rbf", kernel_params={"gamma": 3, "degree": 5})
 
 
