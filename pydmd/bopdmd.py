@@ -13,6 +13,7 @@ temporal uncertainty-quantification. 2021. arXiv:2107.10878.
 
 import warnings
 from collections import OrderedDict
+from inspect import isfunction
 from scipy.sparse import csr_matrix
 from scipy.linalg import qr
 import numpy as np
@@ -65,8 +66,10 @@ class BOPDMDOperator(DMDOperator):
         `"imag"`, which constrains eigenvalues to the imaginary axis, and
         `"conjugate_pairs"`, which enforces that eigenvalues are always
         present with their complex conjugate. Note that constraints may be
-        combined if valid.
-    :type eig_constraints: set(str)
+        combined if valid. May alternatively be a custom eigenvalue constraint
+        function that will be applied to the computed eigenvalues at each step
+        of the variable projection routine.
+    :type eig_constraints: set(str) or function
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
         Note: Larger lambda values make the method more like gradient descent.
@@ -255,13 +258,18 @@ class BOPDMDOperator(DMDOperator):
         Helper function that constrains the given eigenvalues according to
         the arguments found in self._eig_constraints. If no constraints were
         given, this function simply returns the given eigenvalues sorted
-        according to real part and then imaginary part to break ties.
+        according to real part and then imaginary part to break ties. Simply
+        applies the provided eig_constraints function and sorts the eigenvalues
+        if a function was provided instead of a set of constraints.
 
         :param eigenvalues: Vector of original eigenvalues.
         :type eigenvalues: numpy.ndarray
         :return: Vector of constrained eigenvalues.
         :rtype: numpy.ndarray
         """
+        if isfunction(self._eig_constraints):
+            return np.sort(self._eig_constraints(eigenvalues))
+
         if "conjugate_pairs" in self._eig_constraints:
             eigenvalues_sorted = np.sort(eigenvalues)
             num_eigs = len(eigenvalues)
@@ -827,8 +835,10 @@ class BOPDMD(DMDBase):
         `"imag"`, which constrains eigenvalues to the imaginary axis, and
         `"conjugate_pairs"`, which enforces that eigenvalues are always
         present with their complex conjugate. Note that constraints may be
-        combined if valid.
-    :type eig_constraints: set(str)
+        combined if valid. May alternatively be a custom eigenvalue constraint
+        function that will be applied to the computed eigenvalues at each step
+        of the variable projection routine.
+    :type eig_constraints: set(str) or function
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
         `init_lambda`, `maxlam`, `lamup`, `use_levmarq`, `maxiter`, `tol`,
@@ -870,10 +880,12 @@ class BOPDMD(DMDBase):
 
         if eig_constraints is None:
             eig_constraints = set()
-        elif not isinstance(eig_constraints, set):
-            raise ValueError("eig_constraints must be a set.")
+        elif not isinstance(eig_constraints, set) and not isfunction(
+            eig_constraints
+        ):
+            raise ValueError("eig_constraints must be a set or a function.")
+        self._check_eig_constraints(eig_constraints)
         self._eig_constraints = eig_constraints
-        self._check_eig_constraints()
 
         self._snapshots_holder = None
         self._time = None
@@ -1058,22 +1070,57 @@ class BOPDMD(DMDBase):
             else:
                 print(name + ":\t" + str(value))
 
-    def _check_eig_constraints(self):
+    def _check_eig_constraints(self, eig_constraints):
         """
-        Function that verifies that the set self._eig_constraints (1) does
-        not contain an unsupported constraint class, and (2) does not contain
-        an invalid combination of eigenvalue constraints.
+        Function that verifies that...
+         - if the given eig_constraints is a function, the function is able to
+         take a (n,) numpy.ndarray and return a (n,) numpy.ndarray
+         - if the given eig_constraints is a set, it does not contain an
+         unsupported constraint class, and does not contain an invalid
+         combination of eigenvalue constraints
         """
-        valid_constraints = {"stable", "imag", "conjugate_pairs"}
-        invalid_combos = [{"stable", "imag"}]
+        if isfunction(eig_constraints):
+            if self._svd_rank >= 1 and isinstance(self._svd_rank, int):
+                r = self._svd_rank
+            else:  # use a dummy rank of 10
+                r = 10
 
-        if len(self._eig_constraints.difference(valid_constraints)) != 0:
-            raise ValueError("Invalid eigenvalue constraint provided.")
+            try:
+                # Test the eig_constraints function on a (r,) np.ndarray.
+                x_dummy = np.arange(r)
+                y_dummy = eig_constraints(x_dummy)
+            except Exception as e:
+                msg = (
+                    "eigenvalue constraint function must be able "
+                    "to take a single (n,) numpy.ndarray as input."
+                )
+                raise ValueError(msg) from e
 
-        for invalid_combo_set in invalid_combos:
-            if invalid_combo_set.issubset(self._eig_constraints):
-                msg = "Invalid eigenvalue constraint combination provided."
+            if not isinstance(y_dummy, np.ndarray):
+                msg = (
+                    "eigenvalue constraint function must "
+                    "output a single (n,) numpy.ndarray."
+                )
                 raise ValueError(msg)
+
+            if x_dummy.shape != y_dummy.shape:
+                msg = (
+                    "eigenvalue constraint function must accept a (n,) "
+                    "numpy.ndarray as input and output a (n,) numpy.ndarray."
+                )
+                raise ValueError(msg)
+
+        else:
+            valid_constraints = {"stable", "imag", "conjugate_pairs"}
+            invalid_combos = [{"stable", "imag"}]
+
+            if len(eig_constraints.difference(valid_constraints)) != 0:
+                raise ValueError("Invalid eigenvalue constraint provided.")
+
+            for invalid_combo_set in invalid_combos:
+                if invalid_combo_set.issubset(eig_constraints):
+                    msg = "Invalid eigenvalue constraint combination provided."
+                    raise ValueError(msg)
 
     def _initialize_alpha(self):
         """

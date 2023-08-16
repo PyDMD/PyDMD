@@ -10,8 +10,8 @@ import warnings
 import numpy as np
 
 from .hankeldmd import HankelDMD
-from .utils import compute_svd
 from .snapshots import Snapshots
+from .preprocessing.svd_projection import svd_projection_preprocessing
 
 
 class HODMD(HankelDMD):
@@ -89,40 +89,9 @@ class HODMD(HankelDMD):
             sorted_eigs=sorted_eigs,
             reconstruction_method=reconstruction_method,
         )
-
-        self._svd_rank_extra = svd_rank_extra  # TODO improve names
-        self.U_extra = None
-
-    def reconstructions_of_timeindex(self, timeindex=None):
-        """
-        Build a collection of all the available versions of the given
-        `timeindex`. The indexing of time instants is the same used for
-        :func:`reconstructed_data`. For each time instant there are at least
-        one and at most `d` versions.  If `timeindex` is `None` the function
-        returns the whole collection, for all the time instants.
-
-        :param int timeindex: The index of the time snapshot.
-        :return: A collection of all the available versions for the requested
-            time instants, represented by a matrix (or tensor).
-            Axes:
-            0. Number of time instants;
-            1. Copies of the snapshot;
-            2. Space dimension of the snapshot.
-            The first axis is omitted if only one single time instant is
-            selected, in this case the output becomes a 2D matrix.
-        :rtype: numpy.ndarray
-        """
-        snapshots = super().reconstructions_of_timeindex(timeindex)
-        if snapshots.ndim == 2:  # single time instant
-            snapshots = self.U_extra.dot(snapshots.T).T
-        elif snapshots.ndim == 3:  # all time instants
-            snapshots = np.array(
-                [self.U_extra.dot(snapshot.T).T for snapshot in snapshots]
-            )
-        else:
-            raise RuntimeError
-
-        return snapshots
+        self._sub_dmd = svd_projection_preprocessing(
+            self._sub_dmd, svd_rank_extra
+        )
 
     def fit(self, X):
         """
@@ -132,24 +101,8 @@ class HODMD(HankelDMD):
         :type X: numpy.ndarray or iterable
         """
         snapshots_holder = Snapshots(X)
-        snapshots = snapshots_holder.snapshots
 
-        space_dim = snapshots.shape[0]
-        if space_dim == 1:
-            svd_rank_extra = -1
-            warnings.warn(
-                (
-                    f"The parameter 'svd_rank_extra={self._svd_rank_extra}' has "
-                    "been ignored because the given system is a scalar function"
-                )
-            )
-        else:
-            svd_rank_extra = self._svd_rank_extra
-        self.U_extra, _, _ = compute_svd(snapshots, svd_rank_extra)
-
-        snp = self.U_extra.T.dot(snapshots)
-
-        super().fit(snp)
+        super().fit(snapshots_holder.snapshots)
         self._snapshots_holder = snapshots_holder
 
         return self
