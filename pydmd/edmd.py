@@ -26,9 +26,10 @@ class EDMDOperator(DMDOperator):
         to reach the 'energy' specified by `svd_rank`; if -1, the method does
         not compute truncation.
     :type svd_rank: int or float
-    :param kernel_metric: the kernel function to apply.
-    :type kernel_metric: {"additive_chi2", "chi2", "linear",
-        "poly", "polynomial", "rbf", "laplacian", "sigmoid", "cosine"}
+    :param kernel_metric: the kernel function to apply. Supported kernel
+        metrics include `"additive_chi2"`, `"chi2"`, `"linear"`, `"poly"`,
+        `"polynomial"`, `"rbf"`, `"laplacian"`, `"sigmoid"`, and `"cosine"`.
+    :type kernel_metric: str
     :param kernel_params: additional parameters for the
         `sklearn.metrics.pairwise_kernels` function, including
         kernel-specific function parameters.
@@ -169,13 +170,11 @@ class EDMDOperator(DMDOperator):
         """
         if 0 < self._svd_rank < 1:
             cumulative_energy = np.cumsum(s**2 / (s**2).sum())
-            rank = np.searchsorted(cumulative_energy, self._svd_rank) + 1
+            return np.searchsorted(cumulative_energy, self._svd_rank) + 1
         elif self._svd_rank >= 1 and isinstance(self._svd_rank, int):
-            rank = min(self._svd_rank, len(s))
+            return min(self._svd_rank, len(s))
         else:
-            rank = len(s)
-
-        return rank
+            return len(s)
 
 
 class EDMD(DMD):
@@ -203,9 +202,10 @@ class EDMD(DMD):
         be needed (check `svd_rank`). Also setting `svd_rank` to a value
         between 0 and 1 may give better results. Default is False.
     :type opt: bool or int
-    :param kernel_metric: the kernel function to apply.
-    :type kernel_metric: {"additive_chi2", "chi2", "linear",
-        "poly", "polynomial", "rbf", "laplacian", "sigmoid", "cosine"}
+    :param kernel_metric: the kernel function to apply. Supported kernel
+        metrics include `"additive_chi2"`, `"chi2"`, `"linear"`, `"poly"`,
+        `"polynomial"`, `"rbf"`, `"laplacian"`, `"sigmoid"`, and `"cosine"`.
+    :type kernel_metric: str
     :param kernel_params: additional parameters for the
         `sklearn.metrics.pairwise_kernels` function, including
         kernel-specific function parameters.
@@ -259,7 +259,7 @@ class EDMD(DMD):
             raise ValueError("Input x must be a 1-D numpy array.")
 
         K_xx = pairwise_kernels(
-            x[None, :],
+            x[None],
             self.snapshots.T,
             self._kernel_metric,
             **self._kernel_params,
@@ -274,7 +274,8 @@ class EDMD(DMD):
             ]
         )
 
-    def _test_kernel_inputs(self, kernel_metric, kernel_params):
+    @staticmethod
+    def _test_kernel_inputs(kernel_metric, kernel_params):
         """
         Helper function that uses a dummy array of data in order to
         call `sklearn.metrics.pairwise_kernels` using the user-given
