@@ -80,7 +80,7 @@ class EDMDOperator(DMDOperator):
         :return: the (truncated) left-singular vectors matrix of the extended
             feature matrix, the (truncated) singular values matrix of the
             extended feature matrix, and the eigenvectors of the tranformed
-            forward operator `K_hat.
+            forward operator `K_hat`.
         :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
         """
         # Compute kernel matrices using given snapshots and kernel function.
