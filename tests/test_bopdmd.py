@@ -192,7 +192,7 @@ def test_eig_constraints_errors():
     - eig_constraints contains the invalid combination "stable"+"imag"
         (either alone or along with the extra argument "conjugate_pairs")
     """
-    with raises(ValueError):
+    with raises(TypeError):
         BOPDMD(eig_constraints="stable")
 
     with raises(ValueError):

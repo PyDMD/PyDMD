@@ -71,10 +71,11 @@ class BOPDMDOperator(DMDOperator):
         of the variable projection routine.
     :type eig_constraints: set(str) or function
     :param bag_warning: Number of failed (i.e. non-converged) trials of BOP-DMD
-        at which to produce a warning message for the user. Default is 100.
+        at which to produce a warning message for the user. Default is 100. Use
+        arguments less than or equal to zero for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of failed (i.e. non-converged) trials of BOP-DMD
-        at which to terminate the fit. Default is infinity, i.e. no stopping
+        at which to terminate the fit. Default is -1, i.e. no stopping
         condition.
     :type bag_maxfail: int
     :param init_lambda: Initial value used for the regularization parameter in
@@ -249,7 +250,7 @@ class BOPDMDOperator(DMDOperator):
             self._varpro_opts, rec_ranges.items()
         ):
             if not isinstance(opt_value, (int, float, bool)):
-                raise ValueError("Invalid variable projection option given.")
+                raise TypeError("Invalid variable projection option given.")
 
             if opt_value < opt_min:
                 msg = (
@@ -395,16 +396,14 @@ class BOPDMDOperator(DMDOperator):
 
         # Sort the results according to eigenvalue.
         if self._eig_sort == "real":
-            sorted_inds = np.argsort(eigs)
+            return np.argsort(eigs)
         elif self._eig_sort == "imag":
             eigs_real_imag_swapped = eigs.imag + (1j * eigs.real)
-            sorted_inds = np.argsort(eigs_real_imag_swapped)
+            return np.argsort(eigs_real_imag_swapped)
         elif self._eig_sort == "abs":
-            sorted_inds = np.argsort(np.abs(eigs))
-        else:
-            raise ValueError("Provided eig_sort method is not supported.")
+            return np.argsort(np.abs(eigs))
 
-        return sorted_inds
+        raise ValueError("Provided eig_sort method is not supported.")
 
     def _bag(self, H, trial_size):
         """
@@ -684,12 +683,12 @@ class BOPDMDOperator(DMDOperator):
 
         return B, alpha, converged
 
-
     def _single_trial_compute_operator(self, H, t, init_alpha):
         """
         Helper function that computes the standard optimized dmd operator.
         Returns the resulting DMD modes, eigenvalues, amplitudes, reduced
-        system matrix, and full system matrix respectively.
+        system matrix, full system matrix, and whether or not convergence
+        of the variable projection routine was reached.
         """
         B, alpha, converged = self._variable_projection(
             H, t, init_alpha, self._exp_function, self._exp_function_deriv
@@ -768,7 +767,7 @@ class BOPDMDOperator(DMDOperator):
         e_sum2 = np.zeros(e_0.shape, dtype="complex")
         b_sum2 = np.zeros(b_0.shape, dtype="complex")
 
-        # Perform num_trials-many successful trials of optimized dmd.
+        # Perform num_trials many successful trials of optimized dmd.
         num_successful_trials = 0
         num_consecutive_fails = 0
         runtime_warning_given = False
@@ -802,7 +801,10 @@ class BOPDMDOperator(DMDOperator):
             else:
                 num_consecutive_fails += 1
 
-            if not runtime_warning_given and num_consecutive_fails == self._bag_warning:
+            if (
+                not runtime_warning_given
+                and num_consecutive_fails == self._bag_warning
+            ):
                 msg = (
                     "{} many trials without convergence. "
                     "Consider loosening the tol requirements "
@@ -911,10 +913,11 @@ class BOPDMD(DMDBase):
         of the variable projection routine.
     :type eig_constraints: set(str) or function
     :param bag_warning: Number of failed (i.e. non-converged) trials of BOP-DMD
-        at which to produce a warning message for the user. Default is 100.
+        at which to produce a warning message for the user. Default is 100. Use
+        arguments less than or equal to zero for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of failed (i.e. non-converged) trials of BOP-DMD
-        at which to terminate the fit. Default is infinity, i.e. no stopping
+        at which to terminate the fit. Default is -1, i.e. no stopping
         condition.
     :type bag_maxfail: int
     :param varpro_opts_dict: Dictionary containing the desired parameter values
@@ -939,7 +942,7 @@ class BOPDMD(DMDBase):
         eig_sort="auto",
         eig_constraints=None,
         bag_warning=100,
-        bag_maxfail=np.inf,
+        bag_maxfail=-1,
         varpro_opts_dict=None,
     ):
         self._svd_rank = svd_rank
@@ -950,13 +953,21 @@ class BOPDMD(DMDBase):
         self._num_trials = num_trials
         self._trial_size = trial_size
         self._eig_sort = eig_sort
+
+        if not isinstance(bag_warning, int) or not isinstance(bag_maxfail, int):
+            msg = (
+                "bag_warning and bag_maxfail must be integers. "
+                "Please use a non-positive integer if no warning "
+                "or stopping condition is desired."
+            )
+            raise TypeError(msg)
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
 
         if varpro_opts_dict is None:
             self._varpro_opts_dict = {}
         elif not isinstance(varpro_opts_dict, dict):
-            raise ValueError("varpro_opts_dict must be a dict.")
+            raise TypeError("varpro_opts_dict must be a dict.")
         else:
             self._varpro_opts_dict = varpro_opts_dict
 
@@ -965,7 +976,7 @@ class BOPDMD(DMDBase):
         elif not isinstance(eig_constraints, set) and not isfunction(
             eig_constraints
         ):
-            raise ValueError("eig_constraints must be a set or a function.")
+            raise TypeError("eig_constraints must be a set or a function.")
         self._check_eig_constraints(eig_constraints)
         self._eig_constraints = eig_constraints
 
