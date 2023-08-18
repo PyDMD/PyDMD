@@ -70,13 +70,14 @@ class BOPDMDOperator(DMDOperator):
         function that will be applied to the computed eigenvalues at each step
         of the variable projection routine.
     :type eig_constraints: set(str) or function
-    :param bag_warning: Number of failed (i.e. non-converged) trials of BOP-DMD
-        at which to produce a warning message for the user. Default is 100. Use
-        arguments less than or equal to zero for no warning condition.
-    :type bag_warning: int
-    :param bag_maxfail: Number of failed (i.e. non-converged) trials of BOP-DMD
-        at which to terminate the fit. Default is -1, i.e. no stopping
+    :param bag_warning: Number of consecutive failed (i.e. non-converged)
+        trials of BOP-DMD at which to produce a warning message for the user.
+        Default is 100. Use arguments less than or equal to zero for no warning
         condition.
+    :type bag_warning: int
+    :param bag_maxfail: Number of consecutive failed (i.e. non-converged)
+        trials of BOP-DMD at which to terminate the fit. Default is -1, i.e.
+        no stopping condition.
     :type bag_maxfail: int
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
@@ -912,13 +913,14 @@ class BOPDMD(DMDBase):
         function that will be applied to the computed eigenvalues at each step
         of the variable projection routine.
     :type eig_constraints: set(str) or function
-    :param bag_warning: Number of failed (i.e. non-converged) trials of BOP-DMD
-        at which to produce a warning message for the user. Default is 100. Use
-        arguments less than or equal to zero for no warning condition.
-    :type bag_warning: int
-    :param bag_maxfail: Number of failed (i.e. non-converged) trials of BOP-DMD
-        at which to terminate the fit. Default is -1, i.e. no stopping
+    :param bag_warning: Number of consecutive failed (i.e. non-converged)
+        trials of BOP-DMD at which to produce a warning message for the user.
+        Default is 100. Use arguments less than or equal to zero for no warning
         condition.
+    :type bag_warning: int
+    :param bag_maxfail: Number of consecutive failed (i.e. non-converged)
+        trials of BOP-DMD at which to terminate the fit. Default is -1, i.e.
+        no stopping condition.
     :type bag_maxfail: int
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
