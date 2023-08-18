@@ -13,7 +13,7 @@ AUTHOR = meta["__author__"]
 VERSION = meta["__version__"]
 KEYWORDS = "dynamic-mode-decomposition dmd"
 
-REQUIRED = ["numpy", "scipy", "matplotlib"]
+REQUIRED = ["numpy", "scipy", "matplotlib", "sklearn"]
 
 EXTRAS = {
     "docs": ["Sphinx>=1.4", "sphinx_rtd_theme"],
