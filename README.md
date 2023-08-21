@@ -31,7 +31,7 @@
     </a>
     <br>
     <a href="#developers-and-contributors">
-      <img alt="All Contributors" src="https://img.shields.io/badge/all_contributors-24-orange.svg?style=for-the-badge"/>
+      <img alt="All Contributors" src="https://img.shields.io/badge/all_contributors-25-orange.svg?style=for-the-badge"/>
     </a>
     <a href="#stargazers">
       <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/PyDMD/PyDMD?style=for-the-badge">
