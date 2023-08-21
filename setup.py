@@ -14,6 +14,9 @@ VERSION = meta["__version__"]
 KEYWORDS = "dynamic-mode-decomposition dmd"
 
 REQUIRED = ["numpy", "scipy", "matplotlib", "scikit-learn"]
+EXTRAS_REQUIRE = {
+    "costs": ["scikit-learn", "xarray", "h5netcdf"],
+}
 
 EXTRAS = {
     "docs": ["Sphinx>=1.4", "sphinx_rtd_theme"],
