@@ -255,11 +255,6 @@ class COSTS:
         n_data_vars = np.shape(data)[0]
         return n_time_steps, n_data_vars
 
-    @staticmethod
-    def relative_error(x_est, x_true):
-        """Helper function for calculating the relative error."""
-        return np.linalg.norm(x_est - x_true) / np.linalg.norm(x_true)
-
     def _build_proj_basis(self, data, svd_rank=None):
         self._svd_rank = compute_rank(data, svd_rank=svd_rank)
         # Recover the first r modes of the global svd
