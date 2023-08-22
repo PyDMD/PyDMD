@@ -70,14 +70,12 @@ class BOPDMDOperator(DMDOperator):
         function that will be applied to the computed eigenvalues at each step
         of the variable projection routine.
     :type eig_constraints: set(str) or function
-    :param bag_warning: Number of consecutive failed (i.e. non-converged)
-        trials of BOP-DMD at which to produce a warning message for the user.
-        Default is 100. Use arguments less than or equal to zero for no warning
-        condition.
+    :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
+        at which to produce a warning message for the user. Default is 100.
+        Use arguments less than or equal to zero for no warning condition.
     :type bag_warning: int
-    :param bag_maxfail: Number of consecutive failed (i.e. non-converged)
-        trials of BOP-DMD at which to terminate the fit. Default is -1, i.e.
-        no stopping condition.
+    :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
+        at which to terminate the fit. Default is -1, i.e. no stopping condition.
     :type bag_maxfail: int
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
@@ -372,8 +370,8 @@ class BOPDMDOperator(DMDOperator):
     def _argsort_eigenvalues(self, eigs):
         """
         Helper function that computes and returns the indices that sort the
-        given array of eigenvalues according to the operator's eig_sort
-        attribute. Sets eig_sort according to eigs if not already done so.
+        given array of eigenvalues according to the operator's `eig_sort`
+        attribute. Sets `eig_sort` according to eigs if not already done so.
 
         :param eigs: array of eigenvalues to sort
         :type eigs: numpy.ndarray
@@ -388,12 +386,7 @@ class BOPDMDOperator(DMDOperator):
             imag_var = np.var(eigs.imag)
             abs_var = np.var(np.abs(eigs))
             all_var = [real_var, imag_var, abs_var]
-            if np.argmax(all_var) == 0:
-                self._eig_sort = "real"
-            elif np.argmax(all_var) == 1:
-                self._eig_sort = "imag"
-            else:
-                self._eig_sort = "abs"
+            self._eig_sort = ("real", "imag", "abs")[np.argmax(all_var)]
 
         # Sort the results according to eigenvalue.
         if self._eig_sort == "real":
@@ -482,7 +475,7 @@ class BOPDMDOperator(DMDOperator):
         :param dPhi: (M, N) matrix-valued function dPhi(alpha,t,i) that
             contains the derivatives of Phi wrt the ith component of alpha.
         :type dPhi: function
-        :return: Tuple of two numpy arrays and a boolean representing...
+        :return: Tuple of two numpy arrays and a boolean representing:
             1. (N, IS) best-fit matrix B.
             2. (N,) best-fit vector alpha.
             3. Flag indicating whether or not convergence was reached.
@@ -913,14 +906,12 @@ class BOPDMD(DMDBase):
         function that will be applied to the computed eigenvalues at each step
         of the variable projection routine.
     :type eig_constraints: set(str) or function
-    :param bag_warning: Number of consecutive failed (i.e. non-converged)
-        trials of BOP-DMD at which to produce a warning message for the user.
-        Default is 100. Use arguments less than or equal to zero for no warning
-        condition.
+    :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
+        at which to produce a warning message for the user. Default is 100.
+        Use arguments less than or equal to zero for no warning condition.
     :type bag_warning: int
-    :param bag_maxfail: Number of consecutive failed (i.e. non-converged)
-        trials of BOP-DMD at which to terminate the fit. Default is -1, i.e.
-        no stopping condition.
+    :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
+        at which to terminate the fit. Default is -1, i.e. no stopping condition.
     :type bag_maxfail: int
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
