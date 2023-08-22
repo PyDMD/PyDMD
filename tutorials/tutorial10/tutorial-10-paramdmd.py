@@ -3,7 +3,7 @@
 
 # # Parametric Dynamic Mode Decomposition
 #
-# In this tutorial we explore the usage of the class `pydmd.ParametricDMD`, presented in [arXiv:2110.09155]. The approach provides an extension Dynamic Mode Decomposition to parametric problems, in order to obtain predictions for future time instants in untested parameters.
+# In this tutorial we explore the usage of the class `pydmd.ParametricDMD`, presented in *A Dynamic Mode Decomposition Extension for the Forecasting of Parametric Dynamical Systems* by Andreuzzi et all ( [doi](https://doi.org/10.1137/22M1481658) ). The approach provides an extension Dynamic Mode Decomposition to parametric problems, in order to obtain predictions for future time instants in untested parameters.
 #
 # We'll examine a simple parametric time-dependent problem, the sum of two complex period functions:
 # $$\begin{cases}
