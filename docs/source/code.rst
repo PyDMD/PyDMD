@@ -7,17 +7,23 @@ Code Documentation
 
 
    dmdbase
+   dmdoperator
    dmd
-   mrdmd
-   fbdmd
+   bopdmd
    cdmd
+   dmd_modes_tuner
+   dmdc
+   edmd
+   fbdmd
    hankeldmd
    havok
    hodmd
-   dmdc
+   mrdmd
    optdmd
-   spdmd
    paramdmd
+   plotter
+   pidmd
    rdmd
+   spdmd
    subspacedmd
-   dmd_modes_tuner
+   utils
