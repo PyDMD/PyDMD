@@ -1,5 +1,5 @@
-BOP-DMD
-=================
+BOPDMD: Optimized DMD and Bagging, Optimized DMD
+==================================================
 
 .. currentmodule:: pydmd.bopdmd
 
@@ -12,3 +12,9 @@ BOP-DMD
 	:show-inheritance:
 	:noindex:
 
+.. autoclass:: BOPDMDOperator
+	:members:
+	:private-members:
+	:undoc-members:
+	:show-inheritance:
+	:noindex:

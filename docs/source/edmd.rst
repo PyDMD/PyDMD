@@ -1,18 +1,18 @@
-Physics-informed DMD
+Kernelized extended DMD
 ==========================
 
-.. currentmodule:: pydmd.pidmd
+.. currentmodule:: pydmd.edmd
 
-.. automodule:: pydmd.pidmd
+.. automodule:: pydmd.edmd
 
-.. autoclass:: PiDMD
+.. autoclass:: EDMD
 	:members:
 	:private-members:
 	:undoc-members:
 	:show-inheritance:
 	:noindex:
 
-.. autoclass:: PiDMDOperator
+.. autoclass:: EDMDOperator
 	:members:
 	:private-members:
 	:undoc-members:
