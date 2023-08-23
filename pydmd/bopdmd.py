@@ -267,10 +267,10 @@ class BOPDMDOperator(DMDOperator):
     def _push_eigenvalues(self, eigenvalues):
         """
         Helper function that constrains the given eigenvalues according to
-        the arguments found in self._eig_constraints. If no constraints were
+        the arguments found in `self._eig_constraints`. If no constraints were
         given, this function simply returns the given eigenvalues. Applies the
-        provided eig_constraints function if a function was provided instead of
-        a set of constraints.
+        provided `eig_constraints` function if a function was provided instead
+        of a set of constraints.
 
         :param eigenvalues: Vector of original eigenvalues.
         :type eigenvalues: numpy.ndarray
