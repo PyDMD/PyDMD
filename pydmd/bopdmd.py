@@ -268,10 +268,9 @@ class BOPDMDOperator(DMDOperator):
         """
         Helper function that constrains the given eigenvalues according to
         the arguments found in self._eig_constraints. If no constraints were
-        given, this function simply returns the given eigenvalues sorted
-        according to real part and then imaginary part to break ties. Simply
-        applies the provided eig_constraints function and sorts the eigenvalues
-        if a function was provided instead of a set of constraints.
+        given, this function simply returns the given eigenvalues. Applies the
+        provided eig_constraints function if a function was provided instead of
+        a set of constraints.
 
         :param eigenvalues: Vector of original eigenvalues.
         :type eigenvalues: numpy.ndarray
@@ -279,7 +278,7 @@ class BOPDMDOperator(DMDOperator):
         :rtype: numpy.ndarray
         """
         if isfunction(self._eig_constraints):
-            return np.sort(self._eig_constraints(eigenvalues))
+            return self._eig_constraints(eigenvalues)
 
         if "conjugate_pairs" in self._eig_constraints:
             eigenvalues_sorted = np.sort(eigenvalues)
@@ -309,7 +308,7 @@ class BOPDMDOperator(DMDOperator):
         elif "imag" in self._eig_constraints:
             eigenvalues = 1j * eigenvalues.imag
 
-        return np.sort(eigenvalues)
+        return eigenvalues
 
     def _exp_function(self, alpha, t):
         """
