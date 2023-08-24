@@ -75,7 +75,7 @@ class BOPDMDOperator(DMDOperator):
         Use arguments less than or equal to zero for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
-        at which to terminate the fit. Default is -1, i.e. no stopping condition.
+        at which to terminate the fit. Default is -1, no stopping condition.
     :type bag_maxfail: int
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
@@ -281,26 +281,27 @@ class BOPDMDOperator(DMDOperator):
             return self._eig_constraints(eigenvalues)
 
         if "conjugate_pairs" in self._eig_constraints:
-            eigenvalues_sorted = np.sort(eigenvalues)
             num_eigs = len(eigenvalues)
-            num_pair = num_eigs // 2
-            new_eigs = []
+            new_eigs = np.empty(num_eigs, dtype="complex")
             # If given an odd number of eigenvalues, find the eigenvalue with
             # the smallest imaginary part and take it to be a real eigenvalue.
             if num_eigs % 2 == 1:
-                imag_magnitudes = np.abs(eigenvalues_sorted.imag)
-                ind_single = np.argmin(imag_magnitudes)
-                new_eigs.append(eigenvalues_sorted[ind_single].real)
-                eigenvalues_sorted = np.delete(eigenvalues_sorted, ind_single)
-            for i in range(num_pair):
-                eig1 = eigenvalues_sorted[2 * i]
-                eig2 = eigenvalues_sorted[2 * i + 1]
-                real_comp = (eig1.real + eig2.real) / 2
-                imag_comp = (abs(eig1.imag) + abs(eig2.imag)) / 2
-                new_eigs.append(real_comp + 1j * imag_comp)
-                new_eigs.append(real_comp - 1j * imag_comp)
+                ind_single = np.argmin(np.abs(eigenvalues.imag))
+                new_eigs[ind_single] = eigenvalues[ind_single].real
+                eig_pair_inds = np.delete(np.arange(num_eigs), ind_single)[::2]
+            else:
+                eig_pair_inds = np.arange(0, num_eigs, 2)
+            # Note: a consequence of the OptDMD variable projection process is
+            # that complex conjugate pairs naturally appear together in the
+            # computed eigenvalue vectors. We thus take advantage of this...
+            for i in eig_pair_inds:
+                eig_pair = eigenvalues[i:i+2]
+                real_comp = np.mean(eig_pair.real)
+                imag_comp = np.mean(np.abs(eig_pair.imag))
+                new_eigs[i] = real_comp + 1j * imag_comp
+                new_eigs[i+1] = real_comp - 1j * imag_comp
 
-            eigenvalues = np.array(new_eigs)
+            eigenvalues = np.copy(new_eigs)
 
         if "stable" in self._eig_constraints:
             right_half = eigenvalues.real > 0.0
@@ -910,7 +911,7 @@ class BOPDMD(DMDBase):
         Use arguments less than or equal to zero for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
-        at which to terminate the fit. Default is -1, i.e. no stopping condition.
+        at which to terminate the fit. Default is -1, no stopping condition.
     :type bag_maxfail: int
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
