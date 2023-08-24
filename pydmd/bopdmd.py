@@ -648,7 +648,7 @@ class BOPDMDOperator(DMDOperator):
                 print(update_msg.format(itr + 1, relative_error, _lambda))
 
             # Update termination status and terminate if converged or stalled.
-            converged = error < tol
+            converged = relative_error < tol
             error_reduction = all_error[itr - 1] - all_error[itr]
             stalled = (itr > 0) and (
                 error_reduction < eps_stall * all_error[itr - 1]
