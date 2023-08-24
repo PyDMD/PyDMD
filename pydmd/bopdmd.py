@@ -495,15 +495,15 @@ class BOPDMDOperator(DMDOperator):
         def compute_residual(alpha):
             """
             Helper function that, given alpha, and using H, t, Phi as they are
-            passed to the _variable_projection function, computes and returns
+            passed to the `_variable_projection` function, computes and returns
             the matrix Phi(alpha,t), B from the expression H = Phi(alpha,t)B,
             the residual H - Phi(alpha,t)B, and 0.5*norm(residual,'fro')^2,
-            which will be used to denote the error.
+            which is used as an error indicator.
             """
             Phi_matrix = Phi(alpha, t)
             B = np.linalg.lstsq(Phi_matrix, H, rcond=None)[0]
             residual = H - Phi_matrix.dot(B)
-            error = 0.5 * np.linalg.norm(residual, "fro") ** 2
+            error = 0.5 * np.linalg.norm(residual) ** 2
             return B, residual, error
 
         # Define M, IS, and IA.
@@ -528,6 +528,7 @@ class BOPDMDOperator(DMDOperator):
         _lambda = init_lambda
         alpha = self._push_eigenvalues(init_alpha)
         B, residual, error = compute_residual(alpha)
+        relative_error = np.linalg.norm(residual) / np.linalg.norm(H)
         U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
         # Initialize termination flags.
@@ -628,21 +629,23 @@ class BOPDMDOperator(DMDOperator):
                     if verbose:
                         msg = (
                             "Failed to find appropriate step length at "
-                            "iteration {}. Current error {}."
+                            "iteration {}. Current error {}. "
+                            "Consider increasing maxlam or lamup."
                         )
-                        print(msg.format(itr + 1, error))
+                        print(msg.format(itr + 1, relative_error))
                     return B, alpha, converged
 
                 # ...otherwise, update and proceed.
                 alpha, B, residual, error = alpha_0, B_0, residual_0, error_0
 
-            # Record the current error.
-            all_error[itr] = error
+            # Record the current relative error.
+            relative_error = np.linalg.norm(residual) / np.linalg.norm(H)
+            all_error[itr] = relative_error
 
             # Print iterative progress if the verbose flag is turned on.
             if verbose:
                 update_msg = "Step {} Error {} Lambda {}"
-                print(update_msg.format(itr + 1, error, _lambda))
+                print(update_msg.format(itr + 1, relative_error, _lambda))
 
             # Update termination status and terminate if converged or stalled.
             converged = error < tol
@@ -661,9 +664,10 @@ class BOPDMDOperator(DMDOperator):
                     msg = (
                         "Stall detected: error reduced by less than {} "
                         "times the error at the previous step. "
-                        "Iteration {}. Current error {}."
+                        "Iteration {}. Current error {}. Consider "
+                        "increasing tol or decreasing eps_stall."
                     )
-                    print(msg.format(eps_stall, itr + 1, error))
+                    print(msg.format(eps_stall, itr + 1, relative_error))
                 return B, alpha, converged
 
             U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
@@ -674,7 +678,7 @@ class BOPDMDOperator(DMDOperator):
                 "Failed to reach tolerance after maxiter = {} iterations. "
                 "Current error {}."
             )
-            print(msg.format(maxiter, error))
+            print(msg.format(maxiter, relative_error))
 
         return B, alpha, converged
 
