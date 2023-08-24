@@ -295,11 +295,11 @@ class BOPDMDOperator(DMDOperator):
             # that complex conjugate pairs naturally appear together in the
             # computed eigenvalue vectors. We thus take advantage of this...
             for i in eig_pair_inds:
-                eig_pair = eigenvalues[i:i+2]
+                eig_pair = eigenvalues[i : i + 2]
                 real_comp = np.mean(eig_pair.real)
                 imag_comp = np.mean(np.abs(eig_pair.imag))
                 new_eigs[i] = real_comp + 1j * imag_comp
-                new_eigs[i+1] = real_comp - 1j * imag_comp
+                new_eigs[i + 1] = real_comp - 1j * imag_comp
 
             eigenvalues = np.copy(new_eigs)
 
