@@ -379,7 +379,7 @@ class BOPDMDOperator(DMDOperator):
         :return: array of indices that sort the given eigenvalues
         :rtype: numpy.ndarray
         """
-        # Set the sorting style if _eig_sort is "auto".
+        # Set the sorting style if eig_sort is "auto".
         # Note: the initial call to this function will set the eig_sort
         # attribute that will be used for the remainder of all fits!
         if self._eig_sort == "auto":
@@ -389,13 +389,13 @@ class BOPDMDOperator(DMDOperator):
             all_var = [real_var, imag_var, abs_var]
             self._eig_sort = ("real", "imag", "abs")[np.argmax(all_var)]
 
-        # Sort the results according to eigenvalue.
+        # Sort the results according to eig_sort.
         if self._eig_sort == "real":
             return np.argsort(eigs)
-        elif self._eig_sort == "imag":
+        if self._eig_sort == "imag":
             eigs_real_imag_swapped = eigs.imag + (1j * eigs.real)
             return np.argsort(eigs_real_imag_swapped)
-        elif self._eig_sort == "abs":
+        if self._eig_sort == "abs":
             return np.argsort(np.abs(eigs))
 
         raise ValueError("Provided eig_sort method is not supported.")
@@ -495,7 +495,7 @@ class BOPDMDOperator(DMDOperator):
         def compute_residual(alpha):
             """
             Helper function that, given alpha, and using H, t, Phi as they are
-            passed to the `_variable_projection` function, computes and returns
+            passed to the _variable_projection function, computes and returns
             the matrix Phi(alpha,t), B from the expression H = Phi(alpha,t)B,
             the residual H - Phi(alpha,t)B, and 0.5*norm(residual,'fro')^2,
             which is used as an error indicator.
