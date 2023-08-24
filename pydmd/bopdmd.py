@@ -346,7 +346,8 @@ class BOPDMDOperator(DMDOperator):
             (A, (np.arange(m), np.full(m, fill_value=i))), shape=(m, n)
         )
 
-    def _compute_irank_svd(self, X, tolrank):
+    @staticmethod
+    def _compute_irank_svd(X, tolrank):
         """
         Helper function that computes and returns the SVD of X with a rank
         truncation of irank, which denotes the number of singular values of
@@ -629,7 +630,7 @@ class BOPDMDOperator(DMDOperator):
                             "Failed to find appropriate step length at "
                             "iteration {}. Current error {}."
                         )
-                        print(msg.format(itr, error))
+                        print(msg.format(itr + 1, error))
                     return B, alpha, converged
 
                 # ...otherwise, update and proceed.
@@ -641,7 +642,7 @@ class BOPDMDOperator(DMDOperator):
             # Print iterative progress if the verbose flag is turned on.
             if verbose:
                 update_msg = "Step {} Error {} Lambda {}"
-                print(update_msg.format(itr, error, _lambda))
+                print(update_msg.format(itr + 1, error, _lambda))
 
             # Update termination status and terminate if converged or stalled.
             converged = error < tol
@@ -662,7 +663,7 @@ class BOPDMDOperator(DMDOperator):
                         "times the error at the previous step. "
                         "Iteration {}. Current error {}."
                     )
-                    print(msg.format(eps_stall, itr, error))
+                    print(msg.format(eps_stall, itr + 1, error))
                 return B, alpha, converged
 
             U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
