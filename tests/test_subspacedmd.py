@@ -1,8 +1,8 @@
 import numpy as np
+import pytest
 
 from pydmd import SubspaceDMD
 from pydmd.subspacedmd import SubspaceDMDOperator
-import pytest
 
 from .linalg.utils import setup_backends
 

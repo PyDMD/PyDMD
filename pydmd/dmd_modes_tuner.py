@@ -2,12 +2,12 @@
 A module which contains several functions to tune (i.e. improve) DMD instances
 through the "manual" modification of DMD modes.
 """
-from .linalg import build_linalg_module
-
 from copy import deepcopy
 from functools import partial
 
 import numpy as np
+
+from .linalg import build_linalg_module
 
 
 def select_modes(

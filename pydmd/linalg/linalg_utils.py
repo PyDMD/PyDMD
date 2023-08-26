@@ -3,7 +3,6 @@ import functools
 from .numpy_linalg import LinalgNumPy
 from .pytorch_linalg import LinalgPyTorch
 
-
 __linalg_module_mapper = {
     "numpy": LinalgNumPy,
     "torch": LinalgPyTorch,

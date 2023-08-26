@@ -4,9 +4,7 @@ from pytest import raises
 
 from pydmd.rdmd import RDMD
 
-from pydmd.rdmd import RDMD
-
-from .linalg.utils import setup_backends, assert_allclose
+from .linalg.utils import assert_allclose, setup_backends
 
 data_backends = setup_backends()
 

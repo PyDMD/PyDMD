@@ -2,13 +2,15 @@
 Hankel pre-processing.
 """
 
-from typing import Dict, Union, List, Tuple
 from functools import partial
+from typing import Dict, List, Tuple, Union
+
 import numpy as np
+
 from pydmd.dmdbase import DMDBase
+from pydmd.linalg import build_linalg_module, cast_as_array
 from pydmd.preprocessing.pre_post_processing import PrePostProcessingDMD
 from pydmd.utils import pseudo_hankel_matrix
-from pydmd.linalg import build_linalg_module, cast_as_array
 
 _reconstruction_method_type = Union[str, np.ndarray, List, Tuple]
 

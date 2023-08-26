@@ -1,8 +1,8 @@
 """
 Module for snapshots normalization.
 """
-import warnings
 import logging
+import warnings
 from functools import reduce
 from operator import mul
 

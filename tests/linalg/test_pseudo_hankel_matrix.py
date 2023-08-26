@@ -1,7 +1,10 @@
-from pydmd.linalg import build_linalg_module
-from .utils import assert_allclose, setup_backends, Backend
-import pytest
 from functools import partial
+
+import pytest
+
+from pydmd.linalg import build_linalg_module
+
+from .utils import Backend, assert_allclose, setup_backends
 
 torch_backends = setup_backends(exclude=Backend.NUMPY)
 

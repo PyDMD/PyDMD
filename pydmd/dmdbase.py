@@ -6,8 +6,9 @@ from copy import copy, deepcopy
 
 import numpy as np
 
-from .dmdoperator import DMDOperator
 from pydmd.linalg import build_linalg_module
+
+from .dmdoperator import DMDOperator
 from .utils import compute_svd
 
 

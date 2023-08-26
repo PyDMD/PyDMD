@@ -6,11 +6,12 @@ https://doi.org/10.1007/s11554-016-0655-2
 import numpy as np
 import scipy.sparse
 
+from pydmd.linalg import build_linalg_module
+
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from pydmd.linalg import build_linalg_module
-from .utils import compute_svd, compute_tlsq
 from .snapshots import Snapshots
+from .utils import compute_svd, compute_tlsq
 
 
 class CDMDOperator(DMDOperator):

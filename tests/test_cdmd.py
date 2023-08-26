@@ -4,8 +4,6 @@ from pytest import raises
 
 from pydmd.cdmd import CDMD
 
-from pydmd.cdmd import CDMD
-
 from .linalg.utils import assert_allclose, setup_backends
 
 data_backends = setup_backends()

@@ -4,11 +4,8 @@ from pytest import raises
 
 from pydmd.hodmd import HODMD
 
-from .linalg.utils import (
-    assert_allclose,
-    setup_backends,
-    setup_linalg_module_backends,
-)
+from .linalg.utils import (assert_allclose, setup_backends,
+                           setup_linalg_module_backends)
 
 data_backends = setup_backends()
 linalg_backends = setup_linalg_module_backends()

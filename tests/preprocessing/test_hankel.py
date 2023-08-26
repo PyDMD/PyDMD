@@ -1,10 +1,8 @@
 import numpy as np
-from pydmd.preprocessing.hankel import (
-    hankel_preprocessing,
-    _preprocessing,
-    _reconstructions,
-)
+
 from pydmd import DMD
+from pydmd.preprocessing.hankel import (_preprocessing, _reconstructions,
+                                        hankel_preprocessing)
 
 sample_data = np.load("tests/test_datasets/input_sample.npy").real
 _d = 3

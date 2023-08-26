@@ -2,8 +2,9 @@
 Derived module from dmdbase.py for classic dmd.
 """
 
-from .dmdbase import DMDBase
 from pydmd.linalg import assert_same_linalg_type, build_linalg_module
+
+from .dmdbase import DMDBase
 from .snapshots import Snapshots
 from .utils import compute_tlsq
 

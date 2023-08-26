@@ -7,8 +7,8 @@ Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.
 """
 
 from .hankeldmd import HankelDMD
-from .snapshots import Snapshots
 from .preprocessing.svd_projection import svd_projection_preprocessing
+from .snapshots import Snapshots
 
 
 class HODMD(HankelDMD):

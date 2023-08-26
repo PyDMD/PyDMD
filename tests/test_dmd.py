@@ -5,13 +5,8 @@ from pytest import raises
 
 from pydmd.dmd import DMD
 
-from .linalg.utils import (
-    assert_allclose,
-    setup_backends,
-    sample_data,
-    setup_linalg_module_backends,
-    numpyfy,
-)
+from .linalg.utils import (assert_allclose, numpyfy, sample_data,
+                           setup_backends, setup_linalg_module_backends)
 
 data_backends = setup_backends()
 linalg_backends = setup_linalg_module_backends()

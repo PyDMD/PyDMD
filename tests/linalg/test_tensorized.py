@@ -1,17 +1,10 @@
+import numpy as np
 import pytest
 import torch
-from pydmd import (
-    CDMD,
-    DMD,
-    FbDMD,
-    HankelDMD,
-    HODMD,
-    SubspaceDMD,
-    RDMD,
-)
-import numpy as np
 
-from .utils import assert_allclose, setup_backends, noisy_data, Backend
+from pydmd import CDMD, DMD, HODMD, RDMD, FbDMD, HankelDMD, SubspaceDMD
+
+from .utils import Backend, assert_allclose, noisy_data, setup_backends
 
 torch.autograd.set_detect_anomaly(True)
 

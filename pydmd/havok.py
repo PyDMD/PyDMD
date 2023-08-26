@@ -10,11 +10,12 @@ Nature Communications, 8, 2017.
 import numpy as np
 from scipy import signal
 
+from pydmd.linalg import build_linalg_module, no_torch
+
+from .dmd import DMD
+from .dmdbase import DMDBase
 from .snapshots import Snapshots
 from .utils import compute_svd
-from .dmdbase import DMDBase
-from .dmd import DMD
-from pydmd.linalg import no_torch, build_linalg_module
 
 
 class HAVOK(DMDBase):

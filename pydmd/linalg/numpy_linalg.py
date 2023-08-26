@@ -1,14 +1,15 @@
 import logging
-from scipy.linalg import sqrtm, block_diag
+
+from scipy.linalg import block_diag, sqrtm
 
 logging.basicConfig(
     format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 )
 
-from .linalg_base import LinalgBase
-
 # we can assume that NumPy is installed
 import numpy as np
+
+from .linalg_base import LinalgBase
 
 
 class LinalgNumPy(LinalgBase):

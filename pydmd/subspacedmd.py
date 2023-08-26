@@ -7,11 +7,12 @@ decomposition for stochastic Koopman analysis." Physical Review E 96.3 (2017):
 033310.
 """
 
+from pydmd.linalg import build_linalg_module, is_array
+
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from .utils import compute_svd
-from pydmd.linalg import build_linalg_module, is_array
 from .snapshots import Snapshots
+from .utils import compute_svd
 
 
 class SubspaceDMDOperator(DMDOperator):

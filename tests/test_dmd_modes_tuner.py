@@ -2,24 +2,11 @@ from copy import deepcopy
 
 import numpy as np
 import pytest
-from pytest import raises, param
+from pytest import param, raises
 
-from pydmd import (
-    CDMD,
-    DMD,
-    HODMD,
-    DMDc,
-    FbDMD,
-    HankelDMD,
-    ParametricDMD,
-)
-from pydmd.dmd_modes_tuner import (
-    ModesSelectors,
-    ModesTuner,
-    select_modes,
-    selectors,
-    stabilize_modes,
-)
+from pydmd import CDMD, DMD, HODMD, DMDc, FbDMD, HankelDMD, ParametricDMD
+from pydmd.dmd_modes_tuner import (ModesSelectors, ModesTuner, select_modes,
+                                   selectors, stabilize_modes)
 
 # TODO Test me with all backends
 

@@ -9,9 +9,10 @@ Systems, 18, 2019.
 
 import numpy as np
 
+from pydmd.linalg import build_linalg_module
+
 from .cdmd import CDMD
 from .utils import compute_rank
-from pydmd.linalg import build_linalg_module
 
 
 class RDMD(CDMD):

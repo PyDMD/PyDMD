@@ -3,6 +3,7 @@ import logging
 import numpy as np
 
 from pydmd.linalg import build_linalg_module, is_array
+
 from .utils import compute_svd
 
 logging.basicConfig(

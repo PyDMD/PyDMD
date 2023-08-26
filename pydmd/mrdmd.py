@@ -10,9 +10,10 @@ from functools import partial
 
 import numpy as np
 
+from pydmd.linalg import build_linalg_module, cast_as_array
+
 from .dmd_modes_tuner import select_modes
 from .dmdbase import DMDBase
-from pydmd.linalg import build_linalg_module, cast_as_array
 from .snapshots import Snapshots
 
 

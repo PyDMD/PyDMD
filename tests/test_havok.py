@@ -1,7 +1,7 @@
 import numpy as np
+import torch
 from pytest import raises
 from scipy.integrate import odeint
-import torch
 
 from pydmd import HAVOK
 

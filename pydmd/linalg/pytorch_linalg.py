@@ -6,9 +6,9 @@ logging.basicConfig(
     format="[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 )
 
-from .linalg_base import LinalgBase
-
 import numpy as np
+
+from .linalg_base import LinalgBase
 
 svd_driver = None
 
