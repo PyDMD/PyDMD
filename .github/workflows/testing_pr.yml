@@ -93,6 +93,8 @@ jobs:
     strategy: 
       matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix_tutorial_test) }}
       fail-fast: false
+    env:
+      TUTORIAL_TIMEOUT=90s
         
     steps:
     - uses: actions/checkout@v3
@@ -143,12 +145,14 @@ jobs:
       
     - name: Test tutorials
       run: |
+        set -x
         cd tutorials/
         for dir in $(ls -d tutorial*/); do
           if [[ $dir != tutorial5* ]]
             then
             cd $dir
-            jupyter nbconvert --to notebook --execute *.ipynb
+            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT sjupyter nbconvert --to notebook --execute *.ipynb
             cd ..
           fi
         done
+        set +x
