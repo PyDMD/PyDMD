@@ -12,7 +12,7 @@ jobs:
     permissions: write-all
     runs-on: ubuntu-latest
     env:
-      TUTORIAL_TIMEOUT=300s
+      TUTORIAL_TIMEOUT: 300s
     steps:
     - uses: actions/checkout@v3
 
