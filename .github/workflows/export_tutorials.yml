@@ -9,11 +9,10 @@ on:
 
 jobs:
   export_tutorials:
-  
     permissions: write-all
-    
     runs-on: ubuntu-latest
-        
+    env:
+      TUTORIAL_TIMEOUT=300s
     steps:
     - uses: actions/checkout@v3
 
@@ -55,8 +54,9 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email 41898282+github-actions[bot]@users.noreply.github.com
 
-    - name: Convert tutorials
+    - name: Export tutorials to .py and HTML
       run: |
+        set -x
         for file in ${{ steps.files.outputs.all }}; do
           if [[ $file == *tutorial-5* ]]; then
             echo "Skipped $file"
@@ -64,12 +64,13 @@ jobs:
             filename=$(basename $file)
 
             pyfilename=$(echo ${filename%?????})py
-            jupyter nbconvert --execute $file --to python --output $pyfilename
+            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT jupyter nbconvert --execute $file --to python --output $pyfilename
 
             htmlfilename=$(echo ${filename%?????} | sed -e 's/-//g')html
-            jupyter nbconvert --execute $file --to html --output $htmlfilename --output-dir=docs/source/_tutorials
+            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT jupyter nbconvert --execute $file --to html --output $htmlfilename --output-dir=docs/source/_tutorials
           fi
         done
+        set +x
         
     - name: Run formatter
       run: black tutorials/
