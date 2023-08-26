@@ -50,8 +50,8 @@ def test_shape():
     """
     havok = HAVOK()
     havok.fit(lorenz_x, dt)
-    assert havok.linear_embeddings.shape == (len(t) - havok.d + 1, havok.r - 1)
-    assert havok.forcing_input.shape == (len(t) - havok.d + 1,)
+    assert havok.linear_embeddings.shape == (len(t) - havok._d + 1, havok.r - 1)
+    assert havok.forcing_input.shape == (len(t) - havok._d + 1,)
     assert havok.A.shape == (havok.r - 1, havok.r - 1)
     assert havok.B.shape == (havok.r - 1, 1)
 
@@ -84,15 +84,6 @@ def test_error_1d():
         havok.fit(np.zeros((2, 100)), dt)
 
 
-def test_error_reconstructions_of_timeindex():
-    """
-    Ensure that calling reconstructions_of_timeindex results in an error.
-    """
-    havok = HAVOK()
-    with raises(NotImplementedError):
-        havok.reconstructions_of_timeindex()
-
-
 def test_error_small_r():
     """
     Ensure that a runtime error is thrown if r is too small.
@@ -109,17 +100,17 @@ def test_r():
     # If no svd truncation, r is the min of the dimensions of the hankel matrix
     havok = HAVOK(svd_rank=-1)
     havok.fit(lorenz_x, dt)
-    assert havok.r == min(havok.d, len(t) - havok.d + 1)
+    assert havok.r == min(havok._d, len(t) - havok._d + 1)
 
     # Test the above case, but for a larger d value
     havok = HAVOK(svd_rank=-1, d=500)
     havok.fit(lorenz_x, dt)
-    assert havok.r == min(havok.d, len(t) - havok.d + 1)
+    assert havok.r == min(havok._d, len(t) - havok._d + 1)
 
     # Test the above case, but for an even larger d value
     havok = HAVOK(svd_rank=-1, d=len(t) - 20)
     havok.fit(lorenz_x, dt)
-    assert havok.r == min(havok.d, len(t) - havok.d + 1)
+    assert havok.r == min(havok._d, len(t) - havok._d + 1)
 
     # If given a positive integer svd truncation, r should equal svd_rank
     havok = HAVOK(svd_rank=3)

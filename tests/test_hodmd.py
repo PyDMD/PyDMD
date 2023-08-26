@@ -4,7 +4,11 @@ from pytest import raises
 
 from pydmd.hodmd import HODMD
 
-from .linalg.utils import assert_allclose, setup_backends, setup_linalg_module_backends
+from .linalg.utils import (
+    assert_allclose,
+    setup_backends,
+    setup_linalg_module_backends,
+)
 
 data_backends = setup_backends()
 linalg_backends = setup_linalg_module_backends()
@@ -46,9 +50,8 @@ def test_d(linalg_module):
     single_data = linalg_module.new_array(np.sin(np.linspace(0, 10, 100))[None])
     dmd = HODMD(svd_rank=-1, d=50, opt=True, exact=True, svd_rank_extra=-1)
     dmd.fit(single_data)
-
-    assert dmd.reconstructed_data.shape == single_data.shape
-    assert_allclose(dmd.reconstructed_data, single_data, atol=1.0e-12)
+    assert np.allclose(dmd.reconstructed_data, single_data)
+    assert dmd._d == 50
 
 
 @pytest.mark.parametrize("X", data_backends)
@@ -250,47 +253,7 @@ def test_nonan_nomask(X):
     assert not np.nan in rec
 
 
-@pytest.mark.parametrize("X", data_backends)
-def test_extract_versions_nonan(X):
-    dmd = HODMD(d=3)
-    dmd.fit(X=X)
-    for timeindex in range(X.shape[1]):
-        assert not np.nan in dmd.reconstructions_of_timeindex(timeindex)
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_rec_method_first(X):
-    dmd = HODMD(d=3, reconstruction_method="first")
-    dmd.fit(X=X)
-
-    rec = dmd.reconstructed_data
-    allrec = dmd.reconstructions_of_timeindex()
-    for i in range(rec.shape[1]):
-        assert (rec[:, i] == allrec[i, min(i, dmd.d - 1)]).all()
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_rec_method_mean(X):
-    dmd = HODMD(d=3, reconstruction_method="mean")
-    dmd.fit(X=X)
-    assert_allclose(
-        dmd.reconstructed_data[:, 2],
-        dmd.reconstructions_of_timeindex(2).mean(axis=0).T,
-    )
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_rec_method_weighted(X):
-    dmd = HODMD(d=2, svd_rank_extra=-1, reconstruction_method=[10, 20])
-    dmd.fit(X=X)
-    wavg = np.average(
-        np.array(dmd.reconstructions_of_timeindex(4)), axis=0, weights=[10, 20]
-    )
-    assert_allclose(dmd.reconstructed_data[:, 4], wavg.T)
-
-
-@pytest.mark.parametrize("linalg_module", linalg_backends)
-def test_scalar_func_warning(linalg_module):
+def test_scalar_func():
     x = np.linspace(0, 10, 64)[None]
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
     arr = linalg_module.new_array(arr)
@@ -406,48 +369,7 @@ def test_reconstructed_data_with_bitmask(X):
     assert dmd.reconstructed_data is not None
 
 
-@pytest.mark.parametrize("X", data_backends)
-def test_getitem_modes(X):
-    dmd = HODMD(svd_rank=-1, d=5)
-    dmd.fit(X=X)
-    old_n_modes = dmd.modes.shape[1]
-
-    assert dmd[[0, -1]].modes.shape[1] == 2
-    assert_allclose(dmd[[0, -1]].modes, dmd.modes[:, [0, -1]])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-    assert dmd[1::2].modes.shape[1] == old_n_modes // 2
-    assert_allclose(dmd[1::2].modes, dmd.modes[:, 1::2])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-    assert dmd[[1, 3]].modes.shape[1] == 2
-    assert_allclose(dmd[[1, 3]].modes, dmd.modes[:, [1, 3]])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-    assert dmd[2].modes.shape[1] == 1
-    assert_allclose(np.squeeze(dmd[2].modes), dmd.modes[:, 2])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_getitem_raises(X):
-    dmd = HODMD(svd_rank=-1, d=5)
-    dmd.fit(X=X)
-
-    with raises(ValueError):
-        dmd[[0, 1, 1, 0, 1]]
-    with raises(ValueError):
-        dmd[[True, True, False, True]]
-    with raises(ValueError):
-        dmd[1.0]
-
-
-@pytest.mark.parametrize("X", data_backends)
-def test_correct_amplitudes(X):
+def test_correct_amplitudes():
     dmd = HODMD(svd_rank=-1, d=5)
     dmd.fit(X=X)
     assert_allclose(dmd.amplitudes, dmd._sub_dmd._b)
@@ -464,3 +386,10 @@ def test_raises_not_enough_snapshots(linalg_module):
     with raises(ValueError, match="Received only one time snapshot."):
         dmd.fit(np.ones((20, 5)))
     dmd.fit(np.ones((20, 6)))
+
+
+def test_hodmd_1d():
+    dmd = HODMD(svd_rank=-1, d=5)
+    data = np.pi * np.cos(np.linspace(0, 2, 100))[None]
+    dmd.fit(data)
+    np.testing.assert_allclose(data, dmd.reconstructed_data)

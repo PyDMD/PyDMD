@@ -5,12 +5,10 @@ Reference:
 - S. L Clainche, J. M. Vega, Higher Order Dynamic Mode Decomposition.
 Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.
 """
-import warnings
 
 from .hankeldmd import HankelDMD
-from pydmd.linalg import build_linalg_module
-from .utils import compute_svd
 from .snapshots import Snapshots
+from .preprocessing.svd_projection import svd_projection_preprocessing
 
 
 class HODMD(HankelDMD):
@@ -88,38 +86,9 @@ class HODMD(HankelDMD):
             sorted_eigs=sorted_eigs,
             reconstruction_method=reconstruction_method,
         )
-
-        self._svd_rank_extra = svd_rank_extra  # TODO improve names
-        self.U_extra = None
-
-    def reconstructions_of_timeindex(self, timeindex=None):
-        """
-        Build a collection of all the available versions of the given
-        `timeindex`. The indexing of time instants is the same used for
-        :func:`reconstructed_data`. For each time instant there are at least
-        one and at most `d` versions.  If `timeindex` is `None` the function
-        returns the whole collection, for all the time instants.
-
-        :param int timeindex: The index of the time snapshot.
-        :return: A collection of all the available versions for the requested
-            time instants, represented by a matrix (or tensor).
-            Axes:
-            0. Number of time instants;
-            1. Copies of the snapshot;
-            2. Space dimension of the snapshot.
-            The first axis is omitted if only one single time instant is
-            selected, in this case the output becomes a 2D matrix.
-        :rtype: numpy.ndarray
-        """
-        snapshots = super().reconstructions_of_timeindex(timeindex)
-        snapshots = snapshots.swapaxes(-1, -2)
-
-        Ue = self.U_extra
-        if Ue.ndim == 3:
-            Ue = Ue[:, None]
-
-        linalg_module = build_linalg_module(snapshots)
-        return linalg_module.dot(Ue, snapshots).swapaxes(-1, -2)
+        self._sub_dmd = svd_projection_preprocessing(
+            self._sub_dmd, svd_rank_extra
+        )
 
     def fit(self, X, batch=False):
         """
@@ -131,25 +100,8 @@ class HODMD(HankelDMD):
         :type batch: bool
         """
         snapshots_holder = Snapshots(X, batch=batch)
-        snapshots = snapshots_holder.snapshots
 
-        space_dim = snapshots.shape[-2]
-        if space_dim == 1:
-            svd_rank_extra = -1
-            warnings.warn(
-                (
-                    f"The parameter 'svd_rank_extra={self._svd_rank_extra}' has "
-                    "been ignored because the given system is a scalar function"
-                )
-            )
-        else:
-            svd_rank_extra = self._svd_rank_extra
-        self.U_extra, _, _ = compute_svd(snapshots, svd_rank_extra)
-
-        linalg_module = build_linalg_module(snapshots)
-        snp = linalg_module.dot(self.U_extra.swapaxes(-1, -2), snapshots)
-
-        super().fit(snp, batch=batch)
+        super().fit(snapshots_holder.snapshots, batch=batch)
         self._snapshots_holder = snapshots_holder
 
         return self

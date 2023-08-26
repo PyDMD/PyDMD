@@ -1,5 +1,10 @@
 """
 Module for the parametric Dynamic Mode Decomposition.
+
+References:
+- A Dynamic Mode Decomposition Extension for the Forecasting of Parametric 
+Dynamical Systems, F. Andreuzzi, N. Demo, G. Rozza, 2023, SIAM Journal on 
+Applied Dynamical Systems
 """
 import pickle
 

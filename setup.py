@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 meta = {}
 with open("pydmd/meta.py") as fp:
@@ -11,13 +11,13 @@ URL = "https://github.com/mathLab/PyDMD"
 MAIL = meta["__mail__"]
 AUTHOR = meta["__author__"]
 VERSION = meta["__version__"]
-KEYWORDS = "dynamic-mode-decomposition dmd mrdmd fbdmd cdmd"
+KEYWORDS = "dynamic-mode-decomposition dmd"
 
-REQUIRED = ["future", "numpy", "scipy", "matplotlib"]
+REQUIRED = ["numpy", "scipy", "matplotlib", "scikit-learn"]
 
 EXTRAS = {
-    "docs": ["Sphinx==1.4", "sphinx_rtd_theme"],
-    "test": ["pytest", "pytest-cov", "ezyrb>=v1.2.1.post2205"],
+    "docs": ["Sphinx>=1.4", "sphinx_rtd_theme"],
+    "test": ["pytest", "pytest-cov", "pytest-mock", "ezyrb>=v1.2.1.post2205"],
 }
 
 LDESCRIPTION = (
@@ -63,16 +63,18 @@ setup(
         "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Mathematics",
     ],
     keywords=KEYWORDS,
     url=URL,
     license="MIT",
-    packages=find_packages(),
+    packages=[NAME],
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,

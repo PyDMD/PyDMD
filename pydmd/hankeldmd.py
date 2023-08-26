@@ -6,16 +6,13 @@ Reference:
 computation of spectral properties of the Koopman operator. SIAM Journal on
 Applied Dynamical Systems, 2017, 16.4: 2096-2126.
 """
-from copy import copy
-from collections.abc import Iterable
 
 import numpy as np
 
 from .dmd import DMD
 from .dmdbase import DMDBase
-from pydmd.linalg import build_linalg_module, cast_as_array
-from .utils import nan_average
 from .snapshots import Snapshots
+from .preprocessing.hankel import hankel_preprocessing
 
 
 class HankelDMD(DMDBase):
@@ -100,7 +97,7 @@ class HankelDMD(DMDBase):
                 )
         self._reconstruction_method = reconstruction_method
 
-        self._sub_dmd = DMD(
+        sub_dmd = DMD(
             svd_rank=svd_rank,
             tlsq_rank=tlsq_rank,
             exact=exact,
@@ -110,11 +107,9 @@ class HankelDMD(DMDBase):
             sorted_eigs=sorted_eigs,
             tikhonov_regularization=tikhonov_regularization,
         )
-
-    @property
-    def d(self):
-        """The new order for spatial dimension of the input snapshots."""
-        return self._d
+        self._sub_dmd = hankel_preprocessing(
+            sub_dmd, d=d, reconstruction_method=reconstruction_method
+        )
 
     def _update_sub_dmd_time(self):
         """
@@ -139,96 +134,21 @@ class HankelDMD(DMDBase):
         )
         self._sub_dmd.dmd_time["tend"] = tend_hankel_first_occurrence
 
-    def reconstructions_of_timeindex(self, timeindex=None):
-        """
-        Build a collection of all the available versions of the given
-        `timeindex`. The indexing of time instants is the same used for
-        :func:`reconstructed_data`. For each time instant there are at least
-        one and at most `d` versions. If `timeindex` is `None` the function
-        returns the whole collection, for all the time instants.
-
-        :param int timeindex: The index of the time snapshot.
-        :return: a collection of all the available versions for the given
-            time snapshot, or for all the time snapshots if `timeindex` is
-            `None` (in the second case, time varies along the first dimension
-            of the array returned).
-        :rtype: numpy.ndarray or list
-        """
-        self._update_sub_dmd_time()
-
-        rec = self._sub_dmd.reconstructed_data
-        space_dim = rec.shape[-2] // self.d
-        time_instants = rec.shape[-1] + self.d - 1
-        tensorized = rec.ndim == 3
-
-        rec_snapshots_shape = (time_instants, self.d, space_dim)
-        if tensorized:
-            rec_snapshots_shape = (len(rec),) + rec_snapshots_shape
-
-        linalg_module = build_linalg_module(rec)
-        reconstructed_snapshots = linalg_module.full(
-            rec_snapshots_shape, np.nan, dtype=rec.dtype
-        )
-
-        time_idxes = np.arange(self.d)[None].repeat(rec.shape[-1], axis=0)
-        time_idxes += np.arange(rec.shape[-1])[:, None]
-        d_idxes = np.arange(self.d)[None].repeat(rec.shape[-1], axis=0)
-
-        splitted = cast_as_array(linalg_module.split(rec, self.d, axis=-2))
-        if tensorized:
-            # move batch axis to the first place
-            splitted = splitted.swapaxes(0, 1)
-            splitted = splitted.swapaxes(-1, -2).swapaxes(-2, -3)
-        else:
-            splitted = linalg_module.moveaxis(splitted, -1, -3)
-
-        reconstructed_snapshots[..., time_idxes, d_idxes, :] = splitted
-        return (
-            reconstructed_snapshots[timeindex]
-            if timeindex
-            else reconstructed_snapshots
-        )
-
-    def _first_reconstructions(self, reconstructions):
-        """Return The first snapshot that occurs in `reconstructions` for each
-        snapshot available.
-        """
-        n_time = reconstructions.shape[-3]
-        time_idxes = np.arange(n_time)
-        d_idxes = np.arange(n_time)
-        d_idxes[self.d - 1 :] = self.d - 1
-        return reconstructions[..., time_idxes, d_idxes, :].swapaxes(-1, -2)
-
     @property
     def reconstructed_data(self):
         self._update_sub_dmd_time()
 
-        rec = self.reconstructions_of_timeindex()
-        linalg_module = build_linalg_module(rec)
-
-        if self._reconstruction_method == "first":
-            result = self._first_reconstructions(rec)
-        elif self._reconstruction_method == "mean":
-            result = linalg_module.nanmean(rec, axis=-2).T
-        elif isinstance(self._reconstruction_method, Iterable):
-            weights = linalg_module.new_array(self._reconstruction_method)
-            result = nan_average(rec, weights).T
-        else:
-            raise ValueError(
-                "The reconstruction method wasn't recognized: {}".format(
-                    self._reconstruction_method
-                )
-            )
-
         # we want to return only the requested timesteps
         time_index = min(
-            self.d - 1,
+            self._d - 1,
             int(
                 (self.dmd_time["t0"] - self.original_time["t0"])
                 // self.dmd_time["dt"]
             ),
         )
-        return result[..., time_index : time_index + len(self.dmd_timesteps)]
+        return self._sub_dmd.reconstructed_data[
+            :, time_index : time_index + len(self.dmd_timesteps)
+        ]
 
     @property
     def modes(self):
@@ -258,7 +178,7 @@ class HankelDMD(DMDBase):
         :return: the matrix that contains the time-delayed data.
         :rtype: numpy.ndarray
         """
-        return self._ho_snapshots
+        return self._sub_dmd.snapshots
 
     @property
     def modes_activation_bitmask(self):
@@ -268,35 +188,9 @@ class HankelDMD(DMDBase):
     def modes_activation_bitmask(self, value):
         self._sub_dmd.modes_activation_bitmask = value
 
-    # due to how we implemented HankelDMD we need an alternative implementation
-    # of __getitem__
     def __getitem__(self, key):
-        """
-        Restrict the DMD modes used by this instance to a subset of indexes
-        specified by keys. The value returned is a shallow copy of this DMD
-        instance, with a different value in :func:`modes_activation_bitmask`.
-        Therefore assignments to attributes are not reflected into the original
-        instance.
-
-        However the DMD instance returned should not be used for low-level
-        manipulations on DMD modes, since the underlying DMD operator is shared
-        with the original instance. For this reasons modifications to NumPy
-        arrays may result in unwanted and unspecified situations which should
-        be avoided in principle.
-
-        :param key: An index (integer), slice or list of indexes.
-        :type key: int or slice or list or np.ndarray
-        :return: A shallow copy of this DMD instance having only a subset of
-            DMD modes which are those indexed by `key`.
-        :rtype: HankelDMD
-        """
-
-        sub_dmd_copy = copy(self._sub_dmd)
-        sub_dmd_copy._allocate_modes_bitmask_proxy()
-
-        shallow_copy = copy(self)
-        shallow_copy._sub_dmd = sub_dmd_copy
-        return DMDBase.__getitem__(shallow_copy, key)
+        # The implementation was asking for problems...
+        raise ValueError("This operation is not allowed for HankelDMD")
 
     def fit(self, X, batch=False):
         """
@@ -309,8 +203,6 @@ class HankelDMD(DMDBase):
         """
         self._reset()
 
-        linalg_module = build_linalg_module(X)
-
         self._snapshots_holder = Snapshots(X, batch=batch)
         n_samples = self.snapshots.shape[-1]
         if n_samples < self._d:
@@ -318,10 +210,7 @@ class HankelDMD(DMDBase):
                 f"The number of snapshots provided is not enough for d={self._d}."
             )
 
-        ho_snapshots = linalg_module.pseudo_hankel_matrix(
-            self.snapshots, self._d
-        )
-        self._sub_dmd.fit(ho_snapshots, batch=batch)
+        self._sub_dmd.fit(X, batch=batch)
 
         # Default timesteps
         self._set_initial_time_dictionary(

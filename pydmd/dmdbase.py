@@ -671,9 +671,12 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
             )
             q = linalg_module.extract_diagonal(vsm).conj()
         else:
-            _, s, V = compute_svd(
-                self.snapshots[..., :-1], self.modes.shape[-1]
-            )
+            if self._snapshots_holder_y:
+                X = self.snapshots
+            else:
+                X = self.snapshots[..., :-1]
+
+            _, s, V = compute_svd(X, self.modes.shape[-1])
 
             s_conj = linalg_module.diag_matrix(s).conj()
             s_conj, V, vander = linalg_module.to(
@@ -722,6 +725,15 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
             )
 
         return a
+
+    def _compare_data_shapes(self, y_snapshots):
+        """
+        Method that ensures that the data inputs X and Y are the same shape
+        if provided separately. Throws an error if the shapes do not agree.
+        """
+        if self.snapshots.shape != y_snapshots.shape:
+            msg = f"X {self.snapshots.shape} and Y {y_snapshots.shape} input data must be the same shape."
+            raise ValueError(msg)
 
 
 class DMDTimeDict(dict):
