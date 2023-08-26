@@ -5,9 +5,15 @@ import numpy as np
 from pytest import raises
 
 from pydmd import DMD, DMDBase, MrDMD
-from pydmd.plotter import (_enforce_ratio, _plot_limits, plot_eigs,
-                           plot_eigs_mrdmd, plot_modes_2D, plot_snapshots_2D,
-                           plot_summary)
+from pydmd.plotter import (
+    _enforce_ratio,
+    _plot_limits,
+    plot_eigs,
+    plot_eigs_mrdmd,
+    plot_modes_2D,
+    plot_snapshots_2D,
+    plot_summary,
+)
 
 from .test_mrdmd import create_data as create_mrdmd_data
 

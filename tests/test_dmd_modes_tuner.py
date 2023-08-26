@@ -5,8 +5,13 @@ import pytest
 from pytest import param, raises
 
 from pydmd import CDMD, DMD, HODMD, DMDc, FbDMD, HankelDMD, ParametricDMD
-from pydmd.dmd_modes_tuner import (ModesSelectors, ModesTuner, select_modes,
-                                   selectors, stabilize_modes)
+from pydmd.dmd_modes_tuner import (
+    ModesSelectors,
+    ModesTuner,
+    select_modes,
+    selectors,
+    stabilize_modes,
+)
 
 # TODO Test me with all backends
 

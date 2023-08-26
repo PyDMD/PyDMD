@@ -7,8 +7,11 @@ with control. SIAM Journal on Applied Dynamical Systems, 15(1), pp.142-161.
 """
 import numpy as np
 
-from pydmd.linalg import (assert_same_linalg_type, build_linalg_module,
-                          cast_as_array)
+from pydmd.linalg import (
+    assert_same_linalg_type,
+    build_linalg_module,
+    cast_as_array,
+)
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
