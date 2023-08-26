@@ -112,6 +112,8 @@ jobs:
         pip install -e .[test]
         # Dependencies for tutorials
         pip install jupyter pandas opencv-python ffmpeg-python
+        # timeout not available by default on MacOS
+        brew install coreutils || true
         
     - uses: actions/cache@v2
       id: cache-segtrackv2
@@ -145,7 +147,6 @@ jobs:
       
     - name: Test tutorials
       run: |
-        brew install coreutils
         set -x
         cd tutorials/
         for dir in $(ls -d tutorial*/); do
