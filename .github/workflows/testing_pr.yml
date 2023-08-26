@@ -64,6 +64,23 @@ jobs:
           exit 1
         fi
 
+  Sort dependencies: ##########################################################################
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install isort
+      run: |
+        pip install isort
+
+    - name: Run isort on PyDMD source code
+      run: |
+        OUT=$(isort pydmd/ tests/)
+        if [[ $OUT ]]; then
+            echo "All imports are properly sorted"
+        else
+            echo "$OUT"
+        fi
+
   unit_test: #################################################################################
     needs: prepare_matrix
     runs-on: ${{ matrix.os }}

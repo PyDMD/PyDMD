@@ -2,8 +2,8 @@ import numpy as np
 from pytest import raises
 from scipy.integrate import solve_ivp
 
-from pydmd.dmd import DMD
 from pydmd.bopdmd import BOPDMD
+from pydmd.dmd import DMD
 
 
 def simulate_z(t_eval):

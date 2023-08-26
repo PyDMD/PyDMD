@@ -10,18 +10,11 @@ import numpy as np
 
 from .dmd import DMD
 from .dmdoperator import DMDOperator
+from .pidmd_utils import (compute_BC, compute_BCCB, compute_circulant,
+                          compute_diagonal, compute_symmetric,
+                          compute_symtridiagonal, compute_toeplitz,
+                          compute_unitary, compute_uppertriangular)
 from .utils import compute_svd
-from .pidmd_utils import (
-    compute_unitary,
-    compute_uppertriangular,
-    compute_diagonal,
-    compute_symmetric,
-    compute_toeplitz,
-    compute_circulant,
-    compute_symtridiagonal,
-    compute_BCCB,
-    compute_BC,
-)
 
 
 class PiDMDOperator(DMDOperator):

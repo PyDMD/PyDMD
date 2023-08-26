@@ -3,28 +3,12 @@ from copy import deepcopy
 import numpy as np
 import pytest
 from ezyrb import POD, RBF
-from pytest import raises, param
+from pytest import param, raises
 
-from pydmd import (
-    CDMD,
-    DMD,
-    HODMD,
-    DMDBase,
-    DMDc,
-    FbDMD,
-    HankelDMD,
-    MrDMD,
-    OptDMD,
-    ParametricDMD,
-    SpDMD,
-)
-from pydmd.dmd_modes_tuner import (
-    ModesSelectors,
-    ModesTuner,
-    select_modes,
-    selectors,
-    stabilize_modes,
-)
+from pydmd import (CDMD, DMD, HODMD, DMDBase, DMDc, FbDMD, HankelDMD, MrDMD,
+                   OptDMD, ParametricDMD, SpDMD)
+from pydmd.dmd_modes_tuner import (ModesSelectors, ModesTuner, select_modes,
+                                   selectors, stabilize_modes)
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where

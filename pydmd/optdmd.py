@@ -13,8 +13,8 @@ from scipy.linalg import eig
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from .utils import compute_svd, compute_tlsq
 from .snapshots import Snapshots
+from .utils import compute_svd, compute_tlsq
 
 
 def pinv_diag(x):
