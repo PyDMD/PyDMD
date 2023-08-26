@@ -145,13 +145,14 @@ jobs:
       
     - name: Test tutorials
       run: |
+        brew install coreutils
         set -x
         cd tutorials/
         for dir in $(ls -d tutorial*/); do
           if [[ $dir != tutorial5* ]]
             then
             cd $dir
-            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT jupyter nbconvert --to notebook --execute *.ipynb
+            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT python -Xfrozen_modules=off -m jupyter nbconvert --to notebook --execute *.ipynb
             cd ..
           fi
         done

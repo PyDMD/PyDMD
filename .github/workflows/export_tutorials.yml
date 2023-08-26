@@ -64,10 +64,10 @@ jobs:
             filename=$(basename $file)
 
             pyfilename=$(echo ${filename%?????})py
-            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT jupyter nbconvert --execute $file --to python --output $pyfilename
+            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT python -Xfrozen_modules=off -m jupyter nbconvert --execute $file --to python --output $pyfilename
 
             htmlfilename=$(echo ${filename%?????} | sed -e 's/-//g')html
-            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT jupyter nbconvert --execute $file --to html --output $htmlfilename --output-dir=docs/source/_tutorials
+            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT python -Xfrozen_modules=off -m jupyter nbconvert --execute $file --to html --output $htmlfilename --output-dir=docs/source/_tutorials
           fi
         done
         set +x
