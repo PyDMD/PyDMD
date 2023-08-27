@@ -24,6 +24,10 @@ class HOEDMDOperator(DMDOperator):
         to reach the 'energy' specified by `svd_rank`; if -1, the method does
         not compute truncation.
     :type svd_rank: int or float
+    :paran alg_type: Algorithm type in HOEDMD; If `alg_type='stls'`, Atilde
+    are computed by svd. If `alg_type='nonsvd'`, Atilde are computed by cholesky
+    decomposition. Default is 'stls'.
+    :type alg_type: {'stls', 'nonsvd'}
     :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by
         magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
         part to break ties) if `sorted_eigs='real'`. Default: False.
@@ -33,6 +37,7 @@ class HOEDMDOperator(DMDOperator):
     def __init__(
         self,
         svd_rank,
+        alg_type,
         exact,
         rescale_mode,
         forward_backward,
@@ -66,8 +71,8 @@ class HOEDMDOperator(DMDOperator):
             P, _, _ = compute_svd(
                 Psi, svd_rank=self._svd_rank
             )  # solve for tlsq
-            Px = P[:-d, :]
-            Py = P[d:, :]
+            Px = P[:-d]
+            Py = P[d:]
             M, omega, N = compute_svd(
                 Px, svd_rank=self._svd_rank
             )  # solve for dmd
@@ -78,18 +83,19 @@ class HOEDMDOperator(DMDOperator):
             self._compute_eigenquantities()
             U = self.eigenvectors_r
             V = self.eigenvectors_l
-            inprodUV = self.eigenvalues.conj() * ((U.conj() * V).sum(0))
-            U = P[m : 2 * m, :].dot(U)
+            inprodUV = self.eigenvalues.conj() * (U.conj() * V).sum(0)
+            U = P[m : 2 * m].dot(U)
             V = np.linalg.multi_dot([(M * o_inv), N.T.conj(), V])
             self._compute_modes(U, V, inprodUV)
 
         elif alg_type == "nosvd":
-            Gxx = np.dot(Psi[:-d, :].T.conj(), Psi[:-d, :])
-            Gxy = np.dot(Psi[:-d, :].T.conj(), Psi[d:, :])
-            Gpp = np.dot(Psi[m * d :, :].T.conj(), Psi[m * d :, :])
+            Gxx = np.dot(Psi[:-d].T.conj(), Psi[:-d])
+            Gxy = np.dot(Psi[:-d].T.conj(), Psi[d:])
+            Gpp = np.dot(Psi[m * d :].T.conj(), Psi[m * d :])
             sigma, Q = np.linalg.eig(Gxx + Gpp)
-            ind = np.sort(-sigma)
-            sigma = sigma(ind)
+            # sort sigma index in descending order
+            ind = np.argsort(sigma)[::-1]
+            sigma = sigma[ind]
             Q = Q[:, ind[: self._svd_rank]]
             L = scipy.linalg.cholesky(Q.T.conj() * Gxx * Q, lower=True)
             atilde = np.linalg.solve(
@@ -99,15 +105,15 @@ class HOEDMDOperator(DMDOperator):
             self._compute_eigenquantities()
             U = self.eigenvectors_r
             V = self.eigenvectors_l
-            inprodUV = self.eigenvalues.conj() * ((U.conj() * V).sum(0))
-            U = Psi[m : 2 * m, :] * (Q * U)
-            V = Psi[: m * d, :] * (
+            inprodUV = self.eigenvalues.conj() * (U.conj() * V).sum(0)
+            U = Psi[m : 2 * m] * (Q * U)
+            V = Psi[: m * d] * (
                 Q * np.linalg.solve(L.T.conj(), np.linalg.solve(L, V))
             )
             self._compute_modes(U, V, inprodUV)
 
         else:
-            raise ValueError("Invalid value for alg_type: {}".format(alg_type))
+            raise ValueError("Invalid value for alg_type: {alg_type}")
 
     @property
     def eigenvectors_r(self):
@@ -210,6 +216,10 @@ class HOEDMD(DMDBase):
         to reach the 'energy' specified by `svd_rank`; if -1, the method does
         not compute truncation.
     :type svd_rank: int or float
+    :param alg_type: Algorithm type in HOEDMD; If `alg_type='stls'`, Atilde are
+    computed by svd. If `alg_type='nonsvd'`, Atilde are computed by cholesky
+    decomposition. Default is 'stls'.
+    :type alg_type: {'stls', 'nonsvd'}
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means TLSQ is not applied.
     :param int d: the new order for spatial dimension of the input snapshots.
@@ -252,6 +262,7 @@ class HOEDMD(DMDBase):
         self._alg_type = alg_type
         self._Atilde = HOEDMDOperator(
             svd_rank=svd_rank,
+            alg_type=alg_type,
             exact=exact,
             rescale_mode=rescale_mode,
             forward_backward=forward_backward,
