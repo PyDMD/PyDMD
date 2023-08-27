@@ -2,11 +2,9 @@
 
 import numpy as np
 from numpy.linalg import solve
-from scipy.sparse import (
-    csc_matrix as sparse,
-    vstack as spvstack,
-    hstack as sphstack,
-)
+from scipy.sparse import csc_matrix as sparse
+from scipy.sparse import hstack as sphstack
+from scipy.sparse import vstack as spvstack
 from scipy.sparse.linalg import spsolve
 
 from .dmd import DMD
@@ -19,7 +17,7 @@ def soft_thresholding_operator(v, k):
     :param np.ndarray v: The vector on which we apply the operator.
     :param float k: The threshold.
     :return np.ndarray: The result of the application of the soft-tresholding
-        operator on ´v´.
+        operator on `v`.
     """
     return np.multiply(
         np.multiply(np.divide(1 - k, np.abs(v)), v), np.abs(v) > k

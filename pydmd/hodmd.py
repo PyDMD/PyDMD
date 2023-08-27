@@ -5,13 +5,10 @@ Reference:
 - S. L Clainche, J. M. Vega, Higher Order Dynamic Mode Decomposition.
 Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.
 """
-import warnings
-
-import numpy as np
 
 from .hankeldmd import HankelDMD
-from .snapshots import Snapshots
 from .preprocessing.svd_projection import svd_projection_preprocessing
+from .snapshots import Snapshots
 
 
 class HODMD(HankelDMD):
@@ -93,16 +90,18 @@ class HODMD(HankelDMD):
             self._sub_dmd, svd_rank_extra
         )
 
-    def fit(self, X):
+    def fit(self, X, batch=False):
         """
         Compute the Dynamic Modes Decomposition to the input data.
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
+        :param batch: If `True`, the first dimension is dedicated to batching.
+        :type batch: bool
         """
-        snapshots_holder = Snapshots(X)
+        snapshots_holder = Snapshots(X, batch=batch)
 
-        super().fit(snapshots_holder.snapshots)
+        super().fit(snapshots_holder.snapshots, batch=batch)
         self._snapshots_holder = snapshots_holder
 
         return self

@@ -1,6 +1,6 @@
 import numpy as np
-from pytest import raises
 from numpy.testing import assert_allclose
+from pytest import raises
 
 from pydmd.edmd import EDMD
 

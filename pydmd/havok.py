@@ -10,10 +10,12 @@ Nature Communications, 8, 2017.
 import numpy as np
 from scipy import signal
 
-from .snapshots import Snapshots
-from .utils import compute_svd, pseudo_hankel_matrix
-from .dmdbase import DMDBase
+from pydmd.linalg import build_linalg_module, no_torch
+
 from .dmd import DMD
+from .dmdbase import DMDBase
+from .snapshots import Snapshots
+from .utils import compute_svd
 
 
 class HAVOK(DMDBase):
@@ -176,6 +178,7 @@ class HAVOK(DMDBase):
         the time step dt separating the observations in x.
         """
         self._reset()
+        no_torch(x)
 
         x = np.asarray(x)
         if x.ndim != 1:
@@ -192,7 +195,10 @@ Expected at least d."""
             raise ValueError(msg.format(self._d))
 
         # Compute hankel matrix for the input data
-        hankel_matrix = pseudo_hankel_matrix(self.snapshots, self._d)
+        linalg_module = build_linalg_module(self.snapshots)
+        hankel_matrix = linalg_module.pseudo_hankel_matrix(
+            self.snapshots, self._d
+        )
 
         # Take SVD of the hankel matrix
         # Save the resulting U, s, and V for future reconstructions

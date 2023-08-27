@@ -5,7 +5,8 @@ https://doi.org/10.1007/s11554-016-0655-2
 """
 import numpy as np
 import scipy.sparse
-from scipy.linalg import sqrtm
+
+from pydmd.linalg import build_linalg_module
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
@@ -76,6 +77,7 @@ class CDMDOperator(DMDOperator):
         :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
         """
 
+        linalg_module = build_linalg_module(compressedX)
         U, s, V = compute_svd(compressedX, svd_rank=self._svd_rank)
 
         atilde = self._least_square_operator(U, s, V, compressedY)
@@ -84,7 +86,9 @@ class CDMDOperator(DMDOperator):
             # b stands for "backward"
             bU, bs, bV = compute_svd(compressedY, svd_rank=self._svd_rank)
             atilde_back = self._least_square_operator(bU, bs, bV, compressedX)
-            atilde = sqrtm(atilde.dot(np.linalg.inv(atilde_back)))
+            atilde_back_inv = linalg_module.inv(atilde_back)
+            atilde_dotted = linalg_module.dot(atilde, atilde_back_inv)
+            atilde = linalg_module.matrix_sqrt(atilde_dotted)
 
         self._Atilde = atilde
         self._compute_eigenquantities()
@@ -194,7 +198,7 @@ class CDMD(DMDBase):
         :rtype: numpy.ndarray
         """
 
-        C_shape = (self.snapshots.shape[1], self.snapshots.shape[0])
+        C_shape = (self.snapshots.shape[-1], self.snapshots.shape[-2])
         if isinstance(self.compression_matrix, np.ndarray):
             C = self.compression_matrix
         elif self.compression_matrix == "uniform":
@@ -206,33 +210,38 @@ class CDMD(DMDBase):
         elif self.compression_matrix == "sample":
             C = np.zeros(C_shape)
             C[
-                np.arange(self.snapshots.shape[1]),
+                np.arange(self.snapshots.shape[-1]),
                 np.random.choice(*self.snapshots.shape, replace=False),
             ] = 1.0
 
+        linalg_module = build_linalg_module(self.snapshots)
+        C = linalg_module.to(self.snapshots, C)
+
         # compress the matrix
-        Y = C.dot(self.snapshots)
+        Y = linalg_module.dot(C, self.snapshots)
 
         return Y
 
-    def fit(self, X):
+    def fit(self, X, batch=False):
         """
         Compute the Dynamic Modes Decomposition to the input data.
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
+        :param batch: If `True`, the first dimension is dedicated to batching.
+        :type batch: bool
         """
         self._reset()
 
-        self._snapshots_holder = Snapshots(X)
+        self._snapshots_holder = Snapshots(X, batch=batch)
         compressed_snapshots = self._compress_snapshots()
 
-        n_samples = compressed_snapshots.shape[1]
-        X = compressed_snapshots[:, :-1]
-        Y = compressed_snapshots[:, 1:]
+        n_samples = compressed_snapshots.shape[-1]
+        X = compressed_snapshots[..., :-1]
+        Y = compressed_snapshots[..., 1:]
 
         X, Y = compute_tlsq(X, Y, self._tlsq_rank)
-        self.operator.compute_operator(X, Y, self.snapshots[:, 1:])
+        self.operator.compute_operator(X, Y, self.snapshots[..., 1:])
 
         # Default timesteps
         self._set_initial_time_dictionary(

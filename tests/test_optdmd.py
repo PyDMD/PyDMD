@@ -59,7 +59,7 @@ def test_rank():
 def test_Atilde_shape():
     optdmd = OptDMD(svd_rank=3)
     optdmd.fit(X=sample_data)
-    assert optdmd.operator.as_numpy_array.shape == (
+    assert optdmd.operator.as_array.shape == (
         optdmd.operator._svd_rank,
         optdmd.operator._svd_rank,
     )
@@ -76,7 +76,7 @@ def test_Atilde_values():
     )
     np.testing.assert_allclose(
         np.linalg.eigvals(exact_atilde),
-        np.linalg.eigvals(optdmd.operator.as_numpy_array),
+        np.linalg.eigvals(optdmd.operator.as_array),
     )
 
 

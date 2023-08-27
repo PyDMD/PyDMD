@@ -9,7 +9,8 @@ from copy import deepcopy
 from functools import partial
 
 import numpy as np
-from scipy.linalg import block_diag
+
+from pydmd.linalg import build_linalg_module, cast_as_array
 
 from .dmd_modes_tuner import select_modes
 from .dmdbase import DMDBase
@@ -51,10 +52,10 @@ class BinaryTree:
 
     @property
     def levels(self):
-        return range(self.depth + 1)
+        return tuple(range(self.depth + 1))
 
     def index_leaves(self, level):
-        return range(0, 2**level)
+        return tuple(range(0, 2**level))
 
 
 class MrDMD(DMDBase):
@@ -88,8 +89,10 @@ class MrDMD(DMDBase):
         :return: the matrix containing the DMD modes.
         :rtype: numpy.ndarray
         """
-        return np.hstack(
-            [self.partial_modes(i) for i in range(self.max_level + 1)]
+        linalg_module = build_linalg_module(self.snapshots)
+        return linalg_module.cat(
+            tuple(self.partial_modes(i) for i in range(self.max_level + 1)),
+            axis=-1,
         )
 
     @property
@@ -101,8 +104,10 @@ class MrDMD(DMDBase):
                 row.
         :rtype: numpy.ndarray
         """
-        return np.vstack(
-            [self.partial_dynamics(i) for i in range(self.max_level + 1)]
+        linalg_module = build_linalg_module(self.snapshots)
+        return linalg_module.cat(
+            tuple(self.partial_dynamics(i) for i in range(self.max_level + 1)),
+            axis=-2,
         )
 
     @property
@@ -113,7 +118,8 @@ class MrDMD(DMDBase):
         :return: the eigenvalues from the eigendecomposition of `atilde`.
         :rtype: numpy.ndarray
         """
-        return np.concatenate([dmd.eigs for dmd in self])
+        linalg_module = build_linalg_module(self.snapshots)
+        return linalg_module.cat(tuple(dmd.eigs for dmd in self), axis=-1)
 
     @property
     def modes_activation_bitmask(self):
@@ -131,20 +137,19 @@ class MrDMD(DMDBase):
         :return: the matrix that contains the reconstructed snapshots.
         :rtype: numpy.ndarray
         """
-        return np.sum(
-            np.array(
-                [
-                    np.hstack(
-                        [
-                            self.dmd_tree[level, leaf].reconstructed_data
-                            for leaf in self.dmd_tree.index_leaves(level)
-                        ]
-                    )
-                    for level in self.dmd_tree.levels
-                ]
-            ),
-            axis=0,
-        )
+        linalg_module = build_linalg_module(self.snapshots)
+        return cast_as_array(
+            [
+                linalg_module.cat(
+                    tuple(
+                        self.dmd_tree[level, leaf].reconstructed_data
+                        for leaf in self.dmd_tree.index_leaves(level)
+                    ),
+                    -1,
+                )
+                for level in self.dmd_tree.levels
+            ]
+        ).sum(0)
 
     def _dmd_builder(self):
         """
@@ -239,8 +244,7 @@ Expected one item per level, got {} out of {} levels.""".format(
                 # we construct the dmd before in order to trigger a better
                 # exception in case the function fails (otherwise it would
                 # be an IndexError)
-                dmd = builder_func(level, leaf)
-                self.dmd_tree[level, leaf] = dmd
+                self.dmd_tree[level, leaf] = builder_func(level, leaf)
 
     def time_window_bins(self, t0, tend):
         """
@@ -277,7 +281,10 @@ Expected one item per level, got {} out of {} levels.""".format(
         :rtype: numpy.ndarray
         """
         indexes = self.time_window_bins(t0, tend)
-        return np.concatenate([self.dmd_tree[idx].eigs for idx in indexes])
+        linalg_module = build_linalg_module(self.snapshots)
+        return linalg_module.cat(
+            tuple(self.dmd_tree[idx].eigs for idx in indexes), -1
+        )
 
     def time_window_frequency(self, t0, tend):
         """
@@ -290,7 +297,10 @@ Expected one item per level, got {} out of {} levels.""".format(
         :rtype: numpy.ndarray
         """
         indexes = self.time_window_bins(t0, tend)
-        return np.concatenate([self.dmd_tree[idx].frequency for idx in indexes])
+        linalg_module = build_linalg_module(self.snapshots)
+        return linalg_module.cat(
+            tuple(self.dmd_tree[idx].frequency for idx in indexes), -1
+        )
 
     def time_window_growth_rate(self, t0, tend):
         """
@@ -303,8 +313,9 @@ Expected one item per level, got {} out of {} levels.""".format(
         :rtype: numpy.ndarray
         """
         indexes = self.time_window_bins(t0, tend)
-        return np.concatenate(
-            [self.dmd_tree[idx].growth_rate for idx in indexes]
+        linalg_module = build_linalg_module(self.snapshots)
+        return linalg_module.cat(
+            tuple(self.dmd_tree[idx].growth_rate for idx in indexes), -1
         )
 
     def time_window_amplitudes(self, t0, tend):
@@ -318,8 +329,9 @@ Expected one item per level, got {} out of {} levels.""".format(
         :rtype: numpy.ndarray
         """
         indexes = self.time_window_bins(t0, tend)
-        return np.concatenate(
-            [self.dmd_tree[idx].amplitudes for idx in indexes]
+        linalg_module = build_linalg_module(self.snapshots)
+        return linalg_module.cat(
+            tuple(self.dmd_tree[idx].amplitudes for idx in indexes), -1
         )
 
     def partial_modes(self, level, node=None):
@@ -338,7 +350,10 @@ Expected one item per level, got {} out of {} levels.""".format(
         :rtype: numpy.ndarray
         """
         leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
-        return np.hstack([self.dmd_tree[level, leaf].modes for leaf in leaves])
+        linalg_module = build_linalg_module(self.snapshots)
+        return linalg_module.cat(
+            tuple(self.dmd_tree[level, leaf].modes for leaf in leaves), -1
+        )
 
     def partial_dynamics(self, level, node=None):
         """
@@ -357,13 +372,13 @@ Expected one item per level, got {} out of {} levels.""".format(
         :rtype: numpy.ndarray
         """
         leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
-        dynamics = block_diag(
+        linalg_module = build_linalg_module(self.snapshots)
+        return linalg_module.block_diag(
             *tuple(
                 dmd.dynamics
                 for dmd in map(lambda leaf: self.dmd_tree[level, leaf], leaves)
             )
         )
-        return dynamics
 
     def partial_eigs(self, level, node=None):
         """
@@ -381,8 +396,9 @@ Expected one item per level, got {} out of {} levels.""".format(
         :rtype: numpy.ndarray
         """
         leaves = self.dmd_tree.index_leaves(level) if node is None else [node]
-        return np.concatenate(
-            [self.dmd_tree[level, leaf].eigs for leaf in leaves]
+        linalg_module = build_linalg_module(self.snapshots)
+        return linalg_module.cat(
+            tuple(self.dmd_tree[level, leaf].eigs for leaf in leaves), -1
         )
 
     def partial_reconstructed_data(self, level, node=None):
@@ -403,7 +419,8 @@ Expected one item per level, got {} out of {} levels.""".format(
         modes = self.partial_modes(level, node)
         dynamics = self.partial_dynamics(level, node)
 
-        return modes.dot(dynamics)
+        linalg_module = build_linalg_module(self.snapshots)
+        return linalg_module.dot(modes, dynamics)
 
     def partial_time_interval(self, level, leaf):
         """
@@ -456,10 +473,11 @@ Expected one item per level, got {} out of {} levels.""".format(
         self._reset()
 
         self._snapshots_holder = Snapshots(X)
+        linalg_module = build_linalg_module(self.snapshots)
 
         # Redefine max level if it is too big.
         lvl_threshold = (
-            int(np.log(self.snapshots.shape[1] / 4.0) / np.log(2.0)) + 1
+            int(np.log(self.snapshots.shape[-1] / 4.0) / np.log(2.0)) + 1
         )
         if self.max_level > lvl_threshold:
             self.max_level = lvl_threshold
@@ -470,32 +488,35 @@ Expected one item per level, got {} out of {} levels.""".format(
             )
 
         def slow_modes(dmd, rho):
-            return np.abs(np.log(dmd.eigs)) < rho * 2 * np.pi
+            return (
+                linalg_module.abs(linalg_module.log(dmd.eigs)) < rho * 2 * np.pi
+            )
 
-        X = self.snapshots.copy()
+        X = linalg_module.new_array(self.snapshots)
         for level in self.dmd_tree.levels:
             n_leaf = 2**level
-            Xs = np.array_split(X, n_leaf, axis=1)
+            Xs = linalg_module.array_split(X, n_leaf, axis=-1)
 
             for leaf, x in enumerate(Xs):
                 current_dmd = self.dmd_tree[level, leaf]
                 current_dmd.fit(x)
 
-                rho = self.max_cycles / x.shape[1]
+                rho = self.max_cycles / x.shape[-1]
                 slow_modes_selector = partial(slow_modes, rho=rho)
 
                 select_modes(current_dmd, slow_modes_selector)
 
-            newX = np.hstack(
-                [
+            newX = linalg_module.cat(
+                tuple(
                     self.dmd_tree[level, leaf].reconstructed_data
                     for leaf in self.dmd_tree.index_leaves(level)
-                ]
-            ).astype(X.dtype)
-            X -= newX
+                ),
+                axis=-1,
+            )
+            X = X - linalg_module.to(X, newX)
 
         self._set_initial_time_dictionary(
-            dict(t0=0, tend=self.snapshots.shape[1], dt=1)
+            dict(t0=0, tend=self.snapshots.shape[-1], dt=1)
         )
 
         return self

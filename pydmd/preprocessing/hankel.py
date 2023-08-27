@@ -2,10 +2,13 @@
 Hankel pre-processing.
 """
 
-from typing import Dict, Union, List, Tuple
 from functools import partial
+from typing import Dict, List, Tuple, Union
+
 import numpy as np
+
 from pydmd.dmdbase import DMDBase
+from pydmd.linalg import build_linalg_module, cast_as_array
 from pydmd.preprocessing.pre_post_processing import PrePostProcessingDMD
 from pydmd.utils import pseudo_hankel_matrix
 
@@ -57,16 +60,27 @@ def _reconstructions(rec: np.ndarray, d: int):
     """
     space_dim = rec.shape[-2] // d
     time_instants = rec.shape[-1] + d - 1
+    tensorized = rec.ndim == 3
 
     rec_snapshots_shape = (time_instants, d, space_dim)
-    reconstructed_snapshots = np.full(
+    if tensorized:
+        rec_snapshots_shape = (len(rec),) + rec_snapshots_shape
+
+    linalg_module = build_linalg_module(rec)
+    reconstructed_snapshots = linalg_module.full(
         rec_snapshots_shape, np.nan, dtype=rec.dtype
     )
     time_idxes = np.arange(d)[None].repeat(rec.shape[-1], axis=0)
     time_idxes += np.arange(rec.shape[-1])[:, None]
     d_idxes = np.arange(d)[None].repeat(rec.shape[-1], axis=0)
-    splitted = np.array(np.split(rec, d, axis=-2))
-    splitted = np.moveaxis(splitted, -1, -3)
+
+    splitted = cast_as_array(linalg_module.split(rec, self.d, axis=-2))
+    if tensorized:
+        # move batch axis to the first place
+        splitted = splitted.swapaxes(0, 1)
+        splitted = splitted.swapaxes(-1, -2).swapaxes(-2, -3)
+    else:
+        splitted = linalg_module.moveaxis(splitted, -1, -3)
 
     reconstructed_snapshots[..., time_idxes, d_idxes, :] = splitted
     return reconstructed_snapshots

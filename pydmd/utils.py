@@ -1,8 +1,11 @@
 """Utilities module."""
 
 import warnings
+
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
+
+from pydmd.linalg import build_linalg_module, cast_as_array, is_array
 
 
 def compute_rank(X, svd_rank=0):
@@ -23,15 +26,17 @@ def compute_rank(X, svd_rank=0):
     singular values is, IEEE Transactions on Information Theory 60.8
     (2014): 5040-5053.
     """
-    U, s, _ = np.linalg.svd(X, full_matrices=False)
+    linalg_module = build_linalg_module(X)
+    U, s, _ = linalg_module.svd(X, full_matrices=False)
 
     def omega(x):
         return 0.56 * x**3 - 0.95 * x**2 + 1.82 * x + 1.43
 
     if svd_rank == 0:
-        beta = np.divide(*sorted(X.shape))
-        tau = np.median(s) * omega(beta)
-        rank = np.sum(s > tau)
+        small, big = sorted(X.shape[-2:])
+        beta = small / big
+        tau = linalg_module.median(s) * omega(beta)
+        rank = (s > tau).sum()
         if rank == 0:
             warnings.warn(
                 "SVD optimal rank is 0. The largest singular values are "
@@ -40,12 +45,12 @@ def compute_rank(X, svd_rank=0):
             )
             rank = 1
     elif 0 < svd_rank < 1:
-        cumulative_energy = np.cumsum(s**2 / (s**2).sum())
-        rank = np.searchsorted(cumulative_energy, svd_rank) + 1
+        cumulative_energy = (s**2 / (s**2).sum()).cumsum(0)
+        rank = linalg_module.searchsorted(cumulative_energy, svd_rank) + 1
     elif svd_rank >= 1 and isinstance(svd_rank, int):
-        rank = min(svd_rank, U.shape[1])
+        rank = min(svd_rank, U.shape[-1])
     else:
-        rank = min(X.shape)
+        rank = min(X.shape[-2], X.shape[-1])
 
     return rank
 
@@ -71,11 +76,26 @@ def compute_tlsq(X, Y, tlsq_rank):
     if tlsq_rank == 0:
         return X, Y
 
-    V = np.linalg.svd(np.append(X, Y, axis=0), full_matrices=False)[-1]
-    rank = min(tlsq_rank, V.shape[0])
-    VV = V[:rank, :].conj().T.dot(V[:rank, :])
+    linalg_module = build_linalg_module(X)
+    concatenated = linalg_module.cat((X, Y), axis=-2)
+    _, _, V = linalg_module.svd(concatenated)
+    VV = linalg_module.dot(V[:tlsq_rank].conj().T, V[:tlsq_rank])
+    return linalg_module.dot(X, VV), linalg_module.dot(Y, VV)
 
-    return X.dot(VV), Y.dot(VV)
+
+def compute_optimal_svd_rank(X):
+    """
+    Rank computation for the truncated Singular Value Decomposition.
+    :param numpy.ndarray X: the matrix to decompose.
+    :type svd_rank: int or float
+    :return: the computed rank truncation.
+    :rtype: int
+    References:
+    Gavish, Matan, and David L. Donoho, The optimal hard threshold for
+    singular values is, IEEE Transactions on Information Theory 60.8
+    (2014): 5040-5053.
+    """
+    return compute_svd(X)[0].shape[-1]
 
 
 def compute_svd(X, svd_rank=0):
@@ -99,15 +119,83 @@ def compute_svd(X, svd_rank=0):
     singular values is, IEEE Transactions on Information Theory 60.8
     (2014): 5040-5053.
     """
+    if X.ndim > 2:
+        if svd_rank == 0 or not isinstance(svd_rank, int):
+            raise ValueError(
+                "Automatic SVD rank selection not available in tensorized DMD"
+            )
+
+    linalg_module = build_linalg_module(X)
+
+    U, s, V = linalg_module.svd(X, full_matrices=False)
+    V = V.conj().swapaxes(-1, -2)
+
     rank = compute_rank(X, svd_rank)
-    U, s, V = np.linalg.svd(X, full_matrices=False)
-    V = V.conj().T
+    return U[..., :rank], s[..., :rank], V[..., :rank]
 
-    U = U[:, :rank]
-    V = V[:, :rank]
-    s = s[:rank]
 
-    return U, s, V
+def prepare_snapshots(X):
+    snapshots = cast_as_array(X)
+
+    linalg_module = build_linalg_module(snapshots)
+    snapshots = linalg_module.atleast_2d(snapshots)
+    if snapshots.ndim < 2:
+        raise ValueError("Expected at least 2D array.")
+    if snapshots.ndim > 2 and isinstance(snapshots, np.ndarray):
+        raise ValueError("Batched DMD not supported in NumPy")
+
+    # when snapshots are wrapped in a list each member of the list is
+    # a snapshot
+    if not is_array(X) and snapshots.ndim == 2:
+        snapshots = snapshots.T
+
+    cond_number = linalg_module.cond(snapshots)
+    if (
+        isinstance(cond_number, float)
+        or hasattr(cond_number, "ndim")
+        and cond_number.ndim == 0
+    ):
+        max_cond_number = float(cond_number)
+    else:
+        max_cond_number = max(cond_number)
+    if max_cond_number > 10e4:
+        warnings.warn(
+            f"Input data matrix X has condition number {max_cond_number}. "
+            """Consider preprocessing data, passing in augmented data
+matrix, or regularization methods."""
+        )
+
+    return snapshots
+
+
+def nan_average(arr, weights):
+    """
+    Cancels axis -2 by averaging all the samples on axis -3 using the given
+    weights.
+    """
+    if weights.ndim != 1:
+        raise ValueError("Expected 1D weights")
+
+    linalg_module = build_linalg_module(arr)
+
+    if arr.ndim == 4:
+        arr0, arr1, _, arr3 = arr.shape
+    else:
+        arr0 = 0
+        arr1, _, arr3 = arr.shape
+    repeated_weights = linalg_module.repeat(weights[None], arr1, 0)
+    repeated_weights = linalg_module.repeat(
+        repeated_weights[..., None], arr3, 2
+    )
+    if arr.ndim == 4:
+        repeated_weights = linalg_module.repeat(repeated_weights[None], arr0, 0)
+
+    non_normalized_mean = linalg_module.nansum(arr * repeated_weights, axis=-2)
+
+    weights_sum = linalg_module.nansum(repeated_weights, axis=-2)
+    # avoid divide by zero
+    weights_sum[weights_sum == 0.0] = 1
+    return non_normalized_mean / weights_sum
 
 
 def pseudo_hankel_matrix(X: np.ndarray, d: int):

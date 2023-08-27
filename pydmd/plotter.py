@@ -1,16 +1,18 @@
 """
 Module for DMD plotting.
 """
+import warnings
 from os.path import splitext
 
-import warnings
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 from pydmd import MrDMD
-from .hankeldmd import HankelDMD
+
 from .bopdmd import BOPDMD
+from .hankeldmd import HankelDMD
 
 mpl.rcParams["figure.max_open_warning"] = 0
 

@@ -2,9 +2,11 @@
 Zero-mean pre-processing.
 """
 
-from typing import Dict, Iterable
 from functools import partial
+from typing import Dict, Iterable
+
 import numpy as np
+
 from pydmd.dmdbase import DMDBase
 from pydmd.preprocessing import PrePostProcessingDMD
 

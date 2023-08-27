@@ -2,8 +2,7 @@
 Derived module from dmdbase.py for classic dmd.
 """
 
-import numpy as np
-from scipy.linalg import pinv
+from pydmd.linalg import assert_same_linalg_type, build_linalg_module
 
 from .dmdbase import DMDBase
 from .snapshots import Snapshots
@@ -46,7 +45,7 @@ class DMD(DMDBase):
     :type tikhonov_regularization: int or float
     """
 
-    def fit(self, X, Y=None):
+    def fit(self, X, Y=None, *, batch=False):
         """
         Compute the Dynamic Modes Decomposition to the input data.
 
@@ -55,14 +54,18 @@ class DMD(DMDBase):
         :param Y: additional input snapshots such that Y=AX.
             If not provided, snapshots from X are used.
         :type Y: numpy.ndarray or iterable
+        :param batch: If `True`, the first dimension is dedicated to batching.
+        :type batch: bool
         """
         self._reset()
-        self._snapshots_holder = Snapshots(X)
-        n_samples = self.snapshots.shape[1]
+
+        self._snapshots_holder = Snapshots(X, batch=batch)
+
+        n_samples = self.snapshots.shape[-1]
 
         if Y is None:
-            X = self.snapshots[:, :-1]
-            Y = self.snapshots[:, 1:]
+            X = self.snapshots[..., :-1]
+            Y = self.snapshots[..., 1:]
         else:
             self._compare_data_shapes(Snapshots(Y).snapshots)
             self._snapshots_holder_y = Snapshots(Y)
@@ -89,6 +92,14 @@ class DMD(DMDBase):
         :return: one time-step ahead predicted output.
         :rtype: numpy.ndarray
         """
-        return np.linalg.multi_dot(
-            [self.modes, np.diag(self.eigs), pinv(self.modes), X]
+        assert_same_linalg_type(X, self.modes)
+
+        linalg_module = build_linalg_module(X)
+        return linalg_module.multi_dot(
+            (
+                self.modes,
+                linalg_module.diag_matrix(self.eigs),
+                linalg_module.pinv(self.modes),
+                X,
+            )
         )

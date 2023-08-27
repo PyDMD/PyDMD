@@ -1,5 +1,7 @@
 import numpy as np
+
 from pydmd.preprocessing import zero_mean_preprocessing
+
 from .test_pre_post_processing import _kwargs
 
 

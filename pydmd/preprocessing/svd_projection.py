@@ -2,11 +2,14 @@
 SVD projection pre-processing.
 """
 
-from typing import Dict, Union
-from functools import partial
 import warnings
+from functools import partial
+from typing import Dict, Union
+
 import numpy as np
+
 from pydmd.dmdbase import DMDBase
+from pydmd.linalg import build_linalg_module
 from pydmd.preprocessing import PrePostProcessingDMD
 from pydmd.utils import compute_svd
 
@@ -25,7 +28,7 @@ def svd_projection_preprocessing(dmd: DMDBase, svd_rank: svd_rank_type):
 
 
 def _pre(state: Dict, X: np.ndarray, svd_rank: svd_rank_type, **kwargs):
-    space_dim = X.shape[0]
+    space_dim = X.shape[-2]
     if space_dim == 1:
         svd_rank = -1
         warnings.warn(
@@ -34,10 +37,19 @@ def _pre(state: Dict, X: np.ndarray, svd_rank: svd_rank_type, **kwargs):
                 "been ignored because the given system is a scalar function"
             )
         )
-    state["projection_matrix"], _, _ = compute_svd(X, svd_rank)
 
-    return (state["projection_matrix"].T.dot(X),) + tuple(kwargs.values())
+    proj, _, _ = compute_svd(X, svd_rank)
+    linalg_module = build_linalg_module(X)
+    projected = linalg_module.dot(proj.swapaxes(-1, -2), X)
+
+    state["projection_matrix"] = proj
+    return (projected,) + tuple(kwargs.values())
 
 
 def _post(state: Dict, X: np.ndarray) -> np.ndarray:
-    return state["projection_matrix"].dot(X)
+    proj = state["projection_matrix"]
+    if proj.ndim == 3:
+        proj = proj[:, None]
+
+    linalg_module = build_linalg_module(X)
+    return linalg_module.dot(proj, X).swapaxes(-1, -2)

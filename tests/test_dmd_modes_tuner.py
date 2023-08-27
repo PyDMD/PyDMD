@@ -2,22 +2,9 @@ from copy import deepcopy
 
 import numpy as np
 import pytest
-from ezyrb import POD, RBF
-from pytest import raises, param
+from pytest import param, raises
 
-from pydmd import (
-    CDMD,
-    DMD,
-    HODMD,
-    DMDBase,
-    DMDc,
-    FbDMD,
-    HankelDMD,
-    MrDMD,
-    OptDMD,
-    ParametricDMD,
-    SpDMD,
-)
+from pydmd import CDMD, DMD, HODMD, DMDc, FbDMD, HankelDMD, ParametricDMD
 from pydmd.dmd_modes_tuner import (
     ModesSelectors,
     ModesTuner,
@@ -25,6 +12,8 @@ from pydmd.dmd_modes_tuner import (
     selectors,
     stabilize_modes,
 )
+
+# TODO Test me with all backends
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -35,7 +24,7 @@ sample_data = np.load("tests/test_datasets/input_sample.npy")
 
 class FakeDMDOperator:
     def __init__(self):
-        self.as_numpy_array = np.ones(10)
+        self.as_array = np.ones(10)
 
 
 def test_select_modes():
@@ -65,9 +54,7 @@ def test_select_modes_nullified_indexes():
     dmd.fit(sample_data)
     dmdc = deepcopy(dmd)
 
-    _, cut_indexes = select_modes(
-        dmd, stable_modes, nullify_amplitudes=False, return_indexes=True
-    )
+    _, cut_indexes = select_modes(dmd, stable_modes, return_indexes=True)
     noncut_indexes = list(set(range(len(dmdc.eigs))) - set(cut_indexes))
 
     assert dmd.amplitudes.shape == dmdc[noncut_indexes].amplitudes.shape
@@ -916,10 +903,6 @@ def test_modes_tuner_stabilize_multiple_subset():
 
 
 def test_modes_tuner_index_scalar_dmd_raises():
-    def stable_modes(dmd_object):
-        toll = 1e-3
-        return np.abs(np.abs(dmd_object.eigs) - 1) < toll
-
     dmd = DMD(svd_rank=10)
     dmd.fit(sample_data)
 
@@ -969,4 +952,3 @@ def test_modes_selector_all_dmd_types(dmd):
     ModesTuner(dmd, in_place=True).select(
         "integral_contribution", n=3
     ).stabilize(1 - 1.0e-3)
-    assert True

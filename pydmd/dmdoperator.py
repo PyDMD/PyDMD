@@ -1,7 +1,8 @@
 import logging
 
 import numpy as np
-from scipy.linalg import sqrtm
+
+from pydmd.linalg import build_linalg_module, is_array
 
 from .utils import compute_svd
 
@@ -76,19 +77,24 @@ class DMDOperator:
 
         U, s, V = compute_svd(X, self._svd_rank)
 
+        linalg_module = build_linalg_module(X)
+
+        VV = linalg_module.dot(V, V.conj().swapaxes(-1, -2))
+        identity = linalg_module.to(VV, np.identity(VV.shape[-1]))
+        self._dmd_phase_space_error = linalg_module.matrix_norm(
+            linalg_module.dot(Y, identity - VV)
+        )
+
         if self._tikhonov_regularization is not None:
-            self._norm_X = np.linalg.norm(X)
+            self._norm_X = linalg_module.matrix_norm(X)
         atilde = self._least_square_operator(U, s, V, Y)
 
         if self._forward_backward:
-            # b stands for "backward"
-            bU, bs, bV = compute_svd(Y, svd_rank=len(s))
+            bU, bs, bV = compute_svd(Y, svd_rank=s.shape[-1])
             atilde_back = self._least_square_operator(bU, bs, bV, X)
-            atilde = sqrtm(atilde.dot(np.linalg.inv(atilde_back)))
-            if hasattr(np, "complex256") and atilde.dtype == np.complex256:
-                atilde = atilde.astype(np.complex128)
-                msg = "Casting atilde from np.complex256 to np.complex128"
-                logging.info(msg)
+            atilde_back_inv = linalg_module.inv(atilde_back)
+            atilde_dotted = linalg_module.dot(atilde, atilde_back_inv)
+            atilde = linalg_module.matrix_sqrt(atilde_dotted)
 
         if isinstance(self._rescale_mode, str) and self._rescale_mode == "auto":
             self._rescale_mode = s
@@ -102,7 +108,7 @@ class DMDOperator:
     @property
     def shape(self):
         """Shape of the operator"""
-        return self.as_numpy_array.shape
+        return self.as_array.shape
 
     def __call__(self, snapshot_lowrank_modal_coefficients):
         """
@@ -114,8 +120,13 @@ class DMDOperator:
         :return: low-rank representation (in modal coefficients) of x{n+1}.
         :rtype: numpy.ndarray
         """
-
-        return self._Atilde.dot(snapshot_lowrank_modal_coefficients)
+        linalg_module = build_linalg_module(self._Atilde)
+        snapshot_lowrank_modal_coefficients = linalg_module.to(
+            self._Atilde, snapshot_lowrank_modal_coefficients
+        )
+        return linalg_module.dot(
+            self._Atilde, snapshot_lowrank_modal_coefficients
+        )
 
     @property
     def eigenvalues(self):
@@ -142,7 +153,13 @@ class DMDOperator:
         return self._Lambda
 
     @property
-    def as_numpy_array(self):
+    def dmd_phase_space_error(self):
+        if not hasattr(self, "_dmd_phase_space_error"):
+            raise ValueError("You need to call fit before")
+        return self._dmd_phase_space_error
+
+    @property
+    def as_array(self):
         if not hasattr(self, "_Atilde") or self._Atilde is None:
             raise ValueError("You need to call fit before")
         else:
@@ -170,10 +187,13 @@ class DMDOperator:
         :rtype: numpy.ndarray
         """
         if self._tikhonov_regularization is not None:
-            s = (
-                s**2 + self._tikhonov_regularization * self._norm_X
-            ) * np.reciprocal(s)
-        return np.linalg.multi_dot([U.T.conj(), Y, V]) * np.reciprocal(s)
+            s = (s**2 + self._tikhonov_regularization * self._norm_X) / s
+
+        linalg_module = build_linalg_module(U)
+        UYV = linalg_module.multi_dot((U.swapaxes(-1, -2).conj(), Y, V))
+        if UYV.ndim == 3:
+            s = s[:, None]
+        return UYV / s
 
     def _compute_eigenquantities(self):
         """
@@ -181,27 +201,34 @@ class DMDOperator:
         low-dimensional operator, scaled according to self._rescale_mode.
         """
 
+        linalg_module = build_linalg_module(self._Atilde)
         if self._rescale_mode is None:
             # scaling isn't required
             Ahat = self._Atilde
-        elif isinstance(self._rescale_mode, np.ndarray):
-            if len(self._rescale_mode) != self.as_numpy_array.shape[0]:
+        elif is_array(self._rescale_mode):
+            if len(self._rescale_mode) != self.as_array.shape[-2]:
                 raise ValueError(
                     """Scaling by an invalid number of
                         coefficients"""
                 )
-            scaling_factors_array = self._rescale_mode
-
-            factors_inv_sqrt = np.diag(np.power(scaling_factors_array, -0.5))
-            factors_sqrt = np.diag(np.power(scaling_factors_array, 0.5))
+            scaling_factors = linalg_module.to(
+                self.as_array, self._rescale_mode
+            )
+            factors_inv_sqrt = linalg_module.diag_matrix(
+                1 / linalg_module.pow(scaling_factors, 0.5)
+            )
+            factors_sqrt = linalg_module.diag_matrix(
+                linalg_module.pow(scaling_factors, 0.5)
+            )
 
             # if an index is 0, we get inf when taking the reciprocal
-            for idx, item in enumerate(scaling_factors_array):
-                if item == 0:
-                    factors_inv_sqrt[idx] = 0
+            factors_inv_sqrt[..., scaling_factors == 0] = 0
 
-            Ahat = np.linalg.multi_dot(
-                [factors_inv_sqrt, self.as_numpy_array, factors_sqrt]
+            factors_sqrt, factors_inv_sqrt = linalg_module.to(
+                self.as_array, factors_sqrt, factors_inv_sqrt
+            )
+            Ahat = linalg_module.multi_dot(
+                (factors_inv_sqrt, self.as_array, factors_sqrt)
             )
         else:
             raise ValueError(
@@ -210,38 +237,26 @@ class DMDOperator:
                 )
             )
 
-        self._eigenvalues, self._eigenvectors = np.linalg.eig(Ahat)
+        eigs, eigenvecs = linalg_module.eig(Ahat)
 
-        if self._sorted_eigs is not False and self._sorted_eigs is not None:
+        if self._sorted_eigs:
+            if eigenvecs.ndim > 2:
+                raise ValueError("Sorting not allowed for batched DMD")
+
             if self._sorted_eigs == "abs":
-
-                def k(tp):
-                    return abs(tp[0])
-
+                sort_mask = linalg_module.argsort(linalg_module.abs(eigs))
             elif self._sorted_eigs == "real":
-
-                def k(tp):
-                    eig = tp[0]
-                    if isinstance(eig, complex):
-                        return (eig.real, eig.imag)
-                    return (eig.real, 0)
-
+                sort_mask = linalg_module.argsort(eigs)
             else:
                 raise ValueError(
-                    "Invalid value for sorted_eigs: {}".format(
-                        self._sorted_eigs
-                    )
+                    f"Invalid value for sorted_eigs: {self._sorted_eigs}"
                 )
 
-            # each column is an eigenvector, therefore we take the
-            # transpose to associate each row (former column) to an
-            # eigenvalue before sorting
-            a, b = zip(
-                *sorted(zip(self._eigenvalues, self._eigenvectors.T), key=k)
-            )
-            self._eigenvalues = np.array([eig for eig in a])
-            # we restore the original condition (eigenvectors in columns)
-            self._eigenvectors = np.array([vec for vec in b]).T
+            self._eigenvalues = eigs[sort_mask]
+            self._eigenvectors = eigenvecs[:, sort_mask]
+        else:
+            self._eigenvalues = eigs
+            self._eigenvectors = eigenvecs
 
     def _compute_modes(self, Y, U, Sigma, V):
         """
@@ -254,25 +269,29 @@ class DMDOperator:
         :param numpy.ndarray Sigma: (truncated) singular values of X
         :param numpy.ndarray V: (truncated) right singular vectors of X
         """
-
+        linalg_module = build_linalg_module(self.eigenvectors)
         if self._rescale_mode is None:
             W = self.eigenvectors
         else:
             # compute W as shown in arXiv:1409.5496 (section 2.4)
-            factors_sqrt = np.diag(np.power(self._rescale_mode, 0.5))
-            W = factors_sqrt.dot(self.eigenvectors)
+            factors = linalg_module.to(self.eigenvectors, self._rescale_mode)
+            factors_sqrt = linalg_module.diag_matrix(
+                linalg_module.pow(factors, 0.5)
+            )
+            W = linalg_module.dot(factors_sqrt, self.eigenvectors)
 
         # compute the eigenvectors of the high-dimensional operator
         if self._exact:
             if self._tikhonov_regularization is not None:
                 Sigma = (
                     Sigma**2 + self._tikhonov_regularization * self._norm_X
-                ) * np.reciprocal(Sigma)
-            high_dimensional_eigenvectors = (
-                Y.dot(V) * np.reciprocal(Sigma)
-            ).dot(W)
+                ) / Sigma
+            YV = linalg_module.dot(Y, V)
+            if Y.ndim == 3:
+                Sigma = Sigma[:, None]
+            high_dimensional_eigenvectors = linalg_module.dot((YV / Sigma), W)
         else:
-            high_dimensional_eigenvectors = U.dot(W)
+            high_dimensional_eigenvectors = linalg_module.dot(U, W)
 
         # eigenvalues are the same of lowrank
         high_dimensional_eigenvalues = self.eigenvalues

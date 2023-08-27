@@ -6,15 +6,13 @@ Reference:
 computation of spectral properties of the Koopman operator. SIAM Journal on
 Applied Dynamical Systems, 2017, 16.4: 2096-2126.
 """
-from copy import copy
-from numbers import Number
 
 import numpy as np
 
 from .dmd import DMD
 from .dmdbase import DMDBase
-from .snapshots import Snapshots
 from .preprocessing.hankel import hankel_preprocessing
+from .snapshots import Snapshots
 
 
 class HankelDMD(DMDBase):
@@ -92,7 +90,7 @@ class HankelDMD(DMDBase):
         elif isinstance(reconstruction_method, np.ndarray):
             if (
                 reconstruction_method.ndim > 1
-                or reconstruction_method.shape[0] != d
+                or reconstruction_method.shape[-2] != d
             ):
                 raise ValueError(
                     "The length of the array of weights must be equal to d"
@@ -113,25 +111,6 @@ class HankelDMD(DMDBase):
             sub_dmd, d=d, reconstruction_method=reconstruction_method
         )
 
-    def _hankel_first_occurrence(self, time):
-        r"""
-        For a given `t` such that there is :math:`k \in \mathbb{N}` such that
-        :math:`t = t_0 + k dt`, return the index of the first column in Hankel
-        pseudo matrix (see also :func:`_pseudo_hankel_matrix`) which contains
-        the snapshot corresponding to `t`.
-
-        :param time: The time corresponding to the requested snapshot.
-        :return: The index of the first appeareance of `time` in the columns of
-            Hankel pseudo matrix.
-        :rtype: int
-        """
-        assert isinstance(time, Number) or np.asarray(time).ndim == 1
-        return max(
-            0,
-            (time - self.original_time["t0"]) // self.dmd_time["dt"]
-            - (self.original_time["t0"] + self._d - 1),
-        )
-
     def _update_sub_dmd_time(self):
         """
         Update the time dictionaries (`dmd_time` and `original_time`) of
@@ -139,12 +118,21 @@ class HankelDMD(DMDBase):
         time dictionaries of the time dictionaries of this instance of the
         higher level instance of `HankelDMD`.
         """
-        self._sub_dmd.dmd_time["t0"] = self._hankel_first_occurrence(
-            self.dmd_time["t0"]
+        t0_hankel_first_occurrence = max(
+            0,
+            (self.dmd_time["t0"] - self.original_time["t0"])
+            // self.dmd_time["dt"]
+            - (self.original_time["t0"] + self.d - 1),
         )
-        self._sub_dmd.dmd_time["tend"] = self._hankel_first_occurrence(
-            self.dmd_time["tend"]
+        self._sub_dmd.dmd_time["t0"] = t0_hankel_first_occurrence
+
+        tend_hankel_first_occurrence = max(
+            0,
+            (self.dmd_time["tend"] - self.original_time["t0"])
+            // self.dmd_time["dt"]
+            - (self.original_time["t0"] + self.d - 1),
         )
+        self._sub_dmd.dmd_time["tend"] = tend_hankel_first_occurrence
 
     @property
     def reconstructed_data(self):
@@ -180,7 +168,7 @@ class HankelDMD(DMDBase):
 
     @property
     def svd_rank(self):
-        return self._sub_dmd.svd_rank
+        return self._sub_dmd._svd_rank
 
     @property
     def ho_snapshots(self):
@@ -204,24 +192,25 @@ class HankelDMD(DMDBase):
         # The implementation was asking for problems...
         raise ValueError("This operation is not allowed for HankelDMD")
 
-    def fit(self, X):
+    def fit(self, X, batch=False):
         """
         Compute the Dynamic Modes Decomposition to the input data.
 
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
+        :param batch: If `True`, the first dimension is dedicated to batching.
+        :type batch: bool
         """
         self._reset()
 
-        self._snapshots_holder = Snapshots(X)
-
+        self._snapshots_holder = Snapshots(X, batch=batch)
         n_samples = self.snapshots.shape[-1]
         if n_samples < self._d:
-            msg = """The number of snapshots provided is not enough for d={}.
-Expected at least d."""
-            raise ValueError(msg.format(self._d))
+            raise ValueError(
+                f"The number of snapshots provided is not enough for d={self._d}."
+            )
 
-        self._sub_dmd.fit(X)
+        self._sub_dmd.fit(X, batch=batch)
 
         # Default timesteps
         self._set_initial_time_dictionary(

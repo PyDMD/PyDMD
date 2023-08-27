@@ -9,6 +9,8 @@ Systems, 18, 2019.
 
 import numpy as np
 
+from pydmd.linalg import build_linalg_module
+
 from .cdmd import CDMD
 from .utils import compute_rank
 
@@ -68,28 +70,35 @@ class RDMD(CDMD):
         :return: the compressed snapshots
         :rtype: numpy.ndarray
         """
+        linalg_module = build_linalg_module(self.snapshots)
+
         # Define the random test matrix if not provided.
         if self._test_matrix is None:
             m = self.snapshots.shape[-1]
             r = compute_rank(self.snapshots, self._svd_rank)
             self._test_matrix = np.random.randn(m, r + self._oversampling)
+            self._test_matrix = linalg_module.to(
+                self.snapshots, self._test_matrix
+            )
 
         # Compute sampling matrix.
-        Y = self.snapshots.dot(self._test_matrix)
+        Y = linalg_module.dot(self.snapshots, self._test_matrix)
 
         # Perform power iterations.
         for _ in range(self._power_iters):
-            Q = np.linalg.qr(Y)[0]
-            Z = np.linalg.qr(self.snapshots.conj().T.dot(Q))[0]
-            Y = self.snapshots.dot(Z)
+            Q = linalg_module.qr_reduced(Y)[0]
+            Z = linalg_module.qr_reduced(
+                linalg_module.dot(self.snapshots.conj().swapaxes(-1, -2), Q)
+            )[0]
+            Y = linalg_module.dot(self.snapshots, Z)
 
         # Orthonormalize the sampling matrix.
-        Q = np.linalg.qr(Y)[0]
+        Q = linalg_module.qr_reduced(Y)[0]
 
         # Project the snapshot matrix onto the smaller space.
-        B = Q.conj().T.dot(self.snapshots)
+        B = linalg_module.dot(Q.conj().swapaxes(-1, -2), self.snapshots)
 
         # Save the compression matrix.
-        self._compression_matrix = Q.conj().T
+        self._compression_matrix = Q.conj().swapaxes(-1, -2)
 
         return B

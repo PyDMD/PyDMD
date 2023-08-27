@@ -6,6 +6,8 @@ from copy import copy, deepcopy
 
 import numpy as np
 
+from pydmd.linalg import build_linalg_module
+
 from .dmdoperator import DMDOperator
 from .utils import compute_svd
 
@@ -36,12 +38,13 @@ class ActivationBitmaskProxy:
     """
 
     def __init__(self, dmd_operator, amplitudes):
+        linalg_module = build_linalg_module(dmd_operator.modes)
         self._original_modes = dmd_operator.modes
-        self._original_eigs = np.atleast_1d(dmd_operator.eigenvalues)
-        self._original_amplitudes = np.atleast_1d(amplitudes)
+        self._original_eigs = linalg_module.atleast_1d(dmd_operator.eigenvalues)
+        self._original_amplitudes = linalg_module.atleast_1d(amplitudes)
 
         self.old_bitmask = None
-        self.change_bitmask(np.full(len(dmd_operator.eigenvalues), True))
+        self.change_bitmask(np.full(dmd_operator.eigenvalues.shape[-1], True))
 
     def change_bitmask(self, value):
         """
@@ -55,16 +58,9 @@ class ActivationBitmaskProxy:
             `bool` whose size is the same of the number of DMD modes.
         :type value: np.ndarray
         """
-
-        # apply changes made on the proxied values to the original values
-        if self.old_bitmask is not None:
-            self._original_modes[:, self.old_bitmask] = self.modes
-            self._original_eigs[self.old_bitmask] = self.eigs
-            self._original_amplitudes[self.old_bitmask] = self.amplitudes
-
-        self._modes = np.array(self._original_modes)[:, value]
-        self._eigs = np.array(self._original_eigs)[value]
-        self._amplitudes = np.array(self._original_amplitudes)[value]
+        self._modes = self._original_modes[..., value]
+        self._eigs = self._original_eigs[..., value]
+        self._amplitudes = self._original_amplitudes[..., value]
 
         self.old_bitmask = value
 
@@ -191,7 +187,6 @@ class DMDBase:
 
         self._b = None  # amplitudes
         self._snapshots_holder = None
-        self._snapshots_holder_y = None
 
         self._modes_activation_bitmask_proxy = None
 
@@ -203,10 +198,12 @@ class DMDBase:
         :return: the time intervals of the original snapshots.
         :rtype: numpy.ndarray
         """
-        return np.arange(
+        linalg_module = build_linalg_module(self.eigs)
+        return linalg_module.arange(
             self.dmd_time["t0"],
             self.dmd_time["tend"] + self.dmd_time["dt"],
             self.dmd_time["dt"],
+            device=linalg_module.device(self.snapshots),
         )
 
     @property
@@ -217,10 +214,12 @@ class DMDBase:
         :return: the time intervals of the original snapshots.
         :rtype: numpy.ndarray
         """
-        return np.arange(
+        linalg_module = build_linalg_module(self.eigs)
+        return linalg_module.arange(
             self.original_time["t0"],
             self.original_time["tend"] + self.original_time["dt"],
             self.original_time["dt"],
+            device=linalg_module.device(self.snapshots),
         )
 
     @property
@@ -283,8 +282,9 @@ class DMDBase:
             row.
         :rtype: numpy.ndarray
         """
-        temp = np.repeat(
-            self.eigs[:, None], self.dmd_timesteps.shape[0], axis=1
+        linalg_module = build_linalg_module(self.eigs)
+        temp = linalg_module.repeat(
+            self.eigs[..., None], len(self.dmd_timesteps), axis=-1
         )
         tpow = (
             self.dmd_timesteps - self.original_time["t0"]
@@ -297,7 +297,7 @@ class DMDBase:
         # Therefore tpow must be scaled appropriately.
         tpow = self._translate_eigs_exponent(tpow)
 
-        return np.power(temp, tpow) * self.amplitudes[:, None]
+        return linalg_module.pow(temp, tpow) * self.amplitudes[..., None]
 
     def _translate_eigs_exponent(self, tpow):
         """
@@ -318,7 +318,7 @@ class DMDBase:
 
         if amplitudes_snapshot_index < 0:
             # we take care of negative indexes: -n becomes T - n
-            return tpow - (self.snapshots.shape[1] + amplitudes_snapshot_index)
+            return tpow - (self.snapshots.shape[-1] + amplitudes_snapshot_index)
         else:
             return tpow - amplitudes_snapshot_index
 
@@ -330,7 +330,8 @@ class DMDBase:
         :return: the matrix that contains the reconstructed snapshots.
         :rtype: numpy.ndarray
         """
-        return self.modes.dot(self.dynamics)
+        linalg_module = build_linalg_module(self.modes)
+        return linalg_module.dot(self.modes, self.dynamics)
 
     @property
     def snapshots(self):
@@ -342,18 +343,6 @@ class DMDBase:
         """
         if self._snapshots_holder:
             return self._snapshots_holder.snapshots
-        return None
-
-    @property
-    def snapshots_y(self):
-        """
-        Get the input left-hand side data (space flattened) if given.
-
-        :return: matrix that contains the flattened left-hand side snapshots.
-        :rtype: numpy.ndarray
-        """
-        if self._snapshots_holder_y:
-            return self._snapshots_holder_y.snapshots
         return None
 
     @property
@@ -376,7 +365,9 @@ class DMDBase:
         :return: the array that contains the frequencies of the eigenvalues.
         :rtype: numpy.ndarray
         """
-        return np.log(self.eigs).imag / (2 * np.pi * self.original_time["dt"])
+        linalg_module = build_linalg_module(self.eigs)
+        div = 2 * np.pi * self.original_time["dt"]
+        return linalg_module.log(self.eigs).imag / div
 
     @property
     def growth_rate(self):  # To check
@@ -453,7 +444,7 @@ class DMDBase:
 
         bitmask = self._modes_activation_bitmask_proxy.old_bitmask
         # make sure that the array is immutable
-        bitmask.flags.writeable = False
+        build_linalg_module(bitmask).make_not_writeable(bitmask)
         return bitmask
 
     @modes_activation_bitmask.setter
@@ -462,7 +453,6 @@ class DMDBase:
         if not self.fitted:
             raise RuntimeError("This DMD instance has not been fitted yet.")
 
-        value = np.array(value)
         if value.dtype != bool:
             raise RuntimeError(
                 "Unxpected dtype, expected bool, got {}.".format(value.dtype)
@@ -633,7 +623,6 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         self._modes_activation_bitmask_proxy = None
         self._b = None
         self._snapshots_holder = None
-        self._snapshots_holder_y = None
 
     def save(self, fname):
         """
@@ -670,41 +659,34 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
 
     def _optimal_dmd_matrices(self):
         # compute the vandermonde matrix
-        vander = np.vander(self.eigs, len(self.dmd_timesteps), True)
+        linalg_module = build_linalg_module(self.eigs)
+        vander = linalg_module.vander(self.eigs, len(self.dmd_timesteps), True)
 
-        P = np.multiply(
-            np.dot(self.modes.conj().T, self.modes),
-            np.conj(np.dot(vander, vander.conj().T)),
-        )
+        a = linalg_module.dot(self.modes.conj().swapaxes(-1, -2), self.modes)
+        b = linalg_module.dot(vander, vander.conj().swapaxes(-1, -2)).conj()
+        P = linalg_module.multiply_elementwise(a, b)
 
         if self._exact:
-            q = np.conj(
-                np.diag(
-                    np.linalg.multi_dot(
-                        [vander, self.snapshots.conj().T, self.modes]
-                    )
-                )
+            vsm = linalg_module.multi_dot(
+                (vander, self.snapshots.conj().swapaxes(-1, -2), self.modes)
             )
+            q = linalg_module.extract_diagonal(vsm).conj()
         else:
             if self._snapshots_holder_y:
                 X = self.snapshots
             else:
-                X = self.snapshots[:, :-1]
+                X = self.snapshots[..., :-1]
 
             _, s, V = compute_svd(X, self.modes.shape[-1])
 
-            q = np.conj(
-                np.diag(
-                    np.linalg.multi_dot(
-                        [
-                            vander[:, : X.shape[1]],
-                            V,
-                            np.diag(s).conj(),
-                            self.operator.eigenvectors,
-                        ]
-                    )
-                )
+            s_conj = linalg_module.diag_matrix(s).conj()
+            s_conj, V, vander = linalg_module.to(
+                self.operator.eigenvectors, s_conj, V, vander
             )
+            vVse = linalg_module.multi_dot(
+                (vander[..., :-1], V, s_conj, self.operator.eigenvectors)
+            )
+            q = linalg_module.extract_diagonal(vVse).conj()
 
         return P, q
 
@@ -726,20 +708,22 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
         https://hal-polytechnique.archives-ouvertes.fr/hal-00995141/document
         """
+        linalg_module = build_linalg_module(self.modes)
         if isinstance(self._opt, bool) and self._opt:
-            # b optimal
-            a = np.linalg.solve(*self._optimal_dmd_matrices())
+            A, b = self._optimal_dmd_matrices()
+            a = linalg_module.solve(A, b)
         else:
             if isinstance(self._opt, bool):
                 amplitudes_snapshot_index = 0
             else:
                 amplitudes_snapshot_index = self._opt
 
-            a = np.linalg.lstsq(
+            selected_snapshots = self.snapshots[..., amplitudes_snapshot_index]
+            a = linalg_module.lstsq(
                 self.modes,
-                self.snapshots.T[amplitudes_snapshot_index],
+                linalg_module.to(self.modes, selected_snapshots),
                 rcond=None,
-            )[0]
+            )
 
         return a
 
@@ -749,10 +733,8 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         if provided separately. Throws an error if the shapes do not agree.
         """
         if self.snapshots.shape != y_snapshots.shape:
-            msg = "X {} and Y {} input data must be the same shape."
-            raise ValueError(
-                msg.format(self.snapshots.shape, y_snapshots.shape)
-            )
+            msg = f"X {self.snapshots.shape} and Y {y_snapshots.shape} input data must be the same shape."
+            raise ValueError(msg)
 
 
 class DMDTimeDict(dict):

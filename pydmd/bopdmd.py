@@ -14,14 +14,15 @@ temporal uncertainty-quantification. 2021. arXiv:2107.10878.
 import warnings
 from collections import OrderedDict
 from inspect import isfunction
-from scipy.sparse import csr_matrix
-from scipy.linalg import qr
+
 import numpy as np
+from scipy.linalg import qr
+from scipy.sparse import csr_matrix
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
-from .utils import compute_svd, compute_rank
 from .snapshots import Snapshots
+from .utils import compute_rank, compute_svd
 
 
 class BOPDMDOperator(DMDOperator):
@@ -980,7 +981,7 @@ class BOPDMD(DMDBase):
         :return: the reduced Koopman operator A.
         :rtype: numpy.ndarray
         """
-        return self.operator.as_numpy_array
+        return self.operator.as_array
 
     @property
     def A(self):

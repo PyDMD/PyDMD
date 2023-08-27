@@ -1,5 +1,6 @@
-from unittest.mock import patch
 from copy import copy, deepcopy
+from unittest.mock import patch
+
 from pydmd.preprocessing import PrePostProcessingDMD
 
 _kwargs = {"param1": "value1", "param2": "value2"}

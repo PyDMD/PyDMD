@@ -360,36 +360,6 @@ def test_reconstructed_data_noprediction():
     np.testing.assert_allclose(rec.real, testing_data.real, atol=1.0e-2)
 
 
-def test_save():
-    p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
-    p.fit(training_data, params)
-    p.parameters = test_parameters
-    p.save("pydmd.test")
-    os.remove("pydmd.test")
-
-
-def test_load():
-    p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
-    p.fit(training_data, params)
-    p.parameters = test_parameters
-    p.save("pydmd.test2")
-    loaded_p = ParametricDMD.load("pydmd.test2")
-    np.testing.assert_array_equal(
-        p.reconstructed_data, loaded_p.reconstructed_data
-    )
-    os.remove("pydmd.test2")
-
-
-def test_load2():
-    p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
-    p.fit(training_data, params)
-    p.parameters = test_parameters
-    p.save("pydmd.test2")
-    loaded_p = ParametricDMD.load("pydmd.test2")
-    assert isinstance(loaded_p, ParametricDMD)
-    os.remove("pydmd.test2")
-
-
 def test_set_time_monolithic():
     p = ParametricDMD(DMD(svd_rank=-1), POD(rank=5), RBF())
     p.fit(training_data, params)

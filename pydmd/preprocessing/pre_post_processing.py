@@ -3,6 +3,7 @@ Pre/post-processing capability for DMD instances.
 """
 
 from typing import Callable, Dict
+
 from pydmd.dmdbase import DMDBase
 
 

@@ -1,6 +1,6 @@
 import numpy as np
-from scipy.integrate import solve_ivp
 from pytest import raises
+from scipy.integrate import solve_ivp
 
 from pydmd.bopdmd import BOPDMD
 
