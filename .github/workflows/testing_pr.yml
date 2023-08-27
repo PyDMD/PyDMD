@@ -93,6 +93,8 @@ jobs:
     strategy: 
       matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix_tutorial_test) }}
       fail-fast: false
+    env:
+      TUTORIAL_TIMEOUT: 1200s
         
     steps:
     - uses: actions/checkout@v3
@@ -110,6 +112,8 @@ jobs:
         pip install -e .[test]
         # Dependencies for tutorials
         pip install jupyter pandas opencv-python ffmpeg-python
+        # timeout not available by default on MacOS
+        brew install coreutils || true
         
     - uses: actions/cache@v2
       id: cache-segtrackv2
@@ -143,12 +147,14 @@ jobs:
       
     - name: Test tutorials
       run: |
+        set -x
         cd tutorials/
         for dir in $(ls -d tutorial*/); do
           if [[ $dir != tutorial5* ]]
             then
             cd $dir
-            jupyter nbconvert --to notebook --execute *.ipynb
+            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT python -Xfrozen_modules=off -m jupyter nbconvert --to notebook --execute *.ipynb
             cd ..
           fi
         done
+        set +x
