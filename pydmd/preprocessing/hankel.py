@@ -2,9 +2,11 @@
 Hankel pre-processing.
 """
 
-from typing import Dict, Union, List, Tuple
 from functools import partial
+from typing import Dict, List, Tuple, Union
+
 import numpy as np
+
 from pydmd.dmdbase import DMDBase
 from pydmd.preprocessing.pre_post_processing import PrePostProcessingDMD
 from pydmd.utils import pseudo_hankel_matrix
