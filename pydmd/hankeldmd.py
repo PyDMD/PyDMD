@@ -13,8 +13,8 @@ import numpy as np
 
 from .dmd import DMD
 from .dmdbase import DMDBase
-from .snapshots import Snapshots
 from .preprocessing.hankel import hankel_preprocessing
+from .snapshots import Snapshots
 
 
 class HankelDMD(DMDBase):

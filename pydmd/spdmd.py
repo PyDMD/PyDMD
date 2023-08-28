@@ -2,11 +2,9 @@
 
 import numpy as np
 from numpy.linalg import solve
-from scipy.sparse import (
-    csc_matrix as sparse,
-    vstack as spvstack,
-    hstack as sphstack,
-)
+from scipy.sparse import csc_matrix as sparse
+from scipy.sparse import hstack as sphstack
+from scipy.sparse import vstack as spvstack
 from scipy.sparse.linalg import spsolve
 
 from .dmd import DMD
