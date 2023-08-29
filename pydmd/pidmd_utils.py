@@ -7,11 +7,11 @@ Steven L. Brunton. Physics-informed dynamic mode decomposition (pidmd). 2021.
 arXiv:2112.04307.
 """
 import numpy as np
-from numpy.fft import fft, ifft, fft2
+from numpy.fft import fft, fft2, ifft
 from scipy import sparse
 from scipy.linalg import block_diag, rq
 
-from .utils import compute_svd, compute_rank
+from .utils import compute_rank, compute_svd
 
 
 def compute_unitary(X, Y, svd_rank):

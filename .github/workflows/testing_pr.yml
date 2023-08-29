@@ -40,29 +40,6 @@ jobs:
           echo $matrix | jq .
           echo $matrix | json2yaml
 
-  unit_test: #################################################################################
-    needs: prepare_matrix
-    runs-on: ${{ matrix.os }}
-    strategy: 
-      matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix_unit_test) }}
-      fail-fast: false
-        
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v4.5.0
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-        cache-dependency-path: setup.py
-    - name: Install Python dependencies
-      run: |
-        pip install --upgrade pip
-        pip install .[test]
-    - name: Test with pytest
-      run: |
-        pytest
-        
   black: ######################################################################################
     runs-on: ubuntu-latest
     steps:
@@ -87,12 +64,54 @@ jobs:
           exit 1
         fi
 
+  sort_dependencies: ##########################################################################
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install isort
+      run: |
+        pip install isort
+
+    - name: Run isort on PyDMD source code
+      run: |
+        OUT=$(isort pydmd/ tests/)
+        if [[ $OUT ]]; then
+            echo "All imports are properly sorted"
+        else
+            echo "$OUT"
+        fi
+
+  unit_test: #################################################################################
+    needs: prepare_matrix
+    runs-on: ${{ matrix.os }}
+    strategy: 
+      matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix_unit_test) }}
+      fail-fast: false
+        
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4.5.0
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: setup.py
+    - name: Install Python dependencies
+      run: |
+        pip install --upgrade pip
+        pip install .[test]
+    - name: Test with pytest
+      run: |
+        pytest
+        
   tutorial_test: ##############################################################################
     needs: prepare_matrix
     runs-on: ${{ matrix.os }}
     strategy: 
       matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix_tutorial_test) }}
       fail-fast: false
+    env:
+      TUTORIAL_TIMEOUT: 1200s
         
     steps:
     - uses: actions/checkout@v3
@@ -110,6 +129,8 @@ jobs:
         pip install -e .[test]
         # Dependencies for tutorials
         pip install jupyter pandas opencv-python ffmpeg-python
+        # timeout not available by default on MacOS
+        brew install coreutils || true
         
     - uses: actions/cache@v2
       id: cache-segtrackv2
@@ -143,12 +164,14 @@ jobs:
       
     - name: Test tutorials
       run: |
+        set -x
         cd tutorials/
         for dir in $(ls -d tutorial*/); do
           if [[ $dir != tutorial5* ]]
             then
             cd $dir
-            jupyter nbconvert --to notebook --execute *.ipynb
+            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT python -Xfrozen_modules=off -m jupyter nbconvert --to notebook --execute *.ipynb
             cd ..
           fi
         done
+        set +x

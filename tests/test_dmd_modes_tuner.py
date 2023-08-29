@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 import pytest
 from ezyrb import POD, RBF
-from pytest import raises, param
+from pytest import param, raises
 
 from pydmd import (
     CDMD,

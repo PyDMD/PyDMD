@@ -2,10 +2,12 @@
 SVD projection pre-processing.
 """
 
-from typing import Dict, Union
-from functools import partial
 import warnings
+from functools import partial
+from typing import Dict, Union
+
 import numpy as np
+
 from pydmd.dmdbase import DMDBase
 from pydmd.preprocessing import PrePostProcessingDMD
 from pydmd.utils import compute_svd

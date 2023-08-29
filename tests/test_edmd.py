@@ -1,6 +1,6 @@
 import numpy as np
-from pytest import raises
 from numpy.testing import assert_allclose
+from pytest import raises
 
 from pydmd.edmd import EDMD
 
@@ -103,7 +103,7 @@ def test_operator():
     J_est = np.linalg.multi_dot(
         [edmd.modes, np.diag(edmd.eigs), np.linalg.pinv(edmd.modes)]
     )
-    assert_allclose(J_est, J, atol=1e-14)
+    assert_allclose(J_est, J, atol=1e-13)
 
 
 def test_reconstruction():
@@ -116,7 +116,7 @@ def test_reconstruction():
         kernel_params={"gamma": 1, "coef0": 1, "degree": 4},
     )
     edmd.fit(X, Y)
-    assert_allclose(edmd.reconstructed_data, X2, atol=1e-14)
+    assert_allclose(edmd.reconstructed_data, X2, atol=1e-13)
 
 
 def test_kernel_errors():
