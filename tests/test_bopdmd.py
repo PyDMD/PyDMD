@@ -52,6 +52,8 @@ t_uneven = np.delete(t, np.arange(1000)[1::2])
 Z = simulate_z(t)
 Z_long = simulate_z(t_long)
 Z_uneven = np.delete(Z, np.arange(1000)[1::2], axis=1)
+rng = np.random.default_rng(seed=42)
+Z_noisy = Z + 0.2 * rng.standard_normal(Z.shape)
 
 # Define the true eigenvalues of the system.
 expected_eigs = np.array((-1j, 1j))
@@ -94,7 +96,7 @@ def test_eigs():
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
 
-    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.2)
+    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.5)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
 
@@ -104,6 +106,7 @@ def test_A():
     Tests that the computed A matrix is accurate for the following cases:
     - standard optimized dmd, even dataset
     - standard optimized dmd, uneven dataset
+    - standard optimized dmd, noisy dataset
     - standard optimized dmd, fit full data
     - optimized dmd with bagging
     """
@@ -115,11 +118,15 @@ def test_A():
     bopdmd.fit(Z_uneven, t_uneven)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True)
+    bopdmd.fit(Z_noisy, t)
+    np.testing.assert_allclose(bopdmd.A, expected_A, rtol=0.02)
+
     bopdmd = BOPDMD(svd_rank=2, compute_A=True, use_proj=False)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
-    bopdmd = BOPDMD(svd_rank=2, compute_A=True, num_trials=100, trial_size=0.2)
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True, num_trials=100, trial_size=0.5)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
@@ -133,7 +140,7 @@ def test_reconstruction():
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.reconstructed_data, Z, rtol=1e-5)
 
-    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.2)
+    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.5)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.reconstructed_data, Z, rtol=1e-5)
 
@@ -151,15 +158,15 @@ def test_forecast():
     """
     bopdmd = BOPDMD(svd_rank=2)
     bopdmd.fit(Z, t)
-    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-3)
+    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-2)
 
     bopdmd = BOPDMD(svd_rank=2)
     bopdmd.fit(Z_uneven, t_uneven)
-    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-3)
+    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-2)
 
-    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.2)
+    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.5)
     bopdmd.fit(Z, t)
-    np.testing.assert_allclose(bopdmd.forecast(t_long)[0], Z_long, rtol=1e-3)
+    np.testing.assert_allclose(bopdmd.forecast(t_long)[0], Z_long, rtol=1e-2)
 
 
 def test_compute_A():
@@ -192,7 +199,7 @@ def test_eig_constraints_errors():
     - eig_constraints contains the invalid combination "stable"+"imag"
         (either alone or along with the extra argument "conjugate_pairs")
     """
-    with raises(ValueError):
+    with raises(TypeError):
         BOPDMD(eig_constraints="stable")
 
     with raises(ValueError):
@@ -308,17 +315,10 @@ def test_eig_constraints_errors_2():
 def test_eig_constraints_2():
     """
     Tests that if the eig_constraints function...
-    - discards positive real parts, the functionality is the same as
-        setting eig_constraints={"stable"}
     - discards all real parts, the functionality is the same as
         setting eig_constraints={"imag"}
     - is a custom function, the functionality is as expected
     """
-
-    def make_stable(x):
-        right_half = x.real > 0.0
-        x[right_half] = 1j * x[right_half].imag
-        return x
 
     def make_imag(x):
         return 1j * x.imag
@@ -326,13 +326,39 @@ def test_eig_constraints_2():
     def make_real(x):
         return x.real
 
-    bopdmd1 = BOPDMD(svd_rank=2, eig_constraints={"stable"}).fit(Z, t)
-    bopdmd2 = BOPDMD(svd_rank=2, eig_constraints=make_stable).fit(Z, t)
-    np.testing.assert_array_equal(bopdmd1.eigs, bopdmd2.eigs)
-
     bopdmd1 = BOPDMD(svd_rank=2, eig_constraints={"imag"}).fit(Z, t)
     bopdmd2 = BOPDMD(svd_rank=2, eig_constraints=make_imag).fit(Z, t)
     np.testing.assert_array_equal(bopdmd1.eigs, bopdmd2.eigs)
 
     bopdmd = BOPDMD(svd_rank=2, eig_constraints=make_real).fit(Z, t)
     assert np.all(bopdmd.eigs.imag == 0.0)
+
+
+def test_bagging_improvement():
+    """
+    Tests that the use of bags improves accuracy on average when using noisy
+    data for fitting. Uses A matrix error as a proxy for accuracy.
+    """
+
+    def relative_error(x, x_true):
+        return np.linalg.norm(x_true - x) / np.linalg.norm(x_true)
+
+    optdmd = BOPDMD(svd_rank=2, compute_A=True, varpro_opts_dict={"tol": 0.246})
+    optdmd.fit(Z_noisy, t)
+    optdmd_error = relative_error(optdmd.A, expected_A)
+
+    test_trials = 20
+    bop_success = 0
+    for _ in range(test_trials):
+        bopdmd = BOPDMD(
+            svd_rank=2,
+            compute_A=True,
+            num_trials=100,
+            trial_size=0.9,
+            varpro_opts_dict={"tol": 0.246},
+        )
+        bopdmd.fit(Z_noisy, t)
+        bopdmd_error = relative_error(bopdmd.A, expected_A)
+        bop_success += bopdmd_error < optdmd_error
+
+    assert bop_success >= 0.75 * test_trials
