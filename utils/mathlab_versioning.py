@@ -1,7 +1,6 @@
-import re
-import os
 import argparse
-
+import os
+import re
 
 module = "pydmd"
 meta_file = os.path.join(module, "meta.py")
