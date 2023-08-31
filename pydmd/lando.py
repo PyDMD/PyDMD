@@ -197,7 +197,7 @@ class LANDO(DMDBase):
         opt=False,
         kernel_metric="linear",
         kernel_params=None,
-        dict_tol=0.1,
+        dict_tol=1e-6,
         permute=True,
     ):
         self._test_kernel_inputs(kernel_metric, kernel_params)
@@ -407,7 +407,7 @@ class LANDO(DMDBase):
         # Initialize the Cholesky factorization routine.
         ind_0 = parsing_inds[0]
         x_0 = X[:, ind_0]
-        k_00 = self._kernel_function(x_0[:, None], x_0[:, None])
+        k_00 = self.operator.kernel_function(x_0[:, None], x_0[:, None])
         cholesky_factor = np.sqrt(k_00)
         dict_inds = [ind_0]
 
@@ -415,7 +415,7 @@ class LANDO(DMDBase):
             # Equation (3.11): Evaluate the kernel using the current dictionary
             # items and the next candidate addition to the dictionary.
             x_t = X[:, ind_t]
-            k_tilde_next = self._kernel_function(X[:, dict_inds], x_t[:, None])
+            k_tilde_next = self.operator.kernel_function(X[:, dict_inds], x_t[:, None])
 
             # Equation (3.10): Use backsubstitution to compute the span of the
             # current dictionary.
@@ -424,7 +424,7 @@ class LANDO(DMDBase):
 
             # Equation (3.9): Compute the minimum (squared) distance between
             # the current sample and the span of the current dictionary.
-            k_tt = self._kernel_function(x_t[:, None], x_t[:, None])
+            k_tt = self.operator.kernel_function(x_t[:, None], x_t[:, None])
             delta_t = k_tt - k_tilde_next.conj().T.dot(pi_t)
 
             if np.abs(delta_t) > self._dict_tol:
