@@ -102,7 +102,7 @@ class LANDOOperator(DMDOperator):
         # Kernel metric must be polynomial or RBF.
         if "gamma" in self._kernel_params.keys():
             gamma = self._kernel_params["gamma"]
-        else: # set the pairwise_kernels gamma default
+        else:  # set the pairwise_kernels gamma default
             gamma = 1.0 / X.shape[0]
 
         if self._kernel_metric == "poly":
@@ -535,6 +535,7 @@ class LANDO(DMDBase):
         x0 = self._check_input_shape(x0)
 
         if continuous:
+
             def ode_sys(xt, x):
                 return self.f(x)
 
