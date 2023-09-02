@@ -218,7 +218,9 @@ class LANDOOperator(DMDOperator):
         """
         self._weights = Y.dot(np.linalg.pinv(self.kernel_function(X_dict, X)))
 
-    def compute_linear_operator(self, fixed_point, compute_A, X_dict):
+    def compute_linear_operator(
+        self, fixed_point, compute_A, X_dict, x_rescale
+    ):
         """
         Compute the DMD diagnostics of the linear model about a fixed point.
 
@@ -232,6 +234,7 @@ class LANDOOperator(DMDOperator):
         :type X_dict: numpy.ndarray
         """
         kernel_grad = self.kernel_gradient(X_dict, fixed_point)
+        kernel_grad = np.multiply(kernel_grad, x_rescale)
         U, s, V = compute_svd(kernel_grad.T, self._svd_rank)
         if compute_A:
             self._A = self.weights.dot(kernel_grad)
@@ -290,6 +293,9 @@ class LANDO(DMDBase):
         `sklearn.metrics.pairwise_kernels` function. This includes
         kernel-specific function parameters.
     :type kernel_params: dict
+    :param x_rescale: value or (n_features,) array of values for rescaling the
+        the features of the input data. Can be used to improve conditioning.
+    :type x_rescale: float or numpy.ndarray
     :param dict_tol: threshold at which delta_t, the degree to which a snapshot
         x_t can be represented by the snapshot dictionary in feature space, is
         considered high enough that x_t should be added to the snapshot
@@ -309,6 +315,7 @@ class LANDO(DMDBase):
         opt=False,
         kernel_metric="linear",
         kernel_params=None,
+        x_rescale=1.0,
         dict_tol=1e-6,
         permute=True,
     ):
@@ -338,6 +345,7 @@ class LANDO(DMDBase):
 
         # Keep track of the computed sparse dictionary.
         self._sparse_dictionary = None
+        self._x_rescale = x_rescale
         self._dict_tol = dict_tol
         self._permute = permute
 
@@ -412,6 +420,7 @@ class LANDO(DMDBase):
         if not self.partially_fitted:
             raise RuntimeError("You need to call fit.")
         x = self._check_input_shape(x)
+        x = self._rescale(x)
         return self.operator.weights.dot(
             self.operator.kernel_function(self._sparse_dictionary, x[:, None])
         )
@@ -430,18 +439,21 @@ class LANDO(DMDBase):
             evaluated at the input vector x.
         :rtype: numpy.ndarray
         """
+        # TODO: I may be missing a rescaling somewhere here. Check later.
         if not self.fitted:
             raise RuntimeError("You need to call fit and analyze_fixed_point.")
         x = self._check_input_shape(x)
+        kernel_grad = self.operator.kernel_gradient(
+            self._sparse_dictionary, self._rescale(self._fixed_point)
+        )
+        kernel_grad = np.multiply(kernel_grad, self._x_rescale)
         return (
             self.f(self._fixed_point + x)
             - self._bias
             - np.linalg.multi_dot(
                 [
                     self.operator.weights,
-                    self.operator.kernel_gradient(
-                        self._sparse_dictionary, self._fixed_point
-                    ),
+                    kernel_grad,
                     x,
                 ]
             )
@@ -459,7 +471,7 @@ class LANDO(DMDBase):
         """
         self._reset()
         self._snapshots_holder = Snapshots(X)
-        n_samples = self.snapshots.shape[1]
+        self._check_x_rescale()
 
         if Y is None:
             X = self.snapshots[:, :-1]
@@ -471,12 +483,13 @@ class LANDO(DMDBase):
             Y = self.snapshots_y
 
         X, Y = compute_tlsq(X, Y, self._tlsq_rank)
-        self._sparse_dictionary = self._learn_sparse_dictionary(X)
-        self.operator.compute_operator(X, Y, self._sparse_dictionary)
+        X_rescaled = self._rescale(X)
+        self._sparse_dictionary = self._learn_sparse_dictionary(X_rescaled)
+        self.operator.compute_operator(X_rescaled, Y, self._sparse_dictionary)
 
         # Default timesteps
         self._set_initial_time_dictionary(
-            {"t0": 0, "tend": n_samples - 1, "dt": 1}
+            {"t0": 0, "tend": self.snapshots.shape[1] - 1, "dt": 1}
         )
 
         return self
@@ -504,8 +517,12 @@ class LANDO(DMDBase):
         self._fixed_point = fixed_point
         self._bias = self.f(fixed_point)
         self.operator.compute_linear_operator(
-            fixed_point, compute_A, self._sparse_dictionary
+            self._rescale(fixed_point),
+            compute_A,
+            self._sparse_dictionary,
+            self._x_rescale,
         )
+
         self._b = self._compute_amplitudes()
 
     def predict(self, x0, tend, continuous=True, dt=1.0, solve_ivp_opts=None):
@@ -561,7 +578,6 @@ class LANDO(DMDBase):
             Y[:, i + 1] = self.f(Y[:, i])
         return Y
 
-    # TODO: add a matrix scaling element to this
     def _learn_sparse_dictionary(self, X):
         """
         Sparse dictionary learning with Cholesky updates.
@@ -579,18 +595,15 @@ class LANDO(DMDBase):
 
         # Initialize the Cholesky factorization routine.
         ind_0 = parsing_inds[0]
-        x_0 = X[:, ind_0]
-        k_00 = self.operator.kernel_function(x_0[:, None], x_0[:, None])
-        cholesky_factor = np.sqrt(k_00)
+        x_0 = X[:, ind_0, None]
+        cholesky_factor = np.sqrt(self.operator.kernel_function(x_0, x_0))
         dict_inds = [ind_0]
 
         for ind_t in parsing_inds[1:]:
             # Equation (3.11): Evaluate the kernel using the current dictionary
             # items and the next candidate addition to the dictionary.
-            x_t = X[:, ind_t]
-            k_tilde_next = self.operator.kernel_function(
-                X[:, dict_inds], x_t[:, None]
-            )
+            x_t = X[:, ind_t, None]
+            k_tilde_next = self.operator.kernel_function(X[:, dict_inds], x_t)
 
             # Equation (3.10): Use backsubstitution to compute the span of the
             # current dictionary.
@@ -599,18 +612,25 @@ class LANDO(DMDBase):
 
             # Equation (3.9): Compute the minimum (squared) distance between
             # the current sample and the span of the current dictionary.
-            k_tt = self.operator.kernel_function(x_t[:, None], x_t[:, None])
+            k_tt = self.operator.kernel_function(x_t, x_t)
             delta_t = k_tt - k_tilde_next.conj().T.dot(pi_t)
 
             if np.abs(delta_t) > self._dict_tol:
+                # Update the dictionary.
                 dict_inds.append(ind_t)
 
-                # Update the Cholesky factor
-                m = len(cholesky_factor)
-                c_t = max(0, np.sqrt(k_tt - np.sum(s_t**2)))
-                cholesky_factor = np.hstack([cholesky_factor, np.zeros((m, 1))])
+                # Update the Cholesky factor.
+                cholesky_factor = np.hstack(
+                    [cholesky_factor, np.zeros((len(cholesky_factor), 1))]
+                )
                 cholesky_factor = np.vstack(
-                    [cholesky_factor, np.append(s_t.conj().T, c_t)]
+                    [
+                        cholesky_factor,
+                        np.append(
+                            s_t.conj().T,
+                            max(0, np.abs(np.sqrt(k_tt - np.sum(s_t**2)))),
+                        ),
+                    ]
                 )
 
                 if k_tt < np.sum(s_t**2):
@@ -622,6 +642,28 @@ class LANDO(DMDBase):
                     warnings.warn(msg)
 
         return X[:, dict_inds]
+
+    def _rescale(self, X):
+        if isinstance(self._x_rescale, np.ndarray):
+            if np.ndim(X) == 1:
+                return np.multiply(X, self._x_rescale)
+            return np.multiply(X, self._x_rescale[:, None])
+        return X * self._x_rescale
+
+    def _check_x_rescale(self):
+        if not isinstance(self._x_rescale, (int, float, np.ndarray)):
+            raise TypeError("x_rescale must be a float or a numpy array.")
+        if (
+            isinstance(self._x_rescale, np.ndarray)
+            and self._x_rescale.shape != self.snapshots_shape
+        ):
+            msg = (
+                "If a numpy array, x_rescale must have the "
+                "same shape {} as the input features X."
+            )
+            raise RuntimeError(msg.format(self.snapshots_shape))
+        if isinstance(self._x_rescale, np.ndarray):
+            self._x_rescale = self._x_rescale.flatten()
 
     def _check_input_shape(self, x):
         """
