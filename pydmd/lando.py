@@ -10,6 +10,7 @@ nonlinear disambiguation optimization. Proc. R. Soc. A. 478: 20210830.
 """
 import warnings
 import numpy as np
+from inspect import isfunction
 from scipy.integrate import solve_ivp
 from sklearn.metrics.pairwise import pairwise_kernels
 
@@ -34,21 +35,9 @@ class LANDOOperator(DMDOperator):
         values that are needed to reach the 'energy' specified by `svd_rank`;
         if -1, the method does not compute a truncation.
     :type svd_rank: int or float
-    :param kernel_metric: the kernel function to apply. Supported kernel
-        metrics for `LANDO` are `"linear"`, `"poly"`, and `"rbf"`.
-    :type kernel_metric: str
-    :param kernel_params: additional parameters to be inputted to the
-        `sklearn.metrics.pairwise_kernels` function. This includes
-        kernel-specific function parameters.
-    :type kernel_params: dict
     """
 
-    def __init__(
-        self,
-        svd_rank,
-        kernel_metric,
-        kernel_params,
-    ):
+    def __init__(self, svd_rank):
         super().__init__(
             svd_rank=svd_rank,
             exact=True,
@@ -57,68 +46,12 @@ class LANDOOperator(DMDOperator):
             sorted_eigs=False,
             tikhonov_regularization=None,
         )
-        self._kernel_metric = kernel_metric
-        self._kernel_params = kernel_params
         self._weights = None
         self._eigenvalues = None
         self._eigenvectors = None
         self._modes = None
         self._Atilde = None
         self._A = None
-
-    def kernel_function(self, X, Y):
-        """
-        Calls `sklearn.metrics.pairwise_kernels` to evaluate the kernel
-        function at the given feature matrices X and Y.
-
-        :param X: feature matrix with shape (n_features, n_samples_X)
-        :type X: numpy.ndarray
-        :param Y: second feature matrix with shape (n_features, n_samples_Y)
-        :type Y: numpy.ndarray
-        :return: kernel matrix with shape (n_samples_X, n_samples_Y)
-        :rtype: numpy.ndarray
-        """
-        return pairwise_kernels(
-            X.T, Y.T, metric=self._kernel_metric, **self._kernel_params
-        )
-
-    def kernel_gradient(self, X, y):
-        """
-        Computes the gradient of the kernel with respect to the second feature
-        vector x. Then evaluates the gradient at the feature matrix X and the
-        feature vector x = y. Currently, this method is only compatible with
-        the linear, polynomial, and RBF kernels.
-
-        :param X: feature matrix with shape (n_features, n_samples_X)
-        :type X: numpy.ndarray
-        :param y: feature vector with shape (n_features,)
-        :type y: numpy.ndarray
-        :return: kernel gradient matrix with shape (n_samples_X, n_features)
-        :rtype: numpy.ndarray
-        """
-        if self._kernel_metric == "linear":
-            return X.T
-
-        # Kernel metric must be polynomial or RBF.
-        if "gamma" in self._kernel_params.keys():
-            gamma = self._kernel_params["gamma"]
-        else:  # set the pairwise_kernels gamma default
-            gamma = 1.0 / X.shape[0]
-
-        if self._kernel_metric == "poly":
-            coef0 = self._kernel_params["coef0"]
-            degree = self._kernel_params["degree"]
-            return np.diag(
-                gamma * degree * (coef0 + gamma * X.T.dot(y)) ** (degree - 1)
-            ).dot(X.T)
-
-        # Kernel metric is RBF.
-        centered_X = X - y[:, None]
-        return np.diag(
-            -2
-            * gamma
-            * np.exp(-gamma * np.linalg.norm(centered_X, 2, axis=0) ** 2)
-        ).dot(centered_X.T)
 
     @property
     def weights(self):
@@ -205,7 +138,7 @@ class LANDOOperator(DMDOperator):
             warnings.warn(msg)
         return self._A
 
-    def compute_operator(self, X, Y, X_dict):
+    def compute_operator(self, X, Y, X_dict, kernel_function):
         """
         Compute the dictionary-based kernel model weights.
 
@@ -215,11 +148,13 @@ class LANDOOperator(DMDOperator):
         :type Y: numpy.ndarray
         :param X_dict: the sparse feature dictionary.
         :type X_dict: numpy.ndarray
+        :param kernel_function: kernel function to apply.
+        :type kernel_function: function
         """
-        self._weights = Y.dot(np.linalg.pinv(self.kernel_function(X_dict, X)))
+        self._weights = Y.dot(np.linalg.pinv(kernel_function(X_dict, X)))
 
     def compute_linear_operator(
-        self, fixed_point, compute_A, X_dict, x_rescale
+        self, fixed_point, compute_A, kernel_gradient, X_dict, x_rescale
     ):
         """
         Compute the DMD diagnostics of the linear model about a fixed point.
@@ -230,10 +165,14 @@ class LANDOOperator(DMDOperator):
             computed and stored. If False, the full linear operator isn't
             computed and stored explicitly.
         :type compute_A: bool
+        :param kernel_gradient: gradient of the kernel function applied.
+        :type kernel_gradient: function
         :param X_dict: the sparse feature dictionary.
         :type X_dict: numpy.ndarray
+        :param x_rescale:
+        :type x_rescale:
         """
-        kernel_grad = self.kernel_gradient(X_dict, fixed_point)
+        kernel_grad = kernel_gradient(X_dict, fixed_point)
         kernel_grad = np.multiply(kernel_grad, x_rescale)
         U, s, V = compute_svd(kernel_grad.T, self._svd_rank)
         if compute_A:
@@ -293,6 +232,10 @@ class LANDO(DMDBase):
         `sklearn.metrics.pairwise_kernels` function. This includes
         kernel-specific function parameters.
     :type kernel_params: dict
+    :param kernel_function: 
+    :type kernel_function: function
+    :param kernel_gradient: 
+    :type kernel_gradient: function
     :param x_rescale: value or (n_features,) array of values for rescaling the
         the features of the input data. Can be used to improve conditioning.
     :type x_rescale: float or numpy.ndarray
@@ -315,20 +258,21 @@ class LANDO(DMDBase):
         opt=False,
         kernel_metric="linear",
         kernel_params=None,
+        kernel_function=None,
+        kernel_gradient=None,
         x_rescale=1.0,
         dict_tol=1e-6,
         permute=True,
     ):
-        self._test_kernel_inputs(kernel_metric, kernel_params)
-
         if kernel_params is None:
             kernel_params = {}
-        # set the pairwise_kernels polynomial degree default
-        if kernel_metric == "poly" and "degree" not in kernel_params.keys():
-            kernel_params["degree"] = 3
-        # set the pairwise_kernels polynomial coef0 default
-        if kernel_metric == "poly" and "coef0" not in kernel_params.keys():
-            kernel_params["coef0"] = 1
+
+        self._test_kernel_inputs(kernel_metric, kernel_params)
+        self._test_kernel_functions(kernel_function, kernel_gradient)
+        self._kernel_metric = kernel_metric
+        self._kernel_params = kernel_params
+        self._kernel_function = kernel_function
+        self._kernel_gradient = kernel_gradient
 
         super().__init__(
             svd_rank=svd_rank,
@@ -337,11 +281,8 @@ class LANDO(DMDBase):
             opt=opt,
         )
 
-        self._Atilde = LANDOOperator(
-            svd_rank=svd_rank,
-            kernel_metric=kernel_metric,
-            kernel_params=kernel_params,
-        )
+        # Build the LANDO operator.
+        self._Atilde = LANDOOperator(svd_rank=svd_rank)
 
         # Keep track of the computed sparse dictionary.
         self._sparse_dictionary = None
@@ -352,6 +293,71 @@ class LANDO(DMDBase):
         # Keep track of the last fixed point analysis.
         self._fixed_point = None
         self._bias = None
+
+    def kernel_function(self, X, Y):
+        """
+        Calls `sklearn.metrics.pairwise_kernels` to evaluate the kernel
+        function at the given feature matrices X and Y.
+
+        :param X: feature matrix with shape (n_features, n_samples_X)
+        :type X: numpy.ndarray
+        :param Y: second feature matrix with shape (n_features, n_samples_Y)
+        :type Y: numpy.ndarray
+        :return: kernel matrix with shape (n_samples_X, n_samples_Y)
+        :rtype: numpy.ndarray
+        """
+        if self._kernel_function is not None:
+            return self._kernel_function(X, Y)
+        return pairwise_kernels(
+            X.T, Y.T, metric=self._kernel_metric, **self._kernel_params
+        )
+
+    def kernel_gradient(self, X, y):
+        """
+        Computes the gradient of the kernel with respect to the second feature
+        vector x. Then evaluates the gradient at the feature matrix X and the
+        feature vector x = y. Currently, this method is only compatible with
+        the linear, polynomial, and RBF kernels.
+
+        :param X: feature matrix with shape (n_features, n_samples_X)
+        :type X: numpy.ndarray
+        :param y: feature vector with shape (n_features,)
+        :type y: numpy.ndarray
+        :return: kernel gradient matrix with shape (n_samples_X, n_features)
+        :rtype: numpy.ndarray
+        """
+        if self._kernel_gradient is not None:
+            return self._kernel_gradient(X, y)
+
+        if self._kernel_metric == "linear":
+            return X.T
+
+        # Kernel metric must be polynomial or RBF.
+        if "gamma" in self._kernel_params.keys():
+            gamma = self._kernel_params["gamma"]
+        else:  # set the pairwise_kernels gamma default
+            gamma = 1.0 / X.shape[0]
+
+        if self._kernel_metric == "poly":
+            if "coef0" in self._kernel_params.keys():
+                coef0 = self._kernel_params["coef0"]
+            else:
+                coef0 = 1
+            if "degree" in self._kernel_params.keys():
+                degree = self._kernel_params["degree"]
+            else:
+                degree = 3
+            return np.diag(
+                gamma * degree * (coef0 + gamma * X.T.dot(y)) ** (degree - 1)
+            ).dot(X.T)
+
+        # Kernel metric is RBF.
+        centered_X = X - y[:, None]
+        return np.diag(
+            -2
+            * gamma
+            * np.exp(-gamma * np.linalg.norm(centered_X, 2, axis=0) ** 2)
+        ).dot(centered_X.T)
 
     @property
     def partially_fitted(self):
@@ -422,7 +428,7 @@ class LANDO(DMDBase):
         x = self._check_input_shape(x)
         x = self._rescale(x)
         return self.operator.weights.dot(
-            self.operator.kernel_function(self._sparse_dictionary, x[:, None])
+            self.kernel_function(self._sparse_dictionary, x[:, None])
         )
 
     def nonlinear(self, x):
@@ -443,7 +449,7 @@ class LANDO(DMDBase):
         if not self.fitted:
             raise RuntimeError("You need to call fit and analyze_fixed_point.")
         x = self._check_input_shape(x)
-        kernel_grad = self.operator.kernel_gradient(
+        kernel_grad = self.kernel_gradient(
             self._sparse_dictionary, self._rescale(self._fixed_point)
         )
         kernel_grad = np.multiply(kernel_grad, self._x_rescale)
@@ -519,6 +525,7 @@ class LANDO(DMDBase):
         self.operator.compute_linear_operator(
             self._rescale(fixed_point),
             compute_A,
+            self.kernel_gradient,
             self._sparse_dictionary,
             self._x_rescale,
         )
@@ -596,14 +603,14 @@ class LANDO(DMDBase):
         # Initialize the Cholesky factorization routine.
         ind_0 = parsing_inds[0]
         x_0 = X[:, ind_0, None]
-        cholesky_factor = np.sqrt(self.operator.kernel_function(x_0, x_0))
+        cholesky_factor = np.sqrt(self.kernel_function(x_0, x_0))
         dict_inds = [ind_0]
 
         for ind_t in parsing_inds[1:]:
             # Equation (3.11): Evaluate the kernel using the current dictionary
             # items and the next candidate addition to the dictionary.
             x_t = X[:, ind_t, None]
-            k_tilde_next = self.operator.kernel_function(X[:, dict_inds], x_t)
+            k_tilde_next = self.kernel_function(X[:, dict_inds], x_t)
 
             # Equation (3.10): Use backsubstitution to compute the span of the
             # current dictionary.
@@ -612,7 +619,7 @@ class LANDO(DMDBase):
 
             # Equation (3.9): Compute the minimum (squared) distance between
             # the current sample and the span of the current dictionary.
-            k_tt = self.operator.kernel_function(x_t, x_t)
+            k_tt = self.kernel_function(x_t, x_t)
             delta_t = k_tt - k_tilde_next.conj().T.dot(pi_t)
 
             if np.abs(delta_t) > self._dict_tol:
@@ -689,9 +696,7 @@ class LANDO(DMDBase):
             )
             raise ValueError(msg.format(kernel_metric, SUPPORTED_KERNELS))
 
-        if kernel_params is None:
-            kernel_params = {}
-        elif not isinstance(kernel_params, dict):
+        if not isinstance(kernel_params, dict):
             raise TypeError("kernel_params must be a dict.")
 
         # Test that sklearn.metrics.pairwise_kernels can be called.
@@ -707,3 +712,47 @@ class LANDO(DMDBase):
                 "sklearn.metrics.pairwise_kernels with metric '{}'."
             )
             raise ValueError(msg.format(kernel_params, kernel_metric)) from e
+
+    @staticmethod
+    def _test_kernel_functions(kernel_function, kernel_gradient):
+        # Test moves on if both arguments are None.
+        if kernel_function is not None or kernel_gradient is not None:
+            # Both arguments must be functions.
+            if not isfunction(kernel_function) or not isfunction(kernel_gradient):
+                msg = (
+                    "If either is provided, then both kernel_function "
+                    "and kernel_gradient must be functions."
+                )
+                raise TypeError(msg)
+            # Test that the given functions take and yield what is expected.
+            X_dummy = np.empty((5, 10))
+            Y_dummy = np.empty((5, 20))
+            gen_msg = (
+                "Please check LANDO documentation for details on how to format "
+                "the input functions kernel_function and kernel_gradient."
+            )
+            try:
+                K_xy = kernel_function(X_dummy, Y_dummy)
+                K_grad = kernel_gradient(X_dummy, Y_dummy[:, 0])
+            except Exception as e:
+                msg = "Error calling kernel_function and kernel_gradient. "
+                raise ValueError(msg + gen_msg) from e
+            if not isinstance(K_xy, np.ndarray) or not isinstance(K_grad, np.ndarray):
+                msg = (
+                    "kernel_function and kernel_gradient "
+                    "need to return numpy arrays. "
+                )
+                raise ValueError(msg + gen_msg)
+            if K_xy.shape != (10, 20) or K_grad.shape != (10, 5):
+                msg = (
+                    "Incorrect shape returned by kernel_function "
+                    "and kernel_gradient. "
+                )
+                raise ValueError(msg + gen_msg)
+
+# :param X: feature matrix with shape (n_features, n_samples_X)
+# :type X: numpy.ndarray
+# :param Y: second feature matrix with shape (n_features, n_samples_Y)
+# :type Y: numpy.ndarray
+# :return: kernel matrix with shape (n_samples_X, n_samples_Y)
+# :rtype: numpy.ndarray
