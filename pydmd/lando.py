@@ -9,8 +9,9 @@ nonlinear disambiguation optimization. Proc. R. Soc. A. 478: 20210830.
 20210830. http://doi.org/10.1098/rspa.2021.0830
 """
 import warnings
-import numpy as np
 from inspect import isfunction
+
+import numpy as np
 from scipy.integrate import solve_ivp
 from sklearn.metrics.pairwise import pairwise_kernels
 
@@ -169,8 +170,9 @@ class LANDOOperator(DMDOperator):
         :type kernel_gradient: function
         :param X_dict: the sparse feature dictionary.
         :type X_dict: numpy.ndarray
-        :param x_rescale:
-        :type x_rescale:
+        :param x_rescale: value or (n_features,) array of values for
+            rescaling the features of the input data.
+        :type x_rescale: float or numpy.ndarray
         """
         kernel_grad = kernel_gradient(X_dict, fixed_point)
         kernel_grad = np.multiply(kernel_grad, x_rescale)
@@ -232,9 +234,17 @@ class LANDO(DMDBase):
         `sklearn.metrics.pairwise_kernels` function. This includes
         kernel-specific function parameters.
     :type kernel_params: dict
-    :param kernel_function: 
+    :param kernel_function: custom kernel function to be used instead of the
+        `sklearn.metrics.pairwise_kernels` built-ins. Must be able to take a
+        (n_features, n_samples_X) numpy.ndarray and a (n_features, n_samples_Y)
+        numpy.ndarray and return the (n_samples_X, n_samples_Y) kernel matrix
+        as a numpy.ndarray.
     :type kernel_function: function
-    :param kernel_gradient: 
+    :param kernel_gradient: gradient of the kernel with respect to the second
+        feature vector x. Must be able to take a (n_features, n_samples_X)
+        numpy.ndarray and a (n_features,) numpy.ndarray and return the
+        (n_samples_X, n_features) matrix of gradient values as a numpy.ndarray.
+        This function must be defined if a custom kernel function is given.
     :type kernel_gradient: function
     :param x_rescale: value or (n_features,) array of values for rescaling the
         the features of the input data. Can be used to improve conditioning.
@@ -297,7 +307,8 @@ class LANDO(DMDBase):
     def kernel_function(self, X, Y):
         """
         Calls `sklearn.metrics.pairwise_kernels` to evaluate the kernel
-        function at the given feature matrices X and Y.
+        function at the given feature matrices X and Y. If a custom kernel
+        function was provided, then that function will be used instead.
 
         :param X: feature matrix with shape (n_features, n_samples_X)
         :type X: numpy.ndarray
@@ -491,7 +502,12 @@ class LANDO(DMDBase):
         X, Y = compute_tlsq(X, Y, self._tlsq_rank)
         X_rescaled = self._rescale(X)
         self._sparse_dictionary = self._learn_sparse_dictionary(X_rescaled)
-        self.operator.compute_operator(X_rescaled, Y, self._sparse_dictionary)
+        self.operator.compute_operator(
+            X_rescaled,
+            Y,
+            self._sparse_dictionary,
+            self.kernel_function,
+        )
 
         # Default timesteps
         self._set_initial_time_dictionary(
@@ -651,6 +667,10 @@ class LANDO(DMDBase):
         return X[:, dict_inds]
 
     def _rescale(self, X):
+        """
+        Helper function that rescales the given data according to
+        the current `LANDO` instance's `x_rescale` value(s).
+        """
         if isinstance(self._x_rescale, np.ndarray):
             if np.ndim(X) == 1:
                 return np.multiply(X, self._x_rescale)
@@ -658,6 +678,11 @@ class LANDO(DMDBase):
         return X * self._x_rescale
 
     def _check_x_rescale(self):
+        """
+        Helper function that ensures that `x_rescale` is either an int, float,
+        or a numpy array. Also ensures that if `x_rescale` is an array, then it
+        must possess the same shape as the flattened input snapshots.
+        """
         if not isinstance(self._x_rescale, (int, float, np.ndarray)):
             raise TypeError("x_rescale must be a float or a numpy array.")
         if (
@@ -668,7 +693,7 @@ class LANDO(DMDBase):
                 "If a numpy array, x_rescale must have the "
                 "same shape {} as the input features X."
             )
-            raise RuntimeError(msg.format(self.snapshots_shape))
+            raise ValueError(msg.format(self.snapshots_shape))
         if isinstance(self._x_rescale, np.ndarray):
             self._x_rescale = self._x_rescale.flatten()
 
@@ -715,10 +740,18 @@ class LANDO(DMDBase):
 
     @staticmethod
     def _test_kernel_functions(kernel_function, kernel_gradient):
+        """
+        Helper function that checks the validity of the provided kernel
+        functions. Ensures that either both are None, or both are valid
+        functions. That is, both functions must accept and output numpy
+        arrays of the expected shapes.
+        """
         # Test moves on if both arguments are None.
         if kernel_function is not None or kernel_gradient is not None:
             # Both arguments must be functions.
-            if not isfunction(kernel_function) or not isfunction(kernel_gradient):
+            if not isfunction(kernel_function) or not isfunction(
+                kernel_gradient
+            ):
                 msg = (
                     "If either is provided, then both kernel_function "
                     "and kernel_gradient must be functions."
@@ -737,7 +770,9 @@ class LANDO(DMDBase):
             except Exception as e:
                 msg = "Error calling kernel_function and kernel_gradient. "
                 raise ValueError(msg + gen_msg) from e
-            if not isinstance(K_xy, np.ndarray) or not isinstance(K_grad, np.ndarray):
+            if not isinstance(K_xy, np.ndarray) or not isinstance(
+                K_grad, np.ndarray
+            ):
                 msg = (
                     "kernel_function and kernel_gradient "
                     "need to return numpy arrays. "
@@ -749,10 +784,3 @@ class LANDO(DMDBase):
                     "and kernel_gradient. "
                 )
                 raise ValueError(msg + gen_msg)
-
-# :param X: feature matrix with shape (n_features, n_samples_X)
-# :type X: numpy.ndarray
-# :param Y: second feature matrix with shape (n_features, n_samples_Y)
-# :type Y: numpy.ndarray
-# :return: kernel matrix with shape (n_samples_X, n_samples_Y)
-# :rtype: numpy.ndarray
