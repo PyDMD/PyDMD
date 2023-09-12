@@ -471,6 +471,9 @@ class COSTS:
             omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
         elif transform_method == "log10":
             omega_transform = np.log10(np.abs(omega_rshp.imag.astype("float")))
+            # Impute log10(0) with the smallest non-zero values in log10(omega).
+            zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
+            omega_transform[~np.isfinite(omega_transform)] = zero_imputer
         else:
             transform_method = "absolute_value"
             omega_transform = np.abs(omega_rshp.imag.astype("float"))
@@ -522,6 +525,9 @@ class COSTS:
             omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
         elif transform_method == "log10":
             omega_transform = np.log10(np.abs(omega_rshp.imag.astype("float")))
+            # Impute log10(0) with the smallest non-zero values in log10(omega).
+            zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
+            omega_transform[~np.isfinite(omega_transform)] = zero_imputer
         else:
             omega_transform = np.abs(omega_rshp.imag.astype("float"))
 
@@ -552,6 +558,9 @@ class COSTS:
         elif self._transform_method == "log10":
             omega_rshp = np.abs(omega_rshp.imag)
             omega_transform = np.log10(np.abs(omega_rshp.imag.astype("float")))
+            # Impute log10(0) with the smallest non-zero values in log10(omega).
+            zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
+            omega_transform[~np.isfinite(omega_transform)] = zero_imputer
             label = r"$log_{10}(|\omega|)$"
             hist_kwargs["bins"] = np.linspace(
                 np.min(np.log10(omega_transform[omega_rshp > 0])),
@@ -613,11 +622,11 @@ class COSTS:
 
         return fig, ax
 
-    def global_reconstruction(self, kwargs=None):
+    def global_reconstruction(self, scale_reconstruction_kwargs=None):
         """Helper function for generating the global reconstruction."""
-        if kwargs is None:
-            kwargs = {}
-        xr_sep = self.scale_reconstruction(**kwargs)
+        if scale_reconstruction_kwargs is None:
+            scale_reconstruction_kwargs = {}
+        xr_sep = self.scale_reconstruction(**scale_reconstruction_kwargs)
         x_global_recon = xr_sep.sum(axis=0)
         return x_global_recon
 
