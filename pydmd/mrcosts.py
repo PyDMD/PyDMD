@@ -68,23 +68,28 @@ class mrCOSTS:
         window_length_array=None,
         step_size_array=None,
         svd_rank_array=None,
-        global_svd=True,
+        global_svd_array=None,
         initialize_artificially=False,
         use_last_freq=False,
         use_kmean_freqs=False,
         init_alpha=None,
         pydmd_kwargs=None,
+        costs_recon_kwargs=None,
         cluster_centroids=None,
         reset_alpha_init=False,
         force_even_eigs=True,
         max_rank=None,
         n_components_array=None,
+        cluster_sweep=False,
+        transform_method=None,
+        store_data=True,
     ):
+        self._store_data = store_data
         self._n_components_array = n_components_array
         self._step_size_array = step_size_array
         self._window_length_array = window_length_array
         self._svd_rank_array = svd_rank_array
-        self._global_svd = global_svd
+        self._global_svd_array = global_svd_array
         self._initialize_artificially = initialize_artificially
         self._use_last_freq = use_last_freq
         self._use_kmean_freqs = use_kmean_freqs
@@ -93,23 +98,20 @@ class mrCOSTS:
         self._reset_alpha_init = reset_alpha_init
         self._force_even_eigs = force_even_eigs
         self._max_rank = max_rank
+        self._cluster_sweep = cluster_sweep
+        self._transform_method = transform_method
 
         # Initialize variables that are defined in fitting.
+        self._n_decompositions = None
         self._n_data_vars = None
         self._n_time_steps = None
-        self._window_length = None
-        self._n_slides = None
+        self._n_slides_array = None
         self._time_array = None
-        self._modes_array = None
-        self._omega_array = None
-        self._amplitudes_array = None
         self._cluster_centroids = None
         self._omega_classes = None
-        self._transform_method = None
-        self._window_means_array = None
-        self._non_integer_n_slide = None
+        self._costs_array = None
 
-        # Specify default keywords to hand to BOPDMD.
+        # Specify default keywords to hand to CoSTS's BOPDMD model.
         if pydmd_kwargs is None:
             self._pydmd_kwargs = {
                 "eig_sort": "imag",
@@ -126,8 +128,34 @@ class mrCOSTS:
             )
             self._pydmd_kwargs["use_proj"] = pydmd_kwargs.get("use_proj", False)
 
+        if costs_recon_kwargs is None:
+            self._costs_recon_kwargs = {
+                "suppress_growth": False,
+            }
+        else:
+            self._costs_recon_kwargs = costs_recon_kwargs
+            self._costs_recon_kwargs[
+                "suppress_growth"
+            ] = costs_recon_kwargs.get("suppress_growth", False)
+
     @property
-    def svd_rank(self):
+    def store_data(self):
+        """
+        :return: If the low-frequency components were stored (True) or discarded (False).
+        :rtype: bool
+        """
+        return self._store_data
+
+    @property
+    def costs_array(self):
+        """
+        :return: the rank used for the svd truncation.
+        :rtype: int or float
+        """
+        return self._costs_array
+
+    @property
+    def svd_rank_array(self):
         """
         :return: the rank used for the svd truncation.
         :rtype: int or float
@@ -135,20 +163,52 @@ class mrCOSTS:
         return self._svd_rank_array
 
     @property
-    def window_length(self):
+    def window_length_array(self):
         """
         :return: the length of the windows used for this decomposition level.
         :rtype: int or float
         """
-        return self._window_length
+        return self._window_length_array
 
     @property
-    def n_slides(self):
+    def step_size_array(self):
+        """
+        :return: the length of the windows used for this decomposition level.
+        :rtype: int or float
+        """
+        return self._step_size_array
+
+    @property
+    def n_decompositions(self):
+        """
+        :return: The number of multi-resolution decompositions to perform.
+        :rtype: int
+        """
+        return self._n_decompositions
+
+    @property
+    def transform_method(self):
+        """
+        :return: The number of multi-resolution decompositions to perform.
+        :rtype: int
+        """
+        return self._transform_method
+
+    @property
+    def n_components_array(self):
+        """
+        :return: the number of components used for each decomposition level.
+        :rtype: int or float
+        """
+        return self._n_components_array
+
+    @property
+    def n_slides_array(self):
         """
         :return: number of window slides for this decomposition level.
         :rtype: int
         """
-        return self._n_slides
+        return self._n_slides_array
 
     @property
     def modes_array(self):
@@ -157,28 +217,10 @@ class mrCOSTS:
         return self._modes_array
 
     @property
-    def amplitudes_array(self):
-        if not hasattr(self, "_amplitudes_array"):
-            raise ValueError("You need to call fit first.")
-        return self._amplitudes_array
-
-    @property
-    def omega_array(self):
-        if not hasattr(self, "_omega_array"):
-            raise ValueError("You need to call fit first.")
-        return self._omega_array
-
-    @property
     def time_array(self):
         if not hasattr(self, "_time_array"):
             raise ValueError("You need to call fit first.")
         return self._time_array
-
-    @property
-    def window_means_array(self):
-        if not hasattr(self, "_window_means_array"):
-            raise ValueError("You need to call fit first.")
-        return self._window_means_array
 
     @property
     def n_components(self):
@@ -198,34 +240,55 @@ class mrCOSTS:
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._omega_classes
 
-    def fit(self, data):
+    @staticmethod
+    def _data_shape(data):
+        n_time_steps = np.shape(data)[1]
+        n_data_vars = np.shape(data)[0]
+        return n_time_steps, n_data_vars
+
+    def fit(self, data, time, verbose=True):
         window_lengths = self._window_length_array
-        step_sizes = self.step_size_array
-        svd_ranks = self.svd_rank_array
+        step_sizes = self._step_size_array
+        svd_ranks = self._svd_rank_array
+        self._n_decompositions = len(window_lengths)
+        n_decompositions = self._n_decompositions
+        transform_method = self._transform_method
 
-        mrd_list = []
-        suppress_growth = True
-        transform_method = "squared"
+        # Set the global_svd flag if none was provided.
+        if self._global_svd_array is None:
+            self._global_svd_array = [True] * n_decompositions
 
-        data_iter = np.zeros((num_decompositions, data.shape[0], data.shape[1]))
-        data_iter[0, :, :] = data
+        self._costs_array = []
+        self._n_time_steps, self._n_data_vars = self._data_shape(data)
+
+        if store_data:
+            data_iter = np.zeros(
+                (n_decompositions, self._n_data_vars, self._n_time_steps)
+            )
+            data_iter[0, :, :] = data
+        else:
+            data_iter = data
 
         for n_decomp, (window, step, rank) in enumerate(
             zip(window_lengths, step_sizes, svd_ranks)
         ):
-            print("Working on window length={}".format(window))
+            global_svd = self._global_svd_array[n_decomp]
 
-            x_iter = data_iter[n_decomp, :, :].squeeze()
+            if store_data:
+                x_iter = data_iter[n_decomp, :, :].squeeze()
+            else:
+                x_iter = data_iter.squeeze()
+
             mrd = COSTS(
                 svd_rank=rank,
-                global_svd=True,
-                pydmd_kwargs={"eig_constraints": {"conjugate_pairs", "stable"}},
+                global_svd=global_svd,
+                pydmd_kwargs=self._pydmd_kwargs,
             )
 
-            print("Fitting")
-            print("_________________________________________________")
-            mrd.fit(x_iter, np.atleast_2d(time), window, step, verbose=True)
-            print("_________________________________________________")
+            if verbose:
+                print("_________________________________________________")
+                print("Fitting window length = {}".format(window))
+            mrd.fit(x_iter, np.atleast_2d(time), window, step, verbose=verbose)
 
             # Cluster the frequency bands
             if self._cluster_sweep:
@@ -240,21 +303,57 @@ class mrCOSTS:
             )
 
             # Global reconstruction
-            global_reconstruction = mrd.global_reconstruction(
-                {"suppress_growth": suppress_growth}
-            )
-            re = mrd.relative_error(global_reconstruction.real, x_iter)
             if verbose:
+                global_reconstruction = mrd.global_reconstruction(
+                    scale_reconstruction_kwargs=self._costs_recon_kwargs,
+                )
+                re = mrd.relative_error(global_reconstruction.real, x_iter)
                 print("Error in Global Reconstruction = {:.2}".format(re))
 
             # Scale separation
             xr_low_frequency, xr_high_frequency = mrd.scale_separation(
-                scale_reconstruction_kwargs={"suppress_growth": suppress_growth}
+                scale_reconstruction_kwargs=self._costs_recon_kwargs
             )
 
             # Pass the low frequency component to the next level of decomposition.
-            if n_decomp < num_decompositions - 1:
-                data_iter[n_decomp + 1, :, :] = xr_low_frequency
+            if n_decomp < n_decompositions - 1:
+                if store_data:
+                    data_iter[n_decomp + 1, :, :] = xr_low_frequency
+                else:
+                    data_iter = xr_low_frequency
 
             # Save the object for later use.
-            mrd_list.append(copy.copy(mrd))
+            self._costs_array.append(copy.copy(mrd))
+
+    def multi_res_interp(
+        self,
+    ):
+        ds_list = [c.to_xarray() for c in self._costs_array]
+        # Remove the low-frequency bands.
+        da_to_concat = [
+            ds_list[0].omega.where(ds_list[0].omega_classes > 0, drop=True)
+        ]
+
+        # Interpolate the larger decomposition levels to the timestep of the
+        # smallest decomposition level.
+        for ds in ds_list[1:]:
+            da = ds.omega.where(ds.omega_classes > 0, drop=True)
+            da = da.interp(
+                window_time_means=ds_list[0].window_time_means,
+                method="nearest",
+                kwargs={"fill_value": "extrapolate"},
+            )
+            da_to_concat.append(da)
+
+        da_omega = xr.concat(
+            da_to_concat,
+            dim="window_length",
+        )
+        da_omega.coords["window_length"] = self._window_length_array
+        da_omega.coords["decomposition_level"] = (
+            "window_length",
+            np.arange(len(da_omega.window_length)),
+        )
+        df = da_omega.to_dataframe()
+
+        return da_omega
