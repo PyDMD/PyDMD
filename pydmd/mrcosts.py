@@ -1,6 +1,4 @@
 import numpy as np
-from pydmd.bopdmd import BOPDMD
-from .utils import compute_rank, compute_svd
 import copy
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
@@ -261,7 +259,7 @@ class mrCOSTS:
         self._costs_array = []
         self._n_time_steps, self._n_data_vars = self._data_shape(data)
 
-        if store_data:
+        if self._store_data:
             data_iter = np.zeros(
                 (n_decompositions, self._n_data_vars, self._n_time_steps)
             )
@@ -274,7 +272,7 @@ class mrCOSTS:
         ):
             global_svd = self._global_svd_array[n_decomp]
 
-            if store_data:
+            if self._store_data:
                 x_iter = data_iter[n_decomp, :, :].squeeze()
             else:
                 x_iter = data_iter.squeeze()
@@ -317,7 +315,7 @@ class mrCOSTS:
 
             # Pass the low frequency component to the next level of decomposition.
             if n_decomp < n_decompositions - 1:
-                if store_data:
+                if self._store_data:
                     data_iter[n_decomp + 1, :, :] = xr_low_frequency
                 else:
                     data_iter = xr_low_frequency
