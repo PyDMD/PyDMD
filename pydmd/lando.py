@@ -31,7 +31,7 @@ class LANDOOperator(DMDOperator):
 
     :param svd_rank: the rank for the truncation of the linear operator; If 0,
         the method computes the optimal rank and uses it for truncation; if a
-        positive integer, the method uses the argument for the truncation; if
+        positive integer, the method uses the fargument for the truncation; if
         float between 0 and 1, the rank is the number of the biggest singular
         values that are needed to reach the 'energy' specified by `svd_rank`;
         if -1, the method does not compute a truncation.
@@ -337,7 +337,15 @@ class LANDO(DMDBase):
         :return: kernel gradient matrix with shape (n_samples_X, n_features)
         :rtype: numpy.ndarray
         """
-        if self._kernel_gradient is not None:
+        if self._kernel_function is not None:
+            if self._kernel_gradient is None:
+                msg = (
+                    "Unable to evaluate the gradient of the kernel function. "
+                    "If a custom kernel function was provided, please ensure "
+                    "that the corresponding gradient function is also defined "
+                    "by setting the kernel_gradient parameter the LANDO model."
+                )
+                raise ValueError(msg)
             return self._kernel_gradient(X, y)
 
         if self._kernel_metric == "linear":
@@ -440,7 +448,7 @@ class LANDO(DMDBase):
         x = self._rescale(x)
         return self.operator.weights.dot(
             self.kernel_function(self._sparse_dictionary, x[:, None])
-        )
+        ).flatten()
 
     def nonlinear(self, x):
         """
@@ -553,7 +561,7 @@ class LANDO(DMDBase):
         Reconstruct or predict the state of the system using the fitted model.
 
         :param x0: initial condition from which to propagate.
-        :type x0: numpy.ndarray
+        :type x0: numpy.ndarray or iterable
         :param tend: number of data points to compute.
         :type tend: int
         :param continuous: if True, the method assumes that the fitted model
@@ -572,7 +580,7 @@ class LANDO(DMDBase):
         if not self.partially_fitted:
             raise RuntimeError("You need to call fit.")
 
-        x0 = self._check_input_shape(x0)
+        x0 = self._check_input_shape(np.array(x0))
 
         if continuous:
 
@@ -599,6 +607,7 @@ class LANDO(DMDBase):
         Y[:, 0] = x0
         for i in range(tend - 1):
             Y[:, i + 1] = self.f(Y[:, i])
+
         return Y
 
     def _learn_sparse_dictionary(self, X):
@@ -742,45 +751,63 @@ class LANDO(DMDBase):
     def _test_kernel_functions(kernel_function, kernel_gradient):
         """
         Helper function that checks the validity of the provided kernel
-        functions. Ensures that either both are None, or both are valid
-        functions. That is, both functions must accept and output numpy
-        arrays of the expected shapes.
+        functions. Ensures that either both are None, or both inputs are valid.
+        In short...
+        - If provided, kernel_function and kernel_gradient must be functions
+            that accept and return numpy arrays of the expected shape.
+        - kernel_gradient function cannot be provided without kernel_function.
+        - kernel_function can be provided without a kernel_gradient function,
+            however a fixed point analysis cannot be performed as a result.
         """
-        # Test moves on if both arguments are None.
+        # Test moves on if both inputs are None.
         if kernel_function is not None or kernel_gradient is not None:
-            # Both arguments must be functions.
-            if not isfunction(kernel_function) or not isfunction(
-                kernel_gradient
-            ):
+            # kernel gradient can't be provided alone.
+            if kernel_function is None:
                 msg = (
-                    "If either is provided, then both kernel_function "
-                    "and kernel_gradient must be functions."
+                    "kernel_gradient cannot be provided "
+                    "without a corresponding kernel_function."
                 )
-                raise TypeError(msg)
+                raise ValueError(msg)
+            # kernel_function needs to be a function.
+            if not isfunction(kernel_function):
+                raise TypeError("kernel_function must be a function")
+            # Warn the user if kernel_gradient wasn't provided.
+            if kernel_gradient is None:
+                msg = (
+                    "kernel_function given without kernel_gradient. Note that "
+                    "fit() may be performed, but kernel_gradient must now be "
+                    "provided in order to perform analyze_fixed_point()."
+                )
+                warnings.warn(msg)
+            # kernel_gradient needs to be a function.
+            elif not isfunction(kernel_gradient):
+                raise TypeError("kernel_gradient must be a function")
+
             # Test that the given functions take and yield what is expected.
             X_dummy = np.empty((5, 10))
             Y_dummy = np.empty((5, 20))
-            gen_msg = (
-                "Please check LANDO documentation for details on how to format "
-                "the input functions kernel_function and kernel_gradient."
+            general_msg = (
+                "Please check the LANDO class documentation "
+                "for details on how to format the functions "
+                "kernel_function and kernel_gradient."
             )
+            # Test the kernel function.
             try:
                 K_xy = kernel_function(X_dummy, Y_dummy)
-                K_grad = kernel_gradient(X_dummy, Y_dummy[:, 0])
             except Exception as e:
-                msg = "Error calling kernel_function and kernel_gradient. "
-                raise ValueError(msg + gen_msg) from e
-            if not isinstance(K_xy, np.ndarray) or not isinstance(
-                K_grad, np.ndarray
-            ):
-                msg = (
-                    "kernel_function and kernel_gradient "
-                    "need to return numpy arrays. "
-                )
-                raise ValueError(msg + gen_msg)
-            if K_xy.shape != (10, 20) or K_grad.shape != (10, 5):
-                msg = (
-                    "Incorrect shape returned by kernel_function "
-                    "and kernel_gradient. "
-                )
-                raise ValueError(msg + gen_msg)
+                msg = "Error calling kernel_function. "
+                raise ValueError(msg + general_msg) from e
+            if not isinstance(K_xy, np.ndarray) or K_xy.shape != (10, 20):
+                msg = "kernel_function must return a {} numpy array. "
+                raise ValueError((msg + general_msg).format((10, 20)))
+
+            # Test the kernel gradient function.
+            if kernel_gradient is not None:
+                try:
+                    grad = kernel_gradient(X_dummy, Y_dummy[:, 0])
+                except Exception as e:
+                    msg = "Error calling kernel_gradient. "
+                    raise ValueError(msg + general_msg) from e
+                if not isinstance(grad, np.ndarray) or grad.shape != (10, 5):
+                    msg = "kernel_gradient must return a {} numpy array. "
+                    raise ValueError((msg + general_msg).format((10, 5)))
