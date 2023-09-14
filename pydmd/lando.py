@@ -27,11 +27,11 @@ class LANDOOperator(DMDOperator):
     """
     LANDO operator class, which is used to compute and keep track of the
     dictionary-based kernel model and the diagnostics of the linear model
-    about a fixed point.
+    at a fixed point.
 
     :param svd_rank: the rank for the truncation of the linear operator; If 0,
         the method computes the optimal rank and uses it for truncation; if a
-        positive integer, the method uses the fargument for the truncation; if
+        positive integer, the method uses the argument for the truncation; if
         float between 0 and 1, the rank is the number of the biggest singular
         values that are needed to reach the 'energy' specified by `svd_rank`;
         if -1, the method does not compute a truncation.
@@ -64,48 +64,51 @@ class LANDOOperator(DMDOperator):
         :rtype: numpy.ndarray
         """
         if self._weights is None:
-            raise ValueError("You need to call fit.")
+            raise ValueError("You need to call fit().")
         return self._weights
 
     @property
     def eigenvalues(self):
         """
-        Get the eigenvalues of the full linear operator evaluated about a fixed
+        Get the eigenvalues of the full linear operator evaluated at a fixed
         point. This operator is referred to as L in the original reference.
 
         :return: the eigenvalues of the full linear operator.
         :rtype: numpy.ndarray
         """
         if self._eigenvalues is None:
-            raise ValueError("You need to call fit and analyze_fixed_point.")
+            msg = "You need to call fit() and analyze_fixed_point()."
+            raise ValueError(msg)
         return self._eigenvalues
 
     @property
     def eigenvectors(self):
         """
-        Get the eigenvectors of the reduced linear operator evaluated about a
-        fixed point. This operator is referred to as L_hat in the original
-        reference.
+        Get the eigenvectors of the reduced linear operator evaluated at a
+        fixed point. The reduced operator is referred to as L_hat in the
+        original reference.
 
         :return: the eigenvectors of the reduced linear operator.
         :rtype: numpy.ndarray
         """
         if self._eigenvectors is None:
-            raise ValueError("You need to call fit and analyze_fixed_point.")
+            msg = "You need to call fit() and analyze_fixed_point()."
+            raise ValueError(msg)
         return self._eigenvectors
 
     @property
     def modes(self):
         """
-        Get the eigenvectors of the full linear operator evaluated about a
-        fixed point. This operator is referred to as L in the original
+        Get the eigenvectors of the full linear operator evaluated at a
+        fixed point. The full operator is referred to as L in the original
         reference.
 
         :return: the eigenvectors of the full linear operator.
         :rtype: numpy.ndarray
         """
         if self._modes is None:
-            raise ValueError("You need to call fit and analyze_fixed_point.")
+            msg = "You need to call fit() and analyze_fixed_point()."
+            raise ValueError(msg)
         return self._modes
 
     @property
@@ -114,11 +117,12 @@ class LANDOOperator(DMDOperator):
         Get the reduced linear operator A_tilde.
         Referred to as L_hat in the original reference.
 
-        :return: the reduced linear operator A_tilde.
+        :return: the reduced linear operator.
         :rtype: numpy.ndarray
         """
         if self._Atilde is None:
-            raise ValueError("You need to call fit and analyze_fixed_point.")
+            msg = "You need to call fit() and analyze_fixed_point()."
+            raise ValueError(msg)
         return self._Atilde
 
     @property
@@ -127,19 +131,19 @@ class LANDOOperator(DMDOperator):
         Get the full linear operator A.
         Referred to as L in the original reference.
 
-        :return: the full linear operator A.
+        :return: the full linear operator.
         :rtype: numpy.ndarray
         """
         if self._A is None:
             msg = (
                 "Full linear operator currently not computed. You may need to "
-                "call fit and analyze_fixed_point. If already done so, call "
-                "analyze_fixed_point again using compute_A=True."
+                "call fit() and analyze_fixed_point(). If already done so, "
+                "call analyze_fixed_point() using the flag compute_A=True."
             )
             warnings.warn(msg)
         return self._A
 
-    def compute_operator(self, X, Y, X_dict, kernel_function):
+    def compute_operator(self, X, Y, X_dict, kernel_function, lstsq):
         """
         Compute the dictionary-based kernel model weights.
 
@@ -151,14 +155,21 @@ class LANDOOperator(DMDOperator):
         :type X_dict: numpy.ndarray
         :param kernel_function: kernel function to apply.
         :type kernel_function: function
+        :param lstsq: if True, uses least-squares to solve
+            for weights, otherwise uses the pseudo-inverse.
+        :type lstsq: bool
         """
-        self._weights = Y.dot(np.linalg.pinv(kernel_function(X_dict, X)))
+        K_mat = kernel_function(X_dict, X)
+        if lstsq:  # Use least squares.
+            self._weights = np.linalg.lstsq(K_mat.T, Y.T, rcond=None)[0].T
+        else:  # Use the pseudo-inverse.
+            self._weights = Y.dot(np.linalg.pinv(K_mat))
 
     def compute_linear_operator(
         self, fixed_point, compute_A, kernel_gradient, X_dict, x_rescale
     ):
         """
-        Compute the DMD diagnostics of the linear model about a fixed point.
+        Compute the DMD diagnostics of the linear model at a fixed point.
 
         :param fixed_point: base state about which to perturb the system.
         :type fixed_point: numpy.ndarray
@@ -187,8 +198,14 @@ class LANDOOperator(DMDOperator):
 
         # Filter out zero eigenvalues.
         eigenvalues, eigenvectors = np.linalg.eig(self._Atilde)
-        self._eigenvalues = eigenvalues[np.abs(eigenvalues) > 1e-16]
-        self._eigenvectors = eigenvectors[:, np.abs(eigenvalues) > 1e-16]
+        eigenvalues = eigenvalues[np.abs(eigenvalues) > 1e-16]
+        eigenvectors = eigenvectors[:, np.abs(eigenvalues) > 1e-16]
+
+        # Sort eigenvalues, descending based on modulus.
+        sorted_inds = np.argsort(-np.abs(eigenvalues))
+        self._eigenvalues = eigenvalues[sorted_inds]
+        self._eigenvectors = eigenvectors[:, sorted_inds]
+
         self._modes = np.linalg.multi_dot(
             [
                 self._weights,
@@ -238,27 +255,38 @@ class LANDO(DMDBase):
         `sklearn.metrics.pairwise_kernels` built-ins. Must be able to take a
         (n_features, n_samples_X) numpy.ndarray and a (n_features, n_samples_Y)
         numpy.ndarray and return the (n_samples_X, n_samples_Y) kernel matrix
-        as a numpy.ndarray.
+        as a numpy.ndarray. In other words, for the input matrices X, Y,
+            kernel_function(X, Y) = K(X, Y),
+        where K(X, Y) denotes the kernel matrix.
     :type kernel_function: function
-    :param kernel_gradient: gradient of the kernel with respect to the second
-        feature vector x. Must be able to take a (n_features, n_samples_X)
-        numpy.ndarray and a (n_features,) numpy.ndarray and return the
-        (n_samples_X, n_features) matrix of gradient values as a numpy.ndarray.
-        This function must be defined if a custom kernel function is given.
+    :param kernel_gradient: gradient of the kernel function evaluated at the
+        given (n_features, n_samples_X) numpy.ndarray, and at the given
+        (n_features,) numpy.ndarray. Must return a (n_samples_X, n_features)
+        numpy.ndarray. This function must be defined in order to perform
+        `analyze_fixed_point()` if a custom kernel function is given.
+        In other words, for the input matrix X and input vector y,
+            kernel_gradient(X, y) = \nabla K(X, y)
+        for the kernel function defined via the kernel_function input.
     :type kernel_gradient: function
-    :param x_rescale: value or (n_features,) array of values for rescaling the
-        the features of the input data. Can be used to improve conditioning.
+    :param x_rescale: value or `snapshots_shape` numpy array of values for
+        rescaling the features of the input data. Can be used to improve
+        conditioning.
     :type x_rescale: float or numpy.ndarray
     :param dict_tol: threshold at which delta_t, the degree to which a snapshot
         x_t can be represented by the snapshot dictionary in feature space, is
         considered high enough that x_t should be added to the snapshot
-        dictionary. Referred to as \nu in the original paper.
+        dictionary. Referred to as \nu in the original paper. Note that
+        increasing this tolerance will lead to sparser dictionaries.
     :type dict_tol: float
     :param permute: whether or not to randomly permute the order of the
         snapshots prior to learning the snapshot dictionary. Default is True,
         to permute the snapshots, as doing so is generally recommended in order
         to avoid generating ill-conditioned dictionaries.
     :type permute: bool
+    :param lstsq: method used for computing the weights of the dictionary-based
+        kernel model. If True, least-squares is used to solve for the weights,
+        otherwise the pseudo-inverse is used.
+    :type lstsq: bool
     """
 
     def __init__(
@@ -273,6 +301,7 @@ class LANDO(DMDBase):
         x_rescale=1.0,
         dict_tol=1e-6,
         permute=True,
+        lstsq=True,
     ):
         if kernel_params is None:
             kernel_params = {}
@@ -299,6 +328,7 @@ class LANDO(DMDBase):
         self._x_rescale = x_rescale
         self._dict_tol = dict_tol
         self._permute = permute
+        self._lstsq = lstsq
 
         # Keep track of the last fixed point analysis.
         self._fixed_point = None
@@ -327,8 +357,9 @@ class LANDO(DMDBase):
         """
         Computes the gradient of the kernel with respect to the second feature
         vector x. Then evaluates the gradient at the feature matrix X and the
-        feature vector x = y. Currently, this method is only compatible with
-        the linear, polynomial, and RBF kernels.
+        feature vector y. Currently, this method is only compatible with
+        the linear, polynomial, and RBF kernels, unless a custom kernel
+        gradient function was provided.
 
         :param X: feature matrix with shape (n_features, n_samples_X)
         :type X: numpy.ndarray
@@ -371,7 +402,7 @@ class LANDO(DMDBase):
             ).dot(X.T)
 
         # Kernel metric is RBF.
-        centered_X = X - y[:, None]
+        centered_X = X - np.expand_dims(y, axis=-1)
         return np.diag(
             -2
             * gamma
@@ -401,9 +432,16 @@ class LANDO(DMDBase):
         :return: the sparse feature dictionary.
         :rtype: numpy.ndarray
         """
+        # Note: the attribute self._sparse_dictionary is re-scaled.
+        # Thus we undo this, but only when the user asks for the dictionary.
         if not self.partially_fitted:
-            warnings.warn("You need to call fit.")
-        return self._sparse_dictionary
+            raise ValueError("You need to call fit().")
+        if isinstance(self._x_rescale, np.ndarray):
+            return np.divide(
+                self._sparse_dictionary,
+                np.expand_dims(self._x_rescale, axis=-1),
+            )
+        return (1 / self._x_rescale) * self._sparse_dictionary
 
     @property
     def fixed_point(self):
@@ -414,36 +452,21 @@ class LANDO(DMDBase):
         :rtype: numpy.ndarray
         """
         if not self.fitted:
-            warnings.warn("You need to call fit and analyze_fixed_point.")
+            msg = "You need to call fit() and analyze_fixed_point()."
+            raise ValueError(msg)
         return self._fixed_point
-
-    @property
-    def bias(self):
-        """
-        Get the bias term from the last fixed point analysis. This is in
-        reference to the term c in the expression f(x) = c + Ax' + N(x') for
-        our system perturbed about a base state x_bar where x = x_bar + x'.
-        f is our model approximation, A is a linear operator, and N is a
-        nonlinear operator.
-
-        :return: the bias term from the last fixed point analysis.
-        :rtype: numpy.ndarray
-        """
-        if not self.fitted:
-            warnings.warn("You need to call fit and analyze_fixed_point.")
-        return self._bias
 
     def f(self, X):
         """
         Prediction of the true system model F, where F(x) = y.
 
-        :param X: feature vector(s) from the data domain.
+        :param X: feature vectors from the data domain.
         :type X: numpy.ndarray or iterable
         :return: f(X), an approximation of the true quantity F(X) = Y.
         :rtype: numpy.ndarray
         """
         if not self.partially_fitted:
-            raise ValueError("You need to call fit.")
+            raise ValueError("You need to call fit().")
 
         # Ensure that the input is an array whose columns contain snapshots
         # with a dimension that matches that of the original input data.
@@ -460,22 +483,41 @@ class LANDO(DMDBase):
             self.kernel_function(self._sparse_dictionary, X)
         )
 
-    def nonlinear(self, X):
+    @property
+    def bias(self):
         """
-        Get the nonlinear term from the last fixed point analysis, evaluated
-        at the input snapshots X. This is in reference to the term N(x') in the
-        expression f(x) = c + Ax' + N(x') for our system perturbed about a base
-        state x_bar where x = x_bar + x'. f is our model approximation, c is a
-        constant bias term, and A is a linear operator.
+        Get the bias term from the last fixed point analysis. This is in
+        reference to the term c in the expression
+            f(x) = c + Ax' + N(x'), x = x_bar + x'
+        for our system perturbed about x_bar. f is our model approximation,
+        A is a linear operator, and N is a nonlinear operator.
 
-        :param x: feature vector(s) from the data domain.
-        :type x: numpy.ndarray or iterable
-        :return: the nonlinear term(s) from the last fixed point analysis,
-            evaluated at the input vector(s).
+        :return: the bias term from the last fixed point analysis.
         :rtype: numpy.ndarray
         """
         if not self.fitted:
-            raise RuntimeError("You need to call fit and analyze_fixed_point.")
+            msg = "You need to call fit() and analyze_fixed_point()."
+            raise ValueError(msg)
+        return self._bias
+
+    def nonlinear(self, X):
+        """
+        Get the nonlinear term from the last fixed point analysis, evaluated
+        at the input snapshots X. This is in reference to the term N(x') in
+        the expression
+            f(x) = c + Ax' + N(x'), x = x_bar + x'
+        for our system perturbed about x_bar. f is our model approximation,
+        c is a constant bias term, and A is a linear operator.
+
+        :param X: feature vectors from the data domain.
+        :type X: numpy.ndarray or iterable
+        :return: the nonlinear terms from the last fixed point analysis,
+            evaluated at the input vectors.
+        :rtype: numpy.ndarray
+        """
+        if not self.fitted:
+            msg = "You need to call fit() and analyze_fixed_point()."
+            raise ValueError(msg)
 
         # Ensure that the input is an array whose columns contain snapshots
         # with a dimension that matches that of the original input data.
@@ -493,16 +535,17 @@ class LANDO(DMDBase):
             self._x_rescale,
         )
 
-        # Define the f(x) term. 
+        # Define the f(x) term.
         fX = self.f(X + np.expand_dims(self._fixed_point, axis=-1))
 
-        # Flatten and rescale the snapshots before applying the model.
+        # Flatten and rescale the snapshots before applying the linear model.
         # TODO: Verify if X needs rescaling here.
         X = X.reshape(-1, X.shape[-1])
         # X = self._rescale(X)
 
         return (
-            fX - self._bias
+            fX
+            - self._bias
             - np.linalg.multi_dot(
                 [
                     self.operator.weights,
@@ -543,6 +586,7 @@ class LANDO(DMDBase):
             Y,
             self._sparse_dictionary,
             self.kernel_function,
+            self._lstsq,
         )
 
         # Default timesteps
@@ -552,29 +596,30 @@ class LANDO(DMDBase):
 
         return self
 
-    # TODO: finish documentation here
     def analyze_fixed_point(self, fixed_point, compute_A=False):
         """
         Use a partially-fitted LANDO model to examine the system perturbed
         about a given base state x_bar such that x = x_bar + x'. Extract the
         bias term, linear portion, and nonlinear portion from the expression
-        f(x) = c + Ax' + N(x'), where f is our model approximation, c is a
-        constant bias term, A is a linear operator, and N is a nonlinear
-        operator. Additionally compute and obtain the DMD diagnostics of the
-        linear model A, along with the DMD amplitudes associated with the
-        computed linear model.
+            f(x) = c + Ax' + N(x'),
+        where f is our model approximation, c is a constant bias term, A is a
+        linear operator, and N is a nonlinear operator. Additionally obtain the
+        DMD diagnostics of the linear model A, along with the DMD amplitudes
+        associated with the computed linear model.
 
-        :param fixed_point:
-        :type fixed_point:
-        :param compute_A:
+        :param fixed_point: base state about which to analyze the system.
+        :type fixed_point: numpy.ndarray or iterable
+        :param compute_A: whether or not to explicitly compute the full linear
+            operator A. If True, A is computed and stored explicitly, otherwise
+            A is not stored and is only computed when needed.
         :type compute_A: bool
         """
         if not self.partially_fitted:
             msg = (
-                "You need to call fit before analyzing "
-                "the system about a fixed point."
+                "You need to call fit() before "
+                "performing a fixed point analysis."
             )
-            raise RuntimeError(msg)
+            raise ValueError(msg)
 
         fixed_point = np.array(fixed_point)
         if fixed_point.shape != self.snapshots_shape:
@@ -615,7 +660,7 @@ class LANDO(DMDBase):
         :type solve_ivp_opts: dict
         """
         if not self.partially_fitted:
-            raise RuntimeError("You need to call fit.")
+            raise ValueError("You need to call fit().")
 
         x0 = np.array(x0)
         if x0.shape != self.snapshots_shape:
@@ -626,7 +671,7 @@ class LANDO(DMDBase):
         if continuous:
 
             def ode_sys(xt, x):
-                return self.f(x[:, None]).flatten()
+                return self.f(np.expand_dims(x, axis=-1)).flatten()
 
             if solve_ivp_opts is None:
                 solve_ivp_opts = {}
@@ -638,7 +683,7 @@ class LANDO(DMDBase):
                 [t_eval[0], t_eval[-1]],
                 x0,
                 t_eval=t_eval,
-                **solve_ivp_opts
+                **solve_ivp_opts,
             )
 
             return sol.y
@@ -647,7 +692,7 @@ class LANDO(DMDBase):
         Y = np.empty((len(x0), tend))
         Y[:, 0] = x0
         for i in range(tend - 1):
-            Y[:, i + 1] = self.f(Y[:, i, None]).flatten()
+            Y[:, i + 1] = self.f(np.expand_dims(Y[:, i], axis=-1)).flatten()
 
         return Y
 
@@ -668,14 +713,14 @@ class LANDO(DMDBase):
 
         # Initialize the Cholesky factorization routine.
         ind_0 = parsing_inds[0]
-        x_0 = X[:, ind_0, None]
+        x_0 = np.expand_dims(X[:, ind_0], axis=-1)
         cholesky_factor = np.sqrt(self.kernel_function(x_0, x_0))
         dict_inds = [ind_0]
 
         for ind_t in parsing_inds[1:]:
             # Equation (3.11): Evaluate the kernel using the current dictionary
             # items and the next candidate addition to the dictionary.
-            x_t = X[:, ind_t, None]
+            x_t = np.expand_dims(X[:, ind_t], axis=-1)
             k_tilde_next = self.kernel_function(X[:, dict_inds], x_t)
 
             # Equation (3.10): Use backsubstitution to compute the span of the
@@ -724,7 +769,7 @@ class LANDO(DMDBase):
         if isinstance(self._x_rescale, np.ndarray):
             if np.ndim(X) == 1:
                 return np.multiply(X, self._x_rescale)
-            return np.multiply(X, self._x_rescale[:, None])
+            return np.multiply(X, np.expand_dims(self._x_rescale, axis=-1))
         return X * self._x_rescale
 
     def _check_x_rescale(self):
@@ -735,16 +780,13 @@ class LANDO(DMDBase):
         """
         if not isinstance(self._x_rescale, (int, float, np.ndarray)):
             raise TypeError("x_rescale must be a float or a numpy array.")
-        if (
-            isinstance(self._x_rescale, np.ndarray)
-            and self._x_rescale.shape != self.snapshots_shape
-        ):
-            msg = (
-                "If a numpy array, x_rescale must have the "
-                "same shape {} as the input features X."
-            )
-            raise ValueError(msg.format(self.snapshots_shape))
         if isinstance(self._x_rescale, np.ndarray):
+            if self._x_rescale.shape != self.snapshots_shape:
+                msg = (
+                    "If a numpy array, x_rescale must have the "
+                    "same shape {} as the input features X."
+                )
+                raise ValueError(msg.format(self.snapshots_shape))
             self._x_rescale = self._x_rescale.flatten()
 
     @staticmethod
@@ -801,7 +843,7 @@ class LANDO(DMDBase):
                 raise ValueError(msg)
             # kernel_function needs to be a function.
             if not isfunction(kernel_function):
-                raise TypeError("kernel_function must be a function")
+                raise TypeError("kernel_function must be a function.")
             # Warn the user if kernel_gradient wasn't provided.
             if kernel_gradient is None:
                 msg = (
