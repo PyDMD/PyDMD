@@ -538,11 +538,6 @@ class LANDO(DMDBase):
         # Define the f(x) term.
         fX = self.f(X + np.expand_dims(self._fixed_point, axis=-1))
 
-        # Flatten and rescale the snapshots before applying the linear model.
-        # TODO: Verify if X needs rescaling here.
-        X = X.reshape(-1, X.shape[-1])
-        # X = self._rescale(X)
-
         return (
             fX
             - self._bias
@@ -550,7 +545,7 @@ class LANDO(DMDBase):
                 [
                     self.operator.weights,
                     kernel_grad,
-                    X,
+                    X.reshape(-1, X.shape[-1]),
                 ]
             )
         )
