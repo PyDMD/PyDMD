@@ -433,53 +433,81 @@ class LANDO(DMDBase):
             warnings.warn("You need to call fit and analyze_fixed_point.")
         return self._bias
 
-    def f(self, x):
+    def f(self, X):
         """
         Prediction of the true system model F, where F(x) = y.
 
-        :param x: feature vector from the data domain.
-        :type x: numpy.ndarray
-        :return: f(x), an approximation of the true quantity F(x).
+        :param X: feature vector(s) from the data domain.
+        :type X: numpy.ndarray or iterable
+        :return: f(X), an approximation of the true quantity F(X) = Y.
         :rtype: numpy.ndarray
         """
         if not self.partially_fitted:
-            raise RuntimeError("You need to call fit.")
-        x = self._check_input_shape(x)
-        x = self._rescale(x)
-        return self.operator.weights.dot(
-            self.kernel_function(self._sparse_dictionary, x[:, None])
-        ).flatten()
+            raise ValueError("You need to call fit.")
 
-    def nonlinear(self, x):
+        # Ensure that the input is an array whose columns contain snapshots
+        # with a dimension that matches that of the original input data.
+        X = np.array(X)
+        if X.shape[:-1] != self.snapshots_shape:
+            msg = "Last dimension of X must contain data with shape {}."
+            raise ValueError(msg.format(self.snapshots_shape))
+
+        # Flatten and rescale the snapshots before applying the model.
+        X = X.reshape(-1, X.shape[-1])
+        X = self._rescale(X)
+
+        return self.operator.weights.dot(
+            self.kernel_function(self._sparse_dictionary, X)
+        )
+
+    def nonlinear(self, X):
         """
         Get the nonlinear term from the last fixed point analysis, evaluated
-        at the input vector x. This is in reference to the term N(x') in the
-        expression f(x) = c + Ax' + N(x') for our system perturbed about a
-        base state x_bar where x = x_bar + x'. f is our model approximation,
-        c is a constant bias term, and A is a linear operator.
+        at the input snapshots X. This is in reference to the term N(x') in the
+        expression f(x) = c + Ax' + N(x') for our system perturbed about a base
+        state x_bar where x = x_bar + x'. f is our model approximation, c is a
+        constant bias term, and A is a linear operator.
 
-        :param x: feature vector from the data domain.
-        :type x: numpy.ndarray
-        :return: the nonlinear term from the last fixed point analysis,
-            evaluated at the input vector x.
+        :param x: feature vector(s) from the data domain.
+        :type x: numpy.ndarray or iterable
+        :return: the nonlinear term(s) from the last fixed point analysis,
+            evaluated at the input vector(s).
         :rtype: numpy.ndarray
         """
-        # TODO: I may be missing a rescaling somewhere here. Check later.
         if not self.fitted:
             raise RuntimeError("You need to call fit and analyze_fixed_point.")
-        x = self._check_input_shape(x)
-        kernel_grad = self.kernel_gradient(
-            self._sparse_dictionary, self._rescale(self._fixed_point)
+
+        # Ensure that the input is an array whose columns contain snapshots
+        # with a dimension that matches that of the original input data.
+        X = np.array(X)
+        if X.shape[:-1] != self.snapshots_shape:
+            msg = "Last dimension of X must contain data with shape {}."
+            raise ValueError(msg.format(self.snapshots_shape))
+
+        # Re-create the kernel gradient matrix for the linear operator.
+        kernel_grad = np.multiply(
+            self.kernel_gradient(
+                self._sparse_dictionary,
+                self._rescale(self._fixed_point.flatten()),
+            ),
+            self._x_rescale,
         )
-        kernel_grad = np.multiply(kernel_grad, self._x_rescale)
+
+        # Define the f(x) term. 
+        fX = self.f(X + np.expand_dims(self._fixed_point, axis=-1))
+
+        # Flatten and rescale the snapshots before applying the model.
+        # TODO: Verify if X needs rescaling here.
+        X = X.reshape(-1, X.shape[-1])
+        # X = self._rescale(X)
+
         return (
-            self.f(self._fixed_point + x)
-            - self._bias
+            fX - self._bias
             - np.linalg.multi_dot(
                 [
                     self.operator.weights,
                     kernel_grad,
-                    x,
+                    X,
                 ]
             )
         )
@@ -524,6 +552,7 @@ class LANDO(DMDBase):
 
         return self
 
+    # TODO: finish documentation here
     def analyze_fixed_point(self, fixed_point, compute_A=False):
         """
         Use a partially-fitted LANDO model to examine the system perturbed
@@ -534,6 +563,11 @@ class LANDO(DMDBase):
         operator. Additionally compute and obtain the DMD diagnostics of the
         linear model A, along with the DMD amplitudes associated with the
         computed linear model.
+
+        :param fixed_point:
+        :type fixed_point:
+        :param compute_A:
+        :type compute_A: bool
         """
         if not self.partially_fitted:
             msg = (
@@ -542,12 +576,15 @@ class LANDO(DMDBase):
             )
             raise RuntimeError(msg)
 
-        fixed_point = self._check_input_shape(fixed_point)
+        fixed_point = np.array(fixed_point)
+        if fixed_point.shape != self.snapshots_shape:
+            msg = "Input fixed point must have shape {}."
+            raise ValueError(msg.format(self.snapshots_shape))
 
         self._fixed_point = fixed_point
-        self._bias = self.f(fixed_point)
+        self._bias = self.f(np.expand_dims(fixed_point, axis=-1))
         self.operator.compute_linear_operator(
-            self._rescale(fixed_point),
+            self._rescale(fixed_point.flatten()),
             compute_A,
             self.kernel_gradient,
             self._sparse_dictionary,
@@ -580,12 +617,16 @@ class LANDO(DMDBase):
         if not self.partially_fitted:
             raise RuntimeError("You need to call fit.")
 
-        x0 = self._check_input_shape(np.array(x0))
+        x0 = np.array(x0)
+        if x0.shape != self.snapshots_shape:
+            msg = "Input initial condition must have shape {}."
+            raise ValueError(msg.format(self.snapshots_shape))
+        x0 = x0.flatten()
 
         if continuous:
 
             def ode_sys(xt, x):
-                return self.f(x)
+                return self.f(x[:, None]).flatten()
 
             if solve_ivp_opts is None:
                 solve_ivp_opts = {}
@@ -606,7 +647,7 @@ class LANDO(DMDBase):
         Y = np.empty((len(x0), tend))
         Y[:, 0] = x0
         for i in range(tend - 1):
-            Y[:, i + 1] = self.f(Y[:, i])
+            Y[:, i + 1] = self.f(Y[:, i, None]).flatten()
 
         return Y
 
@@ -705,16 +746,6 @@ class LANDO(DMDBase):
             raise ValueError(msg.format(self.snapshots_shape))
         if isinstance(self._x_rescale, np.ndarray):
             self._x_rescale = self._x_rescale.flatten()
-
-    def _check_input_shape(self, x):
-        """
-        Helper function that ensures that the given x is a numpy array with the
-        same shape as the input snapshots. Returns the flattened version of x.
-        """
-        if not isinstance(x, np.ndarray) or x.shape != self.snapshots_shape:
-            msg = "Input x vector must be a {} numpy.ndarray."
-            raise RuntimeError(msg.format(self.snapshots_shape))
-        return x.flatten()
 
     @staticmethod
     def _test_kernel_inputs(kernel_metric, kernel_params):
