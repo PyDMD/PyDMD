@@ -671,15 +671,18 @@ def plot_summary(
         else:
             ax.set_title("Continuous-time Eigenvalues")
             eigs = np.log(lead_eigs)
+            ax.set_xlabel("Imag")
+            ax.set_ylabel("Real")
         # Plot the eigenvalues.
         for idx, eig in enumerate(eigs):
             if idx in index_modes:
                 color = mode_colors[index_modes.index(idx)]
             else:
                 color = mode_colors[-1]
-            ax.plot(eig.imag, eig.real, "o", c=color, ms=ms_vals[idx])
-            ax.set_xlabel("Imag")
-            ax.set_ylabel("Real")
+            if i == 0:
+                ax.plot(eig.real, eig.imag, "o", c=color, ms=ms_vals[idx])
+            else:
+                ax.plot(eig.imag, eig.real, "o", c=color, ms=ms_vals[idx])
 
     # Plots 4-6: Plot the DMD modes.
     for i, idx in enumerate(index_modes):
