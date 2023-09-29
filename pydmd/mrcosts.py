@@ -147,8 +147,8 @@ class mrCOSTS:
     @property
     def costs_array(self):
         """
-        :return: the rank used for the svd truncation.
-        :rtype: int or float
+        :return: costs objects for each decomposition level.
+        :rtype: list
         """
         return self._costs_array
 
@@ -163,16 +163,16 @@ class mrCOSTS:
     @property
     def window_length_array(self):
         """
-        :return: the length of the windows used for this decomposition level.
-        :rtype: int or float
+        :return: the length of the windows used for each decomposition level.
+        :rtype: list of int or float
         """
         return self._window_length_array
 
     @property
     def step_size_array(self):
         """
-        :return: the length of the windows used for this decomposition level.
-        :rtype: int or float
+        :return: the length of the windows used for each decomposition level.
+        :rtype: list of int or float
         """
         return self._step_size_array
 
@@ -187,24 +187,24 @@ class mrCOSTS:
     @property
     def transform_method(self):
         """
-        :return: The number of multi-resolution decompositions to perform.
-        :rtype: int
+        :return: How to transform the eigenvalues for clustering.
+        :rtype: string
         """
         return self._transform_method
 
     @property
     def n_components_array(self):
         """
-        :return: the number of components used for each decomposition level.
-        :rtype: int or float
+        :return: the number of frequency bands used for each decomposition level.
+        :rtype: list of int or float
         """
         return self._n_components_array
 
     @property
     def n_slides_array(self):
         """
-        :return: number of window slides for this decomposition level.
-        :rtype: int
+        :return: number of window slides for each decomposition level.
+        :rtype: list of int
         """
         return self._n_slides_array
 
