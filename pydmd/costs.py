@@ -779,6 +779,8 @@ class COSTS:
                 self._window_length
             )
         )
+        ax.set_ylabel("Space (-)")
+
         ax = axes[1]
         ax.set_title("Reconstruction, low frequency")
         ax.pcolormesh(xr_low_frequency, **plot_kwargs)
