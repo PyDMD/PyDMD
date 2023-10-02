@@ -25,12 +25,11 @@ SUPPORTED_KERNELS = ["linear", "poly", "rbf"]
 
 class LANDOOperator(DMDOperator):
     """
-    LANDO operator class, which is used to compute and keep track of the
-    dictionary-based kernel model and the diagnostics of the linear model
-    at a fixed point.
+    LANDO operator class, which is used to compute and
+    keep track of the dictionary-based kernel model and
+    the diagnostics of the linear model at a fixed point.
     """
-
-    def __init__(self, svd_rank):
+    def __init__(self, svd_rank, dict_tol, permute, lstsq):
         super().__init__(
             svd_rank=svd_rank,
             exact=True,
@@ -39,12 +38,32 @@ class LANDOOperator(DMDOperator):
             sorted_eigs=False,
             tikhonov_regularization=None,
         )
+
+        # Keep track of the sparse dictionary.
+        self._sparse_dictionary = None
+        self._dict_tol = dict_tol
+        self._permute = permute
+        self._lstsq = lstsq
+
+        # Keep track of operator attributes.
         self._weights = None
         self._eigenvalues = None
         self._eigenvectors = None
         self._modes = None
         self._Atilde = None
         self._A = None
+
+    @property
+    def sparse_dictionary(self):
+        """
+        Get the learned sparse feature dictionary.
+
+        :return: the sparse feature dictionary.
+        :rtype: numpy.ndarray
+        """
+        if self._sparse_dictionary is None:
+            raise ValueError("You need to call fit().")
+        return self._sparse_dictionary
 
     @property
     def weights(self):
@@ -378,14 +397,15 @@ class LANDO(DMDBase):
         )
 
         # Build the LANDO operator.
-        self._Atilde = LANDOOperator(svd_rank=svd_rank)
+        self._Atilde = LANDOOperator(
+            svd_rank=svd_rank,
+            dict_tol=dict_tol,
+            permute=permute,
+            lstsq=lstsq,
+        )
 
-        # Keep track of the computed sparse dictionary.
-        self._sparse_dictionary = None
+        # Keep track of the data rescaling factor.
         self._x_rescale = x_rescale
-        self._dict_tol = dict_tol
-        self._permute = permute
-        self._lstsq = lstsq
 
         # Keep track of the last fixed point analysis.
         self._fixed_point = None
@@ -489,16 +509,16 @@ class LANDO(DMDBase):
         :return: the sparse feature dictionary.
         :rtype: numpy.ndarray
         """
-        # Note: the attribute self._sparse_dictionary is re-scaled.
+        # Note: the attribute operator.sparse_dictionary is re-scaled.
         # Thus we undo this, but only when the user asks for the dictionary.
         if not self.partially_fitted:
             raise ValueError("You need to call fit().")
         if isinstance(self._x_rescale, np.ndarray):
             return np.divide(
-                self._sparse_dictionary,
+                self.operator.sparse_dictionary,
                 np.expand_dims(self._x_rescale, axis=-1),
             )
-        return (1 / self._x_rescale) * self._sparse_dictionary
+        return (1 / self._x_rescale) * self.operator.sparse_dictionary
 
     @property
     def fixed_point(self):
@@ -537,7 +557,7 @@ class LANDO(DMDBase):
         X = self._rescale(X)
 
         return self.operator.weights.dot(
-            self.kernel_function(self._sparse_dictionary, X)
+            self.kernel_function(self.operator.sparse_dictionary, X)
         )
 
     @property
@@ -586,7 +606,7 @@ class LANDO(DMDBase):
         # Re-create the kernel gradient matrix for the linear operator.
         kernel_grad = np.multiply(
             self.kernel_gradient(
-                self._sparse_dictionary,
+                self.operator.sparse_dictionary,
                 self._rescale(self._fixed_point.flatten()),
             ),
             self._x_rescale,
@@ -632,14 +652,7 @@ class LANDO(DMDBase):
 
         X, Y = compute_tlsq(X, Y, self._tlsq_rank)
         X_rescaled = self._rescale(X)
-        self._sparse_dictionary = self._learn_sparse_dictionary(X_rescaled)
-        self.operator.compute_operator(
-            X_rescaled,
-            Y,
-            self._sparse_dictionary,
-            self.kernel_function,
-            self._lstsq,
-        )
+        self.operator.compute_operator(X_rescaled, Y, self.kernel_function)
 
         # Default timesteps
         self._set_initial_time_dictionary(
