@@ -29,7 +29,8 @@ class LANDOOperator(DMDOperator):
     keep track of the dictionary-based kernel model and
     the diagnostics of the linear model at a fixed point.
     """
-    def __init__(self, svd_rank, dict_tol, permute, lstsq):
+
+    def __init__(self, svd_rank, dict_tol, online, permute, lstsq):
         super().__init__(
             svd_rank=svd_rank,
             exact=True,
@@ -42,6 +43,7 @@ class LANDOOperator(DMDOperator):
         # Keep track of the sparse dictionary.
         self._sparse_dictionary = None
         self._dict_tol = dict_tol
+        self._online = online
         self._permute = permute
         self._lstsq = lstsq
 
@@ -173,8 +175,15 @@ class LANDOOperator(DMDOperator):
         # Initialize the Cholesky factorization routine.
         ind_0 = parsing_inds[0]
         x_0 = np.expand_dims(X[:, ind_0], axis=-1)
-        cholesky_factor = np.sqrt(self.kernel_function(x_0, x_0))
+        k_tt = self.kernel_function(x_0, x_0)
+        cholesky_factor = np.sqrt(k_tt)
         dict_inds = [ind_0]
+
+        # Initialize the online learning routine, if applicable.
+        if self._online:
+            P_t = np.ones((1, 1))
+            print(k_tt)
+            self._weights = Y[:, ind_0] / k_tt
 
         for ind_t in parsing_inds[1:]:
             # Equation (3.11): Evaluate the kernel using the current dictionary
@@ -192,8 +201,9 @@ class LANDOOperator(DMDOperator):
             k_tt = self.kernel_function(x_t, x_t)
             delta_t = k_tt - k_tilde_next.conj().T.dot(pi_t)
 
+            # NOT almost linearly dependent - update the dictionary.
             if np.abs(delta_t) > self._dict_tol:
-                # Update the dictionary.
+                # Update the dictionary index list.
                 dict_inds.append(ind_t)
 
                 # Update the Cholesky factor.
@@ -210,6 +220,26 @@ class LANDOOperator(DMDOperator):
                     ]
                 )
 
+                # Perform the online learning updates, if applicable.
+                if self._online:
+                    P_t = np.vstack(
+                        [
+                            np.hstack([P_t, np.zeros((len(P_t), 1))]),
+                            np.append(np.zeros((1, len(P_t))), 1.0),
+                        ]
+                    )
+                    # Check the shape here
+                    # print(self._weights.dot(k_tilde_next).shape)
+                    weights_update = (
+                        self._weights.dot(k_tilde_next) - Y[:, ind_t]
+                    ) / delta_t
+                    self._weights = np.hstack(
+                        [
+                            self._weights + weights_update.dot(pi_t.conj().T),
+                            weights_update,
+                        ]
+                    )
+
                 if k_tt < np.sum(s_t**2):
                     msg = (
                         "The Cholesky factor is ill-conditioned. "
@@ -217,6 +247,19 @@ class LANDOOperator(DMDOperator):
                         "or changing the kernel hyperparameters."
                     )
                     warnings.warn(msg)
+
+            # Online learning updates for the almost linearly dependent case.
+            elif self._online:
+                h_t = pi_t.conj().T.dot(P_t) / (
+                    1.0 + np.linalg.multi_dot([pi_t.conj().T, P_t, pi_t])
+                )
+                P_t = P_t.dot(np.eye(len(P_t)) - pi_t.dot(h_t))
+                weights_update = np.linalg.lstsq(
+                    cholesky_factor.dot(cholesky_factor.conj().T),
+                    (Y[:, ind_t] - self._weights.dot(k_tilde_next)).dot(h_t),
+                    rcond=None,
+                )[0]
+                self._weights += weights_update
 
         self._sparse_dictionary = X[:, dict_inds]
         K_mat = kernel_function(self._sparse_dictionary, X)
@@ -337,6 +380,9 @@ class LANDO(DMDBase):
         dictionary. Referred to as \nu in the original paper. Note that
         increasing this tolerance will lead to sparser dictionaries.
     :type dict_tol: float
+    :param online: whether or not to use the online learning variant of LANDO.
+        Default is False, to not use the online learning algorithm.
+    :type online: bool
     :param permute: whether or not to randomly permute the order of the
         snapshots prior to learning the snapshot dictionary. Default is True,
         to permute the snapshots, as doing so is generally recommended in order
@@ -359,6 +405,7 @@ class LANDO(DMDBase):
         kernel_gradient=None,
         x_rescale=1.0,
         dict_tol=1e-6,
+        online=False,
         permute=True,
         lstsq=True,
     ):
@@ -386,6 +433,7 @@ class LANDO(DMDBase):
         self._Atilde = LANDOOperator(
             svd_rank=svd_rank,
             dict_tol=dict_tol,
+            online=online,
             permute=permute,
             lstsq=lstsq,
         )
