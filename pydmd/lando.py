@@ -175,7 +175,7 @@ class LANDOOperator(DMDOperator):
         # Initialize the Cholesky factorization routine.
         ind_0 = parsing_inds[0]
         x_0 = np.expand_dims(X[:, ind_0], axis=-1)
-        k_tt = self.kernel_function(x_0, x_0)
+        k_tt = kernel_function(x_0, x_0)
         cholesky_factor = np.sqrt(k_tt)
         dict_inds = [ind_0]
 
@@ -189,7 +189,7 @@ class LANDOOperator(DMDOperator):
             # Equation (3.11): Evaluate the kernel using the current dictionary
             # items and the next candidate addition to the dictionary.
             x_t = np.expand_dims(X[:, ind_t], axis=-1)
-            k_tilde_next = self.kernel_function(X[:, dict_inds], x_t)
+            k_tilde_next = kernel_function(X[:, dict_inds], x_t)
 
             # Equation (3.10): Use backsubstitution to compute the span of the
             # current dictionary.
@@ -198,7 +198,7 @@ class LANDOOperator(DMDOperator):
 
             # Equation (3.9): Compute the minimum (squared) distance between
             # the current sample and the span of the current dictionary.
-            k_tt = self.kernel_function(x_t, x_t)
+            k_tt = kernel_function(x_t, x_t)
             delta_t = k_tt - k_tilde_next.conj().T.dot(pi_t)
 
             # NOT almost linearly dependent - update the dictionary.
