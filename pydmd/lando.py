@@ -28,14 +28,6 @@ class LANDOOperator(DMDOperator):
     LANDO operator class, which is used to compute and keep track of the
     dictionary-based kernel model and the diagnostics of the linear model
     at a fixed point.
-
-    :param svd_rank: the rank for the truncation of the linear operator; If 0,
-        the method computes the optimal rank and uses it for truncation; if a
-        positive integer, the method uses the argument for the truncation; if
-        float between 0 and 1, the rank is the number of the biggest singular
-        values that are needed to reach the 'energy' specified by `svd_rank`;
-        if -1, the method does not compute a truncation.
-    :type svd_rank: int or float
     """
 
     def __init__(self, svd_rank):
@@ -215,6 +207,71 @@ class LANDOOperator(DMDOperator):
                 np.diag(1 / self._eigenvalues),
             ]
         )
+
+    def _learn_sparse_dictionary(self, X):
+        """
+        Sparse dictionary learning with Cholesky updates.
+
+        :param X: matrix containing the right-hand side snapshots by column.
+        :type X: numpy.ndarray
+        :return: matrix containing the snapshots from X that make up the
+            sparse snapshot dictionary.
+        :rtype: numpy.ndarray
+        """
+        # Determine the order in which to parse the data snapshots.
+        parsing_inds = np.arange(X.shape[1])
+        if self._permute:
+            np.random.shuffle(parsing_inds)
+
+        # Initialize the Cholesky factorization routine.
+        ind_0 = parsing_inds[0]
+        x_0 = np.expand_dims(X[:, ind_0], axis=-1)
+        cholesky_factor = np.sqrt(self.kernel_function(x_0, x_0))
+        dict_inds = [ind_0]
+
+        for ind_t in parsing_inds[1:]:
+            # Equation (3.11): Evaluate the kernel using the current dictionary
+            # items and the next candidate addition to the dictionary.
+            x_t = np.expand_dims(X[:, ind_t], axis=-1)
+            k_tilde_next = self.kernel_function(X[:, dict_inds], x_t)
+
+            # Equation (3.10): Use backsubstitution to compute the span of the
+            # current dictionary.
+            s_t = np.linalg.lstsq(cholesky_factor, k_tilde_next, rcond=None)[0]
+            pi_t = np.linalg.lstsq(cholesky_factor.conj().T, s_t, rcond=None)[0]
+
+            # Equation (3.9): Compute the minimum (squared) distance between
+            # the current sample and the span of the current dictionary.
+            k_tt = self.kernel_function(x_t, x_t)
+            delta_t = k_tt - k_tilde_next.conj().T.dot(pi_t)
+
+            if np.abs(delta_t) > self._dict_tol:
+                # Update the dictionary.
+                dict_inds.append(ind_t)
+
+                # Update the Cholesky factor.
+                cholesky_factor = np.hstack(
+                    [cholesky_factor, np.zeros((len(cholesky_factor), 1))]
+                )
+                cholesky_factor = np.vstack(
+                    [
+                        cholesky_factor,
+                        np.append(
+                            s_t.conj().T,
+                            max(0, np.abs(np.sqrt(k_tt - np.sum(s_t**2)))),
+                        ),
+                    ]
+                )
+
+                if k_tt < np.sum(s_t**2):
+                    msg = (
+                        "The Cholesky factor is ill-conditioned. "
+                        "Consider increasing the sparsity parameter "
+                        "or changing the kernel hyperparameters."
+                    )
+                    warnings.warn(msg)
+
+        return X[:, dict_inds]
 
 
 class LANDO(DMDBase):
@@ -690,71 +747,6 @@ class LANDO(DMDBase):
             Y[:, i + 1] = self.f(np.expand_dims(Y[:, i], axis=-1)).flatten()
 
         return Y
-
-    def _learn_sparse_dictionary(self, X):
-        """
-        Sparse dictionary learning with Cholesky updates.
-
-        :param X: matrix containing the right-hand side snapshots by column.
-        :type X: numpy.ndarray
-        :return: matrix containing the snapshots from X that make up the
-            sparse snapshot dictionary.
-        :rtype: numpy.ndarray
-        """
-        # Determine the order in which to parse the data snapshots.
-        parsing_inds = np.arange(X.shape[1])
-        if self._permute:
-            np.random.shuffle(parsing_inds)
-
-        # Initialize the Cholesky factorization routine.
-        ind_0 = parsing_inds[0]
-        x_0 = np.expand_dims(X[:, ind_0], axis=-1)
-        cholesky_factor = np.sqrt(self.kernel_function(x_0, x_0))
-        dict_inds = [ind_0]
-
-        for ind_t in parsing_inds[1:]:
-            # Equation (3.11): Evaluate the kernel using the current dictionary
-            # items and the next candidate addition to the dictionary.
-            x_t = np.expand_dims(X[:, ind_t], axis=-1)
-            k_tilde_next = self.kernel_function(X[:, dict_inds], x_t)
-
-            # Equation (3.10): Use backsubstitution to compute the span of the
-            # current dictionary.
-            s_t = np.linalg.lstsq(cholesky_factor, k_tilde_next, rcond=None)[0]
-            pi_t = np.linalg.lstsq(cholesky_factor.conj().T, s_t, rcond=None)[0]
-
-            # Equation (3.9): Compute the minimum (squared) distance between
-            # the current sample and the span of the current dictionary.
-            k_tt = self.kernel_function(x_t, x_t)
-            delta_t = k_tt - k_tilde_next.conj().T.dot(pi_t)
-
-            if np.abs(delta_t) > self._dict_tol:
-                # Update the dictionary.
-                dict_inds.append(ind_t)
-
-                # Update the Cholesky factor.
-                cholesky_factor = np.hstack(
-                    [cholesky_factor, np.zeros((len(cholesky_factor), 1))]
-                )
-                cholesky_factor = np.vstack(
-                    [
-                        cholesky_factor,
-                        np.append(
-                            s_t.conj().T,
-                            max(0, np.abs(np.sqrt(k_tt - np.sum(s_t**2)))),
-                        ),
-                    ]
-                )
-
-                if k_tt < np.sum(s_t**2):
-                    msg = (
-                        "The Cholesky factor is ill-conditioned. "
-                        "Consider increasing the sparsity parameter "
-                        "or changing the kernel hyperparameters."
-                    )
-                    warnings.warn(msg)
-
-        return X[:, dict_inds]
 
     def _rescale(self, X):
         """
