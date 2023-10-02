@@ -154,88 +154,16 @@ class LANDOOperator(DMDOperator):
             warnings.warn(msg)
         return self._A
 
-    def compute_operator(self, X, Y, X_dict, kernel_function, lstsq):
+    def compute_operator(self, X, Y, kernel_function):
         """
         Compute the dictionary-based kernel model weights.
 
-        :param X: the input snapshots x.
+        :param X: the input snapshots x, rescaled.
         :type X: numpy.ndarray
         :param Y: input snapshots y such that F(x) = y.
         :type Y: numpy.ndarray
-        :param X_dict: the sparse feature dictionary.
-        :type X_dict: numpy.ndarray
         :param kernel_function: kernel function to apply.
         :type kernel_function: function
-        :param lstsq: if True, uses least-squares to solve
-            for weights, otherwise uses the pseudo-inverse.
-        :type lstsq: bool
-        """
-        K_mat = kernel_function(X_dict, X)
-        if lstsq:  # Use least squares.
-            self._weights = np.linalg.lstsq(K_mat.T, Y.T, rcond=None)[0].T
-        else:  # Use the pseudo-inverse.
-            self._weights = Y.dot(np.linalg.pinv(K_mat))
-
-    def compute_linear_operator(
-        self, fixed_point, compute_A, kernel_gradient, X_dict, x_rescale
-    ):
-        """
-        Compute the DMD diagnostics of the linear model at a fixed point.
-
-        :param fixed_point: base state about which to perturb the system.
-        :type fixed_point: numpy.ndarray
-        :param compute_A: if True, the full linear operator is explicitly
-            computed and stored. If False, the full linear operator isn't
-            computed and stored explicitly.
-        :type compute_A: bool
-        :param kernel_gradient: gradient of the kernel function applied.
-        :type kernel_gradient: function
-        :param X_dict: the sparse feature dictionary.
-        :type X_dict: numpy.ndarray
-        :param x_rescale: value or (n_features,) array of values for
-            rescaling the features of the input data.
-        :type x_rescale: float or numpy.ndarray
-        """
-        kernel_grad = kernel_gradient(X_dict, fixed_point)
-        kernel_grad = np.multiply(kernel_grad, x_rescale)
-        U, s, V = compute_svd(kernel_grad.T, self._svd_rank)
-        if compute_A:
-            self._A = self.weights.dot(kernel_grad)
-            self._Atilde = np.linalg.multi_dot([U.conj().T, self._A, U])
-        else:
-            self._Atilde = np.linalg.multi_dot(
-                [U.conj().T, self.weights, kernel_grad, U]
-            )
-
-        # Filter out zero eigenvalues.
-        eigenvalues, eigenvectors = np.linalg.eig(self._Atilde)
-        eigenvalues = eigenvalues[np.abs(eigenvalues) > 1e-16]
-        eigenvectors = eigenvectors[:, np.abs(eigenvalues) > 1e-16]
-
-        # Sort eigenvalues, descending based on modulus.
-        sorted_inds = np.argsort(-np.abs(eigenvalues))
-        self._eigenvalues = eigenvalues[sorted_inds]
-        self._eigenvectors = eigenvectors[:, sorted_inds]
-
-        self._modes = np.linalg.multi_dot(
-            [
-                self._weights,
-                V,
-                np.diag(s),
-                self._eigenvectors,
-                np.diag(1 / self._eigenvalues),
-            ]
-        )
-
-    def _learn_sparse_dictionary(self, X):
-        """
-        Sparse dictionary learning with Cholesky updates.
-
-        :param X: matrix containing the right-hand side snapshots by column.
-        :type X: numpy.ndarray
-        :return: matrix containing the snapshots from X that make up the
-            sparse snapshot dictionary.
-        :rtype: numpy.ndarray
         """
         # Determine the order in which to parse the data snapshots.
         parsing_inds = np.arange(X.shape[1])
@@ -290,7 +218,62 @@ class LANDOOperator(DMDOperator):
                     )
                     warnings.warn(msg)
 
-        return X[:, dict_inds]
+        self._sparse_dictionary = X[:, dict_inds]
+        K_mat = kernel_function(self._sparse_dictionary, X)
+
+        if self._lstsq:  # use least squares
+            self._weights = np.linalg.lstsq(K_mat.T, Y.T, rcond=None)[0].T
+        else:  # use the pseudo-inverse
+            self._weights = Y.dot(np.linalg.pinv(K_mat))
+
+    def compute_linear_operator(
+        self, fixed_point, compute_A, kernel_gradient, x_rescale
+    ):
+        """
+        Compute the DMD diagnostics of the linear model at a fixed point.
+
+        :param fixed_point: base state about which to perturb the system.
+        :type fixed_point: numpy.ndarray
+        :param compute_A: if True, the full linear operator is explicitly
+            computed and stored. If False, the full linear operator isn't
+            computed and stored explicitly.
+        :type compute_A: bool
+        :param kernel_gradient: gradient of the kernel function applied.
+        :type kernel_gradient: function
+        :param x_rescale: value or (n_features,) array of values for
+            rescaling the features of the input data.
+        :type x_rescale: float or numpy.ndarray
+        """
+        kernel_grad = kernel_gradient(self._sparse_dictionary, fixed_point)
+        kernel_grad = np.multiply(kernel_grad, x_rescale)
+        U, s, V = compute_svd(kernel_grad.T, self._svd_rank)
+        if compute_A:
+            self._A = self.weights.dot(kernel_grad)
+            self._Atilde = np.linalg.multi_dot([U.conj().T, self._A, U])
+        else:
+            self._Atilde = np.linalg.multi_dot(
+                [U.conj().T, self.weights, kernel_grad, U]
+            )
+
+        # Filter out zero eigenvalues.
+        eigenvalues, eigenvectors = np.linalg.eig(self._Atilde)
+        eigenvalues = eigenvalues[np.abs(eigenvalues) > 1e-16]
+        eigenvectors = eigenvectors[:, np.abs(eigenvalues) > 1e-16]
+
+        # Sort eigenvalues, descending based on modulus.
+        sorted_inds = np.argsort(-np.abs(eigenvalues))
+        self._eigenvalues = eigenvalues[sorted_inds]
+        self._eigenvectors = eigenvectors[:, sorted_inds]
+
+        self._modes = np.linalg.multi_dot(
+            [
+                self._weights,
+                V,
+                np.diag(s),
+                self._eigenvectors,
+                np.diag(1 / self._eigenvalues),
+            ]
+        )
 
 
 class LANDO(DMDBase):
@@ -379,22 +362,25 @@ class LANDO(DMDBase):
         permute=True,
         lstsq=True,
     ):
+        # Check the validity of the provided kernel functions.
         if kernel_params is None:
             kernel_params = {}
-
         self._test_kernel_inputs(kernel_metric, kernel_params)
         self._test_kernel_functions(kernel_function, kernel_gradient)
-        self._kernel_metric = kernel_metric
-        self._kernel_params = kernel_params
-        self._kernel_function = kernel_function
-        self._kernel_gradient = kernel_gradient
 
+        # Initialize the basic DMD attributes.
         super().__init__(
             svd_rank=svd_rank,
             tlsq_rank=tlsq_rank,
             exact=True,
             opt=opt,
         )
+
+        # Set the kernel functions, which must be valid.
+        self._kernel_metric = kernel_metric
+        self._kernel_params = kernel_params
+        self._kernel_function = kernel_function
+        self._kernel_gradient = kernel_gradient
 
         # Build the LANDO operator.
         self._Atilde = LANDOOperator(
@@ -697,7 +683,6 @@ class LANDO(DMDBase):
             self._rescale(fixed_point.flatten()),
             compute_A,
             self.kernel_gradient,
-            self._sparse_dictionary,
             self._x_rescale,
         )
 
