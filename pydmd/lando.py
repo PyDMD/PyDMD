@@ -182,13 +182,13 @@ class LANDOOperator(DMDOperator):
         # Initialize the online learning routine, if applicable.
         if self._online:
             P_t = np.ones((1, 1))
-            print(k_tt)
-            self._weights = Y[:, ind_0] / k_tt
+            self._weights = np.expand_dims(Y[:, ind_0] / k_tt[0][0], axis=-1)
 
         for ind_t in parsing_inds[1:]:
             # Equation (3.11): Evaluate the kernel using the current dictionary
             # items and the next candidate addition to the dictionary.
             x_t = np.expand_dims(X[:, ind_t], axis=-1)
+            y_t = np.expand_dims(Y[:, ind_t], axis=-1)
             k_tilde_next = kernel_function(X[:, dict_inds], x_t)
 
             # Equation (3.10): Use backsubstitution to compute the span of the
@@ -228,15 +228,11 @@ class LANDOOperator(DMDOperator):
                             np.append(np.zeros((1, len(P_t))), 1.0),
                         ]
                     )
-                    # Check the shape here
-                    # print(self._weights.dot(k_tilde_next).shape)
-                    weights_update = (
-                        self._weights.dot(k_tilde_next) - Y[:, ind_t]
-                    ) / delta_t
+                    update = (self._weights.dot(k_tilde_next) - y_t) / delta_t
                     self._weights = np.hstack(
                         [
-                            self._weights + weights_update.dot(pi_t.conj().T),
-                            weights_update,
+                            self._weights + update.dot(pi_t.conj().T),
+                            update,
                         ]
                     )
 
@@ -254,12 +250,12 @@ class LANDOOperator(DMDOperator):
                     1.0 + np.linalg.multi_dot([pi_t.conj().T, P_t, pi_t])
                 )
                 P_t = P_t.dot(np.eye(len(P_t)) - pi_t.dot(h_t))
-                weights_update = np.linalg.lstsq(
-                    cholesky_factor.dot(cholesky_factor.conj().T),
-                    (Y[:, ind_t] - self._weights.dot(k_tilde_next)).dot(h_t),
+                update = np.linalg.lstsq(
+                    (cholesky_factor.dot(cholesky_factor.conj().T)).T,
+                    ((y_t - self._weights.dot(k_tilde_next)).dot(h_t)).T,
                     rcond=None,
-                )[0]
-                self._weights += weights_update
+                )[0].T
+                self._weights += update
 
         self._sparse_dictionary = X[:, dict_inds]
         K_mat = kernel_function(self._sparse_dictionary, X)
