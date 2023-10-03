@@ -258,12 +258,13 @@ class LANDOOperator(DMDOperator):
                 self._weights += update
 
         self._sparse_dictionary = X[:, dict_inds]
-        K_mat = kernel_function(self._sparse_dictionary, X)
 
-        if self._lstsq:  # use least squares
-            self._weights = np.linalg.lstsq(K_mat.T, Y.T, rcond=None)[0].T
-        else:  # use the pseudo-inverse
-            self._weights = Y.dot(np.linalg.pinv(K_mat))
+        if not self._online:
+            K_mat = kernel_function(self._sparse_dictionary, X)
+            if self._lstsq:  # use least squares
+                self._weights = np.linalg.lstsq(K_mat.T, Y.T, rcond=None)[0].T
+            else:  # use the pseudo-inverse
+                self._weights = Y.dot(np.linalg.pinv(K_mat))
 
     def compute_linear_operator(
         self, fixed_point, compute_A, kernel_gradient, x_rescale
