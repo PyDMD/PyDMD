@@ -228,10 +228,10 @@ class LANDOOperator(DMDOperator):
                             np.append(np.zeros((1, len(P_t))), 1.0),
                         ]
                     )
-                    update = (self._weights.dot(k_tilde_next) - y_t) / delta_t
+                    update = (y_t - self._weights.dot(k_tilde_next)) / delta_t
                     self._weights = np.hstack(
                         [
-                            self._weights + update.dot(pi_t.conj().T),
+                            self._weights - update.dot(pi_t.conj().T),
                             update,
                         ]
                     )
