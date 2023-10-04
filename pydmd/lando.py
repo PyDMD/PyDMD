@@ -194,13 +194,15 @@ class LANDOOperator(DMDOperator):
             x_t = np.expand_dims(X[:, ind_t], axis=-1)
             y_t = np.expand_dims(Y[:, ind_t], axis=-1)
 
-            # Get the results of this iterate's Cholesky updates.
-            cholesky_results = self._cholesky_step(x_t, C, kernel_function)
-            k_tilde_t, s_t, pi_t, k_tt, delta_t = cholesky_results
+            # Get the results of this Cholesky factorization iteration.
+            results = self._cholesky_step(x_t, kernel_function, C)
+            _, s_t, _, k_tt, delta_t = results
 
-            # NOT almost linearly dependent - update the dictionary.
+            # NOT almost linearly dependent - add x to the dictionary.
             if np.abs(delta_t) > self._dict_tol:
-                self._sparse_dictionary = np.hstack([self._sparse_dictionary, x_t])
+                self._sparse_dictionary = np.hstack(
+                    [self._sparse_dictionary, x_t]
+                )
 
                 # Update the Cholesky factor.
                 C = np.vstack(
@@ -216,19 +218,7 @@ class LANDOOperator(DMDOperator):
                 # Perform the online learning updates, if applicable.
                 if self._online:
                     self._cholesky = C
-                    self._P = np.vstack(
-                        [
-                            np.hstack([self._P, np.zeros((len(self._P), 1))]),
-                            np.append(np.zeros((1, len(self._P))), 1.0),
-                        ]
-                    )
-                    update = (y_t - self._weights.dot(k_tilde_t)) / delta_t
-                    self._weights = np.hstack(
-                        [
-                            self._weights - update.dot(pi_t.conj().T),
-                            update,
-                        ]
-                    )
+                    self._update_online(y_t, results, cholesky_updated=True)
 
                 if k_tt < np.sum(s_t**2):
                     msg = (
@@ -240,16 +230,7 @@ class LANDOOperator(DMDOperator):
 
             # Online learning updates for the almost linearly dependent case.
             elif self._online:
-                h_t = pi_t.conj().T.dot(self._P) / (
-                    1.0 + np.linalg.multi_dot([pi_t.conj().T, self._P, pi_t])
-                )
-                self._P = self._P.dot(np.eye(len(self._P)) - pi_t.dot(h_t))
-                update = np.linalg.lstsq(
-                    (self._cholesky.dot(self._cholesky.conj().T)).T,
-                    ((y_t - self._weights.dot(k_tilde_t)).dot(h_t)).T,
-                    rcond=None,
-                )[0].T
-                self._weights += update
+                self._update_online(y_t, results, cholesky_updated=False)
 
         if not self._online:
             K_mat = kernel_function(self._sparse_dictionary, X)
@@ -257,6 +238,10 @@ class LANDOOperator(DMDOperator):
                 self._weights = np.linalg.lstsq(K_mat.T, Y.T, rcond=None)[0].T
             else:  # use the pseudo-inverse
                 self._weights = Y.dot(np.linalg.pinv(K_mat))
+
+        # if not self._online:
+        #     msg = "Only LANDO models fitted with online=True may be updated."
+        #     raise ValueError(msg)
 
     def compute_linear_operator(
         self, fixed_point, compute_A, kernel_gradient, x_rescale
@@ -307,7 +292,12 @@ class LANDOOperator(DMDOperator):
             ]
         )
 
-    def _cholesky_step(self, x, cholesky, kernel_function):
+    def _cholesky_step(self, x, kernel_function, cholesky):
+        """
+        Helper function that computes and returns all of the quantities used to
+        decide the progression of the Cholesky factorization routine. See the
+        original reference for specific equations and notations.
+        """
         # Equation (3.11): Evaluate the kernel using the current dictionary
         # items and the next candidate addition to the dictionary.
         k_tilde = kernel_function(self._sparse_dictionary, x)
@@ -323,6 +313,43 @@ class LANDOOperator(DMDOperator):
         delta = kxx - k_tilde.conj().T.dot(pi)
 
         return k_tilde, s, pi, kxx, delta
+
+    def _update_online(self, y, cholesky_results, cholesky_updated):
+        """
+        Helper function that performs a single online learning update for
+        both the almost linearly dependent case and the not almost linearly
+        dependent case. Updates the P matrix and the weight matrix. See the
+        supplemental information of the original reference for more details.
+        """
+        k_tilde, _, pi, _, delta = cholesky_results
+
+        # NOT almost linearly dependent case.
+        if cholesky_updated:
+            self._P = np.vstack(
+                [
+                    np.hstack([self._P, np.zeros((len(self._P), 1))]),
+                    np.append(np.zeros((1, len(self._P))), 1.0),
+                ]
+            )
+            weights_update = (y - self._weights.dot(k_tilde)) / delta
+            self._weights = np.hstack(
+                [
+                    self._weights - weights_update.dot(pi.conj().T),
+                    weights_update,
+                ]
+            )
+        # Almost linearly dependent case.
+        else:
+            h = pi.conj().T.dot(self._P) / (
+                1.0 + np.linalg.multi_dot([pi.conj().T, self._P, pi])
+            )
+            self._P = self._P.dot(np.eye(len(self._P)) - pi.dot(h))
+            weights_update = np.linalg.lstsq(
+                (self._cholesky.dot(self._cholesky.conj().T)).T,
+                ((y - self._weights.dot(k_tilde)).dot(h)).T,
+                rcond=None,
+            )[0].T
+            self._weights += weights_update
 
 
 class LANDO(DMDBase):
