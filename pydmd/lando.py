@@ -239,9 +239,54 @@ class LANDOOperator(DMDOperator):
             else:  # use the pseudo-inverse
                 self._weights = Y.dot(np.linalg.pinv(K_mat))
 
-        # if not self._online:
-        #     msg = "Only LANDO models fitted with online=True may be updated."
-        #     raise ValueError(msg)
+    def update_operator(self, X, Y, kernel_function):
+        """
+        Update the dictionary-based kernel model weights given more snapshots.
+
+        :param X: the input snapshots x, rescaled.
+        :type X: numpy.ndarray
+        :param Y: input snapshots y such that F(x) = y.
+        :type Y: numpy.ndarray
+        :param kernel_function: kernel function to apply.
+        :type kernel_function: function
+        """
+        if not self._online:
+            msg = "Only LANDO models fitted with online=True can be updated."
+            raise ValueError(msg)
+
+        # Determine the order in which to parse the data snapshots.
+        parsing_inds = np.arange(X.shape[1])
+        if self._permute:
+            np.random.shuffle(parsing_inds)
+
+        for ind_t in parsing_inds:
+            # Grab the next corresponding pair of snapshots.
+            x_t = np.expand_dims(X[:, ind_t], axis=-1)
+            y_t = np.expand_dims(Y[:, ind_t], axis=-1)
+
+            # Get the results of this Cholesky factorization iteration.
+            results = self._cholesky_step(x_t, kernel_function, self._cholesky)
+            _, s_t, _, k_tt, delta_t = results
+
+            # NOT almost linearly dependent - update dict and cholesky factor.
+            if np.abs(delta_t) > self._dict_tol:
+                self._sparse_dictionary = np.hstack(
+                    [self._sparse_dictionary, x_t]
+                )
+                self._cholesky = np.vstack(
+                    [
+                        np.hstack(
+                            [self._cholesky, np.zeros((len(self._cholesky), 1))]
+                        ),
+                        np.append(
+                            s_t.conj().T,
+                            max(0, np.abs(np.sqrt(k_tt - np.sum(s_t**2)))),
+                        ),
+                    ]
+                )
+                self._update_online(y_t, results, cholesky_updated=True)
+            else:
+                self._update_online(y_t, results, cholesky_updated=False)
 
     def compute_linear_operator(
         self, fixed_point, compute_A, kernel_gradient, x_rescale
@@ -475,8 +520,12 @@ class LANDO(DMDBase):
         self._x_rescale = x_rescale
 
         # Keep track of the last fixed point analysis.
+        self._compute_A = False
         self._fixed_point = None
         self._bias = None
+
+        # Keep track of whether or not the model was ever updated.
+        self._updated = False
 
     def kernel_function(self, X, Y):
         """
@@ -758,16 +807,68 @@ class LANDO(DMDBase):
             msg = "Input fixed point must have shape {}."
             raise ValueError(msg.format(self.snapshots_shape))
 
+        self._compute_A = compute_A
         self._fixed_point = fixed_point
         self._bias = self.f(np.expand_dims(fixed_point, axis=-1))
         self.operator.compute_linear_operator(
             self._rescale(fixed_point.flatten()),
-            compute_A,
+            self._compute_A,
             self.kernel_gradient,
             self._x_rescale,
         )
 
         self._b = self._compute_amplitudes()
+
+    def update(self, X, Y=None):
+        """
+        Update a fitted LANDO model using new data.
+
+        Note that this function only updates the LANDO model, and not the
+        stored snapshots or DMDTimeDicts. Hence be aware that using this
+        function may result in strange or unexpected behavior when used
+        in conjunction with certain DMDBase functionalities.
+
+        :param X: the input snapshots.
+        :type X: numpy.ndarray or iterable
+        :param Y: additional input snapshots such that F(x) = y. If not given,
+            snapshots from X are used to build a discrete-time model.
+        :type Y: numpy.ndarray or iterable
+        """
+        if not self.partially_fitted:
+            msg = "You need to call fit() before updating a LANDO model."
+            raise ValueError(msg)
+
+        X_newsnap = Snapshots(X).snapshots
+        if Y is None:
+            X = X_newsnap[:, :-1]
+            Y = X_newsnap[:, 1:]
+        else:
+            Y_newsnap = Snapshots(Y).snapshots
+            if X_newsnap.shape != Y_newsnap.shape:
+                msg = "X {} and Y {} input data must be the same shape."
+                raise ValueError(msg.format(X_newsnap.shape, Y_newsnap.shape))
+            X = X_newsnap
+            Y = Y_newsnap
+
+        X, Y = compute_tlsq(X, Y, self._tlsq_rank)
+        X_rescaled = self._rescale(X)
+        self.operator.update_operator(X_rescaled, Y, self.kernel_function)
+
+        # If a fixed point analysis was already done, redo it.
+        if self.fitted:
+            self._bias = self.f(np.expand_dims(self._fixed_point, axis=-1))
+            self.operator.compute_linear_operator(
+                self._rescale(self._fixed_point.flatten()),
+                self._compute_A,
+                self.kernel_gradient,
+                self._x_rescale,
+            )
+            self._b = self._compute_amplitudes()
+
+        # Flag this model as updated.
+        self._updated = True
+
+        return self
 
     def predict(self, x0, tend, continuous=True, dt=1.0, solve_ivp_opts=None):
         """
