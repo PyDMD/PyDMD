@@ -108,3 +108,10 @@ def test_predict_2():
     Test that predict() can accurately produce data for new initial conditions.
     """
     raise NotImplementedError()
+
+def test_online():
+    """
+    Test that a LANDO model fitted with the online option yields the
+    same results as a LANDO model fitted without the online option.
+    """
+    raise NotImplementedError()

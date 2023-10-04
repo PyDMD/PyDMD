@@ -47,6 +47,10 @@ class LANDOOperator(DMDOperator):
         self._permute = permute
         self._lstsq = lstsq
 
+        # Keep track of attributes for online learning.
+        self._cholesky = None
+        self._P = None
+
         # Keep track of operator attributes.
         self._weights = None
         self._eigenvalues = None
@@ -175,44 +179,33 @@ class LANDOOperator(DMDOperator):
         # Initialize the Cholesky factorization routine.
         ind_0 = parsing_inds[0]
         x_0 = np.expand_dims(X[:, ind_0], axis=-1)
-        k_tt = kernel_function(x_0, x_0)
-        cholesky_factor = np.sqrt(k_tt)
-        dict_inds = [ind_0]
+        y_0 = np.expand_dims(Y[:, ind_0], axis=-1)
+        C = np.sqrt(kernel_function(x_0, x_0))
+        self._sparse_dictionary = np.copy(x_0)
 
         # Initialize the online learning routine, if applicable.
         if self._online:
-            P_t = np.ones((1, 1))
-            self._weights = np.expand_dims(Y[:, ind_0] / k_tt[0][0], axis=-1)
+            self._cholesky = C
+            self._P = np.ones((1, 1))
+            self._weights = y_0 / (self._cholesky[0][0] ** 2)
 
         for ind_t in parsing_inds[1:]:
-            # Equation (3.11): Evaluate the kernel using the current dictionary
-            # items and the next candidate addition to the dictionary.
+            # Grab the next corresponding pair of snapshots.
             x_t = np.expand_dims(X[:, ind_t], axis=-1)
             y_t = np.expand_dims(Y[:, ind_t], axis=-1)
-            k_tilde_next = kernel_function(X[:, dict_inds], x_t)
 
-            # Equation (3.10): Use backsubstitution to compute the span of the
-            # current dictionary.
-            s_t = np.linalg.lstsq(cholesky_factor, k_tilde_next, rcond=None)[0]
-            pi_t = np.linalg.lstsq(cholesky_factor.conj().T, s_t, rcond=None)[0]
-
-            # Equation (3.9): Compute the minimum (squared) distance between
-            # the current sample and the span of the current dictionary.
-            k_tt = kernel_function(x_t, x_t)
-            delta_t = k_tt - k_tilde_next.conj().T.dot(pi_t)
+            # Get the results of this iterate's Cholesky updates.
+            cholesky_results = self._cholesky_step(x_t, C, kernel_function)
+            k_tilde_t, s_t, pi_t, k_tt, delta_t = cholesky_results
 
             # NOT almost linearly dependent - update the dictionary.
             if np.abs(delta_t) > self._dict_tol:
-                # Update the dictionary index list.
-                dict_inds.append(ind_t)
+                self._sparse_dictionary = np.hstack([self._sparse_dictionary, x_t])
 
                 # Update the Cholesky factor.
-                cholesky_factor = np.hstack(
-                    [cholesky_factor, np.zeros((len(cholesky_factor), 1))]
-                )
-                cholesky_factor = np.vstack(
+                C = np.vstack(
                     [
-                        cholesky_factor,
+                        np.hstack([C, np.zeros((len(C), 1))]),
                         np.append(
                             s_t.conj().T,
                             max(0, np.abs(np.sqrt(k_tt - np.sum(s_t**2)))),
@@ -222,13 +215,14 @@ class LANDOOperator(DMDOperator):
 
                 # Perform the online learning updates, if applicable.
                 if self._online:
-                    P_t = np.vstack(
+                    self._cholesky = C
+                    self._P = np.vstack(
                         [
-                            np.hstack([P_t, np.zeros((len(P_t), 1))]),
-                            np.append(np.zeros((1, len(P_t))), 1.0),
+                            np.hstack([self._P, np.zeros((len(self._P), 1))]),
+                            np.append(np.zeros((1, len(self._P))), 1.0),
                         ]
                     )
-                    update = (y_t - self._weights.dot(k_tilde_next)) / delta_t
+                    update = (y_t - self._weights.dot(k_tilde_t)) / delta_t
                     self._weights = np.hstack(
                         [
                             self._weights - update.dot(pi_t.conj().T),
@@ -246,18 +240,16 @@ class LANDOOperator(DMDOperator):
 
             # Online learning updates for the almost linearly dependent case.
             elif self._online:
-                h_t = pi_t.conj().T.dot(P_t) / (
-                    1.0 + np.linalg.multi_dot([pi_t.conj().T, P_t, pi_t])
+                h_t = pi_t.conj().T.dot(self._P) / (
+                    1.0 + np.linalg.multi_dot([pi_t.conj().T, self._P, pi_t])
                 )
-                P_t = P_t.dot(np.eye(len(P_t)) - pi_t.dot(h_t))
+                self._P = self._P.dot(np.eye(len(self._P)) - pi_t.dot(h_t))
                 update = np.linalg.lstsq(
-                    (cholesky_factor.dot(cholesky_factor.conj().T)).T,
-                    ((y_t - self._weights.dot(k_tilde_next)).dot(h_t)).T,
+                    (self._cholesky.dot(self._cholesky.conj().T)).T,
+                    ((y_t - self._weights.dot(k_tilde_t)).dot(h_t)).T,
                     rcond=None,
                 )[0].T
                 self._weights += update
-
-        self._sparse_dictionary = X[:, dict_inds]
 
         if not self._online:
             K_mat = kernel_function(self._sparse_dictionary, X)
@@ -314,6 +306,23 @@ class LANDOOperator(DMDOperator):
                 np.diag(1 / self._eigenvalues),
             ]
         )
+
+    def _cholesky_step(self, x, cholesky, kernel_function):
+        # Equation (3.11): Evaluate the kernel using the current dictionary
+        # items and the next candidate addition to the dictionary.
+        k_tilde = kernel_function(self._sparse_dictionary, x)
+
+        # Equation (3.10): Use backsubstitution to compute the span of the
+        # current dictionary.
+        s = np.linalg.lstsq(cholesky, k_tilde, rcond=None)[0]
+        pi = np.linalg.lstsq(cholesky.conj().T, s, rcond=None)[0]
+
+        # Equation (3.9): Compute the minimum (squared) distance between
+        # the current sample and the span of the current dictionary.
+        kxx = kernel_function(x, x)[0][0]
+        delta = kxx - k_tilde.conj().T.dot(pi)
+
+        return k_tilde, s, pi, kxx, delta
 
 
 class LANDO(DMDBase):
