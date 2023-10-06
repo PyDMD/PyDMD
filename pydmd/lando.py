@@ -25,9 +25,9 @@ SUPPORTED_KERNELS = ["linear", "poly", "rbf"]
 
 class LANDOOperator(DMDOperator):
     """
-    LANDO operator class, which is used to compute and
-    keep track of the dictionary-based kernel model and
-    the diagnostics of the linear model at a fixed point.
+    LANDO operator class, which is used to compute and keep track of the
+    dictionary-based kernel model and the diagnostics of the linear model
+    at a fixed point. See LANDO documentation for parameter descriptions.
     """
 
     def __init__(self, svd_rank, dict_tol, online, permute, lstsq):
@@ -222,9 +222,8 @@ class LANDOOperator(DMDOperator):
 
                 if k_tt < np.sum(s_t**2):
                     msg = (
-                        "The Cholesky factor is ill-conditioned. "
-                        "Consider increasing the sparsity parameter "
-                        "or changing the kernel hyperparameters."
+                        "The Cholesky factor is ill-conditioned. Consider "
+                        "increasing dict_tol or changing the kernel function."
                     )
                     warnings.warn(msg)
 
@@ -285,6 +284,12 @@ class LANDOOperator(DMDOperator):
                     ]
                 )
                 self._update_online(y_t, results, cholesky_updated=True)
+                if k_tt < np.sum(s_t**2):
+                    msg = (
+                        "The Cholesky factor is ill-conditioned. Consider "
+                        "increasing dict_tol or changing the kernel function."
+                    )
+                    warnings.warn(msg)
             else:
                 self._update_online(y_t, results, cholesky_updated=False)
 
@@ -319,8 +324,9 @@ class LANDOOperator(DMDOperator):
 
         # Filter out zero eigenvalues.
         eigenvalues, eigenvectors = np.linalg.eig(self._Atilde)
-        eigenvalues = eigenvalues[np.abs(eigenvalues) > 1e-16]
-        eigenvectors = eigenvectors[:, np.abs(eigenvalues) > 1e-16]
+        nonzero_inds = np.abs(eigenvalues) > 1e-16
+        eigenvalues = eigenvalues[nonzero_inds]
+        eigenvectors = eigenvectors[:, nonzero_inds]
 
         # Sort eigenvalues, descending based on modulus.
         sorted_inds = np.argsort(-np.abs(eigenvalues))
@@ -468,7 +474,8 @@ class LANDO(DMDBase):
     :type permute: bool
     :param lstsq: method used for computing the weights of the dictionary-based
         kernel model. If True, least-squares is used to solve for the weights,
-        otherwise the pseudo-inverse is used.
+        otherwise the pseudo-inverse is used. Note that this parameter is
+        ignored if online learning is enabled.
     :type lstsq: bool
     """
 
@@ -636,19 +643,6 @@ class LANDO(DMDBase):
             )
         return (1 / self._x_rescale) * self.operator.sparse_dictionary
 
-    @property
-    def fixed_point(self):
-        """
-        Get the fixed point from the last fixed point analysis.
-
-        :return: the fixed point from the last fixed point analysis.
-        :rtype: numpy.ndarray
-        """
-        if not self.fitted:
-            msg = "You need to call fit() and analyze_fixed_point()."
-            raise ValueError(msg)
-        return self._fixed_point
-
     def f(self, X):
         """
         Prediction of the true system model F, where F(x) = y.
@@ -677,6 +671,19 @@ class LANDO(DMDBase):
         )
 
     @property
+    def fixed_point(self):
+        """
+        Get the fixed point from the last fixed point analysis.
+
+        :return: the fixed point from the last fixed point analysis.
+        :rtype: numpy.ndarray
+        """
+        if not self.fitted:
+            msg = "You need to call fit() and analyze_fixed_point()."
+            raise ValueError(msg)
+        return self._fixed_point
+
+    @property
     def bias(self):
         """
         Get the bias term from the last fixed point analysis. This is in
@@ -692,6 +699,23 @@ class LANDO(DMDBase):
             msg = "You need to call fit() and analyze_fixed_point()."
             raise ValueError(msg)
         return self._bias
+
+    @property
+    def linear(self):
+        """
+        Get the linear operator from the last fixed point analysis. This is in
+        reference to the term A in the expression
+            f(x) = c + Ax' + N(x'), x = x_bar + x'
+        for our system perturbed about x_bar. f is our model approximation,
+        c is a constant bias term, and N is a nonlinear operator.
+
+        :return: the linear operator from the last fixed point analysis.
+        :rtype: numpy.ndarray
+        """
+        if not self.fitted:
+            msg = "You need to call fit() and analyze_fixed_point()."
+            raise ValueError(msg)
+        return self.operator.A
 
     def nonlinear(self, X):
         """
