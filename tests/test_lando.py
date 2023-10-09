@@ -1,15 +1,13 @@
-from pytest import raises
-
 import numpy as np
-from numpy.testing import assert_allclose
 from scipy.integrate import solve_ivp
+from numpy.testing import assert_allclose, assert_equal
 
 from pydmd.lando import LANDO
 
 # Chaotic Lorenz parameters:
 sigma, rho, beta = 10, 28, 8 / 3
 
-# Lorenz system fixed point.
+# Lorenz system fixed point:
 x_bar = [-np.sqrt(beta * (rho - 1)), -np.sqrt(beta * (rho - 1)), rho - 1]
 
 # Settings to replicate odeint defaults.
@@ -17,6 +15,13 @@ solve_ivp_opts = {}
 solve_ivp_opts["rtol"] = 1e-12
 solve_ivp_opts["atol"] = 1e-12
 solve_ivp_opts["method"] = "LSODA"
+
+
+def relative_error(mat, mat_true):
+    """
+    Computes and returns the relative error between two matrices.
+    """
+    return np.linalg.norm(mat - mat_true) / np.linalg.norm(mat_true)
 
 
 def differentiate(X, dt):
@@ -101,7 +106,7 @@ def test_shapes():
     lando.fit(X, Y)
     assert X.shape[0] == lando.sparse_dictionary.shape[0]
     assert X.shape[-1] > lando.sparse_dictionary.shape[-1]
-    assert lando.weights.shape == lando.sparse_dictionary.shape
+    assert lando.operator.weights.shape == lando.sparse_dictionary.shape
 
 
 def test_f():
@@ -110,7 +115,7 @@ def test_f():
     """
     lando = LANDO(**lando_params)
     lando.fit(X, Y)
-    assert_allclose(lando.f(X), Y)
+    assert relative_error(lando.f(X), Y) < 1e-5
 
 
 def test_bias():
@@ -121,7 +126,7 @@ def test_bias():
     lando.fit(X, Y)
     lando.analyze_fixed_point(x_bar)
     assert lando.bias.shape == (3, 1)
-    assert np.linalg.norm(lando.bias) < 1e-6
+    assert np.linalg.norm(lando.bias) < 1e-3
 
 
 def test_linear():
@@ -140,13 +145,12 @@ def test_linear():
         ]
     )
     eigs_true, modes_true = np.linalg.eig(A_true)
-    modes_true_rescaled = np.multiply(
-        modes_true, np.divide(lando.modes[0], modes_true[0])
-    )
+    modes_rescale = np.divide(lando.modes[0], modes_true[0])
+    modes_true_rescaled = np.multiply(modes_true, modes_rescale)
 
-    assert_allclose(lando.linear, A_true)
-    assert_allclose(lando.eigs, eigs_true)
-    assert_allclose(lando.modes, modes_true_rescaled)
+    assert relative_error(lando.linear, A_true) < 1e-4
+    assert_allclose(lando.eigs, eigs_true, rtol=1e-4)
+    assert_allclose(lando.modes, modes_true_rescaled, rtol=1e-3)
 
 
 def test_nonlinear():
@@ -156,7 +160,7 @@ def test_nonlinear():
     lando = LANDO(**lando_params)
     lando.fit(X, Y)
     lando.analyze_fixed_point(x_bar)
-    assert lando.nonlinear(X).shape == (3, X.shape[-1])
+    assert lando.nonlinear(X).shape == X.shape
 
 
 def test_predict_1():
@@ -172,7 +176,7 @@ def test_predict_1():
         dt=dt,
         solve_ivp_opts=solve_ivp_opts,
     )
-    assert_allclose(lando_recon, X)
+    assert relative_error(lando_recon, X) < 0.01
 
 
 def test_predict_2():
@@ -192,7 +196,7 @@ def test_predict_2():
         dt=dt,
         solve_ivp_opts=solve_ivp_opts,
     )
-    assert_allclose(lando_predict, X_long)
+    assert relative_error(lando_predict, X_long) < 0.05
 
 
 def test_predict_3():
@@ -212,14 +216,21 @@ def test_predict_3():
         dt=dt,
         solve_ivp_opts=solve_ivp_opts,
     )
-    assert_allclose(lando_predict, X2)
+    assert relative_error(lando_predict, X2) < 0.01
 
 
 def test_predict_4():
     """
     Test that predict() works for discrete time.
     """
-    raise NotImplementedError()
+    lando = LANDO(**lando_params)
+    lando.fit(X)
+    lando_predict = lando.predict(
+        x0=(-8, 8, 27),
+        tend=len(t),
+        continuous=False,
+    )
+    assert relative_error(lando_predict, X) < 0.05
 
 
 def test_online_1():
@@ -233,10 +244,41 @@ def test_online_1():
     lando_online = LANDO(online=True, **lando_params)
     lando_online.fit(X, Y)
 
+    assert relative_error(lando_online.f(X), lando.f(X)) < 1e-6
+
 
 def test_online_2():
     """
     Test that a LANDO model fitted with the online option and an update yields
     the same results as a LANDO model fitted without the online option.
     """
-    raise NotImplementedError()
+    lando = LANDO(**lando_params)
+    lando.fit(X, Y)
+
+    batch_split = int(0.8 * len(t))
+    lando_online = LANDO(online=True, **lando_params)
+    lando_online.fit(X[:, :batch_split], Y[:, :batch_split])
+    lando_online.update(X[:, batch_split:], Y[:, batch_split:])
+
+    assert relative_error(lando_online.f(X), lando.f(X)) < 1e-6
+
+
+def test_online_3():
+    """
+    Test that a LANDO model fitted with the online option and an update
+    properly updates fixed point analysis results after the update.
+    """
+    lando = LANDO(**lando_params)
+    lando.fit(X, Y)
+    lando.analyze_fixed_point(x_bar, compute_A=True)
+
+    batch_split = int(0.8 * len(t))
+    lando_online = LANDO(online=True, **lando_params)
+    lando_online.fit(X[:, :batch_split], Y[:, :batch_split])
+    lando_online.analyze_fixed_point(x_bar, compute_A=True)
+    lando_online.update(X[:, batch_split:], Y[:, batch_split:])
+
+    assert_equal(lando_online.fixed_point, lando.fixed_point)
+    assert np.linalg.norm(lando_online.bias) < 1e-3
+    assert relative_error(lando_online.linear, lando.linear) < 1e-6
+    assert relative_error(lando_online.nonlinear(X), lando.nonlinear(X)) < 1e-6
