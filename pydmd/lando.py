@@ -952,6 +952,18 @@ class LANDO(DMDBase):
 
         return Y
 
+    @property
+    def reconstructed_data(self):
+        """
+        Get the DMD reconstruction of the data.
+
+        :return: the DMD reconstruction.
+        :rtype: numpy.ndarray
+        """
+        msg = "Consider using the predict() method for system reconstructions."
+        warnings.warn(msg)
+        return self.modes.dot(self.dynamics)
+
     def _rescale(self, X):
         """
         Helper function that rescales the given data according to
