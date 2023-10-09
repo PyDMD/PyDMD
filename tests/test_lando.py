@@ -34,10 +34,10 @@ def differentiate(X_data, time_step):
         raise ValueError("Please ensure that input data is a 2D array.")
     X_prime = np.empty(X_data.shape)
     X_prime[:, 1:-1] = (X_data[:, 2:] - X_data[:, :-2]) / (2 * time_step)
-    X_prime[:, 0] = (-3 * X_data[:, 0] + 4 * X_data[:, 1] - X[:, 2]) / (
+    X_prime[:, 0] = (-3 * X_data[:, 0] + 4 * X_data[:, 1] - X_data[:, 2]) / (
         2 * time_step
     )
-    X_prime[:, -1] = (3 * X_data[:, -1] - 4 * X_data[:, -2] + X[:, -3]) / (
+    X_prime[:, -1] = (3 * X_data[:, -1] - 4 * X_data[:, -2] + X_data[:, -3]) / (
         2 * time_step
     )
     return X_prime
