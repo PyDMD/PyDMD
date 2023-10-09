@@ -24,19 +24,22 @@ def relative_error(mat, mat_true):
     return np.linalg.norm(mat - mat_true) / np.linalg.norm(mat_true)
 
 
-def differentiate(X, dt):
+def differentiate(X_data, time_step):
     """
     Method for performing 2nd order finite difference. Assumes the input
     matrix X is 2-D, with uniformly-sampled snapshots filling each column.
-    Requires dt, which is the time step between each snapshot.
+    Requires the time step between each snapshot.
     """
-    if not isinstance(X, np.ndarray) or X.ndim != 2:
+    if not isinstance(X_data, np.ndarray) or X_data.ndim != 2:
         raise ValueError("Please ensure that input data is a 2D array.")
-    X_prime = np.empty(X.shape)
-    X_prime[:, 1:-1] = (X[:, 2:] - X[:, :-2]) / (2 * dt)
-    X_prime[:, 0] = (-3 * X[:, 0] + 4 * X[:, 1] - X[:, 2]) / (2 * dt)
-    X_prime[:, -1] = (3 * X[:, -1] - 4 * X[:, -2] + X[:, -3]) / (2 * dt)
-
+    X_prime = np.empty(X_data.shape)
+    X_prime[:, 1:-1] = (X_data[:, 2:] - X_data[:, :-2]) / (2 * time_step)
+    X_prime[:, 0] = (-3 * X_data[:, 0] + 4 * X_data[:, 1] - X[:, 2]) / (
+        2 * time_step
+    )
+    X_prime[:, -1] = (3 * X_data[:, -1] - 4 * X_data[:, -2] + X[:, -3]) / (
+        2 * time_step
+    )
     return X_prime
 
 
