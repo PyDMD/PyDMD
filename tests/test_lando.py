@@ -50,7 +50,7 @@ def generate_lorenz_data(t_eval, x0=(-8, 8, 27)):
     the matrix X for the initial condition x0.
     """
 
-    def lorenz_system(t, state):
+    def lorenz_system(state_t, state):
         x, y, z = state
         x_dot = sigma * (y - x)
         y_dot = (x * (rho - z)) - y
