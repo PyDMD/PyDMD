@@ -355,3 +355,51 @@ class mrCOSTS:
         df = da_omega.to_dataframe()
 
         return da_omega
+
+
+def cluster_hyperparameter_sweep(omega_array, n_components_range, method=None):
+    """Performs a hyperparameter search for the number of components in the kmeans clustering."""
+    score = np.zeros_like(n_components_range, float)
+
+    for nind, n in enumerate(n_components_range):
+        print("fitting n_components = {}".format(n))
+        cluster_centroids, omega_classes, omega = cluster_omega(
+            omega_array, n, method=method
+        )
+
+        print("scoring")
+        score[nind] = silhouette_score(
+            omega.reshape(-1, 1), omega_classes.reshape(-1, 1), n_jobs=-2
+        )
+
+    return score, n_components_range[np.argmax(score)]
+
+
+def cluster_omega(omega_array, n_components, method=None, kmeans_kwargs=None):
+    if method is None:
+        omega_array = np.abs(omega_array.imag.astype("float"))
+    elif method == "square_frequencies":
+        omega_array = (np.conj(omega_array) * omega_array).astype("float")
+    elif method == "period":
+        omega_array = 1 / np.abs(omega_array.imag.astype("float"))
+    elif method == "log10":
+        omega_array = np.log10(np.abs(omega_array.imag.astype("float")))
+
+    if kmeans_kwargs is None:
+        random_state = 0
+        kmeans_kwargs = {
+            "n_init": "auto",
+            "random_state": random_state,
+        }
+    kmeans = KMeans(n_clusters=n_components, **kmeans_kwargs)
+    omega_classes = kmeans.fit_predict(np.atleast_2d(omega_array).T)
+    cluster_centroids = kmeans.cluster_centers_.flatten()
+
+    # Sort the clusters by the centroid magnitude.
+    idx = np.argsort(cluster_centroids)
+    lut = np.zeros_like(idx)
+    lut[idx] = np.arange(n_components)
+    omega_classes = lut[omega_classes]
+    cluster_centroids = cluster_centroids[idx]
+
+    return cluster_centroids, omega_classes, omega_array
