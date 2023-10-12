@@ -14,8 +14,8 @@ class mrCOSTS:
     :type window_length_array: int
     :param step_size_array: Number of time steps to slide each CSM-DMD window.
     :type step_size_array: int
-    :param n_components: Number of independent frequency bands for this window length.
-    :type n_components: int
+    :param n_components_array: Number of frequency bands to use for clustering this window length.
+    :type n_components_array: list of int
     :param svd_rank_array: The rank of the BOPDMD fit.
     :type svd_rank_array: int
     :param global_svd: Flag indicating whether to find the proj_basis and initial
@@ -52,8 +52,6 @@ class mrCOSTS:
     :param max_rank: Maximum allowed `svd_rank`. Overrides the optimal rank truncation if
         `svd_rank=0`.
     :type max_rank: int
-    :param n_components: Number of frequency bands to use for clustering.
-    :type n_components: int
     :param force_even_eigs: Flag specifying if the `svd_rank` should be forced to be even.
     :type force_even_eigs: bool
     :param reset_alpha_init: Flag specifying if the initial eigenvalue guess should be reset
@@ -98,6 +96,8 @@ class mrCOSTS:
         self._max_rank = max_rank
         self._cluster_sweep = cluster_sweep
         self._transform_method = transform_method
+
+        # ToDo: Check for cluster_sweep and n_components_array
 
         # Initialize variables that are defined in fitting.
         self._n_decompositions = None
@@ -221,12 +221,6 @@ class mrCOSTS:
         return self._time_array
 
     @property
-    def n_components(self):
-        if not hasattr(self, "_n_components"):
-            raise ValueError("You need to call `cluster_omega()` first.")
-        return self._n_components
-
-    @property
     def cluster_centroids(self):
         if not hasattr(self, "_cluster_centroids"):
             raise ValueError("You need to call `cluster_omega()` first.")
@@ -289,10 +283,13 @@ class mrCOSTS:
             mrd.fit(x_iter, np.atleast_2d(time), window, step, verbose=verbose)
 
             # Cluster the frequency bands
-            if self._cluster_sweep:
+            if self._cluster_sweep or np.isnan(
+                self._n_components_array[n_decomp]
+            ):
                 n_components = mrd.cluster_hyperparameter_sweep(
                     transform_method=transform_method
                 )
+                self._n_components_array[n_decomp] = n_components
             else:
                 n_components = self._n_components_array[n_decomp]
 
