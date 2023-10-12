@@ -5,6 +5,7 @@ from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import xarray as xr
 from pydmd.costs import COSTS
+import os
 
 
 class mrCOSTS:
@@ -349,13 +350,49 @@ class mrCOSTS:
             "window_length",
             np.arange(len(da_omega.window_length)),
         )
-        df = da_omega.to_dataframe()
 
         return da_omega
 
+    def from_xarray(self, file_list):
+        """Create an mrcosts object from saved files."""
+        mrd_list = []
+        for c in os.listdir(file_list):
+            mrd_list.append(xr.load_dataset(c, engine="h5netcdf"))
 
-def cluster_hyperparameter_sweep(omega_array, n_components_range, method=None):
+        # Sort by window length
+        mrd_list = sorted(mrd_list, key=lambda mrd: mrd.window_length)
+
+        # Convert to an array of costs objects.
+        mrd_list = [mrd.from_xarray() for mrd in mrd_list]
+
+        window_length_array = [mrd.window_length for mrd in mrd_list]
+        step_size_array = [mrd.step_size for mrd in mrd_list]
+        svd_rank_array = [mrd.svd_rank for mrd in mrd_list]
+        n_components_array = [mrd._n_components for mrd in mrd_list]
+        # ToDo: Add flags and kwargs to xarray data
+        global_svd_array = [mrd.global_svd for mrd in mrd_list]
+        pydmd_kwargs = [mrd.pydmd_kwargs for mrd in mrd_list]
+        costs_recon_kwargs = [mrd.costs_recon_kwargs for mrd in mrd_list]
+
+        # Initialize the mrcosts object.
+        mrCOSTS(
+            window_length_array=window_length_array,
+            step_size_array=step_size_array,
+            svd_rank_array=svd_rank_array,
+            global_svd_array=global_svd_array,
+            pydmd_kwargs=pydmd_kwargs,
+            costs_recon_kwargs=costs_recon_kwargs,
+            n_components_array=n_components_array,
+        )
+
+
+def cluster_hyperparameter_sweep(da_omega, n_components_range, method=None):
     """Performs a hyperparameter search for the number of components in the kmeans clustering."""
+    omega_array = da_omega.values
+    nandex = np.isnan(omega_array)
+    index = np.nonzero(~np.isnan(omega_array))
+    omega_array = omega_array[~np.isnan(omega_array)]
+
     score = np.zeros_like(n_components_range, float)
 
     for nind, n in enumerate(n_components_range):
