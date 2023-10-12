@@ -98,6 +98,10 @@ Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/t
 <em>The system evolution reconstructed with dynamic mode decomposition</em>
 </p>
 
+<p align="center">
+    <img src="readme/pydmd_guide.svg" width="1000" />
+</p>
+
 ## Awards
 
 First prize winner in **DSWeb 2019 Contest** _Tutorials on Dynamical Systems Software_ (Junior Faculty Category). You can read the winner tutorial (PDF format) in the [tutorials](tutorials/tutorial_dsweb.pdf) folder.
