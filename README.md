@@ -56,7 +56,7 @@ With PyDMD, users can easily decompose complex, high-dimensional datasets into a
 
 PyDMD offers a seamless integration with the scientific Python ecosystem, leveraging popular libraries such as NumPy and SciPy for efficient numerical computations and data manipulation. It also offers a variety of visualization tools, including mode reconstruction, energy spectrum analysis, and time evolution plotting. These capabilities enable users to gain insights into the dominant modes of the system, identify significant features, and understand the temporal evolution of the dynamics.
 
-PyDMD promotes ease of use and customization, providing a well-documented API with intuitive function names and clear parameter descriptions. The package is actively maintained and updated, ensuring compatibility with the latest Python versions and incorporating user feedback to improve functionality and performance. We provide many tutorials showing the characteristics of the software. See the [**Examples**](#examples-and-tutorials) section below and the [**Tutorials**](tutorials/README.md) to have an idea of the potential of this package.
+PyDMD promotes ease of use and customization, providing a well-documented API with intuitive function names and clear parameter descriptions. The package is actively maintained and updated, ensuring compatibility with the latest Python versions and incorporating user feedback to improve functionality and performance. We provide many tutorials showing the characteristics of the software. See the [**Examples**](#examples-and-tutorials) section below and the [**Tutorials**](tutorials/README.md) to have an idea of the potential of this package. Also see the diagram below for a summary of all available tools and functionalities. Currently in-progress contributions are represented by semi-transparent boxes.
 
 <p align="center">
     <img src="readme/pydmd_capabilities.svg" width="1000" />
@@ -97,6 +97,8 @@ Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/t
 <img src="readme/dmd-example.gif" alt></br>
 <em>The system evolution reconstructed with dynamic mode decomposition</em>
 </p>
+
+Here we also provide a flow chart that outlines how one might choose an appropriate DMD optimization or methodological variant based on their specific problem type or data set. Note that the color-coding of this flowchart follows that of the PyDMD Capabilities diagram.
 
 <p align="center">
     <img src="readme/pydmd_guide.svg" width="1000" />
