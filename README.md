@@ -122,7 +122,9 @@ dmd.fit(X, t)
 # Display a summary of the DMD results.
 plot_summary(dmd)
 ```
-Note that modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to module documentation, plotting tool documentation, and to our module-specific [tutorials](tutorials/README.md) for more information. For users who are unsure of which DMD method is best for them, we provide the following flow chart, which outlines how one might choose an appropriate DMD variant based on specific problem types or data sets.
+Note that modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to module documentation, plotting tool documentation, and to our module-specific [tutorials](tutorials/README.md) for more information.
+
+For users who are unsure of which DMD method is best for them, we provide the following flow chart, which outlines how one might choose an appropriate DMD variant based on specific problem types or data sets.
 
 <p align="center">
     <img src="readme/pydmd_guide.svg" width="1000" />
