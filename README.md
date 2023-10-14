@@ -98,6 +98,47 @@ Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/t
 <em>The system evolution reconstructed with dynamic mode decomposition</em>
 </p>
 
+## Quickstart Tutorial
+As a simple example, we examine fluid flow past a cylinder vorticity data with Reynolds number $Re = 100$, available [here](dmdbook.com/DATA.zip).
+```python3
+# Import vorticity data and frame dimensions.
+import numpy as np
+import scipy.io as sio
+
+mat = sio.loadmat("CYLINDER_ALL.mat")
+X = mat["VORTALL"]         # (89351, 151) numpy array of snapshot data
+t = np.arange(X.shape[-1]) # (151,) numpy array of times of data collection
+nx = mat["nx"][0][0]
+ny = mat["ny"][0][0]
+```
+Users can perform DMD by initializing a PyDMD module that implements their DMD method of choice. Users may also pass a variety of parameters to their DMD models for added customization. Here, we show how a user might build an optimized DMD model with bagging.
+```python3
+from pydmd import BOPDMD
+
+# Build and fit a bagging, optimized DMD model.
+dmd = BOPDMD(
+    svd_rank=15,                                  # rank of the DMD fit
+    num_trials=100,                               # number of bagging trials to perform
+    trial_size=0.5,                               # use half the total number of snapshots each trial
+    eig_constraints={"imag", "conjugate_pairs"},  # optional: constrain the eigenvalue structure
+    varpro_opts_dict={"tol":0.2, "verbose":True}, # optional: set variable projection parameters
+)
+dmd.fit(X, t)
+```
+
+```python3
+from pydmd.plotter import plot_summary
+
+# Display a summary of the DMD results.
+plot_summary(
+    dmd,
+    index_modes=[0, 1, 3],
+    snapshots_shape=(nx, ny),
+    order="F",
+    figsize=(12, 6),
+)
+```
+
 Here we also provide a flow chart that outlines how one might choose an appropriate DMD optimization or methodological variant based on their specific problem type or data set. Note that the color-coding of this flowchart follows that of the PyDMD Capabilities diagram.
 
 <p align="center">
