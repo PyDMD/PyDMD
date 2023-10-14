@@ -117,9 +117,9 @@ from pydmd import BOPDMD
 
 # Build and fit a bagging, optimized DMD model.
 dmd = BOPDMD(
-    svd_rank=15,                                  # rank of the DMD fit
-    num_trials=100,                               # number of bagging trials to perform
-    trial_size=0.5,                               # use half the total number of snapshots each trial
+    svd_rank=15,                                  # set the rank of the DMD fit
+    num_trials=100,                               # set the number of bagging trials to perform
+    trial_size=0.5,                               # use 50% of the total number of snapshots each trial
     eig_constraints={"imag", "conjugate_pairs"},  # optional: constrain the eigenvalue structure
     varpro_opts_dict={"tol":0.2, "verbose":True}, # optional: set variable projection parameters
 )
