@@ -164,9 +164,7 @@ class HOEDMDOperator(DMDOperator):
 
             else:
                 raise ValueError(
-                    "Invalid value for sorted_eigs: {}".format(
-                        self._sorted_eigs
-                    )
+                    f"Invalid value for sorted_eigs: {self._sorted_eig}."
                 )
 
             # each column is an eigenvector, therefore we take the
@@ -264,7 +262,6 @@ class HOEDMD(DMDBase):
         self._alg_type = alg_type
         self._Atilde = HOEDMDOperator(
             svd_rank=svd_rank,
-            alg_type=alg_type,
             exact=exact,
             rescale_mode=rescale_mode,
             forward_backward=forward_backward,
@@ -342,9 +339,9 @@ class HOEDMD(DMDBase):
         self._snapshots_holder = Snapshots(X)
         n_samples = self.snapshots.shape[-1]
         if n_samples < self._d:
-            msg = """The number of snapshots provided is not enough for d={}.
-Expected at least d."""
-            raise ValueError(msg.format(self._d))
+            msg = f"The number of snapshots provided is not enough for d = {self._d}.
+Expected at least d."
+            raise ValueError(msg)
         self._ho_snapshots = Snapshots(
             self._stacked_matrix(self.snapshots)
         ).snapshots
