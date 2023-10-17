@@ -16,6 +16,7 @@ __all__ = [
     "bopdmd",
     "pidmd",
     "edmd",
+    "hoedmd",
 ]
 
 
