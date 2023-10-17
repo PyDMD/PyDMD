@@ -24,10 +24,6 @@ class HOEDMDOperator(DMDOperator):
         to reach the 'energy' specified by `svd_rank`; if -1, the method does
         not compute truncation.
     :type svd_rank: int or float
-    :paran alg_type: Algorithm type in HOEDMD; If `alg_type='stls'`, Atilde
-    are computed by svd. If `alg_type='nonsvd'`, Atilde are computed by cholesky
-    decomposition. Default is 'stls'.
-    :type alg_type: {'stls', 'nonsvd'}
     :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by
         magnitude if `sorted_eigs='abs'`, by real part (and then by imaginary
         part to break ties) if `sorted_eigs='real'`. Default: False.
@@ -37,7 +33,6 @@ class HOEDMDOperator(DMDOperator):
     def __init__(
         self,
         svd_rank,
-        alg_type,
         exact,
         rescale_mode,
         forward_backward,
@@ -53,6 +48,13 @@ class HOEDMDOperator(DMDOperator):
             tikhonov_regularization=tikhonov_regularization,
         )
         self._Atilde = None
+        self._eigenvalues = None
+        self._eigenvectors_r = None
+        self._eigenvectors_l = None
+
+        self._modes = None
+        self._Lambda = None
+        self._Vhat = None
 
     def compute_operator(self, Psi, d, alg_type):
         """
