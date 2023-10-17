@@ -339,8 +339,7 @@ class HOEDMD(DMDBase):
         self._snapshots_holder = Snapshots(X)
         n_samples = self.snapshots.shape[-1]
         if n_samples < self._d:
-            msg = f"The number of snapshots provided is not enough for d = {self._d}.
-Expected at least d."
+            msg = f"The number of snapshots provided is not enough for d = {self._d}. Expected at least d."
             raise ValueError(msg)
         self._ho_snapshots = Snapshots(
             self._stacked_matrix(self.snapshots)
