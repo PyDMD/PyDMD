@@ -10,12 +10,13 @@ Nature Communications, 8, 2017.
 import numpy as np
 from scipy import signal
 
-from .hankeldmd import HankelDMD
+from .dmd import DMD
+from .dmdbase import DMDBase
 from .snapshots import Snapshots
-from .utils import compute_svd
+from .utils import compute_svd, pseudo_hankel_matrix
 
 
-class HAVOK(HankelDMD):
+class HAVOK(DMDBase):
     """
     Hankel alternative view of Koopman (HAVOK) analysis
     """
@@ -41,7 +42,6 @@ class HAVOK(HankelDMD):
             forward_backward=forward_backward,
             sorted_eigs=sorted_eigs,
             tikhonov_regularization=tikhonov_regularization,
-            d=d,
         )
 
         self._svd_rank = svd_rank
@@ -50,6 +50,19 @@ class HAVOK(HankelDMD):
         self._A = None
         self._B = None
         self._r = None
+
+        self._d = d
+
+        self._sub_dmd = DMD(
+            svd_rank=svd_rank,
+            tlsq_rank=tlsq_rank,
+            exact=exact,
+            opt=opt,
+            rescale_mode=rescale_mode,
+            forward_backward=forward_backward,
+            sorted_eigs=sorted_eigs,
+            tikhonov_regularization=tikhonov_regularization,
+        )
 
     @property
     def linear_embeddings(self):
@@ -119,9 +132,6 @@ class HAVOK(HankelDMD):
         """
         return np.concatenate((X[0, :], X[1:, -1]))
 
-    def reconstructions_of_timeindex(self, timeindex=None):
-        raise NotImplementedError("This function is not compatible with HAVOK.")
-
     @property
     def reconstructed_data(self):
         # Build a continuous-time system of the following form, where
@@ -182,7 +192,7 @@ Expected at least d."""
             raise ValueError(msg.format(self._d))
 
         # Compute hankel matrix for the input data
-        hankel_matrix = self._pseudo_hankel_matrix(self.snapshots)
+        hankel_matrix = pseudo_hankel_matrix(self.snapshots, self._d)
 
         # Take SVD of the hankel matrix
         # Save the resulting U, s, and V for future reconstructions
@@ -223,3 +233,44 @@ providing a positive integer argument for svd_rank."""
         )
 
         return self
+
+    @property
+    def modes(self):
+        return self._sub_dmd.modes
+
+    @property
+    def eigs(self):
+        return self._sub_dmd.eigs
+
+    @property
+    def amplitudes(self):
+        return self._sub_dmd.amplitudes
+
+    @property
+    def operator(self):
+        return self._sub_dmd.operator
+
+    @property
+    def svd_rank(self):
+        return self._sub_dmd.svd_rank
+
+    @property
+    def ho_snapshots(self):
+        """
+        Get the time-delay data matrix.
+
+        :return: the matrix that contains the time-delayed data.
+        :rtype: numpy.ndarray
+        """
+        return self._sub_dmd.snapshots
+
+    @property
+    def modes_activation_bitmask(self):
+        return self._sub_dmd.modes_activation_bitmask
+
+    @modes_activation_bitmask.setter
+    def modes_activation_bitmask(self, value):
+        self._sub_dmd.modes_activation_bitmask = value
+
+    def __getitem__(self, key):
+        raise ValueError("This operation is not allowed for HAVOK")

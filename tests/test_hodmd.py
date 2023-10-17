@@ -64,7 +64,7 @@ def test_d():
     dmd = HODMD(svd_rank=-1, d=50, opt=True, exact=True, svd_rank_extra=-1)
     dmd.fit(single_data)
     assert np.allclose(dmd.reconstructed_data, single_data)
-    assert dmd.d == 50
+    assert dmd._d == 50
 
 
 def test_Atilde_values():
@@ -128,14 +128,6 @@ def test_dynamics_opt_2():
     dmd = HODMD(svd_rank=5, svd_rank_extra=4, opt=True)
     dmd.fit(X=sample_data)
     assert dmd.dynamics.shape == (4, sample_data.shape[1])
-
-
-def test_reconstructed_data():
-    dmd = HODMD(d=2)
-    dmd.fit(X=sample_data)
-    dmd.reconstructions_of_timeindex(2)
-    dmd_data = dmd.reconstructed_data
-    np.testing.assert_allclose(dmd_data, sample_data)
 
 
 def test_original_time():
@@ -249,48 +241,11 @@ def test_nonan_nomask():
     assert not np.nan in rec
 
 
-def test_extract_versions_nonan():
-    dmd = HODMD(d=3)
-    dmd.fit(X=sample_data)
-    for timeindex in range(sample_data.shape[1]):
-        assert not np.nan in dmd.reconstructions_of_timeindex(timeindex)
-
-
-def test_rec_method_first():
-    dmd = HODMD(d=3, reconstruction_method="first")
-    dmd.fit(X=sample_data)
-
-    rec = dmd.reconstructed_data
-    allrec = dmd.reconstructions_of_timeindex()
-    for i in range(rec.shape[1]):
-        assert (rec[:, i] == allrec[i, min(i, dmd.d - 1)]).all()
-
-
-def test_rec_method_mean():
-    dmd = HODMD(d=3, reconstruction_method="mean")
-    dmd.fit(X=sample_data)
-    assert (
-        dmd.reconstructed_data.T[2]
-        == np.mean(dmd.reconstructions_of_timeindex(2), axis=0).T
-    ).all()
-
-
-def test_rec_method_weighted():
-    dmd = HODMD(d=2, svd_rank_extra=-1, reconstruction_method=[10, 20])
-    dmd.fit(X=sample_data)
-    assert (
-        dmd.reconstructed_data.T[4]
-        == np.average(
-            dmd.reconstructions_of_timeindex(4), axis=0, weights=[10, 20]
-        ).T
-    ).all()
-
-
 def test_scalar_func():
     x = np.linspace(0, 10, 64)[None]
     arr = np.cos(x) * np.sin(np.cos(x)) + np.cos(x * 0.2)
     # we check that this does not fail
-    dmd = HODMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
+    HODMD(svd_rank=1, exact=True, opt=True, d=3).fit(arr)
 
 
 def test_get_bitmask_default():
@@ -394,44 +349,6 @@ def test_reconstructed_data_with_bitmask():
     assert True
 
 
-def test_getitem_modes():
-    dmd = HODMD(svd_rank=-1, d=5)
-    dmd.fit(X=sample_data)
-    old_n_modes = dmd.modes.shape[1]
-
-    assert dmd[[0, -1]].modes.shape[1] == 2
-    np.testing.assert_almost_equal(dmd[[0, -1]].modes, dmd.modes[:, [0, -1]])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-    assert dmd[1::2].modes.shape[1] == old_n_modes // 2
-    np.testing.assert_almost_equal(dmd[1::2].modes, dmd.modes[:, 1::2])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-    assert dmd[[1, 3]].modes.shape[1] == 2
-    np.testing.assert_almost_equal(dmd[[1, 3]].modes, dmd.modes[:, [1, 3]])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-    assert dmd[2].modes.shape[1] == 1
-    np.testing.assert_almost_equal(np.squeeze(dmd[2].modes), dmd.modes[:, 2])
-
-    assert dmd.modes.shape[1] == old_n_modes
-
-
-def test_getitem_raises():
-    dmd = HODMD(svd_rank=-1, d=5)
-    dmd.fit(X=sample_data)
-
-    with raises(ValueError):
-        dmd[[0, 1, 1, 0, 1]]
-    with raises(ValueError):
-        dmd[[True, True, False, True]]
-    with raises(ValueError):
-        dmd[1.0]
-
-
 def test_correct_amplitudes():
     dmd = HODMD(svd_rank=-1, d=5)
     dmd.fit(X=sample_data)
@@ -448,3 +365,10 @@ def test_raises_not_enough_snapshots():
     with raises(ValueError, match="Received only one time snapshot."):
         dmd.fit(np.ones((20, 5)))
     dmd.fit(np.ones((20, 6)))
+
+
+def test_hodmd_1d():
+    dmd = HODMD(svd_rank=-1, d=5)
+    data = np.pi * np.cos(np.linspace(0, 2, 100))[None]
+    dmd.fit(data)
+    np.testing.assert_allclose(data, dmd.reconstructed_data)

@@ -1,11 +1,8 @@
 """
 Base module for the DMD: `fit` method must be implemented in inherited classes
 """
-from __future__ import division
-
 import pickle
 from copy import copy, deepcopy
-from os.path import splitext
 
 import numpy as np
 
@@ -194,6 +191,7 @@ class DMDBase:
 
         self._b = None  # amplitudes
         self._snapshots_holder = None
+        self._snapshots_holder_y = None
 
         self._modes_activation_bitmask_proxy = None
 
@@ -344,6 +342,18 @@ class DMDBase:
         """
         if self._snapshots_holder:
             return self._snapshots_holder.snapshots
+        return None
+
+    @property
+    def snapshots_y(self):
+        """
+        Get the input left-hand side data (space flattened) if given.
+
+        :return: matrix that contains the flattened left-hand side snapshots.
+        :rtype: numpy.ndarray
+        """
+        if self._snapshots_holder_y:
+            return self._snapshots_holder_y.snapshots
         return None
 
     @property
@@ -623,6 +633,7 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
         self._modes_activation_bitmask_proxy = None
         self._b = None
         self._snapshots_holder = None
+        self._snapshots_holder_y = None
 
     def save(self, fname):
         """
@@ -675,13 +686,18 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
                 )
             )
         else:
-            _, s, V = compute_svd(self.snapshots[:, :-1], self.modes.shape[-1])
+            if self._snapshots_holder_y:
+                X = self.snapshots
+            else:
+                X = self.snapshots[:, :-1]
+
+            _, s, V = compute_svd(X, self.modes.shape[-1])
 
             q = np.conj(
                 np.diag(
                     np.linalg.multi_dot(
                         [
-                            vander[:, :-1],
+                            vander[:, : X.shape[1]],
                             V,
                             np.diag(s).conj(),
                             self.operator.eigenvectors,
@@ -726,6 +742,17 @@ _set_initial_time_dictionary() has not been called, did you call fit()?"""
             )[0]
 
         return a
+
+    def _compare_data_shapes(self, y_snapshots):
+        """
+        Method that ensures that the data inputs X and Y are the same shape
+        if provided separately. Throws an error if the shapes do not agree.
+        """
+        if self.snapshots.shape != y_snapshots.shape:
+            msg = "X {} and Y {} input data must be the same shape."
+            raise ValueError(
+                msg.format(self.snapshots.shape, y_snapshots.shape)
+            )
 
 
 class DMDTimeDict(dict):

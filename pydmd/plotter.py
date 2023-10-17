@@ -1,16 +1,18 @@
 """
 Module for DMD plotting.
 """
+import warnings
 from os.path import splitext
 
-import warnings
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 from pydmd import MrDMD
-from .hankeldmd import HankelDMD
+
 from .bopdmd import BOPDMD
+from .hankeldmd import HankelDMD
 
 mpl.rcParams["figure.max_open_warning"] = 0
 
@@ -211,6 +213,7 @@ def plot_eigs_mrdmd(
     title="",
     level=None,
     node=None,
+    filename=None,
 ):
     """
     Plot the eigenvalues.
@@ -223,6 +226,7 @@ def plot_eigs_mrdmd(
     :param str title: title of the plot.
     :param int level: plot only the eigenvalues of specific level.
     :param int node: plot only the eigenvalues of specific node.
+    :param str filename: if specified, the plot is saved at `filename`.
     """
     if not isinstance(dmd, MrDMD):
         raise ValueError(f"Expected MrDMD, found {type(dmd)}")
@@ -301,14 +305,17 @@ def plot_eigs_mrdmd(
     if level:
         labels = [f"Eigenvalues - level {level}"]
     else:
-        labels = [f"Eigenvalues - level {i}" for i in range(dmd.max_level)]
+        labels = [f"Eigenvalues - level {i}" for i in range(len(points))]
 
     if show_unit_circle:
         points += [unit_circle]
         labels += ["Unit circle"]
 
     ax.add_artist(plt.legend(points, labels, loc="best"))
-    plt.show()
+    if filename:
+        plt.savefig(filename)
+    else:
+        plt.show()
 
 
 def plot_modes_2D(

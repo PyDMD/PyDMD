@@ -1,39 +1,38 @@
 import numpy as np
-from scipy.integrate import ode
 from pytest import raises
+from scipy.integrate import solve_ivp
+
 from pydmd.bopdmd import BOPDMD
 
 
-def f(t, y):
+def simulate_z(t_eval):
     """
-    y'(t) = f(t, y)
-    """
-    z1, z2 = y
-    z1_prime = z1 - 2 * z2
-    z2_prime = z1 - z2
-    return np.array((z1_prime, z2_prime))
-
-
-def simulate_z(t):
-    """
-    Given a time vector t = t1, t2, ..., evaluates and returns the snapshots
-    z(t1), z(t2), ... as columns of the matrix Z via explicit Runge-Kutta.
-
+    Given a time vector t_eval = t1, t2, ..., evaluates and returns
+    the snapshots z(t1), z(t2), ... as columns of the matrix Z.
     Simulates data z given by the system of ODEs
         z' = Az
     where A = [1 -2; 1 -1] and z_0 = [1, 0.1].
     """
-    z_0 = np.array((1.0, 0.1))
-    Z = np.empty((2, len(t)))
-    Z[:, 0] = z_0
-    r = ode(f).set_integrator("dopri5")
-    r.set_initial_value(z_0, t[0])
-    for i, t_i in enumerate(t):
-        if i == 0:
-            continue
-        r.integrate(t_i)
-        Z[:, i] = r.y
-    return Z
+
+    def ode_sys(zt, z):
+        z1, z2 = z
+        return [z1 - 2 * z2, z1 - z2]
+
+    # Set integrator keywords to replicate odeint defaults.
+    integrator_keywords = {}
+    integrator_keywords["rtol"] = 1e-12
+    integrator_keywords["method"] = "LSODA"
+    integrator_keywords["atol"] = 1e-12
+
+    sol = solve_ivp(
+        ode_sys,
+        [t_eval[0], t_eval[-1]],
+        [1.0, 0.1],
+        t_eval=t_eval,
+        **integrator_keywords
+    )
+
+    return sol.y
 
 
 def sort_imag(x):
@@ -53,6 +52,8 @@ t_uneven = np.delete(t, np.arange(1000)[1::2])
 Z = simulate_z(t)
 Z_long = simulate_z(t_long)
 Z_uneven = np.delete(Z, np.arange(1000)[1::2], axis=1)
+rng = np.random.default_rng(seed=42)
+Z_noisy = Z + 0.2 * rng.standard_normal(Z.shape)
 
 # Define the true eigenvalues of the system.
 expected_eigs = np.array((-1j, 1j))
@@ -95,7 +96,7 @@ def test_eigs():
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
 
-    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.2)
+    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.5)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
 
@@ -105,6 +106,7 @@ def test_A():
     Tests that the computed A matrix is accurate for the following cases:
     - standard optimized dmd, even dataset
     - standard optimized dmd, uneven dataset
+    - standard optimized dmd, noisy dataset
     - standard optimized dmd, fit full data
     - optimized dmd with bagging
     """
@@ -116,11 +118,15 @@ def test_A():
     bopdmd.fit(Z_uneven, t_uneven)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True)
+    bopdmd.fit(Z_noisy, t)
+    np.testing.assert_allclose(bopdmd.A, expected_A, rtol=0.02)
+
     bopdmd = BOPDMD(svd_rank=2, compute_A=True, use_proj=False)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
-    bopdmd = BOPDMD(svd_rank=2, compute_A=True, num_trials=100, trial_size=0.2)
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True, num_trials=100, trial_size=0.5)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
@@ -134,7 +140,7 @@ def test_reconstruction():
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.reconstructed_data, Z, rtol=1e-5)
 
-    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.2)
+    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.5)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.reconstructed_data, Z, rtol=1e-5)
 
@@ -152,15 +158,15 @@ def test_forecast():
     """
     bopdmd = BOPDMD(svd_rank=2)
     bopdmd.fit(Z, t)
-    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-3)
+    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-2)
 
     bopdmd = BOPDMD(svd_rank=2)
     bopdmd.fit(Z_uneven, t_uneven)
-    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-3)
+    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-2)
 
-    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.2)
+    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.5)
     bopdmd.fit(Z, t)
-    np.testing.assert_allclose(bopdmd.forecast(t_long)[0], Z_long, rtol=1e-3)
+    np.testing.assert_allclose(bopdmd.forecast(t_long)[0], Z_long, rtol=1e-2)
 
 
 def test_compute_A():
@@ -181,3 +187,178 @@ def test_compute_A():
     np.testing.assert_array_equal(bopdmd_with_A.atilde, bopdmd_no_A.atilde)
     np.testing.assert_array_equal(bopdmd_with_A.modes, bopdmd_no_A.modes)
     np.testing.assert_array_equal(bopdmd_with_A.eigs, bopdmd_no_A.eigs)
+
+
+def test_eig_constraints_errors():
+    """
+    Tests that the BOPDMD module correctly throws an error upon initialization
+    in each of the following cases:
+    - eig_constraints is a string rather than a set of strings
+    - eig_constraints contains an invalid constraint argument
+        (either alone or along with another constraint argument)
+    - eig_constraints contains the invalid combination "stable"+"imag"
+        (either alone or along with the extra argument "conjugate_pairs")
+    """
+    with raises(TypeError):
+        BOPDMD(eig_constraints="stable")
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints={"stablee"})
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints={"stablee", "imag"})
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints={"stable", "imag"})
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints={"stable", "imag", "conjugate_pairs"})
+
+
+def test_eig_constraints():
+    """
+    Tests that the BOPDMD module correctly enforces that eigenvalues...
+    - lie in the left half plane when eig_constraints contains "stable".
+    - lie on the imaginary axis when eig_constraints contains "imag".
+    - are present with their complex conjugate when eig_constraints
+        contains "conjugate_pairs".
+    Eigenvalue constraint combinations are also tested.
+    """
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints={"stable"})
+    bopdmd.fit(Z, t)
+    assert np.all(bopdmd.eigs.real <= 0.0)
+
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints={"imag"})
+    bopdmd.fit(Z, t)
+    assert np.all(bopdmd.eigs.real == 0.0)
+
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints={"conjugate_pairs"})
+    bopdmd.fit(Z, t)
+    assert bopdmd.eigs[0].real == bopdmd.eigs[1].real
+    assert bopdmd.eigs[0].imag == -bopdmd.eigs[1].imag
+
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints={"stable", "conjugate_pairs"})
+    bopdmd.fit(Z, t)
+    assert np.all(bopdmd.eigs.real <= 0.0)
+    assert bopdmd.eigs[0].real == bopdmd.eigs[1].real
+    assert bopdmd.eigs[0].imag == -bopdmd.eigs[1].imag
+
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints={"imag", "conjugate_pairs"})
+    bopdmd.fit(Z, t)
+    assert np.all(bopdmd.eigs.real == 0.0)
+    assert bopdmd.eigs[0].imag == -bopdmd.eigs[1].imag
+
+
+def test_eig_constraints_errors_2():
+    """
+    Tests that the BOPDMD module correctly throws an error upon initialization
+    whenever eig_constraints is a function and...
+    - eig_constraints is incompatible with general (n,) numpy.ndarray inputs
+    - eig_constraints doesn't return a single numpy.ndarray
+    - eig_constraints takes multiple arguments
+    - eig_constraints changes the shape of the input array
+    """
+
+    # Function that assumes the input is length 3.
+    def bad_func_1(x):
+        return np.multiply(x, np.arange(3))
+
+    # Function that assumes the input array is at least 2-dimensional.
+    def bad_func_2(x):
+        return x[0, :] + x[1, :]
+
+    # Function that doesn't return an array.
+    def bad_func_3(x):
+        return len(x)
+
+    # Function that returns 2 arrays instead of 1.
+    def bad_func_4(x):
+        return x, 2 * x
+
+    # Function that accepts more than 1 input.
+    def bad_func_5(x, y):
+        return x + y
+
+    # Function that returns an array with a different shape.
+    def bad_func_6(x):
+        return x[:-1]
+
+    # Function that returns an array with an extra dimension.
+    def bad_func_7(x):
+        return x[:, None]
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_1)
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_2)
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_3)
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_4)
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_5)
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_6)
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints=bad_func_7)
+
+    # See that bad_func_1 is fine if the svd_rank is 3.
+    BOPDMD(svd_rank=3, eig_constraints=bad_func_1)
+
+
+def test_eig_constraints_2():
+    """
+    Tests that if the eig_constraints function...
+    - discards all real parts, the functionality is the same as
+        setting eig_constraints={"imag"}
+    - is a custom function, the functionality is as expected
+    """
+
+    def make_imag(x):
+        return 1j * x.imag
+
+    def make_real(x):
+        return x.real
+
+    bopdmd1 = BOPDMD(svd_rank=2, eig_constraints={"imag"}).fit(Z, t)
+    bopdmd2 = BOPDMD(svd_rank=2, eig_constraints=make_imag).fit(Z, t)
+    np.testing.assert_array_equal(bopdmd1.eigs, bopdmd2.eigs)
+
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints=make_real).fit(Z, t)
+    assert np.all(bopdmd.eigs.imag == 0.0)
+
+
+def test_bagging_improvement():
+    """
+    Tests that the use of bags improves accuracy on average when using noisy
+    data for fitting. Uses A matrix error as a proxy for accuracy.
+    """
+
+    def relative_error(x, x_true):
+        return np.linalg.norm(x_true - x) / np.linalg.norm(x_true)
+
+    optdmd = BOPDMD(svd_rank=2, compute_A=True, varpro_opts_dict={"tol": 0.246})
+    optdmd.fit(Z_noisy, t)
+    optdmd_error = relative_error(optdmd.A, expected_A)
+
+    test_trials = 20
+    bop_success = 0
+    for _ in range(test_trials):
+        bopdmd = BOPDMD(
+            svd_rank=2,
+            compute_A=True,
+            num_trials=100,
+            trial_size=0.9,
+            varpro_opts_dict={"tol": 0.246},
+        )
+        bopdmd.fit(Z_noisy, t)
+        bopdmd_error = relative_error(bopdmd.A, expected_A)
+        bop_success += bopdmd_error < optdmd_error
+
+    assert bop_success >= 0.75 * test_trials

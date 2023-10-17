@@ -1,111 +1,89 @@
 <p align="center">
-  <a href="http://mathlab.github.io/PyDMD/" target="_blank" >
+  <a href="http://pydmd.github.io/PyDMD/" target="_blank" >
     <img alt="Python Dynamic Mode Decomposition" src="readme/logo_PyDMD.png" width="200" />
   </a>
 </p>
 <p align="center">
+    <a href="http://pydmd.github.io/PyDMD" target="_blank">
+        <img alt="Docs" src="https://img.shields.io/badge/PyDMD-docs-blue?style=for-the-badge"/>
+    </a>
     <a href="https://doi.org/10.21105/joss.00530" target="_blank">
-        <img alt="JOSS DOI" src="http://joss.theoj.org/papers/10.21105/joss.00530/status.svg">
+        <img alt="JOSS DOI" src="https://img.shields.io/badge/JOSS-10.21105/joss.00530-blue?style=for-the-badge">
     </a>
     <a href="https://github.com/PyDMD/PyDMD/blob/master/LICENSE" target="_blank">
-        <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square">
+        <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge">
     </a>
-    <a href="https://badge.fury.io/py/pydmd"  target="_blank">
-        <img alt="PyPI version" src="https://badge.fury.io/py/pydmd.svg">
+    <a href="https://pypi.org/project/pydmd/"  target="_blank">
+        <img alt="PyPI version" src="https://img.shields.io/pypi/v/pydmd?style=for-the-badge">
     </a>
+    <br>
     <a href="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml" target="_blank">
-        <img alt="CI Status" src="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml/badge.svg">
+        <img alt="CI Status" src="https://img.shields.io/github/actions/workflow/status/PyDMD/PyDMD/deploy_after_push.yml?style=for-the-badge">
     </a>
-    <a href="https://www.codacy.com/gh/mathLab/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Coverage">
-      <img src="https://app.codacy.com/project/badge/Coverage/c36adbea2e4a44eb8c0e4505b75e8245"/>
+    <a href="https://www.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=PyDMD/PyDMD&amp;utm_campaign=Badge_Coverage" target="_blank">
+      <img src="https://img.shields.io/codacy/coverage/3d8b278a835e402c86cac9625bb4912f/master?style=for-the-badge"/>
     </a>
-    <a href="https://www.codacy.com/gh/mathLab/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mathLab/PyDMD&amp;utm_campaign=Badge_Grade">
-      <img src="https://app.codacy.com/project/badge/Grade/c36adbea2e4a44eb8c0e4505b75e8245"/>
+    <a href="https://app.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade" target="_blank">
+      <img alt="Codacy Badge" src="https://img.shields.io/codacy/grade/3d8b278a835e402c86cac9625bb4912f?style=for-the-badge"/>
     </a>
+    <a href="https://github.com/ambv/black" target="_blank">
+      <img alt="black code style" src="https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge"/>
+    </a>
+    <br>
+    <a href="#developers-and-contributors">
+      <img alt="All Contributors" src="https://img.shields.io/badge/all_contributors-25-orange.svg?style=for-the-badge"/>
+    </a>
+    <a href="#stargazers">
+      <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/PyDMD/PyDMD?style=for-the-badge">
+    </a>
+
 </p>
-
-
-**PyDMD**: Python Dynamic Mode Decomposition
 
 ## Table of contents
 * [Description](#description)
 * [Dependencies and installation](#dependencies-and-installation)
-	* [Installing via PIP](#installing-via-pip)
-	* [Installing from source](#installing-from-source)
-* [Documentation](#documentation)
-* [Testing](#testing)
 * [Examples and Tutorials](#examples-and-tutorials)
+* [Using PyDMD](#using-pydmd)
 * [Awards](#awards)
-* [How to cite](#how-to-cite)
-	* [References](#references)
-	* [Recent works with PyDMD](#recent-works-with-pydmd)
+* [References](#references)
 * [Developers and contributors](#developers-and-contributors)
 * [Funding](#funding)
-* [License](#license)
 
 ## Description
-**PyDMD** is a Python package that uses **Dynamic Mode Decomposition** for a data-driven model simplification based on spatiotemporal coherent structures.
 
-Dynamic Mode Decomposition (DMD) is a model reduction algorithm developed by Schmid (see "Dynamic mode decomposition of numerical and experimental data"). Since then has emerged as a powerful tool for analyzing the dynamics of nonlinear systems. DMD relies only on the high-fidelity measurements, like experimental data and numerical simulations, so it is an equation-free algorithm. Its popularity is also due to the fact that it does not make any assumptions about the underlying system. See Kutz ("Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems") for a comprehensive overview of the algorithm and its connections to the Koopman-operator analysis, initiated in Koopman ("Hamiltonian systems and transformation in Hilbert space"), along with examples in computational fluid dynamics.
+**PyDMD** is a Python package designed for **Dynamic Mode Decomposition (DMD)**, a data-driven method used for analyzing and extracting spatiotemporal coherent structures from time-varying datasets. It provides a comprehensive and user-friendly interface for performing DMD analysis, making it a valuable tool for researchers, engineers, and data scientists working in various fields.
 
-In the last years many variants arose, such as multiresolution DMD, compressed DMD, forward backward DMD, higher order DMD, and physics-informed DMD among others, in order to deal with noisy data, big dataset, or spurius data for example. We implemented in Python the majority of the DMD extensions currently present in the literature with a user friendly interface. We also provide many tutorials that show all the characteristics of the software. See the [**Examples**](#examples) section below and the [**Tutorials**](tutorials/README.md) to have an idea of the potential of this package.
+With PyDMD, users can easily decompose complex, high-dimensional datasets into a set of coherent spatial and temporal modes, capturing the underlying dynamics and extracting important features. The package implements both standard DMD algorithms and advanced variations, enabling users to choose the most suitable method for their specific needs. These extensions allow to deal with noisy data, big dataset, control variables, or to impose physical structures.
+
+PyDMD offers a seamless integration with the scientific Python ecosystem, leveraging popular libraries such as NumPy and SciPy for efficient numerical computations and data manipulation. It also offers a variety of visualization tools, including mode reconstruction, energy spectrum analysis, and time evolution plotting. These capabilities enable users to gain insights into the dominant modes of the system, identify significant features, and understand the temporal evolution of the dynamics.
+
+PyDMD promotes ease of use and customization, providing a well-documented API with intuitive function names and clear parameter descriptions. The package is actively maintained and updated, ensuring compatibility with the latest Python versions and incorporating user feedback to improve functionality and performance. We provide many tutorials showing the characteristics of the software. See the [**Examples**](#examples-and-tutorials) section below and the [**Tutorials**](tutorials/README.md) to have an idea of the potential of this package. Also see the diagram below for a summary of all available tools and functionalities. Currently in-progress contributions are represented by semi-transparent boxes.
 
 <p align="center">
-    <img src="readme/pydmd_capabilities.png" width="800" />
+    <img src="readme/pydmd_capabilities.svg" width="1000" />
 </p>
 
-
-
 ## Dependencies and installation
-**PyDMD** requires requires `numpy`, `scipy`, `matplotlib`, `future`, `sphinx` (for the documentation) and `pytest` (for local test). The code is tested for Python 3, while compatibility of Python 2 is not guaranteed anymore. It can be installed using `pip` or directly from the source code.
 
 ### Installing via PIP
-Mac and Linux users can install pre-built binary packages using pip.
-To install the package just type:
+PyDMD is available on [PyPI](https://pypi.org/project/pydmd), therefore you can install the latest released version with:
 ```bash
 > pip install pydmd
 ```
-To uninstall the package:
-```bash
-> pip uninstall pydmd
-```
 
 ### Installing from source
-The official distribution is on GitHub, and you can clone the repository using
+To install the bleeding edge version, clone this repository with:
 ```bash
 > git clone https://github.com/PyDMD/PyDMD
 ```
 
-To install the package just type:
+and then install the package in [development mode](https://setuptools.pypa.io/en/latest/userguide/development_mode.html):
 ```bash
 > pip install -e .
 ```
 
-To uninstall the package type:
-```bash
-> pip uninstall pydmd
-```
-
-## Documentation
-**PyDMD** uses [Sphinx](http://www.sphinx-doc.org/en/stable/) for code documentation. You can view the documentation online [here](http://pydmd.github.io/PyDMD/). To build the html version of the docs locally simply:
-
-```bash
-> cd docs
-> make html
-```
-
-The generated html can be found in `docs/build/html`. Open up the `index.html` you find there to browse.
-
-
-## Testing
-
-We are using GitHub actions for Continuous Integration. You can check the current status [here](https://github.com/PyDMD/PyDMD/actions).
-
-To run tests locally (`pytest` is required):
-
-```bash
-> pytest
-```
+### Dependencies
+The core features of **PyDMD** depend on `numpy` and `scipy`. In order to use the plotting functionalities you will also need `matplotlib`.
 
 ## Examples and Tutorials
 You can find useful tutorials on how to use the package in the [tutorials](tutorials/README.md) folder.
@@ -121,61 +99,76 @@ Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/t
 <em>The system evolution reconstructed with dynamic mode decomposition</em>
 </p>
 
+## Using PyDMD
+To perform DMD, simply begin by initializing a PyDMD module that implements your DMD method of choice. Here, we demonstrate how a user might build a customized BOP-DMD model. Models may then be fitted by calling the `fit()` method and passing in the necessary data. This step performs the DMD algorithm, after which users may use PyDMD plotting tools in order to visualize their results.
+```python3
+from pydmd import BOPDMD
+from pydmd.plotter import plot_summary
+
+# Build a bagging, optimized DMD (BOP-DMD) model.
+dmd = BOPDMD(
+    svd_rank=15,  # rank of the DMD fit
+    num_trials=100,  # number of bagging trials to perform
+    trial_size=0.5,  # use 50% of the total number of snapshots per trial
+    eig_constraints={"imag", "conjugate_pairs"},  # constrain the eigenvalue structure
+    varpro_opts_dict={"tol":0.2, "verbose":True},  # set variable projection parameters
+)
+
+# Fit the DMD model.
+# X = (n, m) numpy array of time-varying snapshot data
+# t = (m,) numpy array of times of data collection
+dmd.fit(X, t)
+
+# Display a summary of the DMD results.
+plot_summary(dmd)
+```
+Note that modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to module documentation, plotting tool documentation, and to our module-specific [tutorials](tutorials/README.md) for more information.
+
+For users who are unsure of which DMD method is best for them, we provide the following flow chart, which outlines how one might choose an appropriate DMD variant based on specific problem types or data sets.
+
+<p align="center">
+    <img src="readme/pydmd_guide.svg" width="1000" />
+</p>
+
 ## Awards
 
-* First prize winner in **DSWeb 2019 Contest** _Tutorials on Dynamical Systems Software_ (Junior Faculty Category). You can read the winner tutorial (PDF format) in the [tutorials](tutorials/tutorial_dsweb.pdf) folder.
+First prize winner in **DSWeb 2019 Contest** _Tutorials on Dynamical Systems Software_ (Junior Faculty Category). You can read the winner tutorial (PDF format) in the [tutorials](tutorials/tutorial_dsweb.pdf) folder.
 
-## How to cite
-If you use this package in your publications please cite the package as follows:
-
-Demo et al., (2018). PyDMD: Python Dynamic Mode Decomposition. Journal of Open Source Software, 3(22), 530, https://doi.org/10.21105/joss.00530
-
-Or if you use LaTeX:
-```tex
-@article{demo18pydmd,
-  Author = {Demo, Nicola and Tezzele, Marco and Rozza, Gianluigi},
-  Title = {{PyDMD: Python Dynamic Mode Decomposition}},
-  Journal = {The Journal of Open Source Software},
-  Volume = {3},
-  Number = {22},
-  Pages = {530},
-  Year = {2018},
-  Doi = {https://doi.org/10.21105/joss.00530}
-}
-```
-
-### References
+## References
 To implement the various versions of the DMD algorithm we follow these works:
 
-* Kutz, Brunton, Brunton, Proctor. *Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems*. SIAM Other Titles in Applied Mathematics, 2016. [[DOI](https://doi.org/10.1137/1.9781611974508)] [[bibitem](readme/Kutz2016_1.bib)].
-* Gavish, Donoho. *The optimal hard threshold for singular values is 4/sqrt(3)*. IEEE Transactions on Information Theory, 2014. [[DOI](https://doi.org/10.1109/TIT.2014.2323359)] [[bibitem](readme/Gavish2014.bib)].
-* Matsumoto, Indinger. *On-the-fly algorithm for Dynamic Mode Decomposition using Incremental Singular Value Decomposition and Total Least Squares*. 2017. [[arXiv](https://arxiv.org/abs/1703.11004)] [[bibitem](readme/Matsumoto2017.bib)].
-* Hemati, Rowley, Deem, Cattafesta. *De-biasing the dynamic mode decomposition for applied Koopman spectral analysis of noisy datasets*. Theoretical and Computational Fluid Dynamics, 2017. [[DOI](https://doi.org/10.1007/s00162-017-0432-2)] [[bibitem](readme/Hemati2017.bib)].
-* Dawson, Hemati, Williams, Rowley. *Characterizing and correcting for the effect of sensor noise in the dynamic mode decomposition*. Experiments in Fluids, 2016. [[DOI](https://doi.org/10.1007/s00348-016-2127-7)] [[bibitem](readme/Dawson2016.bib)].
-* Kutz, Fu, Brunton. *Multiresolution Dynamic Mode Decomposition*. SIAM Journal on Applied Dynamical Systems, 2016. [[DOI](https://doi.org/10.1137/15M1023543)] [[bibitem](readme/Kutz2016_2.bib)].
-* Erichson, Brunton, Kutz. *Compressed dynamic mode decomposition for background modeling*. Journal of Real-Time Image Processing, 2016. [[DOI](https://doi.org/10.1007/s11554-016-0655-2)] [[bibitem](readme/Erichson2016.bib)].
-* Le Clainche, Vega. *Higher Order Dynamic Mode Decomposition*. Journal on Applied Dynamical Systems, 2017. [[DOI](https://doi.org/10.1137/15M1054924)] [[bibitem](readme/LeClainche2017.bib)].
-* Andreuzzi, Demo, Rozza. *A dynamic mode decomposition extension for the forecasting of parametric dynamical systems*. 2021.  [[arXiv](https://arxiv.org/pdf/2110.09155)] [[bibitem](readme/Andreuzzi2021.bib)].
-* Jovanović, Schmid, Nichols *Sparsity-promoting dynamic mode decomposition*. 2014.  [[arXiv](https://arxiv.org/abs/1309.4165)] [[bibitem](readme/Jovanovic2014.bib)].
+### General DMD References
+* Kutz, Brunton, Brunton, Proctor. *Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems*. SIAM Other Titles in Applied Mathematics, 2016. [[DOI](https://doi.org/10.1137/1.9781611974508)] [[bibitem](readme/refs/Kutz2016_1.bib)].
+* Brunton, Budišić, Kaiser, Kutz. *Modern Koopman Theory for Dynamical Systems*. SIAM Review, 2022. [[DOI](https://doi.org/10.1137/21M1401243)] [[bibitem](readme/refs/Brunton2022.bib)].
 
-### Recent works with PyDMD
-Here there is a list of the scientific works involving **PyDMD** you can consult and/or cite. If you want to add one, please open a PR.
+### DMD Variants: Noise-robust Methods
+* **Forward-backward DMD:** Dawson, Hemati, Williams, Rowley. *Characterizing and correcting for the effect of sensor noise in the dynamic mode decomposition*. Experiments in Fluids, 2016. [[DOI](https://doi.org/10.1007/s00348-016-2127-7)] [[bibitem](readme/refs/Dawson2016.bib)].
+* **Total least-squares DMD:** Hemati, Rowley, Deem, Cattafesta. *De-biasing the dynamic mode decomposition for applied Koopman spectral analysis of noisy datasets*. Theoretical and Computational Fluid Dynamics, 2017. [[DOI](https://doi.org/10.1007/s00162-017-0432-2)] [[bibitem](readme/refs/Hemati2017.bib)].
+* **Optimal closed-form DMD:** Héas, Herzet. *Low-rank dynamic mode decomposition: An exact and tractable solution*. Journal of Nonlinear Science, 2022. [[DOI](https://doi.org/10.1007/s00332-021-09770-w)] [[bibitem](readme/refs/Heas2022.bib)].
+* **Subspace DMD:** Takeishi, Kawahara, Yairi. *Subspace dynamic mode decomposition for stochastic Koopman analysis*. Physical Review E, 2017. [[DOI](https://doi.org/10.1103/PhysRevE.96.033310)] [[bibitem](readme/refs/Takeishi2017.bib)].
+* **Physics-informed DMD:** Baddoo, Herrmann, McKeon, Kutz, Brunton. *Physics-informed dynamic mode decomposition*. Proceedings of the Royal Society A, 2023. [[DOI](https://doi.org/10.1098/rspa.2022.0576)] [[bibitem](readme/refs/Baddoo2023.bib)].
+* **Optimized DMD:** Askham, Kutz. *Variable projection methods for an optimized dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2018. [[DOI](https://doi.org/10.1137/M1124176)] [[bibitem](readme/refs/Askham2018.bib)].
+* **Bagging, optimized DMD:** Sashidhar, Kutz. *Bagging, optimized dynamic mode decomposition for robust, stable forecasting with spatial and temporal uncertainty quantification*. Proceedings of the Royal Society A, 2022. [[DOI](https://doi.org/10.1098/rsta.2021.0199)] [[bibitem](readme/refs/Sashidhar2022.bib)].
 
-* Tezzele, Demo, Rozza. *A non-intrusive approach for proper orthogonal decomposition modal coefficients reconstruction through active subspaces*. Comptes Rendus de l'Academie des Sciences DataBEST 2019 Special Issue. [[arXiv](https://arxiv.org/abs/1907.12777)] .
+### DMD Variants: Additional Methods and Extensions
+* **DMD with Control:** Proctor, Brunton, Kutz. *Dynamic mode decomposition with control*. SIAM Journal on Applied Dynamical Systems, 2016. [[DOI](https://doi.org/10.1137/15M1013857)] [[bibitem](readme/refs/Proctor2016.bib)].
+* **Multiresolution DMD:** Kutz, Fu, Brunton. *Multiresolution dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2016. [[DOI](https://doi.org/10.1137/15M1023543)] [[bibitem](readme/refs/Kutz2016_2.bib)].
+* **Sparsity-promoting DMD:** Jovanović, Schmid, Nichols *Sparsity-promoting dynamic mode decomposition*. Physics of Fluids, 2014. [[DOI](https://doi.org/10.1063/1.4863670)] [[bibitem](readme/refs/Jovanovic2014.bib)].
+* **Compressed DMD:** Erichson, Brunton, Kutz. *Compressed dynamic mode decomposition for background modeling*. Journal of Real-Time Image Processing, 2016. [[DOI](https://doi.org/10.1007/s11554-016-0655-2)] [[bibitem](readme/refs/Erichson2016.bib)].
+* **Randomized DMD:** Erichson, Mathelin, Kutz, Brunton. *Randomized dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2019. [[DOI](https://doi.org/10.1137/18M1215013)] [[bibitem](readme/refs/Erichson2019.bib)].
+* **Higher Order DMD:** Le Clainche, Vega. *Higher order dynamic mode decomposition*. Journal on Applied Dynamical Systems, 2017. [[DOI](https://doi.org/10.1137/15M1054924)] [[bibitem](readme/refs/LeClainche2017.bib)].
+* **HAVOK:** Brunton, Brunton, Proctor, Kaiser, Kutz. *Chaos as an intermittently forced linear system*. Nature Communications, 2017. [[DOI](https://doi.org/10.1038/s41467-017-00030-8)] [[bibitem](readme/refs/Brunton2017.bib)].
+* **Parametric DMD:** Andreuzzi, Demo, Rozza. *A dynamic mode decomposition extension for the forecasting of parametric dynamical systems*. SIAM Journal on Applied Dynamical Systems, 2023.  [[DOI](https://doi.org/10.1137/22M1481658)] [[bibitem](readme/refs/Andreuzzi2021.bib)].
+* **Extended DMD:** Williams, Rowley, Kevrekidis. *A kernel-based method for data-driven koopman spectral analysis*. Journal of Computational Dynamics, 2015. [[DOI](https://doi.org/10.3934/jcd.2015005)] [[bibitem](readme/refs/Williams2015.bib)].
+* **LANDO:** Baddoo, Herrmann, McKeon, Brunton. *Kernel learning for robust dynamic mode decomposition: linear and nonlinear disambiguation optimization*. Proceedings of the Royal Society A, 2022. [[DOI](https://doi.org/10.1098/rspa.2021.0830)] [[bibitem](readme/refs/Baddoo2022.bib)].
 
-* Tezzele, Demo, Rozza. *Shape Optimization through Proper Orthogonal Decomposition with Interpolation and Dynamic Mode Decomposition Enhanced by Active Subspaces*. In The Proceedings of VIII International Conference on Computational Methods in Marine Engineering, pages 122–133, 2019. [[DOI](https://congress.cimne.com/marine2019/frontal/Doc/EbookMarine2019.pdf)] [[arXiv](https://arxiv.org/abs/1905.05483)].
+### Implementation Tools and Preprocessing
+* Gavish, Donoho. *The optimal hard threshold for singular values is 4/sqrt(3)*. IEEE Transactions on Information Theory, 2014. [[DOI](https://doi.org/10.1109/TIT.2014.2323359)] [[bibitem](readme/refs/Gavish2014.bib)].
+* Matsumoto, Indinger. *On-the-fly algorithm for dynamic mode decomposition using incremental singular value decomposition and total least squares*. 2017. [[arXiv](https://arxiv.org/abs/1703.11004)] [[bibitem](readme/refs/Matsumoto2017.bib)].
+* Hirsh, Harris, Kutz, Brunton. *Centering data improves the dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2020. [[DOI](https://doi.org/10.1137/19M1289881)] [[bibitem](readme/refs/Hirsh2020.bib)]
 
-* Tezzele, Demo, Mola, Rozza. *An integrated data-driven computational pipeline with model order reduction for industrial and applied mathematics*. Submitted, 2018. [[arXiv](https://arxiv.org/abs/1810.12364)].
-
-* Demo, Tezzele, Gustin, Lavini, Rozza. *Shape optimization by means of proper orthogonal decomposition and dynamic mode decomposition*. In Technology and Science for the Ships of the Future: Proceedings of NAV 2018: 19th International Conference on Ship & Maritime Research, 2018. [[DOI](https://doi.org/10.3233/978-1-61499-870-9-212)] [[arXiv](https://arxiv.org/abs/1803.07368)].
-
-* Tezzele, Demo, Gadalla, Mola, Rozza. *Model Order Reduction by means of Active Subspaces and Dynamic Mode Decomposition for Parametric Hull Shape Design Hydrodynamics*. In Technology and Science for the Ships of the Future: Proceedings of NAV 2018: 19th International Conference on Ship & Maritime Research, 2018. [[DOI](https://doi.org/10.3233/978-1-61499-870-9-569)] [[arXiv](https://arxiv.org/abs/1803.07377)].
-
-* Demo, Tezzele, Mola, Rozza. *An efficient shape parametrisation by free-form deformation enhanced by active subspace for hull hydrodynamic ship design problems in open source environment*. 2018. [[arXiv](https://arxiv.org/abs/1801.06369)].
-
-* Tezzele, Demo, Stabile, Mola, Rozza. *Enhancing CFD predictions in shape design problems by model and parameter space reduction*. 2020. [[arXiv](https://arxiv.org/abs/2001.05237)].
-
-* Tezzele. *Data-driven parameter and model order reduction for industrial optimisation problems with applications in naval engineering*, PhD Thesis. 2021. [[Iris](http://hdl.handle.net/20.500.11767/124569)].
+### Recent works using PyDMD
+You can find a list of the scientific works using **PyDMD** [here](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=5544023489671534143).
 
 ## Developers and contributors
 The main developers are 
@@ -187,13 +180,17 @@ We warmly thank all the contributors that have supported PyDMD!
 
 Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIBUTING.md) and the [Tutorials for Developers](tutorials#tutorials-for-developers) before starting to play!
 
-
 <a href="https://github.com/PyDMD/PyDMD/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=PyDMD/PyDMD" />
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
 
+### Testing
+We use `pytest` to run our unit tests. You can run the whole test suite by using the following command in the base directory of the repository:
+```bash
+pytest
+```
 
 ## Funding
 A significant part of PyDMD has been written either as a by-product for other projects people were funded for, or by people on university-funded positions. There are probably many of such projects that have led to some development of PyDMD. We are very grateful for this support!
@@ -205,7 +202,3 @@ Beyond this, PyDMD has also been supported by some dedicated projects that have 
 <p align="center">
     <img src="readme/logos_funding.png" width="800" />
 </p>
-
-## License
-
-See the [LICENSE](LICENSE.rst) file for license rights and limitations (MIT).

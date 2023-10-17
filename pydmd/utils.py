@@ -1,7 +1,9 @@
 """Utilities module."""
 
 import warnings
+
 import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
 
 
 def compute_rank(X, svd_rank=0):
@@ -107,3 +109,37 @@ def compute_svd(X, svd_rank=0):
     s = s[:rank]
 
     return U, s, V
+
+
+def pseudo_hankel_matrix(X: np.ndarray, d: int):
+    """
+    Arrange the snapshot in the matrix `X` into the (pseudo) Hankel
+    matrix. The attribute `d` controls the number of snapshot from `X` in
+    each snapshot of the Hankel matrix.
+
+    :Example:
+
+        >>> a = np.array([[1, 2, 3, 4, 5]])
+        >>> _hankel_pre_processing(a, d=2)
+        array([[1, 2, 3, 4],
+               [2, 3, 4, 5]])
+        >>> _hankel_pre_processing(a, d=4)
+        array([[1, 2],
+               [2, 3],
+               [3, 4],
+               [4, 5]])
+
+        >>> a = np.array([1,2,3,4,5,6]).reshape(2,3)
+        array([[1, 2, 3],
+               [4, 5, 6]])
+        >>> _hankel_pre_processing(a, d=2)
+        array([[1, 2],
+               [4, 5],
+               [2, 3],
+               [5, 6]])
+    """
+    return (
+        sliding_window_view(X.T, (d, X.shape[0]))[:, 0]
+        .reshape(X.shape[1] - d + 1, -1)
+        .T
+    )

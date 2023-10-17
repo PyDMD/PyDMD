@@ -1,5 +1,5 @@
 Physics-informed DMD
-====================
+==========================
 
 .. currentmodule:: pydmd.pidmd
 
@@ -12,3 +12,9 @@ Physics-informed DMD
 	:show-inheritance:
 	:noindex:
 
+.. autoclass:: PiDMDOperator
+	:members:
+	:private-members:
+	:undoc-members:
+	:show-inheritance:
+	:noindex:
