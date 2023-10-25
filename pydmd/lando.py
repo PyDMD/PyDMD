@@ -20,8 +20,6 @@ from .dmdoperator import DMDOperator
 from .snapshots import Snapshots
 from .utils import compute_svd, compute_tlsq
 
-SUPPORTED_KERNELS = ["linear", "poly", "rbf"]
-
 
 class LANDOOperator(DMDOperator):
     """
@@ -178,8 +176,8 @@ class LANDOOperator(DMDOperator):
 
         # Initialize the Cholesky factorization routine.
         ind_0 = parsing_inds[0]
-        x_0 = np.expand_dims(X[:, ind_0], axis=-1)
-        y_0 = np.expand_dims(Y[:, ind_0], axis=-1)
+        x_0 = X[:, ind_0][..., None]
+        y_0 = Y[:, ind_0][..., None]
         C = np.sqrt(kernel_function(x_0, x_0))
         self._sparse_dictionary = np.copy(x_0)
 
@@ -191,8 +189,8 @@ class LANDOOperator(DMDOperator):
 
         for ind_t in parsing_inds[1:]:
             # Grab the next corresponding pair of snapshots.
-            x_t = np.expand_dims(X[:, ind_t], axis=-1)
-            y_t = np.expand_dims(Y[:, ind_t], axis=-1)
+            x_t = X[:, ind_t][..., None]
+            y_t = Y[:, ind_t][..., None]
 
             # Get the results of this Cholesky factorization iteration.
             results = self._cholesky_step(x_t, kernel_function, C)
@@ -260,8 +258,8 @@ class LANDOOperator(DMDOperator):
 
         for ind_t in parsing_inds:
             # Grab the next corresponding pair of snapshots.
-            x_t = np.expand_dims(X[:, ind_t], axis=-1)
-            y_t = np.expand_dims(Y[:, ind_t], axis=-1)
+            x_t = X[:, ind_t][..., None]
+            y_t = Y[:, ind_t][..., None]
 
             # Get the results of this Cholesky factorization iteration.
             results = self._cholesky_step(x_t, kernel_function, self._cholesky)
@@ -494,6 +492,9 @@ class LANDO(DMDBase):
         permute=True,
         lstsq=True,
     ):
+        # Store the supported kernel metrics.
+        self._supported_kernels = ("linear", "poly", "rbf")
+
         # Check the validity of the provided kernel functions.
         if kernel_params is None:
             kernel_params = {}
@@ -583,17 +584,17 @@ class LANDO(DMDBase):
             return X.T
 
         # Kernel metric must be polynomial or RBF.
-        if "gamma" in self._kernel_params.keys():
+        if "gamma" in self._kernel_params:
             gamma = self._kernel_params["gamma"]
         else:  # set the pairwise_kernels gamma default
             gamma = 1.0 / X.shape[0]
 
         if self._kernel_metric == "poly":
-            if "coef0" in self._kernel_params.keys():
+            if "coef0" in self._kernel_params:
                 coef0 = self._kernel_params["coef0"]
             else:
                 coef0 = 1
-            if "degree" in self._kernel_params.keys():
+            if "degree" in self._kernel_params:
                 degree = self._kernel_params["degree"]
             else:
                 degree = 3
@@ -602,12 +603,23 @@ class LANDO(DMDBase):
             ).dot(X.T)
 
         # Kernel metric is RBF.
-        centered_X = X - np.expand_dims(y, axis=-1)
+        centered_X = X - y[..., None]
         return np.diag(
             -2
             * gamma
             * np.exp(-gamma * np.linalg.norm(centered_X, 2, axis=0) ** 2)
         ).dot(centered_X.T)
+
+    @property
+    def supported_kernels(self):
+        """
+        Get the `sklearn.metrics.pairwise.pairwise_kernels()` metrics
+        that are currently compatible with the `LANDO` module.
+
+        :return: currently available kernel metrics.
+        :rtype: tuple(str,str,str)
+        """
+        return self._supported_kernels
 
     @property
     def partially_fitted(self):
@@ -639,9 +651,9 @@ class LANDO(DMDBase):
         if isinstance(self._x_rescale, np.ndarray):
             return np.divide(
                 self.operator.sparse_dictionary,
-                np.expand_dims(self._x_rescale, axis=-1),
+                self._x_rescale[..., None],
             )
-        return (1 / self._x_rescale) * self.operator.sparse_dictionary
+        return self.operator.sparse_dictionary / self._x_rescale
 
     def f(self, X):
         """
@@ -753,7 +765,7 @@ class LANDO(DMDBase):
         )
 
         # Define the f(x) term.
-        fX = self.f(X + np.expand_dims(self._fixed_point, axis=-1))
+        fX = self.f(X + self._fixed_point[..., None])
 
         return (
             fX
@@ -833,7 +845,7 @@ class LANDO(DMDBase):
 
         self._compute_A = compute_A
         self._fixed_point = fixed_point
-        self._bias = self.f(np.expand_dims(fixed_point, axis=-1))
+        self._bias = self.f(fixed_point[..., None])
         self.operator.compute_linear_operator(
             self._rescale(fixed_point.flatten()),
             self._compute_A,
@@ -880,7 +892,7 @@ class LANDO(DMDBase):
 
         # If a fixed point analysis was already done, redo it.
         if self.fitted:
-            self._bias = self.f(np.expand_dims(self._fixed_point, axis=-1))
+            self._bias = self.f(self._fixed_point[..., None])
             self.operator.compute_linear_operator(
                 self._rescale(self._fixed_point.flatten()),
                 self._compute_A,
@@ -927,7 +939,7 @@ class LANDO(DMDBase):
         if continuous:
 
             def ode_sys(xt, x):
-                return self.f(np.expand_dims(x, axis=-1)).flatten()
+                return self.f(x[..., None]).flatten()
 
             if solve_ivp_opts is None:
                 solve_ivp_opts = {}
@@ -948,7 +960,7 @@ class LANDO(DMDBase):
         Y = np.empty((len(x0), tend))
         Y[:, 0] = x0
         for i in range(tend - 1):
-            Y[:, i + 1] = self.f(np.expand_dims(Y[:, i], axis=-1)).flatten()
+            Y[:, i + 1] = self.f(Y[:, i][..., None]).flatten()
 
         return Y
 
@@ -972,7 +984,7 @@ class LANDO(DMDBase):
         if isinstance(self._x_rescale, np.ndarray):
             if np.ndim(X) == 1:
                 return np.multiply(X, self._x_rescale)
-            return np.multiply(X, np.expand_dims(self._x_rescale, axis=-1))
+            return np.multiply(X, self._x_rescale[..., None])
         return X * self._x_rescale
 
     def _check_x_rescale(self):
@@ -992,19 +1004,18 @@ class LANDO(DMDBase):
                 raise ValueError(msg.format(self.snapshots_shape))
             self._x_rescale = self._x_rescale.flatten()
 
-    @staticmethod
-    def _test_kernel_inputs(kernel_metric, kernel_params):
+    def _test_kernel_inputs(self, kernel_metric, kernel_params):
         """
         Helper function that checks the validity of the provided kernel metric
         and parameters. Additionally uses a dummy array of data in order to
         call `sklearn.metrics.pairwise_kernels` using the given parameters.
         """
-        if kernel_metric not in SUPPORTED_KERNELS:
+        if kernel_metric not in self._supported_kernels:
             msg = (
                 "Invalid kernel metric '{}' provided. "
                 "Please use one of the following metrics: {}"
             )
-            raise ValueError(msg.format(kernel_metric, SUPPORTED_KERNELS))
+            raise ValueError(msg.format(kernel_metric, self._supported_kernels))
 
         if not isinstance(kernel_params, dict):
             raise TypeError("kernel_params must be a dict.")
