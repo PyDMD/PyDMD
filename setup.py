@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 meta = {}
 with open("pydmd/meta.py") as fp:
@@ -13,7 +13,7 @@ AUTHOR = meta["__author__"]
 VERSION = meta["__version__"]
 KEYWORDS = "dynamic-mode-decomposition dmd"
 
-REQUIRED = ["numpy", "scipy", "matplotlib", "scikit-learn"]
+REQUIRED = ["numpy<2", "scipy", "matplotlib", "scikit-learn"]
 
 EXTRAS = {
     "docs": ["Sphinx>=1.4", "sphinx_rtd_theme"],
@@ -74,7 +74,7 @@ setup(
     keywords=KEYWORDS,
     url=URL,
     license="MIT",
-    packages=[NAME],
+    packages=find_packages(),
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,
