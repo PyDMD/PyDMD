@@ -218,16 +218,13 @@ class LANDOOperator(DMDOperator):
                 )
 
                 # Update the Cholesky factor.
-                if updating:
+                if self._online:
                     self._cholesky = self._update_cholesky(
                         self._cholesky, s_t, k_tt
                     )
+                    self._update_online(y_t, results, cholesky_updated=True)
                 else:
                     C = self._update_cholesky(C, s_t, k_tt)
-
-                # Perform the online learning updates, if applicable.
-                if self._online:
-                    self._update_online(y_t, results, cholesky_updated=True)
 
                 if k_tt < np.sum(s_t**2):
                     msg = (
