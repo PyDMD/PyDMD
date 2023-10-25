@@ -64,8 +64,6 @@ class COSTS:
 
     def __init__(
         self,
-        window_length=None,
-        step_size=None,
         svd_rank=None,
         global_svd=True,
         initialize_artificially=False,
@@ -79,6 +77,8 @@ class COSTS:
         max_rank=None,
         n_components=None,
     ):
+        self._step_size = None
+        self._window_length = None
         self._n_components = n_components
         self._svd_rank = svd_rank
         self._global_svd = global_svd
@@ -138,6 +138,14 @@ class COSTS:
         :rtype: int or float
         """
         return self._window_length
+
+    @property
+    def step_size(self):
+        """
+        :return: the length of the windows used for this decomposition level.
+        :rtype: int or float
+        """
+        return self._step_size
 
     @property
     def n_slides(self):
@@ -958,8 +966,14 @@ class COSTS:
                 "n_time_steps": self._n_time_steps,
                 "step_size": self._step_size,
                 "non_integer_n_slide": self._non_integer_n_slide,
+                "global_svd": self._global_svd,
             },
         )
+
+        for kw, kw_val in self._pydmd_kwargs.items():
+            ds.attrs["pydmd_kwargs__{}".format(kw)] = self._xarray_sanitize(
+                kw_val
+            )
 
         return ds
 
@@ -970,7 +984,7 @@ class COSTS:
         """
 
         self._omega_array = ds.omega.values
-        self._omega_classes = ds.omega_classes
+        self._omega_classes = ds.omega_classes.values
         self._amplitudes_array = ds.amplitudes.values
         self._modes_array = ds.modes.values
         self._window_means_array = ds.window_means.values
@@ -984,5 +998,25 @@ class COSTS:
         self._non_integer_n_slide = ds.attrs["non_integer_n_slide"]
         self._step_size = ds.attrs["step_size"]
         self._window_length = ds.attrs["window_length"]
+        self._global_svd = ds.attrs["global_svd"]
+
+        self._pydmd_kwargs = {}
+        for attr in ds.attrs:
+            if "pydmd_kwargs" in attr:
+                self._pydmd_kwargs[attr] = self._xarray_unsanitize(
+                    ds.attrs[attr]
+                )
 
         return self
+
+    @staticmethod
+    def _xarray_sanitize(value):
+        if value == None:
+            value = "None"
+        return value
+
+    @staticmethod
+    def _xarray_unsanitize(value):
+        if value == "None":
+            value = None
+        return value

@@ -12,22 +12,22 @@ class mrCOSTS:
     """Multi-resolution Coherent Spatio-Temporal Scale Separation (mrCOSTS) with DMD.
 
     :param window_length_array: Length of the analysis window in number of time steps.
-    :type window_length_array: int
+    :type window_length_array: list of int
     :param step_size_array: Number of time steps to slide each CSM-DMD window.
-    :type step_size_array: int
+    :type step_size_array: list of int
     :param n_components_array: Number of frequency bands to use for clustering this window length.
     :type n_components_array: list of int
     :param svd_rank_array: The rank of the BOPDMD fit.
-    :type svd_rank_array: int
+    :type svd_rank_array: list of int
     :param global_svd: Flag indicating whether to find the proj_basis and initial
         values using the entire dataset instead of individually for each window.
         Generally using the global_svd speeds up the fitting process by not finding a
         new initial value for each window. Default is True.
-    :type global_svd: bool
+    :type global_svd: list of bool
     :param initialize_artificially: Flag indicating whether to initialize the DMD using
         imaginary eigenvalues (i.e., the imaginary component of the cluster results from a
         previous iteration) through the `cluster_centroids` keyword. Default is False.
-    :type initialize_artificially: bool
+    :type initialize_artificially: list of bool
     :param pydmd_kwargs: Keyword arguments to pass onto the BOPDMD object.
     :type pydmd_kwargs: dict
     :param cluster_centroids: Cluster centroids from a previous fitting iteration to
@@ -104,8 +104,6 @@ class mrCOSTS:
         self._n_decompositions = None
         self._n_data_vars = None
         self._n_time_steps = None
-        self._n_slides_array = None
-        self._time_array = None
         self._cluster_centroids = None
         self._omega_classes = None
         self._costs_array = None
@@ -152,6 +150,10 @@ class mrCOSTS:
         :rtype: list
         """
         return self._costs_array
+
+    @costs_array.setter
+    def costs_array(self, costs_array):
+        self._costs_array = costs_array
 
     @property
     def svd_rank_array(self):
@@ -202,24 +204,10 @@ class mrCOSTS:
         return self._n_components_array
 
     @property
-    def n_slides_array(self):
-        """
-        :return: number of window slides for each decomposition level.
-        :rtype: list of int
-        """
-        return self._n_slides_array
-
-    @property
     def modes_array(self):
         if not hasattr(self, "_modes_array"):
             raise ValueError("You need to call fit before")
         return self._modes_array
-
-    @property
-    def time_array(self):
-        if not hasattr(self, "_time_array"):
-            raise ValueError("You need to call fit first.")
-        return self._time_array
 
     @property
     def cluster_centroids(self):
@@ -356,33 +344,62 @@ class mrCOSTS:
     def from_xarray(self, file_list):
         """Create an mrcosts object from saved files."""
         mrd_list = []
-        for c in os.listdir(file_list):
-            mrd_list.append(xr.load_dataset(c, engine="h5netcdf"))
+        # ToDo: Check for file existence.
+        for f in file_list:
+            mrd_list.append(xr.load_dataset(f, engine="h5netcdf"))
 
         # Sort by window length
         mrd_list = sorted(mrd_list, key=lambda mrd: mrd.window_length)
 
         # Convert to an array of costs objects.
-        mrd_list = [mrd.from_xarray() for mrd in mrd_list]
+        mrd_list = [COSTS().from_xarray(mrd) for mrd in mrd_list]
 
         window_length_array = [mrd.window_length for mrd in mrd_list]
         step_size_array = [mrd.step_size for mrd in mrd_list]
         svd_rank_array = [mrd.svd_rank for mrd in mrd_list]
+        # ToDo: Don't access protected information.
         n_components_array = [mrd._n_components for mrd in mrd_list]
-        # ToDo: Add flags and kwargs to xarray data
-        global_svd_array = [mrd.global_svd for mrd in mrd_list]
-        pydmd_kwargs = [mrd.pydmd_kwargs for mrd in mrd_list]
-        costs_recon_kwargs = [mrd.costs_recon_kwargs for mrd in mrd_list]
+        global_svd_array = [mrd._global_svd for mrd in mrd_list]
+
+        # ToDo: Find a more robust way of handling these cases.
+        # A simple stop-gap to use the kwargs simply from the first element.
+        pydmd_kwargs = mrd_list[0]._pydmd_kwargs
+        # costs_recon_kwargs = mrd_list[0]._costs_recon_kwargs
 
         # Initialize the mrcosts object.
-        mrCOSTS(
+        self.__init__(
             window_length_array=window_length_array,
             step_size_array=step_size_array,
             svd_rank_array=svd_rank_array,
             global_svd_array=global_svd_array,
             pydmd_kwargs=pydmd_kwargs,
-            costs_recon_kwargs=costs_recon_kwargs,
+            # costs_recon_kwargs=costs_recon_kwargs,
             n_components_array=n_components_array,
+            store_data=False,
+        )
+
+        # Initialize variables that are defined in fitting.
+        self._n_decompositions = len(mrd_list)
+        self.costs_array = mrd_list
+
+    def scale_separation(self, level, data=None, plot_kwargs=None):
+        # Plotting reconstructions is a bit complicated because it requires
+        # indexing the desired level and the previous level.
+
+        if level == 0 and data is None:
+            raise ValueError(
+                "Data must be provided when plotting the first decomposition level"
+            )
+        elif level == 0 and data is not None:
+            x_iter = data
+        else:
+            x_iter, _ = self.costs_array[level - 1].scale_separation()
+
+        if plot_kwargs is None:
+            plot_kwargs = {}
+
+        _ = self.costs_array[level].plot_scale_separation(
+            x_iter, plot_kwargs=plot_kwargs
         )
 
 
