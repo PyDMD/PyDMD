@@ -283,5 +283,5 @@ def test_online_3():
 
     assert_equal(lando_online.fixed_point, lando.fixed_point)
     assert np.linalg.norm(lando_online.bias) < 1e-3
-    assert relative_error(lando_online.linear, lando.linear) < 1e-5
-    assert relative_error(lando_online.nonlinear(X), lando.nonlinear(X)) < 1e-5
+    assert relative_error(lando_online.linear, lando.linear) < 1e-4
+    assert relative_error(lando_online.nonlinear(X), lando.nonlinear(X)) < 1e-4

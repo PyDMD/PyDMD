@@ -158,7 +158,7 @@ class LANDOOperator(DMDOperator):
             warnings.warn(msg)
         return self._A
 
-    def compute_operator(self, X, Y, kernel_function):
+    def compute_operator(self, X, Y, kernel_function, updating=False):
         """
         Compute the dictionary-based kernel model weights.
 
@@ -168,24 +168,33 @@ class LANDOOperator(DMDOperator):
         :type Y: numpy.ndarray
         :param kernel_function: kernel function to apply.
         :type kernel_function: function
+        :param updating: whether or not the operator is
+            being updated after a previous fit.
+        :type updating: bool
         """
+        if updating and not self._online:
+            msg = "Only LANDO models fitted with online=True can be updated."
+            raise ValueError(msg)
+
         # Determine the order in which to parse the data snapshots.
         parsing_inds = np.arange(X.shape[1])
         if self._permute:
             np.random.shuffle(parsing_inds)
 
-        # Initialize the Cholesky factorization routine.
-        ind_0 = parsing_inds[0]
-        x_0 = X[:, ind_0][..., None]
-        y_0 = Y[:, ind_0][..., None]
-        C = np.sqrt(kernel_function(x_0, x_0))
-        self._sparse_dictionary = np.copy(x_0)
+        # Initialize values if fitting for the first time.
+        if not updating:
+            # Initialize the Cholesky factorization routine.
+            ind_0 = parsing_inds[0]
+            x_0 = X[:, ind_0][..., None]
+            y_0 = Y[:, ind_0][..., None]
+            C = np.sqrt(kernel_function(x_0, x_0))
+            self._sparse_dictionary = np.copy(x_0)
 
-        # Initialize the online learning routine, if applicable.
-        if self._online:
-            self._cholesky = C
-            self._P = np.ones((1, 1))
-            self._weights = y_0 / (self._cholesky[0][0] ** 2)
+            # Initialize the online learning routine, if applicable.
+            if self._online:
+                self._cholesky = C
+                self._P = np.ones((1, 1))
+                self._weights = y_0 / (self._cholesky[0][0] ** 2)
 
         for ind_t in parsing_inds[1:]:
             # Grab the next corresponding pair of snapshots.
@@ -193,7 +202,12 @@ class LANDOOperator(DMDOperator):
             y_t = Y[:, ind_t][..., None]
 
             # Get the results of this Cholesky factorization iteration.
-            results = self._cholesky_step(x_t, kernel_function, C)
+            if updating:
+                results = self._cholesky_step(
+                    x_t, kernel_function, self._cholesky
+                )
+            else:
+                results = self._cholesky_step(x_t, kernel_function, C)
             _, s_t, _, k_tt, delta_t = results
 
             # NOT almost linearly dependent - add x to the dictionary.
@@ -203,19 +217,15 @@ class LANDOOperator(DMDOperator):
                 )
 
                 # Update the Cholesky factor.
-                C = np.vstack(
-                    [
-                        np.hstack([C, np.zeros((len(C), 1))]),
-                        np.append(
-                            s_t.conj().T,
-                            max(0, np.abs(np.sqrt(k_tt - np.sum(s_t**2)))),
-                        ),
-                    ]
-                )
+                if updating:
+                    self._cholesky = self._update_cholesky(
+                        self._cholesky, s_t, k_tt
+                    )
+                else:
+                    C = self._update_cholesky(C, s_t, k_tt)
 
                 # Perform the online learning updates, if applicable.
                 if self._online:
-                    self._cholesky = C
                     self._update_online(y_t, results, cholesky_updated=True)
 
                 if k_tt < np.sum(s_t**2):
@@ -235,61 +245,6 @@ class LANDOOperator(DMDOperator):
                 self._weights = np.linalg.lstsq(K_mat.T, Y.T, rcond=None)[0].T
             else:  # use the pseudo-inverse
                 self._weights = Y.dot(np.linalg.pinv(K_mat))
-
-    def update_operator(self, X, Y, kernel_function):
-        """
-        Update the dictionary-based kernel model weights given more snapshots.
-
-        :param X: the input snapshots x, rescaled.
-        :type X: numpy.ndarray
-        :param Y: input snapshots y such that F(x) = y.
-        :type Y: numpy.ndarray
-        :param kernel_function: kernel function to apply.
-        :type kernel_function: function
-        """
-        if not self._online:
-            msg = "Only LANDO models fitted with online=True can be updated."
-            raise ValueError(msg)
-
-        # Determine the order in which to parse the data snapshots.
-        parsing_inds = np.arange(X.shape[1])
-        if self._permute:
-            np.random.shuffle(parsing_inds)
-
-        for ind_t in parsing_inds:
-            # Grab the next corresponding pair of snapshots.
-            x_t = X[:, ind_t][..., None]
-            y_t = Y[:, ind_t][..., None]
-
-            # Get the results of this Cholesky factorization iteration.
-            results = self._cholesky_step(x_t, kernel_function, self._cholesky)
-            _, s_t, _, k_tt, delta_t = results
-
-            # NOT almost linearly dependent - update dict and cholesky factor.
-            if np.abs(delta_t) > self._dict_tol:
-                self._sparse_dictionary = np.hstack(
-                    [self._sparse_dictionary, x_t]
-                )
-                self._cholesky = np.vstack(
-                    [
-                        np.hstack(
-                            [self._cholesky, np.zeros((len(self._cholesky), 1))]
-                        ),
-                        np.append(
-                            s_t.conj().T,
-                            max(0, np.abs(np.sqrt(k_tt - np.sum(s_t**2)))),
-                        ),
-                    ]
-                )
-                self._update_online(y_t, results, cholesky_updated=True)
-                if k_tt < np.sum(s_t**2):
-                    msg = (
-                        "The Cholesky factor is ill-conditioned. Consider "
-                        "increasing dict_tol or changing the kernel function."
-                    )
-                    warnings.warn(msg)
-            else:
-                self._update_online(y_t, results, cholesky_updated=False)
 
     def compute_linear_operator(
         self, fixed_point, compute_A, kernel_gradient, x_rescale
@@ -340,6 +295,23 @@ class LANDOOperator(DMDOperator):
                 np.diag(1 / self._eigenvalues),
             ]
         )
+
+    @staticmethod
+    def _update_cholesky(cholesky, s, k):
+        """
+        Helper function that updates the cholesky factor given the current
+        cholesky factor and the necessary quantities for updating.
+        """
+        cholesky = np.vstack(
+            [
+                np.hstack([cholesky, np.zeros((len(cholesky), 1))]),
+                np.append(
+                    s.conj().T,
+                    max(0, np.abs(np.sqrt(k - np.sum(s**2)))),
+                ),
+            ]
+        )
+        return cholesky
 
     def _cholesky_step(self, x, kernel_function, cholesky):
         """
@@ -888,7 +860,9 @@ class LANDO(DMDBase):
 
         X, Y = compute_tlsq(X, Y, self._tlsq_rank)
         X_rescaled = self._rescale(X)
-        self.operator.update_operator(X_rescaled, Y, self.kernel_function)
+        self.operator.compute_operator(
+            X_rescaled, Y, self.kernel_function, updating=True
+        )
 
         # If a fixed point analysis was already done, redo it.
         if self.fitted:
