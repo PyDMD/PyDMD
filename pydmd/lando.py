@@ -189,6 +189,7 @@ class LANDOOperator(DMDOperator):
             y_0 = Y[:, ind_0][..., None]
             C = np.sqrt(kernel_function(x_0, x_0))
             self._sparse_dictionary = np.copy(x_0)
+            parsing_inds = parsing_inds[1:]
 
             # Initialize the online learning routine, if applicable.
             if self._online:
@@ -196,7 +197,7 @@ class LANDOOperator(DMDOperator):
                 self._P = np.ones((1, 1))
                 self._weights = y_0 / (self._cholesky[0][0] ** 2)
 
-        for ind_t in parsing_inds[1:]:
+        for ind_t in parsing_inds:
             # Grab the next corresponding pair of snapshots.
             x_t = X[:, ind_t][..., None]
             y_t = Y[:, ind_t][..., None]
@@ -297,17 +298,18 @@ class LANDOOperator(DMDOperator):
         )
 
     @staticmethod
-    def _update_cholesky(cholesky, s, k):
+    def _update_cholesky(cholesky, s, kxx):
         """
         Helper function that updates the cholesky factor given the current
-        cholesky factor and the necessary quantities for updating.
+        cholesky factor and the necessary quantities for updating. See the
+        documentation of `_cholesky_step()` for more parameter information.
         """
         cholesky = np.vstack(
             [
                 np.hstack([cholesky, np.zeros((len(cholesky), 1))]),
                 np.append(
                     s.conj().T,
-                    max(0, np.abs(np.sqrt(k - np.sum(s**2)))),
+                    max(0, np.abs(np.sqrt(kxx - np.sum(s**2)))),
                 ),
             ]
         )
