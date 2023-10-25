@@ -10,6 +10,15 @@ sigma, rho, beta = 10, 28, 8 / 3
 # Lorenz system fixed point:
 x_bar = [-np.sqrt(beta * (rho - 1)), -np.sqrt(beta * (rho - 1)), rho - 1]
 
+# True linear operator at the fixed point:
+A_true = np.array(
+    [
+        [-sigma, sigma, 0.0],
+        [1.0, -1.0, np.sqrt(beta * (rho - 1))],
+        [-np.sqrt(beta * (rho - 1)), -np.sqrt(beta * (rho - 1)), -beta],
+    ]
+)
+
 # Settings to replicate odeint defaults.
 solve_ivp_opts = {}
 solve_ivp_opts["rtol"] = 1e-12
@@ -140,13 +149,6 @@ def test_linear():
     lando.fit(X, Y)
     lando.analyze_fixed_point(x_bar, compute_A=True)
 
-    A_true = np.array(
-        [
-            [-sigma, sigma, 0.0],
-            [1.0, -1.0, np.sqrt(beta * (rho - 1))],
-            [-np.sqrt(beta * (rho - 1)), -np.sqrt(beta * (rho - 1)), -beta],
-        ]
-    )
     eigs_true, modes_true = np.linalg.eig(A_true)
     modes_rescale = np.divide(lando.modes[0], modes_true[0])
     modes_true_rescaled = np.multiply(modes_true, modes_rescale)
@@ -158,12 +160,17 @@ def test_linear():
 
 def test_nonlinear():
     """
-    Test that the nonlinear operator has the correct shape.
+    Test that the nonlinear operator is accurate.
     """
     lando = LANDO(**lando_params)
     lando.fit(X, Y)
     lando.analyze_fixed_point(x_bar)
     assert lando.nonlinear(X).shape == X.shape
+
+    X_centered = X - np.array(x_bar)[..., None]
+    N_est = lando.nonlinear(X_centered)
+    N_true = Y - A_true.dot(X_centered)
+    assert relative_error(N_est, N_true) < 1e-4
 
 
 def test_predict_1():
