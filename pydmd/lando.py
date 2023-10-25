@@ -204,12 +204,12 @@ class LANDOOperator(DMDOperator):
 
             # Get the results of this Cholesky factorization iteration.
             if self._online:
-                results = self._cholesky_step(
+                cholesky_results = self._cholesky_step(
                     x_t, kernel_function, self._cholesky
                 )
             else:
-                results = self._cholesky_step(x_t, kernel_function, C)
-            _, s_t, _, k_tt, delta_t = results
+                cholesky_results = self._cholesky_step(x_t, kernel_function, C)
+            _, s_t, _, k_tt, delta_t = cholesky_results
 
             # NOT almost linearly dependent - add x to the dictionary.
             if np.abs(delta_t) > self._dict_tol:
@@ -222,7 +222,9 @@ class LANDOOperator(DMDOperator):
                     self._cholesky = self._update_cholesky(
                         self._cholesky, s_t, k_tt
                     )
-                    self._update_online(y_t, results, cholesky_updated=True)
+                    self._update_online(
+                        y_t, cholesky_results, cholesky_updated=True
+                    )
                 else:
                     C = self._update_cholesky(C, s_t, k_tt)
 
@@ -235,8 +237,11 @@ class LANDOOperator(DMDOperator):
 
             # Online learning updates for the almost linearly dependent case.
             elif self._online:
-                self._update_online(y_t, results, cholesky_updated=False)
+                self._update_online(
+                    y_t, cholesky_results, cholesky_updated=False
+                )
 
+        # Compute weights in one go, if not performing online learning.
         if not self._online:
             K_mat = kernel_function(self._sparse_dictionary, X)
             if self._lstsq:  # use least squares
