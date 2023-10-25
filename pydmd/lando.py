@@ -203,7 +203,7 @@ class LANDOOperator(DMDOperator):
             y_t = Y[:, ind_t][..., None]
 
             # Get the results of this Cholesky factorization iteration.
-            if updating:
+            if self._online:
                 results = self._cholesky_step(
                     x_t, kernel_function, self._cholesky
                 )
