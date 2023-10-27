@@ -922,17 +922,17 @@ class COSTS:
         """
         ds = xr.Dataset(
             {
-                "omega": (("window_time_means", "rank"), self.omega_array),
+                "omega": (("window_time_means", "svd_rank"), self.omega_array),
                 "omega_classes": (
-                    ("window_time_means", "rank"),
+                    ("window_time_means", "svd_rank"),
                     self.omega_classes,
                 ),
                 "amplitudes": (
-                    ("window_time_means", "rank"),
+                    ("window_time_means", "svd_rank"),
                     self.amplitudes_array,
                 ),
                 "modes": (
-                    ("window_time_means", "space", "rank"),
+                    ("window_time_means", "space", "svd_rank"),
                     self.modes_array,
                 ),
                 "window_means": (
@@ -947,7 +947,7 @@ class COSTS:
             coords={
                 "window_time_means": np.mean(self.time_array, axis=1),
                 "slide": ("window_time_means", np.arange(self._n_slides)),
-                "rank": np.arange(self.svd_rank),
+                "svd_rank": np.arange(self.svd_rank),
                 "space": np.arange(self._n_data_vars),
                 "frequency_band": np.arange(self.n_components),
                 "window_index": np.arange(self._window_length),
