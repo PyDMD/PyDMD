@@ -1,7 +1,7 @@
 import numpy as np
 import copy
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
+from sklearn.cluster import MiniBatchKMeans
+from sklearn.metrics import silhouette_score, calinski_harabasz_score
 import matplotlib.pyplot as plt
 import xarray as xr
 from pydmd.costs import COSTS
@@ -15,7 +15,8 @@ class mrCOSTS:
     :type window_length_array: list of int
     :param step_size_array: Number of time steps to slide each CSM-DMD window.
     :type step_size_array: list of int
-    :param n_components_array: Number of frequency bands to use for clustering this window length.
+    :param n_components_array: Number of frequency bands to use for clustering this
+        window length.
     :type n_components_array: list of int
     :param svd_rank_array: The rank of the BOPDMD fit.
     :type svd_rank_array: list of int
@@ -24,9 +25,10 @@ class mrCOSTS:
         Generally using the global_svd speeds up the fitting process by not finding a
         new initial value for each window. Default is True.
     :type global_svd: list of bool
-    :param initialize_artificially: Flag indicating whether to initialize the DMD using
-        imaginary eigenvalues (i.e., the imaginary component of the cluster results from a
-        previous iteration) through the `cluster_centroids` keyword. Default is False.
+    :param initialize_artificially: Flag indicating whether to initialize the DMD
+        using imaginary eigenvalues (i.e., the imaginary component of the cluster
+        results from a previous iteration) through the `cluster_centroids` keyword.
+        Default is False.
     :type initialize_artificially: list of bool
     :param pydmd_kwargs: Keyword arguments to pass onto the BOPDMD object.
     :type pydmd_kwargs: dict
@@ -35,8 +37,9 @@ class mrCOSTS:
         component.
     :type cluster_centroids: numpy array
     :param reset_alpha_init: Flag indicating whether the initial guess for the BOPDMD
-        eigenvalues should be reset for each window. Resetting the initial value increases
-        the computation time due to finding a new initial guess. Default is False.
+        eigenvalues should be reset for each window. Resetting the initial value
+        increases the computation time due to finding a new initial guess. Default
+        is False.
     :type reset_alpha_init: bool
     :param force_even_eigs: Flag indicating whether an even svd_rank should be forced
         when not specifying the svd_rank directly (i.e., svd_rank=0). Default is True.
@@ -47,16 +50,17 @@ class mrCOSTS:
     :param use_kmean_freqs: Flag specifying if the BOPDMD fit should use initial values
         taken from cluster centroids, e.g., from a previoius iteration.
     :type use_kmean_freqs: bool
-    :param init_alpha: Initial guess for the eigenvalues provided to BOPDMD. Must be equal
-        to the `svd_rank`.
+    :param init_alpha: Initial guess for the eigenvalues provided to BOPDMD.
+        Must be equal to the `svd_rank`.
     :type init_alpha: numpy array
-    :param max_rank: Maximum allowed `svd_rank`. Overrides the optimal rank truncation if
-        `svd_rank=0`.
+    :param max_rank: Maximum allowed `svd_rank`. Overrides the optimal rank truncation
+        if `svd_rank=0`.
     :type max_rank: int
-    :param force_even_eigs: Flag specifying if the `svd_rank` should be forced to be even.
+    :param force_even_eigs: Flag specifying if the `svd_rank` should be forced to
+        be even.
     :type force_even_eigs: bool
-    :param reset_alpha_init: Flag specifying if the initial eigenvalue guess should be reset
-        between windows.
+    :param reset_alpha_init: Flag specifying if the initial eigenvalue guess should
+        be reset between windows.
     :type reset_alpha_init: bool
     """
 
@@ -107,6 +111,7 @@ class mrCOSTS:
         self._cluster_centroids = None
         self._omega_classes = None
         self._costs_array = None
+        self._da_omega = None
 
         # Specify default keywords to hand to CoSTS's BOPDMD model.
         if pydmd_kwargs is None:
@@ -138,7 +143,8 @@ class mrCOSTS:
     @property
     def store_data(self):
         """
-        :return: If the low-frequency components were stored (True) or discarded (False).
+        :return: If the low-frequency components were stored (True)
+            or discarded (False).
         :rtype: bool
         """
         return self._store_data
@@ -339,7 +345,10 @@ class mrCOSTS:
             np.arange(len(da_omega.window_length)),
         )
 
-        return da_omega
+        # ToDo: Verify this can handle variable number of svd_ranks
+        #   for each decomposition level
+
+        self._da_omega = da_omega
 
     def from_xarray(self, file_list):
         """Create an mrcosts object from saved files."""
@@ -402,55 +411,171 @@ class mrCOSTS:
             x_iter, plot_kwargs=plot_kwargs
         )
 
+    def cluster_hyperparameter_sweep(
+        self, n_components_range, method=None, score_method=None
+    ):
+        """
+        Hyperparameter search for n_components for kmeans clustering.
 
-def cluster_hyperparameter_sweep(da_omega, n_components_range, method=None):
-    """Performs a hyperparameter search for the number of components in the kmeans clustering."""
-    omega_array = da_omega.values
-    nandex = np.isnan(omega_array)
-    index = np.nonzero(~np.isnan(omega_array))
-    omega_array = omega_array[~np.isnan(omega_array)]
+        score_method: str or None
+            Valid scoring methods are 'silhouette' and 'calinski-harabasz'. Default is
+            the silhouette score, which can be slow for large numbers of samples.
+        """
+        score = np.zeros_like(n_components_range, float)
 
-    score = np.zeros_like(n_components_range, float)
+        for nind, n in enumerate(n_components_range):
+            print("fitting n_components = {}".format(n))
+            cluster_centroids, omega_classes, omega = self.cluster_omega(
+                n, method=method
+            )
 
-    for nind, n in enumerate(n_components_range):
-        print("fitting n_components = {}".format(n))
-        cluster_centroids, omega_classes, omega = cluster_omega(
-            omega_array, n, method=method
+            print("scoring")
+            if score_method is None or score_method == "silhouette":
+                score[nind] = silhouette_score(
+                    omega.reshape(-1, 1),
+                    omega_classes.reshape(-1, 1),
+                    n_jobs=-2,
+                )
+            elif score_method == "calinski-harabasz":
+                score[nind] = calinski_harabasz_score(
+                    omega.reshape(-1, 1),
+                    omega_classes.reshape(-1, 1),
+                )
+
+        return score, n_components_range[np.argmax(score)]
+
+    def cluster_omega(self, n_components, method=None, kmeans_kwargs=None):
+        omega_array = self._da_omega.values
+        # This step flattens the array, which is desirable. We want to cluster on just
+        # on the histogram of omega, which means just one "sample".
+        omega_array = omega_array[~np.isnan(omega_array)]
+        omega_array = self.transform_omega(omega_array, method=method)
+
+        if kmeans_kwargs is None:
+            random_state = 0
+            kmeans_kwargs = {
+                "n_init": "auto",
+                "random_state": random_state,
+            }
+        kmeans = MiniBatchKMeans(n_clusters=n_components, **kmeans_kwargs)
+        omega_classes = kmeans.fit_predict(np.atleast_2d(omega_array).T)
+        cluster_centroids = kmeans.cluster_centers_.flatten()
+
+        # Sort the clusters by the centroid magnitude.
+        idx = np.argsort(cluster_centroids)
+        lut = np.zeros_like(idx)
+        lut[idx] = np.arange(n_components)
+        omega_classes = lut[omega_classes]
+        cluster_centroids = cluster_centroids[idx]
+
+        return cluster_centroids, omega_classes, omega_array
+
+    @staticmethod
+    def transform_omega(omega_array, method=None):
+        if method is None:
+            omega_array = np.abs(omega_array.imag.astype("float"))
+        elif method == "square_frequencies":
+            omega_array = (np.conj(omega_array) * omega_array).astype("float")
+        elif method == "period":
+            omega_array = 1 / np.abs(omega_array.imag.astype("float"))
+        elif method == "log10":
+            omega_array = np.log10(np.abs(omega_array.imag.astype("float")))
+
+        return omega_array
+
+    def global_scale_reconstruction(
+        self,
+        n_components,
+        omega_classes_array,
+        suppress_growth=True,
+        include_means=False,
+    ):
+        """Reconstruct the sliding mrDMD into the constituent components.
+
+        The reconstructed data are convolved with a guassian filter since
+        points near the middle of the window are more reliable than points
+        at the edge of the window. Note that this will leave the beginning
+        and end of time series prone to larger errors. A best practice is
+        to cut off `window_length` from each end before further analysis.
+
+
+        suppress_growth:
+        Kill positive real components of frequencies
+        """
+
+        # Each individual reconstructed window
+        xr_sep = np.zeros(
+            (
+                len(self._costs_array),
+                n_components,
+                self._n_data_vars,
+                self._n_time_steps,
+            )
         )
 
-        print("scoring")
-        score[nind] = silhouette_score(
-            omega.reshape(-1, 1), omega_classes.reshape(-1, 1), n_jobs=-2
-        )
+        for n_mrd, mrd in enumerate(self._costs_array):
+            # Track the total contribution from all windows to each time step
+            xn = np.zeros(self._n_time_steps)
 
-    return score, n_components_range[np.argmax(score)]
+            # Convolve each windowed reconstruction with a gaussian filter.
+            # Std dev of gaussian filter
+            recon_filter_sd = mrd._window_length / 8
+            recon_filter = np.exp(
+                -(
+                    (
+                        np.arange(mrd._window_length)
+                        - (mrd._window_length + 1) / 2
+                    )
+                    ** 2
+                )
+                / recon_filter_sd**2
+            )
+            omega_classes = omega_classes_array[n_mrd, :, :].squeeze()
 
+            for k in range(mrd._n_slides):
+                w = mrd._modes_array[k]
+                b = mrd._amplitudes_array[k]
+                omega = np.atleast_2d(mrd._omega_array[k]).T
+                classification = omega_classes[k]
 
-def cluster_omega(omega_array, n_components, method=None, kmeans_kwargs=None):
-    if method is None:
-        omega_array = np.abs(omega_array.imag.astype("float"))
-    elif method == "square_frequencies":
-        omega_array = (np.conj(omega_array) * omega_array).astype("float")
-    elif method == "period":
-        omega_array = 1 / np.abs(omega_array.imag.astype("float"))
-    elif method == "log10":
-        omega_array = np.log10(np.abs(omega_array.imag.astype("float")))
+                if suppress_growth:
+                    omega[omega.real > 0] = 1j * omega[omega.real > 0].imag
 
-    if kmeans_kwargs is None:
-        random_state = 0
-        kmeans_kwargs = {
-            "n_init": "auto",
-            "random_state": random_state,
-        }
-    kmeans = KMeans(n_clusters=n_components, **kmeans_kwargs)
-    omega_classes = kmeans.fit_predict(np.atleast_2d(omega_array).T)
-    cluster_centroids = kmeans.cluster_centers_.flatten()
+                # Compute each segment of xr starting at "t = 0"
+                t = mrd._time_array[k]
+                t_start = mrd._time_array[k, 0]
+                t = t - t_start
 
-    # Sort the clusters by the centroid magnitude.
-    idx = np.argsort(cluster_centroids)
-    lut = np.zeros_like(idx)
-    lut[idx] = np.arange(n_components)
-    omega_classes = lut[omega_classes]
-    cluster_centroids = cluster_centroids[idx]
+                xr_sep_window = np.zeros(
+                    (n_components, mrd._n_data_vars, mrd._window_length)
+                )
+                for j in np.arange(0, n_components):
+                    xr_sep_window[j, :, :] = np.linalg.multi_dot(
+                        [
+                            w[:, classification == j],
+                            np.diag(b[classification == j]),
+                            np.exp(omega[classification == j] * t),
+                        ]
+                    )
 
-    return cluster_centroids, omega_classes, omega_array
+                    xr_sep_window[j, :, :] = (
+                        xr_sep_window[j, :, :] * recon_filter
+                    )
+
+                    if k == mrd._n_slides - 1 and mrd._non_integer_n_slide:
+                        window_indices = slice(-mrd._window_length, None)
+                    else:
+                        window_indices = slice(
+                            k * mrd._step_size,
+                            k * mrd._step_size + mrd._window_length,
+                        )
+                    xr_sep[n_mrd, j, :, window_indices] = (
+                        xr_sep[n_mrd, j, :, window_indices]
+                        + xr_sep_window[j, :, :]
+                    )
+
+                xn[window_indices] += recon_filter
+
+            xr_sep[n_mrd, :, :, :] = xr_sep[n_mrd, :, :, :] / xn
+
+        return xr_sep
