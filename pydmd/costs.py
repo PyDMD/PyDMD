@@ -412,8 +412,9 @@ class COSTS:
 
             # Reset optdmd between iterations
             if not self._global_svd:
-                # Get the svd rank for this window. Uses rank truncation when svd_rank is
-                # not fixed, i.e. svd_rank = 0, otherwise uses the specified rank.
+                # Get the svd rank for this window. Uses rank truncation when
+                # svd_rank is not fixed, i.e. svd_rank = 0, otherwise uses the
+                # specified rank.
                 _svd_rank = compute_rank(data_window, svd_rank=self._svd_rank)
                 # Force svd rank to be even to allow for conjugate pairs.
                 if self._force_even_eigs and _svd_rank % 2:
@@ -515,7 +516,8 @@ class COSTS:
     def cluster_hyperparameter_sweep(
         self, n_components_range=None, transform_method=None
     ):
-        """Performs a hyperparameter search for the number of components in the kmeans clustering."""
+        """Performs a hyperparameter search for the number of components
+        in the kmeans clustering."""
         if n_components_range is None:
             n_components_range = np.arange(
                 np.max((self.svd_rank // 4, 2)), self.svd_rank
@@ -904,6 +906,125 @@ class COSTS:
             ax.set_ylabel("Space (-)")
 
         axes[-1].set_xlabel("Time (-)")
+        fig.tight_layout()
+
+        return fig, axes
+
+    def plot_error(
+        self, data, scale_reconstruction_kwargs=None, plot_kwargs=None
+    ):
+        if scale_reconstruction_kwargs is None:
+            scale_reconstruction_kwargs = {}
+        if plot_kwargs is None:
+            plot_kwargs = {}
+        plot_kwargs["vmin"] = plot_kwargs.get("vmin", -3)
+        plot_kwargs["vmax"] = plot_kwargs.get("vmax", 3)
+        plot_kwargs["cmap"] = plot_kwargs.get("cmap", "RdBu_r")
+
+        global_reconstruction = self.global_reconstruction(
+            scale_reconstruction_kwargs=scale_reconstruction_kwargs
+        )
+
+        fig_glbl_r, ax_glbl_r = plt.subplots(
+            1,
+            1,
+        )
+        im = ax_glbl_r.pcolormesh(
+            (global_reconstruction.real - data.real) / data.real * 100,
+            **plot_kwargs,
+        )
+
+        cbar = fig_glbl_r.colorbar(im)
+        cbar.set_label("% error")
+
+        ax_glbl_r.set_xlabel("time (-)")
+        ax_glbl_r.set_ylabel("space (-)")
+        re = self.relative_error(global_reconstruction.real, data)
+        ax_glbl_r.set_title("Error in Global Reconstruction = {:.2}".format(re))
+
+    def plot_time_series(
+        self,
+        space_index,
+        data,
+        scale_reconstruction_kwargs=None,
+        include_residual=False,
+    ):
+        """Plots CoSTS for a single spatial point.
+
+        @param space_index:
+        @param data:
+        @param scale_reconstruction_kwargs:
+        @param include_residual:
+        @return:
+        """
+
+        ground_truth_mean = data.mean(axis=1)
+        ground_truth = (data.T - ground_truth_mean).T
+        ground_truth = ground_truth[space_index, :]
+        ground_truth_mean = ground_truth_mean[space_index]
+
+        if scale_reconstruction_kwargs is None:
+            scale_reconstruction_kwargs = {}
+        xr_sep = self.scale_reconstruction(**scale_reconstruction_kwargs)
+
+        fig, axes = plt.subplots(
+            nrows=self.n_components + 2,
+            sharex=True,
+            sharey=True,
+            figsize=(8, 1.5 * self.n_components),
+        )
+
+        ax = axes[0]
+        ax.plot(ground_truth, color="k")
+        ax.plot(
+            xr_sep.sum(axis=0)[space_index, :] - ground_truth_mean,
+            color="r",
+            lw=0.5,
+        )
+        ax.set_title(
+            "Input signal (single point), window={}, black=input data, red=reconstruction".format(
+                self._window_length
+            )
+        )
+
+        ax = axes[1]
+        ax.plot(
+            ground_truth - (xr_sep[1:, :, :].sum(axis=0))[space_index, :],
+            color="k",
+        )
+
+        for n in range(self.n_components):
+            if n == 0:
+                title = "blue = Low-frequency component, black = high frequency residual"
+                axes[n + 1].plot(xr_sep[n, space_index, :] - ground_truth_mean)
+            else:
+                title = "Band period = {:.0f}s".format(
+                    2 * np.pi / self.cluster_centroids[n]
+                )
+                axes[n + 1].plot(xr_sep[n, space_index, :])
+            axes[n + 1].set_title(title)
+
+        ax = axes[-1]
+        ax.plot(ground_truth, color="k", label="Smoothed data")
+        ax.plot(
+            (xr_sep[1:, :, :].sum(axis=0))[space_index, :],
+            label="High-frequency",
+        )
+        ax.plot(
+            xr_sep[0, space_index, :] - ground_truth_mean, label="Low-frequency"
+        )
+        if include_residual:
+            ax.plot(
+                ground_truth - xr_sep.sum(axis=0)[space_index, :],
+                label="Residual",
+            )
+            ax.set_title(
+                "black=input data, yellow=x_r,LF, blue=x_r,HF, red=residual"
+            )
+        else:
+            ax.set_title("black=input data, yellow=x_r,LF, blue=x_r,HF")
+
+        ax.set_xlim(0, self._n_time_steps)
         fig.tight_layout()
 
         return fig, axes

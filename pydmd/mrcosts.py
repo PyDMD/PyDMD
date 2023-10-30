@@ -350,6 +350,42 @@ class mrCOSTS:
 
         self._da_omega = da_omega
 
+    def multi_res_deterp(self, omega_classes):
+
+        # Get the indices for the 3-d omega structure
+        index = np.nonzero(~np.isnan(self._da_omega.values))
+
+        # Unravel the flattened omega_classes. The class value of `-1` refers
+        # to the slowest mode in each decomposition window which shouldn't be
+        # included in the global clustering.
+        omega_classes_full = (
+            np.zeros_like(self._da_omega.values, dtype="int") - 1
+        )
+        omega_classes_full[index] = omega_classes
+
+        # Build the omega_classes array into a labeled xarray DataArray object.
+        da_omega_classes = xr.zeros_like(self._da_omega, dtype="int")
+        da_omega_classes.values = omega_classes_full  # .astype("str")
+        da_omega_classes = da_omega_classes.swap_dims(
+            {"window_length": "decomposition_level"}
+        )
+
+        # Get a list of the costs results in xarray format.
+        ds_list = [c.to_xarray() for c in self._costs_array]
+
+        # Interpolate from the high-resolution of the first decomposition level
+        # to the coarser time resolution of the higher decomposition levels
+        omega_classes_list = [
+            da_omega_classes.sel(decomposition_level=d)
+            .sel(
+                window_time_means=ds_list[d].window_time_means, method="nearest"
+            )
+            .values
+            for d in da_omega_classes.decomposition_level.values
+        ]
+
+        return omega_classes_list
+
     def from_xarray(self, file_list):
         """Create an mrcosts object from saved files."""
         mrd_list = []
@@ -359,6 +395,10 @@ class mrCOSTS:
 
         # Sort by window length
         mrd_list = sorted(mrd_list, key=lambda mrd: mrd.window_length)
+
+        # Populate information about the fitted data.
+        n_data_vars = mrd_list[0].attrs["n_data_vars"]
+        n_time_steps = mrd_list[0].attrs["n_time_steps"]
 
         # Convert to an array of costs objects.
         mrd_list = [COSTS().from_xarray(mrd) for mrd in mrd_list]
@@ -390,29 +430,164 @@ class mrCOSTS:
         # Initialize variables that are defined in fitting.
         self._n_decompositions = len(mrd_list)
         self.costs_array = mrd_list
+        self._n_data_vars = n_data_vars
+        self._n_time_steps = n_time_steps
 
-    def scale_separation(self, level, data=None, plot_kwargs=None):
-        # Plotting reconstructions is a bit complicated because it requires
-        # indexing the desired level and the previous level.
-
-        if level == 0 and data is None:
-            raise ValueError(
-                "Data must be provided when plotting the first decomposition level"
+    def to_xarray(self, filename):
+        for c in self._costs_array:
+            c.to_xarray().to_netcdf(
+                ".".join(
+                    (
+                        filename,
+                        "window={}".format(c._window_length),
+                        "nc",
+                    )
+                ),
+                engine="h5netcdf",
+                invalid_netcdf=True,
             )
-        elif level == 0 and data is not None:
+
+    def plot_local_reconstructions(
+        self,
+        level,
+        data=None,
+        kwargs=None,
+        scale_reconstruction_kwargs=None,
+    ):
+        """Plot reconstructions for a given local decomposition level.
+
+        @param level:
+        @param data:
+        @param kwargs:
+        @param scale_reconstruction_kwargs:
+        @return:
+        """
+
+        if data is not None:
             x_iter = data
         else:
-            x_iter, _ = self.costs_array[level - 1].scale_separation()
+            if level == 0:
+                raise ValueError(
+                    "Data must be provided when plotting the first decomposition level"
+                )
+            elif level > 0:
+                x_iter, _ = self.costs_array[level - 1].scale_separation()
+
+        if kwargs is None:
+            kwargs = {}
+
+        _ = self.costs_array[level].plot_reconstructions(
+            x_iter,
+            scale_reconstruction_kwargs=scale_reconstruction_kwargs,
+            **kwargs
+        )
+
+    def plot_local_error(
+        self,
+        level,
+        data=None,
+        global_reconstruction=None,
+        scale_reconstruction_kwargs=None,
+        plot_kwargs=None,
+    ):
+        if data is not None:
+            x_iter = data
+        else:
+            if level == 0:
+                raise ValueError(
+                    "Data must be provided when plotting the first decomposition level"
+                )
+            elif level > 0:
+                x_iter, _ = self.costs_array[level - 1].scale_separation()
 
         if plot_kwargs is None:
             plot_kwargs = {}
 
-        _ = self.costs_array[level].plot_scale_separation(
-            x_iter, plot_kwargs=plot_kwargs
+        _ = self.costs_array[level].plot_error(
+            x_iter,
+            scale_reconstruction_kwargs=scale_reconstruction_kwargs,
+            plot_kwargs=plot_kwargs,
         )
 
-    def cluster_hyperparameter_sweep(
-        self, n_components_range, method=None, score_method=None
+    def plot_local_scale_separation(
+        self,
+        level,
+        data=None,
+        plot_kwargs=None,
+        scale_reconstruction_kwargs=None,
+    ):
+        """Plot the local scale separation reconstructions.
+
+        Reconstruction plots require the input data for the level as well as the reconstruction
+        for the given level. Deriving the input data requires either providing the actual input
+        data (for the first decomposition). Otherwise, the input data is recovered by
+        first reconstructing decomposition = level - 1.
+
+        @param scale_reconstruction_kwargs:
+        @param level:
+        @param data:
+        @param plot_kwargs:
+        @return:
+        """
+        #
+
+        if data is not None:
+            x_iter = data
+        else:
+            if level == 0:
+                raise ValueError(
+                    "Data must be provided when plotting the first decomposition level"
+                )
+            elif level > 0:
+                x_iter, _ = self.costs_array[level - 1].scale_separation()
+
+        if plot_kwargs is None:
+            plot_kwargs = {}
+
+        fig, axes = self.costs_array[level].plot_scale_separation(
+            x_iter,
+            plot_kwargs=plot_kwargs,
+            scale_reconstruction_kwargs=scale_reconstruction_kwargs,
+        )
+
+        return fig, axes
+
+    def plot_local_time_series(
+        self,
+        space_index,
+        level,
+        data=None,
+        plot_kwargs=None,
+        scale_reconstruction_kwargs=None,
+    ):
+        if data is not None:
+            x_iter = data
+        else:
+            if level == 0:
+                raise ValueError(
+                    "Data must be provided when plotting the first decomposition level"
+                )
+            elif level > 0:
+                x_iter, _ = self.costs_array[level - 1].scale_separation()
+
+        if plot_kwargs is None:
+            plot_kwargs = {}
+
+        fig, axes = self.costs_array[level].plot_time_series(
+            space_index,
+            x_iter,
+            # plot_kwargs=plot_kwargs,
+            scale_reconstruction_kwargs=scale_reconstruction_kwargs,
+        )
+
+        return fig, axes
+
+    def global_cluster_hyperparameter_sweep(
+        self,
+        n_components_range,
+        method=None,
+        score_method=None,
+        verbose=True,
     ):
         """
         Hyperparameter search for n_components for kmeans clustering.
@@ -424,18 +599,24 @@ class mrCOSTS:
         score = np.zeros_like(n_components_range, float)
 
         for nind, n in enumerate(n_components_range):
-            print("fitting n_components = {}".format(n))
-            cluster_centroids, omega_classes, omega = self.cluster_omega(
+            if verbose:
+                print("fitting n_components = {}".format(n))
+            cluster_centroids, omega_classes, omega = self.global_cluster_omega(
                 n, method=method
             )
 
-            print("scoring")
+            if verbose:
+                print("scoring")
             if score_method is None or score_method == "silhouette":
                 score[nind] = silhouette_score(
                     omega.reshape(-1, 1),
                     omega_classes.reshape(-1, 1),
                     n_jobs=-2,
                 )
+            # Calinski-Harabasz is not a good counter to the silhouette score
+            # since it just increases with increasing number of clusters. It is
+            # only included as a reference and should be replaced if a serious look
+            # is given to altering the clustering algorithm.
             elif score_method == "calinski-harabasz":
                 score[nind] = calinski_harabasz_score(
                     omega.reshape(-1, 1),
@@ -444,7 +625,9 @@ class mrCOSTS:
 
         return score, n_components_range[np.argmax(score)]
 
-    def cluster_omega(self, n_components, method=None, kmeans_kwargs=None):
+    def global_cluster_omega(
+        self, n_components, method=None, kmeans_kwargs=None
+    ):
         omega_array = self._da_omega.values
         # This step flattens the array, which is desirable. We want to cluster on just
         # on the histogram of omega, which means just one "sample".
@@ -480,15 +663,17 @@ class mrCOSTS:
             omega_array = 1 / np.abs(omega_array.imag.astype("float"))
         elif method == "log10":
             omega_array = np.log10(np.abs(omega_array.imag.astype("float")))
+        elif method == "period":
+            omega_array = 1 / (np.abs(omega_array.imag.astype("float")))
 
         return omega_array
 
     def global_scale_reconstruction(
         self,
         n_components,
-        omega_classes_array,
+        omega_classes_list,
         suppress_growth=True,
-        include_means=False,
+        include_background=True,
     ):
         """Reconstruct the sliding mrDMD into the constituent components.
 
@@ -498,15 +683,19 @@ class mrCOSTS:
         and end of time series prone to larger errors. A best practice is
         to cut off `window_length` from each end before further analysis.
 
-
         suppress_growth:
         Kill positive real components of frequencies
         """
 
         # Each individual reconstructed window
+        if include_background:
+            num_costs_decomps = len(self._costs_array) + 1
+        else:
+            num_costs_decomps = len(self._costs_array)
+
         xr_sep = np.zeros(
             (
-                len(self._costs_array),
+                num_costs_decomps,
                 n_components,
                 self._n_data_vars,
                 self._n_time_steps,
@@ -530,7 +719,7 @@ class mrCOSTS:
                 )
                 / recon_filter_sd**2
             )
-            omega_classes = omega_classes_array[n_mrd, :, :].squeeze()
+            omega_classes = omega_classes_list[n_mrd]
 
             for k in range(mrd._n_slides):
                 w = mrd._modes_array[k]
@@ -578,4 +767,13 @@ class mrCOSTS:
 
             xr_sep[n_mrd, :, :, :] = xr_sep[n_mrd, :, :, :] / xn
 
+        # Add the low frequency background values not included in the scale separation.
+        if include_background:
+            xr_sep[-1, :, :, :] = self.costs_array[-1].scale_reconstruction()[
+                0, :, :
+            ]
+
         return xr_sep
+
+
+# ToDo: Make reconstruction equivalent for costs.scale_separation and costs.global_reconstruction
