@@ -87,13 +87,11 @@ def __svht(
         tau_star = median * omega
 
     rank = np.where(sigma_svd >= tau_star)[0]
-    r_out = 0
-    if rank.size == 0:
-        r_out = sigma_svd.shape[-1]
 
-    else:
-        r_out = rank[-1] + 1
-    return r_out
+    if rank.size == 0:
+        return sigma_svd.shape[-1]
+
+    return rank[-1] + 1
 
 
 def __compute_rank(
