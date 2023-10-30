@@ -1,7 +1,10 @@
+"""
+Test module for VarProDMD
+"""
 import numpy as np
 import pytest
 from pydmd.utils import compute_rank
-from pydmd.varprodmd import OptimizeHelper, \
+from pydmd.varprodmd import __OptimizeHelper, \
     __compute_dmd_rho, \
     __compute_dmd_jac, \
     __compute_rank, \
@@ -13,13 +16,25 @@ from pydmd.varprodmd import OptimizeHelper, \
     VarProDMD
 
 
-def signal(x_loc: np.ndarray, time: np.ndarray):
+def signal(x_loc: np.ndarray, time: np.ndarray) -> np.ndarray:
+    """
+    construct complex spatio temporal signal for testing.
+    :param x_loc: 1d x-coordinate.
+    :type x_loc: np.ndarray
+    :param time: 1d time array.
+    :type time: np.ndarray
+    :return: Spatiotemporal signal.
+    :rtype: np.ndarray
+    """
     __f_1 = 1. / np.cosh(x_loc + 3) * np.exp(1j*2.3*time)
     __f_2 = 2. / np.cosh(x_loc) * np.tanh(x_loc) * np.exp(1j*2.8*time)
     return __f_1 + __f_2
 
 
 def test_rank():
+    """
+    Test SVHT rank (no duplicate SVD computation is performed).
+    """
     time = np.linspace(0, 4 * np.pi, 100)
     x_loc = np.linspace(-10, 10, 1024)
     __x, __time = np.meshgrid(x_loc, time)
@@ -31,6 +46,9 @@ def test_rank():
     assert __svht(s, z.shape[0], z.shape[1]) == compute_rank(z, 0)
 
 def test_varprodmd_rho():
+    """
+    Unit test for residual vector :math: `\boldsymbol{\rho}`.
+    """
     data = np.eye(2, 2).astype(np.complex128)
     time = np.array([0., 1.], np.float64)
     alphas = np.array([1. + 0j, 1. + 0j], np.complex128)
@@ -40,23 +58,26 @@ def test_varprodmd_rho():
     __idx = np.where(__s.real != 0.)[0]
     __s_inv = np.zeros_like(__s)
     __s_inv[__idx] = np.reciprocal(__s[__idx])
-    # phi_inv = (__v_t.conj().T * __s_inv.reshape((1, -1))) @ __u.conj().T
+
     res = (data - np.linalg.multi_dot([__u, __u.conj().T, data]))
     res_flat = np.ravel(res)
     res_flat_reals = np.zeros((2 * res_flat.shape[-1]))
     res_flat_reals[:res_flat_reals.shape[-1] // 2] = res_flat.real
     res_flat_reals[res_flat_reals.shape[-1] // 2:] = res_flat.imag
-    opthelper = OptimizeHelper(2, *data.shape)
+    opthelper = __OptimizeHelper(2, *data.shape)
     rho_flat_out = __compute_dmd_rho(alphas_in, time, data, opthelper)
     assert np.array_equal(rho_flat_out, res_flat_reals)
     assert np.array_equal(__u, opthelper.u_svd)
     assert np.array_equal(__s_inv, opthelper.s_inv)
     assert np.array_equal(__v_t.conj().T, opthelper.v_svd)
-    # assert np.array_equal(phi_inv, opthelper.phi_inv)
+
     assert np.array_equal(phi, opthelper.phi)
 
 
 def test_varprodmd_jac():
+    """
+    Test Jacobian computation (real vs. complex).
+    """
     data = np.eye(2, 2).astype(np.complex128)
     time = np.array([0., 1.])
     alphas = np.array([-1. + 0.j, -2. + 0.j], np.complex128)
@@ -68,21 +89,19 @@ def test_varprodmd_jac():
     d_phi_2[:, 1] = time * phi[:, 1]
 
     __u, __s, __v = np.linalg.svd(phi, hermitian=False, full_matrices=False)
-    # print(__s)
     __idx = np.where(__s.real != 0.)[0]
     __s_inv = np.zeros_like(__s)
     __s_inv[__idx] = np.reciprocal(__s[__idx])
-    # __s_inv = np.reciprocal(__s)
     phi_inv = (__v.conj().T * __s_inv.reshape((1, -1))) @ __u.conj().T
 
-    opthelper = OptimizeHelper(2, *data.shape)
+    opthelper = __OptimizeHelper(2, *data.shape)
     opthelper.u_svd = __u
     opthelper.v_svd = __v.conj().T
     opthelper.s_inv = __s_inv
     opthelper.phi = phi
     opthelper.phi_inv = phi_inv
     opthelper.b_matrix = phi_inv @ data
-    opthelper.rho = (data - phi @ opthelper.b_matrix)
+    opthelper.rho = data - phi @ opthelper.b_matrix
     rho_flat = np.ravel(opthelper.rho)
     rho_real = np.zeros((2 * rho_flat.shape[0]))
     rho_real[:rho_flat.shape[0]] = rho_flat.real
@@ -122,10 +141,10 @@ def test_varprodmd_jac():
     GRAD_REAL = JAC_REAL.T @ rho_real
     __GRAD_REAL = __JAC_OUT_REAL.T @ rho_real
     GRAD_IMAG = JAC_IMAG.conj().T @ rho_flat
-    # print(np.linalg.norm(JAC_REAL - __JAC_OUT_REAL))
+
     assert np.linalg.norm(JAC_REAL - __JAC_OUT_REAL) < 1e-12
     assert np.linalg.norm(GRAD_REAL - __GRAD_REAL) < 1e-12
-    # print(np.linalg.norm(GRAD_REAL[:GRAD_REAL.shape[-1] // 2], __realpart))
+
     __imag2real = np.zeros_like(GRAD_REAL)
     __imag2real[:__imag2real.shape[-1] // 2] = GRAD_IMAG.real
     __imag2real[__imag2real.shape[-1] // 2:] = GRAD_IMAG.imag
@@ -143,11 +162,12 @@ def test_varprodmd_jac():
 
     # funny numerical errors leads to np.array_equal(GRAD_IMAG, __rec_grad) to fail
     assert np.linalg.norm(GRAD_IMAG - __rec_grad) < 1e-9
-    # assert np.array_equal(__GRAD_REAL, __imag2real)
 
 
 def test_varprodmd_any():
-
+    """
+    Test Variable Projection function for DMD (at any timestep).
+    """
     time = np.linspace(0, 4 * np.pi, 100)
     x_loc = np.linspace(-10, 10, 1024)
     __x, __time = np.meshgrid(x_loc, time)
@@ -171,7 +191,6 @@ def test_varprodmd_any():
                               OPT_DEF_ARGS,
                               rank=0.)
 
-    # print(__t_sub)
     phi, lambdas, eigenf, _, _ = compute_varprodmd_any(__z_sub,
                                                        __t_sub,
                                                        OPT_DEF_ARGS,
@@ -197,7 +216,9 @@ def test_varprodmd_any():
 
 
 def test_varprodmd_class():
-
+    """
+    Test VarProDMD class.
+    """
     time = np.linspace(0, 4 * np.pi, 100)
     x_loc = np.linspace(-10, 10, 1024)
     __x, __time = np.meshgrid(x_loc, time)
@@ -251,6 +272,5 @@ def test_varprodmd_class():
         __mae = np.sum(np.sum(__diff, axis=0), axis=-1) / \
             z.shape[0] / z.shape[-1]
         assert dmd.selected_samples.size == int((1 - 0.6) * 100)
-        print(arg)
         assert __mae < 1.
         
