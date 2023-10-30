@@ -42,7 +42,9 @@ def test_rank():
     s = np.linalg.svd(z, full_matrices=False)[1]
     assert __compute_rank(s, z.shape[0], z.shape[1], 0) == compute_rank(z, 0)
     assert __compute_rank(s, z.shape[0], z.shape[1], 4) == 4
-    assert __compute_rank(s, z.shape[0], z.shape[1], 0.8) == compute_rank(z, 0.8)
+    assert __compute_rank(s,
+                          z.shape[0],
+                          z.shape[1], 0.8) == compute_rank(z, 0.8)
     assert __svht(s, z.shape[0], z.shape[1]) == compute_rank(z, 0)
 
 def test_varprodmd_rho():
@@ -106,15 +108,17 @@ def test_varprodmd_jac():
     rho_real = np.zeros((2 * rho_flat.shape[0]))
     rho_real[:rho_flat.shape[0]] = rho_flat.real
     rho_real[rho_flat.shape[0]:] = rho_flat.imag
-    A_1 = d_phi_1 @ opthelper.b_matrix - np.linalg.multi_dot([__u,
-                                                              __u.conj().T,
-                                                              d_phi_1,
-                                                              opthelper.b_matrix])
+    A_1 = d_phi_1 @ opthelper.b_matrix - \
+        np.linalg.multi_dot([__u,
+                             __u.conj().T,
+                             d_phi_1,
+                             opthelper.b_matrix])
 
-    A_2 = d_phi_2 @ opthelper.b_matrix - np.linalg.multi_dot([__u,
-                                                              __u.conj().T,
-                                                              d_phi_2,
-                                                              opthelper.b_matrix])
+    A_2 = d_phi_2 @ opthelper.b_matrix - \
+        np.linalg.multi_dot([__u,
+                             __u.conj().T,
+                             d_phi_2,
+                             opthelper.b_matrix])
 
     G_1 = np.linalg.multi_dot(
         [phi_inv.conj().T, d_phi_1.conj().T, opthelper.rho])
@@ -153,14 +157,16 @@ def test_varprodmd_jac():
     __rec_grad.real = GRAD_REAL[:GRAD_REAL.shape[-1] // 2]
     __rec_grad.imag = GRAD_REAL[GRAD_REAL.shape[-1] // 2:]
 
-    # funny numerical errors leads to np.array_equal(GRAD_IMAG, __rec_grad) to fail
+    # funny numerical errors leads to 
+    # np.array_equal(GRAD_IMAG, __rec_grad) to fail
     assert np.linalg.norm(GRAD_IMAG - __rec_grad) < 1e-9
 
     __rec_grad = np.zeros_like(GRAD_IMAG)
     __rec_grad.real = __GRAD_REAL[:__GRAD_REAL.shape[-1] // 2]
     __rec_grad.imag = __GRAD_REAL[__GRAD_REAL.shape[-1] // 2:]
 
-    # funny numerical errors leads to np.array_equal(GRAD_IMAG, __rec_grad) to fail
+    # funny numerical errors leads to 
+    # np.array_equal(GRAD_IMAG, __rec_grad) to fail
     assert np.linalg.norm(GRAD_IMAG - __rec_grad) < 1e-9
 
 
@@ -227,16 +233,16 @@ def test_varprodmd_class():
     dmd = VarProDMD(0, False, False, 0)
 
     with pytest.raises(ValueError):
-        dmd.forecast(time)
+        __ = dmd.forecast(time)
 
     with pytest.raises(ValueError):
-        dmd.ssr
+        __ = dmd.ssr
 
     with pytest.raises(ValueError):
-        dmd.selected_samples
+        __ = dmd.selected_samples
 
     with pytest.raises(ValueError):
-        dmd.opt_stats
+        __ = dmd.opt_stats
 
     dmd.fit(z, time)
     assert dmd.fitted
@@ -273,4 +279,3 @@ def test_varprodmd_class():
             z.shape[0] / z.shape[-1]
         assert dmd.selected_samples.size == int((1 - 0.6) * 100)
         assert __mae < 1.
-        
