@@ -64,8 +64,6 @@ class COSTS:
 
     def __init__(
         self,
-        window_length=None,
-        step_size=None,
         svd_rank=None,
         global_svd=True,
         initialize_artificially=False,
@@ -79,6 +77,8 @@ class COSTS:
         max_rank=None,
         n_components=None,
     ):
+        self._step_size = None
+        self._window_length = None
         self._n_components = n_components
         self._svd_rank = svd_rank
         self._global_svd = global_svd
@@ -138,6 +138,14 @@ class COSTS:
         :rtype: int or float
         """
         return self._window_length
+
+    @property
+    def step_size(self):
+        """
+        :return: the length of the windows used for this decomposition level.
+        :rtype: int or float
+        """
+        return self._step_size
 
     @property
     def n_slides(self):
@@ -404,8 +412,9 @@ class COSTS:
 
             # Reset optdmd between iterations
             if not self._global_svd:
-                # Get the svd rank for this window. Uses rank truncation when svd_rank is
-                # not fixed, i.e. svd_rank = 0, otherwise uses the specified rank.
+                # Get the svd rank for this window. Uses rank truncation when
+                # svd_rank is not fixed, i.e. svd_rank = 0, otherwise uses the
+                # specified rank.
                 _svd_rank = compute_rank(data_window, svd_rank=self._svd_rank)
                 # Force svd rank to be even to allow for conjugate pairs.
                 if self._force_even_eigs and _svd_rank % 2:
@@ -471,6 +480,9 @@ class COSTS:
             omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
         elif transform_method == "log10":
             omega_transform = np.log10(np.abs(omega_rshp.imag.astype("float")))
+            # Impute log10(0) with the smallest non-zero values in log10(omega).
+            zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
+            omega_transform[~np.isfinite(omega_transform)] = zero_imputer
         else:
             transform_method = "absolute_value"
             omega_transform = np.abs(omega_rshp.imag.astype("float"))
@@ -504,7 +516,8 @@ class COSTS:
     def cluster_hyperparameter_sweep(
         self, n_components_range=None, transform_method=None
     ):
-        """Performs a hyperparameter search for the number of components in the kmeans clustering."""
+        """Performs a hyperparameter search for the number of components
+        in the kmeans clustering."""
         if n_components_range is None:
             n_components_range = np.arange(
                 np.max((self.svd_rank // 4, 2)), self.svd_rank
@@ -522,6 +535,9 @@ class COSTS:
             omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
         elif transform_method == "log10":
             omega_transform = np.log10(np.abs(omega_rshp.imag.astype("float")))
+            # Impute log10(0) with the smallest non-zero values in log10(omega).
+            zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
+            omega_transform[~np.isfinite(omega_transform)] = zero_imputer
         else:
             omega_transform = np.abs(omega_rshp.imag.astype("float"))
 
@@ -552,6 +568,9 @@ class COSTS:
         elif self._transform_method == "log10":
             omega_rshp = np.abs(omega_rshp.imag)
             omega_transform = np.log10(np.abs(omega_rshp.imag.astype("float")))
+            # Impute log10(0) with the smallest non-zero values in log10(omega).
+            zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
+            omega_transform[~np.isfinite(omega_transform)] = zero_imputer
             label = r"$log_{10}(|\omega|)$"
             hist_kwargs["bins"] = np.linspace(
                 np.min(np.log10(omega_transform[omega_rshp > 0])),
@@ -613,11 +632,11 @@ class COSTS:
 
         return fig, ax
 
-    def global_reconstruction(self, kwargs=None):
+    def global_reconstruction(self, scale_reconstruction_kwargs=None):
         """Helper function for generating the global reconstruction."""
-        if kwargs is None:
-            kwargs = {}
-        xr_sep = self.scale_reconstruction(**kwargs)
+        if scale_reconstruction_kwargs is None:
+            scale_reconstruction_kwargs = {}
+        xr_sep = self.scale_reconstruction(**scale_reconstruction_kwargs)
         x_global_recon = xr_sep.sum(axis=0)
         return x_global_recon
 
@@ -770,6 +789,8 @@ class COSTS:
                 self._window_length
             )
         )
+        ax.set_ylabel("Space (-)")
+
         ax = axes[1]
         ax.set_title("Reconstruction, low frequency")
         ax.pcolormesh(xr_low_frequency, **plot_kwargs)
@@ -889,6 +910,135 @@ class COSTS:
 
         return fig, axes
 
+    def plot_error(
+        self, data, scale_reconstruction_kwargs=None, plot_kwargs=None
+    ):
+        if scale_reconstruction_kwargs is None:
+            scale_reconstruction_kwargs = {}
+        if plot_kwargs is None:
+            plot_kwargs = {}
+        plot_kwargs["vmin"] = plot_kwargs.get("vmin", -3)
+        plot_kwargs["vmax"] = plot_kwargs.get("vmax", 3)
+        plot_kwargs["cmap"] = plot_kwargs.get("cmap", "RdBu_r")
+
+        global_reconstruction = self.global_reconstruction(
+            scale_reconstruction_kwargs=scale_reconstruction_kwargs
+        )
+
+        fig_glbl_r, ax_glbl_r = plt.subplots(
+            1,
+            1,
+        )
+        im = ax_glbl_r.pcolormesh(
+            (global_reconstruction.real - data.real) / data.real * 100,
+            **plot_kwargs,
+        )
+
+        cbar = fig_glbl_r.colorbar(im)
+        cbar.set_label("% error")
+
+        ax_glbl_r.set_xlabel("time (-)")
+        ax_glbl_r.set_ylabel("space (-)")
+        re = self.relative_error(global_reconstruction.real, data)
+        ax_glbl_r.set_title("Error in Global Reconstruction = {:.2}".format(re))
+
+    def plot_time_series(
+        self,
+        space_index,
+        data,
+        scale_reconstruction_kwargs=None,
+        include_residual=False,
+    ):
+        """Plots CoSTS for a single spatial point.
+
+        @param space_index:
+        @param data:
+        @param scale_reconstruction_kwargs:
+        @param include_residual:
+        @return:
+        """
+
+        ground_truth_mean = data.mean(axis=1)
+        ground_truth = (data.T - ground_truth_mean).T
+        ground_truth = ground_truth[space_index, :]
+        ground_truth_mean = ground_truth_mean[space_index]
+
+        if scale_reconstruction_kwargs is None:
+            scale_reconstruction_kwargs = {}
+        xr_sep = self.scale_reconstruction(**scale_reconstruction_kwargs)
+
+        # ToDo: Make these kwargs adjustable inputs.
+        fig, axes = plt.subplots(
+            nrows=self.n_components + 2,
+            sharex=True,
+            sharey=True,
+            figsize=(8, 1.5 * self.n_components),
+        )
+
+        ax = axes[0]
+        ax.plot(ground_truth, color="k")
+        ax.plot(
+            xr_sep.sum(axis=0)[space_index, :] - ground_truth_mean,
+            color="r",
+            lw=0.5,
+        )
+        ax.set_title(
+            "window={}, black=input data, red=reconstruction".format(
+                self._window_length
+            )
+        )
+        ax.set_ylabel("Amp.")
+        ax.set_xlabel("Time")
+
+        ax = axes[1]
+        ax.plot(
+            ground_truth - (xr_sep[1:, :, :].sum(axis=0))[space_index, :],
+            color="k",
+        )
+
+        for n in range(self.n_components):
+            ax = axes[n + 1]
+            if n == 0:
+                title = "blue = Low-frequency component, black = high frequency residual"
+                ax.plot(xr_sep[n, space_index, :] - ground_truth_mean)
+            else:
+                title = "Band period = {:.0f}s".format(
+                    2 * np.pi / self.cluster_centroids[n]
+                )
+                ax.plot(xr_sep[n, space_index, :])
+            ax.set_title(title)
+            ax.set_ylabel("Amp.")
+            ax.set_xlabel("Time")
+
+        ax = axes[-1]
+        ax.plot(ground_truth, color="k", label="Smoothed data")
+        ax.plot(
+            (xr_sep[1:, :, :].sum(axis=0))[space_index, :],
+            label="High-frequency",
+        )
+        ax.plot(
+            xr_sep[0, space_index, :] - ground_truth_mean, label="Low-frequency"
+        )
+        if include_residual:
+            ax.plot(
+                ground_truth - xr_sep.sum(axis=0)[space_index, :],
+                label="Residual",
+            )
+            ax.set_title(
+                "black=input data, yellow=low-frequency, blue=high-frequency, red=residual"
+            )
+        else:
+            ax.set_title(
+                "black=input data, yellow=low-frequency, blue=high-frequency"
+            )
+
+        ax.set_ylabel("Amp.")
+        ax.set_xlabel("Time")
+        ax.set_xlim(0, self._n_time_steps)
+        fig.tight_layout()
+
+        return fig, axes
+
     def to_xarray(self):
         """Build an xarray dataset from the fitted CoSTS object.
 
@@ -903,17 +1053,17 @@ class COSTS:
         """
         ds = xr.Dataset(
             {
-                "omega": (("window_time_means", "rank"), self.omega_array),
+                "omega": (("window_time_means", "svd_rank"), self.omega_array),
                 "omega_classes": (
-                    ("window_time_means", "rank"),
+                    ("window_time_means", "svd_rank"),
                     self.omega_classes,
                 ),
                 "amplitudes": (
-                    ("window_time_means", "rank"),
+                    ("window_time_means", "svd_rank"),
                     self.amplitudes_array,
                 ),
                 "modes": (
-                    ("window_time_means", "space", "rank"),
+                    ("window_time_means", "space", "svd_rank"),
                     self.modes_array,
                 ),
                 "window_means": (
@@ -928,7 +1078,7 @@ class COSTS:
             coords={
                 "window_time_means": np.mean(self.time_array, axis=1),
                 "slide": ("window_time_means", np.arange(self._n_slides)),
-                "rank": np.arange(self.svd_rank),
+                "svd_rank": np.arange(self.svd_rank),
                 "space": np.arange(self._n_data_vars),
                 "frequency_band": np.arange(self.n_components),
                 "window_index": np.arange(self._window_length),
@@ -947,8 +1097,14 @@ class COSTS:
                 "n_time_steps": self._n_time_steps,
                 "step_size": self._step_size,
                 "non_integer_n_slide": self._non_integer_n_slide,
+                "global_svd": self._global_svd,
             },
         )
+
+        for kw, kw_val in self._pydmd_kwargs.items():
+            ds.attrs["pydmd_kwargs__{}".format(kw)] = self._xarray_sanitize(
+                kw_val
+            )
 
         return ds
 
@@ -959,7 +1115,7 @@ class COSTS:
         """
 
         self._omega_array = ds.omega.values
-        self._omega_classes = ds.omega_classes
+        self._omega_classes = ds.omega_classes.values
         self._amplitudes_array = ds.amplitudes.values
         self._modes_array = ds.modes.values
         self._window_means_array = ds.window_means.values
@@ -973,5 +1129,25 @@ class COSTS:
         self._non_integer_n_slide = ds.attrs["non_integer_n_slide"]
         self._step_size = ds.attrs["step_size"]
         self._window_length = ds.attrs["window_length"]
+        self._global_svd = ds.attrs["global_svd"]
+
+        self._pydmd_kwargs = {}
+        for attr in ds.attrs:
+            if "pydmd_kwargs" in attr:
+                self._pydmd_kwargs[attr] = self._xarray_unsanitize(
+                    ds.attrs[attr]
+                )
 
         return self
+
+    @staticmethod
+    def _xarray_sanitize(value):
+        if value == None:
+            value = "None"
+        return value
+
+    @staticmethod
+    def _xarray_unsanitize(value):
+        if value == "None":
+            value = None
+        return value

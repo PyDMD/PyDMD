@@ -1,34 +1,35 @@
 import numpy as np
-from pydmd.bopdmd import BOPDMD
-from .utils import compute_rank, compute_svd
 import copy
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
+from sklearn.cluster import MiniBatchKMeans
+from sklearn.metrics import silhouette_score, calinski_harabasz_score
 import matplotlib.pyplot as plt
 import xarray as xr
 from pydmd.costs import COSTS
+import os
 
 
 class mrCOSTS:
     """Multi-resolution Coherent Spatio-Temporal Scale Separation (mrCOSTS) with DMD.
 
     :param window_length_array: Length of the analysis window in number of time steps.
-    :type window_length_array: int
+    :type window_length_array: list of int
     :param step_size_array: Number of time steps to slide each CSM-DMD window.
-    :type step_size_array: int
-    :param n_components: Number of independent frequency bands for this window length.
-    :type n_components: int
+    :type step_size_array: list of int
+    :param n_components_array: Number of frequency bands to use for clustering this
+        window length.
+    :type n_components_array: list of int
     :param svd_rank_array: The rank of the BOPDMD fit.
-    :type svd_rank_array: int
+    :type svd_rank_array: list of int
     :param global_svd: Flag indicating whether to find the proj_basis and initial
         values using the entire dataset instead of individually for each window.
         Generally using the global_svd speeds up the fitting process by not finding a
         new initial value for each window. Default is True.
-    :type global_svd: bool
-    :param initialize_artificially: Flag indicating whether to initialize the DMD using
-        imaginary eigenvalues (i.e., the imaginary component of the cluster results from a
-        previous iteration) through the `cluster_centroids` keyword. Default is False.
-    :type initialize_artificially: bool
+    :type global_svd: list of bool
+    :param initialize_artificially: Flag indicating whether to initialize the DMD
+        using imaginary eigenvalues (i.e., the imaginary component of the cluster
+        results from a previous iteration) through the `cluster_centroids` keyword.
+        Default is False.
+    :type initialize_artificially: list of bool
     :param pydmd_kwargs: Keyword arguments to pass onto the BOPDMD object.
     :type pydmd_kwargs: dict
     :param cluster_centroids: Cluster centroids from a previous fitting iteration to
@@ -36,8 +37,9 @@ class mrCOSTS:
         component.
     :type cluster_centroids: numpy array
     :param reset_alpha_init: Flag indicating whether the initial guess for the BOPDMD
-        eigenvalues should be reset for each window. Resetting the initial value increases
-        the computation time due to finding a new initial guess. Default is False.
+        eigenvalues should be reset for each window. Resetting the initial value
+        increases the computation time due to finding a new initial guess. Default
+        is False.
     :type reset_alpha_init: bool
     :param force_even_eigs: Flag indicating whether an even svd_rank should be forced
         when not specifying the svd_rank directly (i.e., svd_rank=0). Default is True.
@@ -48,18 +50,17 @@ class mrCOSTS:
     :param use_kmean_freqs: Flag specifying if the BOPDMD fit should use initial values
         taken from cluster centroids, e.g., from a previoius iteration.
     :type use_kmean_freqs: bool
-    :param init_alpha: Initial guess for the eigenvalues provided to BOPDMD. Must be equal
-        to the `svd_rank`.
+    :param init_alpha: Initial guess for the eigenvalues provided to BOPDMD.
+        Must be equal to the `svd_rank`.
     :type init_alpha: numpy array
-    :param max_rank: Maximum allowed `svd_rank`. Overrides the optimal rank truncation if
-        `svd_rank=0`.
+    :param max_rank: Maximum allowed `svd_rank`. Overrides the optimal rank truncation
+        if `svd_rank=0`.
     :type max_rank: int
-    :param n_components: Number of frequency bands to use for clustering.
-    :type n_components: int
-    :param force_even_eigs: Flag specifying if the `svd_rank` should be forced to be even.
+    :param force_even_eigs: Flag specifying if the `svd_rank` should be forced to
+        be even.
     :type force_even_eigs: bool
-    :param reset_alpha_init: Flag specifying if the initial eigenvalue guess should be reset
-        between windows.
+    :param reset_alpha_init: Flag specifying if the initial eigenvalue guess should
+        be reset between windows.
     :type reset_alpha_init: bool
     """
 
@@ -68,23 +69,28 @@ class mrCOSTS:
         window_length_array=None,
         step_size_array=None,
         svd_rank_array=None,
-        global_svd=True,
+        global_svd_array=None,
         initialize_artificially=False,
         use_last_freq=False,
         use_kmean_freqs=False,
         init_alpha=None,
         pydmd_kwargs=None,
+        costs_recon_kwargs=None,
         cluster_centroids=None,
         reset_alpha_init=False,
         force_even_eigs=True,
         max_rank=None,
         n_components_array=None,
+        cluster_sweep=False,
+        transform_method=None,
+        store_data=True,
     ):
+        self._store_data = store_data
         self._n_components_array = n_components_array
         self._step_size_array = step_size_array
         self._window_length_array = window_length_array
         self._svd_rank_array = svd_rank_array
-        self._global_svd = global_svd
+        self._global_svd_array = global_svd_array
         self._initialize_artificially = initialize_artificially
         self._use_last_freq = use_last_freq
         self._use_kmean_freqs = use_kmean_freqs
@@ -93,23 +99,19 @@ class mrCOSTS:
         self._reset_alpha_init = reset_alpha_init
         self._force_even_eigs = force_even_eigs
         self._max_rank = max_rank
+        self._cluster_sweep = cluster_sweep
+        self._transform_method = transform_method
 
         # Initialize variables that are defined in fitting.
+        self._n_decompositions = None
         self._n_data_vars = None
         self._n_time_steps = None
-        self._window_length = None
-        self._n_slides = None
-        self._time_array = None
-        self._modes_array = None
-        self._omega_array = None
-        self._amplitudes_array = None
         self._cluster_centroids = None
         self._omega_classes = None
-        self._transform_method = None
-        self._window_means_array = None
-        self._non_integer_n_slide = None
+        self._costs_array = None
+        self._da_omega = None
 
-        # Specify default keywords to hand to BOPDMD.
+        # Specify default keywords to hand to CoSTS's BOPDMD model.
         if pydmd_kwargs is None:
             self._pydmd_kwargs = {
                 "eig_sort": "imag",
@@ -126,8 +128,39 @@ class mrCOSTS:
             )
             self._pydmd_kwargs["use_proj"] = pydmd_kwargs.get("use_proj", False)
 
+        if costs_recon_kwargs is None:
+            self._costs_recon_kwargs = {
+                "suppress_growth": False,
+            }
+        else:
+            self._costs_recon_kwargs = costs_recon_kwargs
+            self._costs_recon_kwargs[
+                "suppress_growth"
+            ] = costs_recon_kwargs.get("suppress_growth", False)
+
     @property
-    def svd_rank(self):
+    def store_data(self):
+        """
+        :return: If the low-frequency components were stored (True)
+            or discarded (False).
+        :rtype: bool
+        """
+        return self._store_data
+
+    @property
+    def costs_array(self):
+        """
+        :return: costs objects for each decomposition level.
+        :rtype: list
+        """
+        return self._costs_array
+
+    @costs_array.setter
+    def costs_array(self, costs_array):
+        self._costs_array = costs_array
+
+    @property
+    def svd_rank_array(self):
         """
         :return: the rank used for the svd truncation.
         :rtype: int or float
@@ -135,56 +168,50 @@ class mrCOSTS:
         return self._svd_rank_array
 
     @property
-    def window_length(self):
+    def window_length_array(self):
         """
-        :return: the length of the windows used for this decomposition level.
-        :rtype: int or float
+        :return: the length of the windows used for each decomposition level.
+        :rtype: list of int or float
         """
-        return self._window_length
+        return self._window_length_array
 
     @property
-    def n_slides(self):
+    def step_size_array(self):
         """
-        :return: number of window slides for this decomposition level.
+        :return: the length of the windows used for each decomposition level.
+        :rtype: list of int or float
+        """
+        return self._step_size_array
+
+    @property
+    def n_decompositions(self):
+        """
+        :return: The number of multi-resolution decompositions to perform.
         :rtype: int
         """
-        return self._n_slides
+        return self._n_decompositions
+
+    @property
+    def transform_method(self):
+        """
+        :return: How to transform the eigenvalues for clustering.
+        :rtype: string
+        """
+        return self._transform_method
+
+    @property
+    def n_components_array(self):
+        """
+        :return: the number of frequency bands used for each decomposition level.
+        :rtype: list of int or float
+        """
+        return self._n_components_array
 
     @property
     def modes_array(self):
         if not hasattr(self, "_modes_array"):
             raise ValueError("You need to call fit before")
         return self._modes_array
-
-    @property
-    def amplitudes_array(self):
-        if not hasattr(self, "_amplitudes_array"):
-            raise ValueError("You need to call fit first.")
-        return self._amplitudes_array
-
-    @property
-    def omega_array(self):
-        if not hasattr(self, "_omega_array"):
-            raise ValueError("You need to call fit first.")
-        return self._omega_array
-
-    @property
-    def time_array(self):
-        if not hasattr(self, "_time_array"):
-            raise ValueError("You need to call fit first.")
-        return self._time_array
-
-    @property
-    def window_means_array(self):
-        if not hasattr(self, "_window_means_array"):
-            raise ValueError("You need to call fit first.")
-        return self._window_means_array
-
-    @property
-    def n_components(self):
-        if not hasattr(self, "_n_components"):
-            raise ValueError("You need to call `cluster_omega()` first.")
-        return self._n_components
 
     @property
     def cluster_centroids(self):
@@ -198,40 +225,72 @@ class mrCOSTS:
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._omega_classes
 
-    def fit(self, data):
+    @staticmethod
+    def _data_shape(data):
+        n_time_steps = np.shape(data)[1]
+        n_data_vars = np.shape(data)[0]
+        return n_time_steps, n_data_vars
+
+    def fit(self, data, time, verbose=True):
         window_lengths = self._window_length_array
-        step_sizes = self.step_size_array
-        svd_ranks = self.svd_rank_array
+        step_sizes = self._step_size_array
+        svd_ranks = self._svd_rank_array
+        n_decompositions = self._n_decompositions
+        transform_method = self._transform_method
 
-        mrd_list = []
-        suppress_growth = True
-        transform_method = "squared"
+        # Check for the n_components array and cluster sweeping.
+        self._n_decompositions = len(self._window_length_array)
+        if self._cluster_sweep:
+            if self._n_components_array is not None:
+                raise ValueError(
+                    "Only one of `cluster_sweep` and `n_components_array` can be provided."
+                )
+            self._n_components_array = np.zeros(self._n_decompositions) * np.nan
 
-        data_iter = np.zeros((num_decompositions, data.shape[0], data.shape[1]))
-        data_iter[0, :, :] = data
+        # Set the global_svd flag if none was provided.
+        if self._global_svd_array is None:
+            self._global_svd_array = [True] * n_decompositions
+
+        self._costs_array = []
+        self._n_time_steps, self._n_data_vars = self._data_shape(data)
+
+        if self._store_data:
+            data_iter = np.zeros(
+                (n_decompositions, self._n_data_vars, self._n_time_steps)
+            )
+            data_iter[0, :, :] = data
+        else:
+            data_iter = data
 
         for n_decomp, (window, step, rank) in enumerate(
             zip(window_lengths, step_sizes, svd_ranks)
         ):
-            print("Working on window length={}".format(window))
+            global_svd = self._global_svd_array[n_decomp]
 
-            x_iter = data_iter[n_decomp, :, :].squeeze()
+            if self._store_data:
+                x_iter = data_iter[n_decomp, :, :].squeeze()
+            else:
+                x_iter = data_iter.squeeze()
+
             mrd = COSTS(
                 svd_rank=rank,
-                global_svd=True,
-                pydmd_kwargs={"eig_constraints": {"conjugate_pairs", "stable"}},
+                global_svd=global_svd,
+                pydmd_kwargs=self._pydmd_kwargs,
             )
 
-            print("Fitting")
-            print("_________________________________________________")
-            mrd.fit(x_iter, np.atleast_2d(time), window, step, verbose=True)
-            print("_________________________________________________")
+            if verbose:
+                print("_________________________________________________")
+                print("Fitting window length = {}".format(window))
+            mrd.fit(x_iter, np.atleast_2d(time), window, step, verbose=verbose)
 
             # Cluster the frequency bands
-            if self._cluster_sweep:
+            if self._cluster_sweep or np.isnan(
+                self._n_components_array[n_decomp]
+            ):
                 n_components = mrd.cluster_hyperparameter_sweep(
                     transform_method=transform_method
                 )
+                self._n_components_array[n_decomp] = n_components
             else:
                 n_components = self._n_components_array[n_decomp]
 
@@ -240,21 +299,481 @@ class mrCOSTS:
             )
 
             # Global reconstruction
-            global_reconstruction = mrd.global_reconstruction(
-                {"suppress_growth": suppress_growth}
-            )
-            re = mrd.relative_error(global_reconstruction.real, x_iter)
             if verbose:
+                global_reconstruction = mrd.global_reconstruction(
+                    scale_reconstruction_kwargs=self._costs_recon_kwargs,
+                )
+                re = mrd.relative_error(global_reconstruction.real, x_iter)
                 print("Error in Global Reconstruction = {:.2}".format(re))
 
             # Scale separation
             xr_low_frequency, xr_high_frequency = mrd.scale_separation(
-                scale_reconstruction_kwargs={"suppress_growth": suppress_growth}
+                scale_reconstruction_kwargs=self._costs_recon_kwargs
             )
 
             # Pass the low frequency component to the next level of decomposition.
-            if n_decomp < num_decompositions - 1:
-                data_iter[n_decomp + 1, :, :] = xr_low_frequency
+            if n_decomp < n_decompositions - 1:
+                if self._store_data:
+                    data_iter[n_decomp + 1, :, :] = xr_low_frequency
+                else:
+                    data_iter = xr_low_frequency
 
             # Save the object for later use.
-            mrd_list.append(copy.copy(mrd))
+            self._costs_array.append(copy.copy(mrd))
+
+    def multi_res_interp(
+        self,
+    ):
+        ds_list = [c.to_xarray() for c in self._costs_array]
+        # Remove the low-frequency bands.
+        da_to_concat = [
+            ds_list[0].omega.where(ds_list[0].omega_classes > 0, drop=True)
+        ]
+
+        # Interpolate the larger decomposition levels to the timestep of the
+        # smallest decomposition level.
+        for ds in ds_list[1:]:
+            da = ds.omega.where(ds.omega_classes > 0, drop=True)
+            da = da.interp(
+                window_time_means=ds_list[0].window_time_means,
+                method="nearest",
+                kwargs={"fill_value": "extrapolate"},
+            )
+            da_to_concat.append(da)
+
+        da_omega = xr.concat(
+            da_to_concat,
+            dim="window_length",
+        )
+        da_omega.coords["window_length"] = self._window_length_array
+        da_omega.coords["decomposition_level"] = (
+            "window_length",
+            np.arange(len(da_omega.window_length)),
+        )
+
+        # ToDo: Verify this can handle variable number of svd_ranks
+        #   for each decomposition level
+
+        self._da_omega = da_omega
+
+    def multi_res_deterp(self, omega_classes):
+
+        # Get the indices for the 3-d omega structure
+        index = np.nonzero(~np.isnan(self._da_omega.values))
+
+        # Unravel the flattened omega_classes. The class value of `-1` refers
+        # to the slowest mode in each decomposition window which shouldn't be
+        # included in the global clustering.
+        omega_classes_full = (
+            np.zeros_like(self._da_omega.values, dtype="int") - 1
+        )
+        omega_classes_full[index] = omega_classes
+
+        # Build the omega_classes array into a labeled xarray DataArray object.
+        da_omega_classes = xr.zeros_like(self._da_omega, dtype="int")
+        da_omega_classes.values = omega_classes_full  # .astype("str")
+        da_omega_classes = da_omega_classes.swap_dims(
+            {"window_length": "decomposition_level"}
+        )
+
+        # Get a list of the costs results in xarray format.
+        ds_list = [c.to_xarray() for c in self._costs_array]
+
+        # Interpolate from the high-resolution of the first decomposition level
+        # to the coarser time resolution of the higher decomposition levels
+        omega_classes_list = [
+            da_omega_classes.sel(decomposition_level=d)
+            .sel(
+                window_time_means=ds_list[d].window_time_means, method="nearest"
+            )
+            .values
+            for d in da_omega_classes.decomposition_level.values
+        ]
+
+        return omega_classes_list
+
+    def from_xarray(self, file_list):
+        """Create an mrcosts object from saved files."""
+        mrd_list = []
+        # ToDo: Check for file existence.
+        for f in file_list:
+            mrd_list.append(xr.load_dataset(f, engine="h5netcdf"))
+
+        # Sort by window length
+        mrd_list = sorted(mrd_list, key=lambda mrd: mrd.window_length)
+
+        # Populate information about the fitted data.
+        n_data_vars = mrd_list[0].attrs["n_data_vars"]
+        n_time_steps = mrd_list[0].attrs["n_time_steps"]
+
+        # Convert to an array of costs objects.
+        mrd_list = [COSTS().from_xarray(mrd) for mrd in mrd_list]
+
+        window_length_array = [mrd.window_length for mrd in mrd_list]
+        step_size_array = [mrd.step_size for mrd in mrd_list]
+        svd_rank_array = [mrd.svd_rank for mrd in mrd_list]
+        # ToDo: Don't access protected information.
+        n_components_array = [mrd._n_components for mrd in mrd_list]
+        global_svd_array = [mrd._global_svd for mrd in mrd_list]
+
+        # ToDo: Find a more robust way of handling these cases.
+        # A simple stop-gap to use the kwargs simply from the first element.
+        pydmd_kwargs = mrd_list[0]._pydmd_kwargs
+        # costs_recon_kwargs = mrd_list[0]._costs_recon_kwargs
+
+        # Initialize the mrcosts object.
+        self.__init__(
+            window_length_array=window_length_array,
+            step_size_array=step_size_array,
+            svd_rank_array=svd_rank_array,
+            global_svd_array=global_svd_array,
+            pydmd_kwargs=pydmd_kwargs,
+            # costs_recon_kwargs=costs_recon_kwargs,
+            n_components_array=n_components_array,
+            store_data=False,
+        )
+
+        # Initialize variables that are defined in fitting.
+        self._n_decompositions = len(mrd_list)
+        self.costs_array = mrd_list
+        self._n_data_vars = n_data_vars
+        self._n_time_steps = n_time_steps
+
+    def to_xarray(self, filename):
+        for c in self._costs_array:
+            c.to_xarray().to_netcdf(
+                ".".join(
+                    (
+                        filename,
+                        "window={}".format(c._window_length),
+                        "nc",
+                    )
+                ),
+                engine="h5netcdf",
+                invalid_netcdf=True,
+            )
+
+    def plot_local_reconstructions(
+        self,
+        level,
+        data=None,
+        kwargs=None,
+        scale_reconstruction_kwargs=None,
+    ):
+        """Plot reconstructions for a given local decomposition level.
+
+        @param level:
+        @param data:
+        @param kwargs:
+        @param scale_reconstruction_kwargs:
+        @return:
+        """
+
+        if data is not None:
+            x_iter = data
+        else:
+            if level == 0:
+                raise ValueError(
+                    "Data must be provided when plotting the first decomposition level"
+                )
+            elif level > 0:
+                x_iter, _ = self.costs_array[level - 1].scale_separation()
+
+        if kwargs is None:
+            kwargs = {}
+
+        _ = self.costs_array[level].plot_reconstructions(
+            x_iter,
+            scale_reconstruction_kwargs=scale_reconstruction_kwargs,
+            **kwargs
+        )
+
+    def plot_local_error(
+        self,
+        level,
+        data=None,
+        global_reconstruction=None,
+        scale_reconstruction_kwargs=None,
+        plot_kwargs=None,
+    ):
+        if data is not None:
+            x_iter = data
+        else:
+            if level == 0:
+                raise ValueError(
+                    "Data must be provided when plotting the first decomposition level"
+                )
+            elif level > 0:
+                x_iter, _ = self.costs_array[level - 1].scale_separation()
+
+        if plot_kwargs is None:
+            plot_kwargs = {}
+
+        _ = self.costs_array[level].plot_error(
+            x_iter,
+            scale_reconstruction_kwargs=scale_reconstruction_kwargs,
+            plot_kwargs=plot_kwargs,
+        )
+
+    def plot_local_scale_separation(
+        self,
+        level,
+        data=None,
+        plot_kwargs=None,
+        scale_reconstruction_kwargs=None,
+    ):
+        """Plot the local scale separation reconstructions.
+
+        Reconstruction plots require the input data for the level as well as the reconstruction
+        for the given level. Deriving the input data requires either providing the actual input
+        data (for the first decomposition). Otherwise, the input data is recovered by
+        first reconstructing decomposition = level - 1.
+
+        @param scale_reconstruction_kwargs:
+        @param level:
+        @param data:
+        @param plot_kwargs:
+        @return:
+        """
+        #
+
+        if data is not None:
+            x_iter = data
+        else:
+            if level == 0:
+                raise ValueError(
+                    "Data must be provided when plotting the first decomposition level"
+                )
+            elif level > 0:
+                x_iter, _ = self.costs_array[level - 1].scale_separation()
+
+        if plot_kwargs is None:
+            plot_kwargs = {}
+
+        fig, axes = self.costs_array[level].plot_scale_separation(
+            x_iter,
+            plot_kwargs=plot_kwargs,
+            scale_reconstruction_kwargs=scale_reconstruction_kwargs,
+        )
+
+        return fig, axes
+
+    def plot_local_time_series(
+        self,
+        space_index,
+        level,
+        data=None,
+        plot_kwargs=None,
+        scale_reconstruction_kwargs=None,
+    ):
+        if data is not None:
+            x_iter = data
+        else:
+            if level == 0:
+                raise ValueError(
+                    "Data must be provided when plotting the first decomposition level"
+                )
+            elif level > 0:
+                x_iter, _ = self.costs_array[level - 1].scale_separation()
+
+        if plot_kwargs is None:
+            plot_kwargs = {}
+
+        fig, axes = self.costs_array[level].plot_time_series(
+            space_index,
+            x_iter,
+            # plot_kwargs=plot_kwargs,
+            scale_reconstruction_kwargs=scale_reconstruction_kwargs,
+        )
+
+        return fig, axes
+
+    def global_cluster_hyperparameter_sweep(
+        self,
+        n_components_range,
+        method=None,
+        score_method=None,
+        verbose=True,
+    ):
+        """
+        Hyperparameter search for n_components for kmeans clustering.
+
+        score_method: str or None
+            Valid scoring methods are 'silhouette' and 'calinski-harabasz'. Default is
+            the silhouette score, which can be slow for large numbers of samples.
+        """
+        score = np.zeros_like(n_components_range, float)
+
+        for nind, n in enumerate(n_components_range):
+            if verbose:
+                print("fitting n_components = {}".format(n))
+            cluster_centroids, omega_classes, omega = self.global_cluster_omega(
+                n, method=method
+            )
+
+            if verbose:
+                print("scoring")
+            if score_method is None or score_method == "silhouette":
+                score[nind] = silhouette_score(
+                    omega.reshape(-1, 1),
+                    omega_classes.reshape(-1, 1),
+                    n_jobs=-2,
+                )
+            # Calinski-Harabasz is not a good counter to the silhouette score
+            # since it just increases with increasing number of clusters. It is
+            # only included as a reference and should be replaced if a serious look
+            # is given to altering the clustering algorithm.
+            elif score_method == "calinski-harabasz":
+                score[nind] = calinski_harabasz_score(
+                    omega.reshape(-1, 1),
+                    omega_classes.reshape(-1, 1),
+                )
+
+        return score, n_components_range[np.argmax(score)]
+
+    def global_cluster_omega(
+        self, n_components, method=None, kmeans_kwargs=None
+    ):
+        omega_array = self._da_omega.values
+        # This step flattens the array, which is desirable. We want to cluster on just
+        # on the histogram of omega, which means just one "sample".
+        omega_array = omega_array[~np.isnan(omega_array)]
+        omega_array = self.transform_omega(omega_array, method=method)
+
+        if kmeans_kwargs is None:
+            random_state = 0
+            kmeans_kwargs = {
+                "n_init": "auto",
+                "random_state": random_state,
+            }
+        kmeans = MiniBatchKMeans(n_clusters=n_components, **kmeans_kwargs)
+        omega_classes = kmeans.fit_predict(np.atleast_2d(omega_array).T)
+        cluster_centroids = kmeans.cluster_centers_.flatten()
+
+        # Sort the clusters by the centroid magnitude.
+        idx = np.argsort(cluster_centroids)
+        lut = np.zeros_like(idx)
+        lut[idx] = np.arange(n_components)
+        omega_classes = lut[omega_classes]
+        cluster_centroids = cluster_centroids[idx]
+
+        return cluster_centroids, omega_classes, omega_array
+
+    @staticmethod
+    def transform_omega(omega_array, method=None):
+        if method is None:
+            omega_array = np.abs(omega_array.imag.astype("float"))
+        elif method == "square_frequencies":
+            omega_array = (np.conj(omega_array) * omega_array).astype("float")
+        elif method == "period":
+            omega_array = 1 / np.abs(omega_array.imag.astype("float"))
+        elif method == "log10":
+            omega_array = np.log10(np.abs(omega_array.imag.astype("float")))
+        elif method == "period":
+            omega_array = 1 / (np.abs(omega_array.imag.astype("float")))
+
+        return omega_array
+
+    def global_scale_reconstruction(
+        self,
+        n_components,
+        omega_classes_list,
+        suppress_growth=True,
+    ):
+        """Reconstruct the sliding mrDMD into the constituent components.
+
+        The reconstructed data are convolved with a guassian filter since
+        points near the middle of the window are more reliable than points
+        at the edge of the window. Note that this will leave the beginning
+        and end of time series prone to larger errors. A best practice is
+        to cut off `window_length` from each end before further analysis.
+
+        suppress_growth:
+        Kill positive real components of frequencies
+        """
+
+        # Each individual reconstructed window
+        xr_sep = np.zeros(
+            (
+                self.n_decompositions,
+                n_components,
+                self._n_data_vars,
+                self._n_time_steps,
+            )
+        )
+
+        for n_mrd, mrd in enumerate(self._costs_array):
+            # Track the total contribution from all windows to each time step
+            xn = np.zeros(self._n_time_steps)
+
+            # Convolve each windowed reconstruction with a gaussian filter.
+            # Std dev of gaussian filter
+            recon_filter_sd = mrd._window_length / 8
+            recon_filter = np.exp(
+                -(
+                    (
+                        np.arange(mrd._window_length)
+                        - (mrd._window_length + 1) / 2
+                    )
+                    ** 2
+                )
+                / recon_filter_sd**2
+            )
+            omega_classes = omega_classes_list[n_mrd]
+
+            for k in range(mrd._n_slides):
+                w = mrd._modes_array[k]
+                b = mrd._amplitudes_array[k]
+                omega = np.atleast_2d(mrd._omega_array[k]).T
+                classification = omega_classes[k]
+
+                if suppress_growth:
+                    omega[omega.real > 0] = 1j * omega[omega.real > 0].imag
+
+                # Compute each segment of xr starting at "t = 0"
+                t = mrd._time_array[k]
+                t_start = mrd._time_array[k, 0]
+                t = t - t_start
+
+                xr_sep_window = np.zeros(
+                    (n_components, mrd._n_data_vars, mrd._window_length)
+                )
+                for j in np.arange(0, n_components):
+                    xr_sep_window[j, :, :] = np.linalg.multi_dot(
+                        [
+                            w[:, classification == j],
+                            np.diag(b[classification == j]),
+                            np.exp(omega[classification == j] * t),
+                        ]
+                    )
+
+                    xr_sep_window[j, :, :] = (
+                        xr_sep_window[j, :, :] * recon_filter
+                    )
+
+                    if k == mrd._n_slides - 1 and mrd._non_integer_n_slide:
+                        window_indices = slice(-mrd._window_length, None)
+                    else:
+                        window_indices = slice(
+                            k * mrd._step_size,
+                            k * mrd._step_size + mrd._window_length,
+                        )
+                    xr_sep[n_mrd, j, :, window_indices] = (
+                        xr_sep[n_mrd, j, :, window_indices]
+                        + xr_sep_window[j, :, :]
+                    )
+
+                xn[window_indices] += recon_filter
+
+            xr_sep[n_mrd, :, :, :] = xr_sep[n_mrd, :, :, :] / xn
+
+        return xr_sep
+
+    def get_background(self):
+        """The low frequency background values not included in the scale separation."""
+
+        background = self.costs_array[-1].scale_reconstruction()[0, :, :]
+        return background
+
+
+# ToDo: Make reconstruction equivalent for costs.scale_separation and costs.global_reconstruction
