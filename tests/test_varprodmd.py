@@ -157,7 +157,7 @@ def test_varprodmd_jac():
     __rec_grad.real = GRAD_REAL[:GRAD_REAL.shape[-1] // 2]
     __rec_grad.imag = GRAD_REAL[GRAD_REAL.shape[-1] // 2:]
 
-    # funny numerical errors leads to 
+    # funny numerical errors leads to
     # np.array_equal(GRAD_IMAG, __rec_grad) to fail
     assert np.linalg.norm(GRAD_IMAG - __rec_grad) < 1e-9
 
@@ -165,7 +165,7 @@ def test_varprodmd_jac():
     __rec_grad.real = __GRAD_REAL[:__GRAD_REAL.shape[-1] // 2]
     __rec_grad.imag = __GRAD_REAL[__GRAD_REAL.shape[-1] // 2:]
 
-    # funny numerical errors leads to 
+    # funny numerical errors leads to
     # np.array_equal(GRAD_IMAG, __rec_grad) to fail
     assert np.linalg.norm(GRAD_IMAG - __rec_grad) < 1e-9
 
