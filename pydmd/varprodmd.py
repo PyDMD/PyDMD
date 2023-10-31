@@ -598,7 +598,7 @@ class VarProOperator(DMDOperator):
         self._eigenvalues: np.ndarray = None
 
     def compute_operator(
-        self, X: np.ndarray, time: np.ndarray
+        self, X: np.ndarray, Y: np.ndarray
     ) -> Tuple[np.ndarray, OptimizeResult, np.ndarray]:
         r"""
         Perform Variable Projection for DMD using SciPy's
@@ -606,10 +606,10 @@ class VarProOperator(DMDOperator):
 
         :param X: Measurement :math:`\boldsymbol{X} \in \mathbb{C}^{n \times m}`
         :type X: np.ndarray
-        :param time: 1d array of timestamps where individual
+        :param Y: 1d array of timestamps where individual
             measurements :math:`\boldsymbol{x}_i \in \mathbb{C}^n`
             where taken.
-        :type time: np.ndarray
+        :type Y: np.ndarray
         :raises ValueError: If `sorted_eigs` from constructor
             was set to an invalid string.
         :return: Eigenfunctions/amplitudes :math:`\boldsymbol{\varphi}^{m-1}`,
@@ -628,7 +628,7 @@ class VarProOperator(DMDOperator):
             opt,
         ) = compute_varprodmd_any(
             X,
-            time,
+            Y,
             self._optargs,
             self._svd_rank,
             not self._exact,
@@ -681,7 +681,7 @@ class VarProDMD(DMDBase):
     Further simplifications (outer products) avoids using sparse matrices.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=super-init-not-called
         self,
         svd_rank: Union[float, int] = 0,
         exact: bool = False,
@@ -742,6 +742,10 @@ class VarProDMD(DMDBase):
             Defaults to None.
         :type optargs: Dict[str, Any], optional
         """
+
+        # super constructor not called
+        # as most of the attributes are
+        # not used.
 
         if optargs is None:
             optargs = OPT_DEF_ARGS
