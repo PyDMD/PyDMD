@@ -967,6 +967,7 @@ class COSTS:
             scale_reconstruction_kwargs = {}
         xr_sep = self.scale_reconstruction(**scale_reconstruction_kwargs)
 
+        # ToDo: Make these kwargs adjustable inputs.
         fig, axes = plt.subplots(
             nrows=self.n_components + 2,
             sharex=True,
@@ -982,10 +983,12 @@ class COSTS:
             lw=0.5,
         )
         ax.set_title(
-            "Input signal (single point), window={}, black=input data, red=reconstruction".format(
+            "window={}, black=input data, red=reconstruction".format(
                 self._window_length
             )
         )
+        ax.set_ylabel("Amp.")
+        ax.set_xlabel("Time")
 
         ax = axes[1]
         ax.plot(
@@ -994,15 +997,18 @@ class COSTS:
         )
 
         for n in range(self.n_components):
+            ax = axes[n + 1]
             if n == 0:
                 title = "blue = Low-frequency component, black = high frequency residual"
-                axes[n + 1].plot(xr_sep[n, space_index, :] - ground_truth_mean)
+                ax.plot(xr_sep[n, space_index, :] - ground_truth_mean)
             else:
                 title = "Band period = {:.0f}s".format(
                     2 * np.pi / self.cluster_centroids[n]
                 )
-                axes[n + 1].plot(xr_sep[n, space_index, :])
-            axes[n + 1].set_title(title)
+                ax.plot(xr_sep[n, space_index, :])
+            ax.set_title(title)
+            ax.set_ylabel("Amp.")
+            ax.set_xlabel("Time")
 
         ax = axes[-1]
         ax.plot(ground_truth, color="k", label="Smoothed data")
@@ -1019,11 +1025,15 @@ class COSTS:
                 label="Residual",
             )
             ax.set_title(
-                "black=input data, yellow=x_r,LF, blue=x_r,HF, red=residual"
+                "black=input data, yellow=low-frequency, blue=high-frequency, red=residual"
             )
         else:
-            ax.set_title("black=input data, yellow=x_r,LF, blue=x_r,HF")
+            ax.set_title(
+                "black=input data, yellow=low-frequency, blue=high-frequency"
+            )
 
+        ax.set_ylabel("Amp.")
+        ax.set_xlabel("Time")
         ax.set_xlim(0, self._n_time_steps)
         fig.tight_layout()
 

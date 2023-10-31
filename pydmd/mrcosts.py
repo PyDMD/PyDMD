@@ -102,8 +102,6 @@ class mrCOSTS:
         self._cluster_sweep = cluster_sweep
         self._transform_method = transform_method
 
-        # ToDo: Check for cluster_sweep and n_components_array
-
         # Initialize variables that are defined in fitting.
         self._n_decompositions = None
         self._n_data_vars = None
@@ -237,9 +235,17 @@ class mrCOSTS:
         window_lengths = self._window_length_array
         step_sizes = self._step_size_array
         svd_ranks = self._svd_rank_array
-        self._n_decompositions = len(window_lengths)
         n_decompositions = self._n_decompositions
         transform_method = self._transform_method
+
+        # Check for the n_components array and cluster sweeping.
+        self._n_decompositions = len(self._window_length_array)
+        if self._cluster_sweep:
+            if self._n_components_array is not None:
+                raise ValueError(
+                    "Only one of `cluster_sweep` and `n_components_array` can be provided."
+                )
+            self._n_components_array = np.zeros(self._n_decompositions) * np.nan
 
         # Set the global_svd flag if none was provided.
         if self._global_svd_array is None:
@@ -673,7 +679,6 @@ class mrCOSTS:
         n_components,
         omega_classes_list,
         suppress_growth=True,
-        include_background=True,
     ):
         """Reconstruct the sliding mrDMD into the constituent components.
 
@@ -688,14 +693,9 @@ class mrCOSTS:
         """
 
         # Each individual reconstructed window
-        if include_background:
-            num_costs_decomps = len(self._costs_array) + 1
-        else:
-            num_costs_decomps = len(self._costs_array)
-
         xr_sep = np.zeros(
             (
-                num_costs_decomps,
+                self.n_decompositions,
                 n_components,
                 self._n_data_vars,
                 self._n_time_steps,
@@ -767,13 +767,13 @@ class mrCOSTS:
 
             xr_sep[n_mrd, :, :, :] = xr_sep[n_mrd, :, :, :] / xn
 
-        # Add the low frequency background values not included in the scale separation.
-        if include_background:
-            xr_sep[-1, :, :, :] = self.costs_array[-1].scale_reconstruction()[
-                0, :, :
-            ]
-
         return xr_sep
+
+    def get_background(self):
+        """The low frequency background values not included in the scale separation."""
+
+        background = self.costs_array[-1].scale_reconstruction()[0, :, :]
+        return background
 
 
 # ToDo: Make reconstruction equivalent for costs.scale_separation and costs.global_reconstruction
