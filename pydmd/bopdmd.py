@@ -149,7 +149,7 @@ class BOPDMDOperator(DMDOperator):
         self._eig_constraints = eig_constraints
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
-        self._varpro_opts = (
+        self._varpro_opts = [
             init_lambda,
             maxlam,
             lamup,
@@ -159,7 +159,7 @@ class BOPDMDOperator(DMDOperator):
             eps_stall,
             use_fulljac,
             verbose,
-        )
+        ]
         self._varpro_opts_warn()
 
         self._modes = None
@@ -748,7 +748,7 @@ class BOPDMDOperator(DMDOperator):
                 "Consider re-adjusting your variable projection parameters "
                 "with the varpro_opts_dict and consider setting verbose=True."
             )
-            warnings.warn(msg)
+            print(msg)
 
         # If num_trials isn't a positive int, perform standard optimized dmd.
         if self._num_trials <= 0 or not isinstance(self._num_trials, int):
@@ -759,6 +759,12 @@ class BOPDMDOperator(DMDOperator):
             return b_0
 
         # Otherwise, perform BOP-DMD.
+        verbose = self._varpro_opts[-1]
+        if verbose:
+            num_trial_print = 5
+            msg = "\nDisplaying the results of the next {} trials...\n"
+            print(msg.format(num_trial_print))
+
         # Initialize storage for values needed for stat computations.
         w_sum = np.zeros(w_0.shape, dtype="complex")
         e_sum = np.zeros(e_0.shape, dtype="complex")
@@ -778,6 +784,11 @@ class BOPDMDOperator(DMDOperator):
                 H_i, t[subset_inds], e_0
             )
             w_i, e_i, b_i, _, _, converged = trial_optdmd_results
+            if verbose:
+                print()
+                num_trial_print -= 1
+                verbose = num_trial_print > 0
+                self._varpro_opts[-1] = verbose
 
             # Incorporate results into the running average
             # ONLY IF the trial successfully converged.
@@ -810,7 +821,7 @@ class BOPDMDOperator(DMDOperator):
                     "Consider loosening the tol requirements "
                     "of the variable projection routine."
                 )
-                warnings.warn(msg.format(num_consecutive_fails))
+                print(msg.format(num_consecutive_fails))
                 runtime_warning_given = True
 
             elif num_consecutive_fails == self._bag_maxfail:
