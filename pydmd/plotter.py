@@ -658,8 +658,6 @@ def plot_summary(
         # Plot the complex plane axes.
         ax.axvline(x=0, c="k", lw=1)
         ax.axhline(y=0, c="k", lw=1)
-        ax.set_xlabel("Real")
-        ax.set_ylabel("Imag")
         ax.axis("equal")
         # Plot 2: Plot the discrete-time eigenvalues with the unit circle.
         if i == 0:
@@ -667,17 +665,24 @@ def plot_summary(
             eigs = lead_eigs
             t = np.linspace(0, 2 * np.pi, 100)
             ax.plot(np.cos(t), np.sin(t), c="tab:blue", ls="--")
+            ax.set_xlabel("Real")
+            ax.set_ylabel("Imag")
         # Plot 3: Plot the continuous-time eigenvalues
         else:
             ax.set_title("Continuous-time Eigenvalues")
             eigs = np.log(lead_eigs)
+            ax.set_xlabel("Imag")
+            ax.set_ylabel("Real")
         # Plot the eigenvalues.
         for idx, eig in enumerate(eigs):
             if idx in index_modes:
                 color = mode_colors[index_modes.index(idx)]
             else:
                 color = mode_colors[-1]
-            ax.plot(eig.real, eig.imag, "o", c=color, ms=ms_vals[idx])
+            if i == 0:
+                ax.plot(eig.real, eig.imag, "o", c=color, ms=ms_vals[idx])
+            else:
+                ax.plot(eig.imag, eig.real, "o", c=color, ms=ms_vals[idx])
 
     # Plots 4-6: Plot the DMD modes.
     for i, idx in enumerate(index_modes):
