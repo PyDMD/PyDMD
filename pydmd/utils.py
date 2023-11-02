@@ -143,3 +143,20 @@ def pseudo_hankel_matrix(X: np.ndarray, d: int):
         .reshape(X.shape[1] - d + 1, -1)
         .T
     )
+
+
+def differentiate(X, dt):
+    """
+    Method for performing 2nd order finite difference. Assumes that the
+    input matrix X is 2D, with uniformly-sampled snapshots filling each
+    column. Requires dt, which is the time step between each snapshot.
+    """
+    if not isinstance(X, np.ndarray) or X.ndim > 2:
+        raise ValueError("Please ensure that input data is a 1D or 2D array.")
+    if X.ndim == 1:
+        X = X[None]
+    X_prime = np.empty(X.shape)
+    X_prime[:, 1:-1] = (X[:, 2:] - X[:, :-2]) / (2 * dt)
+    X_prime[:, 0] = (-3 * X[:, 0] + 4 * X[:, 1] - X[:, 2]) / (2 * dt)
+    X_prime[:, -1] = (3 * X[:, -1] - 4 * X[:, -2] + X[:, -3]) / (2 * dt)
+    return X_prime
