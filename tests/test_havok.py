@@ -57,8 +57,8 @@ def test_shape():
     """
     havok = HAVOK()
     havok.fit(lorenz_x, dt)
-    assert havok.linear_embeddings.shape == (len(t) - havok._d + 1, havok.r - 1)
-    assert havok.forcing_input.shape == (len(t) - havok._d + 1,)
+    assert havok.linear_dynamics.shape == (len(t) - havok._delays + 1, havok.r - 1)
+    assert havok.forcing.shape == (len(t) - havok._delays + 1,)
     assert havok.A.shape == (havok.r - 1, havok.r - 1)
     assert havok.B.shape == (havok.r - 1, 1)
 
@@ -70,15 +70,15 @@ def test_error_fitted():
     has not yet been called.
     """
     havok = HAVOK()
-    with raises(RuntimeError):
-        _ = havok.linear_embeddings
-    with raises(RuntimeError):
-        _ = havok.forcing_input
-    with raises(RuntimeError):
+    with raises(ValueError):
+        _ = havok.linear_dynamics
+    with raises(ValueError):
+        _ = havok.forcing
+    with raises(ValueError):
         _ = havok.A
-    with raises(RuntimeError):
+    with raises(ValueError):
         _ = havok.B
-    with raises(RuntimeError):
+    with raises(ValueError):
         _ = havok.r
 
 
@@ -95,7 +95,7 @@ def test_error_small_r():
     """
     Ensure that a runtime error is thrown if r is too small.
     """
-    havok = HAVOK(d=1)
+    havok = HAVOK(delays=1)
     with raises(RuntimeError):
         havok.fit(lorenz_x, dt)
 
@@ -107,22 +107,22 @@ def test_r():
     # If no svd truncation, r is the min of the dimensions of the hankel matrix
     havok = HAVOK(svd_rank=-1)
     havok.fit(lorenz_x, dt)
-    assert havok.r == min(havok._d, len(t) - havok._d + 1)
+    assert havok.r == min(havok._delays, len(t) - havok._delays + 1)
 
     # Test the above case, but for a larger d value
-    havok = HAVOK(svd_rank=-1, d=500)
+    havok = HAVOK(svd_rank=-1, delays=500)
     havok.fit(lorenz_x, dt)
-    assert havok.r == min(havok._d, len(t) - havok._d + 1)
+    assert havok.r == min(havok._delays, len(t) - havok._delays + 1)
 
     # Test the above case, but for an even larger d value
-    havok = HAVOK(svd_rank=-1, d=len(t) - 20)
+    havok = HAVOK(svd_rank=-1, delays=len(t) - 20)
     havok.fit(lorenz_x, dt)
-    assert havok.r == min(havok._d, len(t) - havok._d + 1)
+    assert havok.r == min(havok._delays, len(t) - havok._delays + 1)
 
     # If given a positive integer svd truncation, r should equal svd_rank
     havok = HAVOK(svd_rank=3)
     havok.fit(lorenz_x, dt)
-    assert havok.r == havok.operator._svd_rank
+    assert havok.r == havok._svd_rank
 
 
 def test_reconstruction():
@@ -130,7 +130,7 @@ def test_reconstruction():
     Test the accuracy of the HAVOK reconstruction. Note that the parameters
     used here have been successful in reconstructing the Lorenz System.
     """
-    havok = HAVOK(svd_rank=15, d=100)
+    havok = HAVOK(svd_rank=15, delays=100)
     havok.fit(lorenz_x, dt)
     error = lorenz_x - havok.reconstructed_data.real
     error_norm = np.linalg.norm(error) / np.linalg.norm(lorenz_x)
