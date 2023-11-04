@@ -538,8 +538,14 @@ def plot_summary(
     filename=None,
     order="C",
     figsize=(12, 8),
-    mode_colors=("r","b","g","gray"),
-    **kwargs,
+    dpi=200,
+    main_colors=("r", "b", "g", "gray"),
+    max_plot=50,
+    max_marker_size=10,
+    vmax_scale=0.9,
+    mode_cmap="bwr",
+    mode_color="tab:orange",
+    dynamics_color="tab:blue",
 ):
     """
     Generate a 3x3 summarizing plot that contains the following components:
@@ -584,18 +590,14 @@ def plot_summary(
     :param figsize: Tuple in inches defining the figure size.
         Deafult is (12, 8).
     :type figsize: tuple(int, int)
-    :param mode_colors: Tuple of strings defining the colors used to denote
+    :param main_colors: Tuple of strings defining the colors used to denote
         eigenvalue, mode, dynamics associations. The first three colors are
         used to highlight the singular values and eigenvalues associated with
         the plotted modes and dynamics, while the fourth color is used to
         denote all other singular values and eigenvalues. Default colors are
         ("r","b","g","gray").
-    :type mode_colors: tuple(str,str,str,str)
+    :type main_colors: tuple(str,str,str,str)
     """
-    # The max number of singular values and eigenvalues that will be plotted.
-    max_plot = 50
-    max_marker_size = 10
-    vmax_scale = 0.9
 
     # Check that the DMD instance has been fitted.
     if dmd.modes is None:
@@ -677,7 +679,7 @@ def plot_summary(
 
     # Generate the summarizing plot.
     fig, (eig_axes, mode_axes, dynamics_axes) = plt.subplots(
-        3, 3, figsize=figsize, dpi=200
+        3, 3, figsize=figsize, dpi=dpi
     )
 
     # Plot 1: Plot the singular value spectrum.
@@ -685,10 +687,10 @@ def plot_summary(
     eig_axes[0].set_title("Singular Values")
     eig_axes[0].set_ylabel("% variance")
     t = np.arange(len(s_var_plot)) + 1
-    eig_axes[0].plot(t, s_var_plot, "o", c=mode_colors[-1], ms=8, mec="k")
+    eig_axes[0].plot(t, s_var_plot, "o", c=main_colors[-1], ms=8, mec="k")
     for i, idx in enumerate(index_modes):
         eig_axes[0].plot(
-            t[idx], s_var_plot[idx], "o", c=mode_colors[i], ms=8, mec="k"
+            t[idx], s_var_plot[idx], "o", c=main_colors[i], ms=8, mec="k"
         )
 
     # Plots 2-3: Plot the eigenvalues (discrete-time and continuous-time).
@@ -714,9 +716,9 @@ def plot_summary(
         # Plot the eigenvalues.
         for idx, eig in enumerate(eigs):
             if idx in index_modes:
-                color = mode_colors[index_modes.index(idx)]
+                color = main_colors[index_modes.index(idx)]
             else:
-                color = mode_colors[-1]
+                color = main_colors[-1]
             if i == 0:
                 ax.plot(eig.real, eig.imag, "o", c=color, ms=ms_vals[idx])
             else:
@@ -725,16 +727,16 @@ def plot_summary(
     # Plots 4-6: Plot the DMD modes.
     for i, idx in enumerate(index_modes):
         ax = mode_axes[i]
-        ax.set_title(f"Mode {idx + 1}", c=mode_colors[i], fontsize=15)
+        ax.set_title(f"Mode {idx + 1}", c=main_colors[i], fontsize=15)
         # Plot modes in 1D.
         if len(snapshots_shape) == 1:
-            ax.plot(lead_modes[:, idx].real, c="tab:orange")
+            ax.plot(lead_modes[:, idx].real, c=mode_color)
         # Plot modes in 2D.
         else:
             mode = lead_modes[:, idx].reshape(*snapshots_shape, order=order)
             # Multiply by factor of vmax_scale to intensify the plotted image.
             vmax = vmax_scale * np.abs(mode.real).max()
-            im = ax.imshow(mode.real, vmax=vmax, vmin=-vmax, cmap="bwr")
+            im = ax.imshow(mode.real, vmax=vmax, vmin=-vmax, cmap=mode_cmap)
             # Align the colorbar with the plotted image.
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="3%", pad=0.05)
@@ -743,8 +745,8 @@ def plot_summary(
     # Plots 7-9: Plot the DMD mode dynamics.
     for i, idx in enumerate(index_modes):
         ax = dynamics_axes[i]
-        ax.set_title("Mode Dynamics", c=mode_colors[i], fontsize=12)
-        ax.plot(lead_dynamics[idx].real)
+        ax.set_title("Mode Dynamics", c=main_colors[i], fontsize=12)
+        ax.plot(lead_dynamics[idx].real, c=dynamics_color)
         ax.set_xlabel("Time")
 
     # Padding between elements.
