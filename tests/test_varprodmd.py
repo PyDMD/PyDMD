@@ -14,8 +14,9 @@ from pydmd.varprodmd import (
     optdmd_predict,
     select_best_samples_fast,
     OPT_DEF_ARGS,
-    VarProDMD,
 )
+
+from pydmd import VarProDMD
 
 
 def signal(x_loc: np.ndarray, time: np.ndarray) -> np.ndarray:
@@ -79,7 +80,7 @@ def test_varprodmd_rho():
     assert np.array_equal(phi, opthelper.phi)
 
 
-def test_varprodmd_jac():
+def test_varprodmd_jac():  # pylint: disable=too-many-locals,too-many-statements
     """
     Test Jacobian computation (real vs. complex).
     """

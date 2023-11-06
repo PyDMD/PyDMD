@@ -66,6 +66,7 @@ def __svht(
     beta = (
         float(cols) / float(rows) if rows > cols else float(rows) / float(cols)
     )
+
     tau_star = 0
 
     if sigma is not None:
@@ -128,9 +129,8 @@ def __compute_rank(
     """
 
     if 0 < rank < 1:
-        cumulative_energy = np.cumsum(
-            np.square(sigma_x) / np.square(sigma_x).sum()
-        )
+        sigma_x_square = np.square(sigma_x)
+        cumulative_energy = np.cumsum(sigma_x_square / sigma_x_square.sum())
         __rank = np.searchsorted(cumulative_energy, rank) + 1
     elif rank == 0:
         __rank = __svht(sigma_x, rows, cols, sigma)
@@ -185,7 +185,7 @@ def __compute_dmd_ev(
     return np.linalg.eigvals(a_approx)
 
 
-class __OptimizeHelper:
+class __OptimizeHelper:  # pylint: disable=too-few-public-methods
     """
     Helper Class to store intermediate results during the optimization.
     """
@@ -330,6 +330,58 @@ def __compute_dmd_jac(
     return jac_out
 
 
+def __varpro_preprocessing(
+    data: np.ndarray,
+    time: np.ndarray,
+    rank: Union[float, int] = 0.0,
+    use_proj: bool = True,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    r"""
+    Preprocess data for Variable Projection: Calculate
+    :math:`\boldsymbol{Y}, \boldsymbol{Z}` for trapezoidal derivative
+    approximation. If desired input data is projected to
+    low-dimensional space.
+
+    :param data: data matrix s.t. :math:`X \n C^{n \times m}`.
+    :type data: np.ndarray
+    :param time: 1d array of timestamps.
+    :type time: np.ndarray
+    :param optargs: Arguments for 'least_squares' optimizer.
+    :type optargs: Dict[str, Any]
+    :param rank: Desired rank. If rank :math:`r = 0`, the optimal rank is
+        determined automatically. If rank is a float s.t. :math:`0 < r < 1`,
+        the cumulative energy of the singular values is used
+        to determine the optimal rank. If rank is an integer
+        and :math:`r > 0`, the desired rank is used iff possible.
+        Defaults to 0.
+    :type rank: Union[float, int], optional
+    :param use_proj: Perform variable projection in
+        low dimensional space if `use_proj=True`, else in the original space.
+        Defaults to True.
+    :type use_proj: bool, optional
+    :return: Derivative :math:`\boldsymbol{Y},\boldsymbol{Z}`, (projected) data,
+         rank reduced projection matrix :math:`\boldsymbol{U}_r`.
+    :rtype: Tuple[np.ndarray,
+                  np.ndarray,
+                  np.ndarray,
+                  np.ndarray]
+    """
+
+    u_r, s_r, v_r_t = np.linalg.svd(data, full_matrices=False)
+    __rank = __compute_rank(s_r, data.shape[0], data.shape[1], rank)
+    u_r = u_r[:, :__rank]
+    s_r = s_r[:__rank]
+    v_r = v_r_t[:__rank, :].conj().T
+    data_out = v_r.conj().T * s_r.reshape((-1, 1)) if use_proj else data
+
+    # trapezoidal derivative approximation
+    y_out = (data_out[:, :-1] + data_out[:, 1:]) / 2.0
+    dt_in = time[1:] - time[:-1]
+    z_out = (data_out[:, 1:] - data_out[:, :-1]) / dt_in.reshape((1, -1))
+
+    return z_out, y_out, data_out, u_r
+
+
 def __compute_dmd_varpro(
     alphas_init: np.ndarray,
     time: np.ndarray,
@@ -448,47 +500,40 @@ def compute_varprodmd_any(  # pylint: disable=unused-variable
     if len(time.shape) != 1:
         raise ValueError("time needs to be a 1D array")
 
-    u_r, s_r, v_r_t = np.linalg.svd(data, full_matrices=False)
-    __rank = __compute_rank(s_r, data.shape[0], data.shape[1], rank)
-    u_r = u_r[:, :__rank]
-    s_r = s_r[:__rank]
-    v_r = v_r_t[:__rank, :].conj().T
-    data_in = v_r.conj().T * s_r.reshape((-1, 1)) if use_proj else data
-
-    # trapezoidal derivative approximation
-    y_in = (data_in[:, :-1] + data_in[:, 1:]) / 2.0
-    dt_in = time[1:] - time[:-1]
-    z_in = (data_in[:, 1:] - data_in[:, :-1]) / dt_in.reshape((1, -1))
-    omegas = __compute_dmd_ev(y_in, z_in, __rank)
-    omegas_in = np.zeros((2 * omegas.shape[-1],), dtype=np.float64)
-    omegas_in[: omegas.shape[-1]] = omegas.real
-    omegas_in[omegas.shape[-1] :] = omegas.imag
+    #  y_in, z_in, data_in, u_r
+    res = __varpro_preprocessing(data, time, rank, use_proj)
+    omegas = __compute_dmd_ev(res[0], res[1], res[-1].shape[-1])
 
     if compression > 0:
-        __idx = select_best_samples_fast(data_in, compression)
-        if __idx.size > 1:
-            indices = __idx
-        else:
-            indices = np.arange(data_in.shape[-1])
-        data_in = data_in[:, indices]
-        time_in = time[indices]
+        indices = select_best_samples_fast(res[2], compression)
+
+        if indices.size <= 1:
+            indices = np.arange(res[2])
 
     else:
-        time_in = time
-        indices = np.arange(data_in.shape[-1])
+        indices = np.arange(res[2].shape[-1])
 
-    if data_in.shape[-1] < omegas.shape[-1]:
-        msg = "Attempting to solve underdeterimined system. "
-        msg += "Decrease desired rank or compression!"
-        warnings.warn(msg)
+    if res[2].shape[-1] < omegas.shape[-1]:
+        warnings.warn(
+            " ".join(
+                (
+                    "Attempting to solve underdetermined system.",
+                    "Decrease desired rank or compression!",
+                )
+            )
+        )
 
-    opthelper = __OptimizeHelper(u_r.shape[-1], *data_in.shape)
+    opthelper = __OptimizeHelper(res[-1].shape[-1], *res[2].shape)
     opt = __compute_dmd_varpro(
-        omegas_in, time_in, data_in.T, opthelper, **optargs
+        np.concatenate([omegas.real, omegas.imag]),
+        time[indices],
+        res[2][:, indices].T,
+        opthelper,
+        **optargs,
     )
     omegas.real = opt.x[: opt.x.shape[-1] // 2]
     omegas.imag = opt.x[opt.x.shape[-1] // 2 :]
-    xi = u_r @ opthelper.b_matrix.T if use_proj else opthelper.b_matrix.T
+    xi = res[-1] @ opthelper.b_matrix.T if use_proj else opthelper.b_matrix.T
     eigenf = np.linalg.norm(xi, axis=0)
     return xi / eigenf.reshape((1, -1)), omegas, eigenf, indices, opt
 
@@ -507,7 +552,7 @@ def optdmd_predict(  # pylint: disable=unused-variable
         :math:`\boldsymbol{\Phi} \in \mathbb{C}^{n \times \left(m-1\right)}`.
     :type phi: np.ndarray
     :param omegas: Continuous diagonal matrix of eigenvalues
-        :math:`\boldsymbol{\Omega} \in 
+        :math:`\boldsymbol{\Omega} \in
             \mathbb{C}^{\left(m-1\right) \times \left(m-1\right)}`
         as 1d array.
     :type omegas: np.ndarray
@@ -773,7 +818,7 @@ class VarProDMD(DMDBase):
         """
 
         self._snapshots_holder = Snapshots(X)
-        self._b, self._optres, self._indices = self._Atilde.compute_operator(
+        (self._b, self._optres, self._indices) = self._Atilde.compute_operator(
             X, time
         )
         self._original_time = time
@@ -793,9 +838,7 @@ class VarProDMD(DMDBase):
         """
 
         if not self.fitted:
-            raise ValueError(
-                "Nothing fitted yet, need to call fit-method first!"
-            )
+            raise ValueError("Nothing fitted yet. Call fit-method first!")
 
         return optdmd_predict(
             self._Atilde.modes, self._Atilde.eigenvalues, self._b, time
@@ -841,7 +884,7 @@ class VarProDMD(DMDBase):
         r"""
         Return indices for creating the library.
 
-        :raises ValueError: ValueError is raised if method 
+        :raises ValueError: ValueError is raised if method
             `fit(X, time)` was not called.
         :return: Indices of the selected samples.
             If no compression was performed :math:`\left(c = 0\right)`,
@@ -852,9 +895,7 @@ class VarProDMD(DMDBase):
         """
 
         if not self.fitted:
-            raise ValueError(
-                "Nothing fitted yet, need to call fit-method first!"
-            )
+            raise ValueError("Nothing fitted yet. Call fit-method first!")
 
         return self._indices
 
