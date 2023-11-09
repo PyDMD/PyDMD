@@ -49,6 +49,10 @@ def _compute_rank(
     Rank computation for the truncated Singular Value Decomposition.
     :param sigma_svd: 1D singular values of SVD.
     :type sigma_svd: np.ndarray
+    :param rows: Number of rows of original matrix.
+    :type rows: int
+    :param cols: Number of columns of original matrix.
+    :type cols: int
     :param svd_rank: the rank for the truncation; If 0, the method computes
         the optimal rank and uses it for truncation; if positive interger,
         the method uses the argument for the truncation; if float between 0
