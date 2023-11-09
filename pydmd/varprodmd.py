@@ -181,7 +181,7 @@ def _compute_dmd_ev(
         [
             u_x[:, :__rank].conj().T,
             x_next,
-            sigma_inv_approx.reshape(1, -1) * v_x_t[:__rank, :].conj().T,
+            sigma_inv_approx[None] * v_x_t[:__rank, :].conj().T,
         ]
     )
 
