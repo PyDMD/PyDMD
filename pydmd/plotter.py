@@ -616,7 +616,9 @@ def plot_summary(
     :type dynamics_color: str
     :param sval_ms: Marker size of all singular values.
     :type sval_ms: int
-    :param max_eig_ms: Marker size of the most prominent eigenvalue.
+    :param max_eig_ms: Marker size of the most prominent eigenvalue. The marker
+        sizes of all other eigenvalues are then scaled according to eigenvalue
+        prominence.
     :type max_eig_ms: int
     :param max_sval_plot: Maximum number of singular values to plot.
     :type max_sval_plot: int
@@ -792,8 +794,7 @@ def plot_summary(
         # Plot modes in 2D.
         else:
             mode = lead_modes[:, idx].reshape(*snapshots_shape, order=order)
-            # Multiply by factor of 0.9 to intensify the plotted image.
-            vmax = 0.9 * np.abs(mode.real).max()
+            vmax = np.abs(mode.real).max()
             im = ax.imshow(mode.real, vmax=vmax, vmin=-vmax, cmap=mode_cmap)
             # Align the colorbar with the plotted image.
             divider = make_axes_locatable(ax)
@@ -812,7 +813,7 @@ def plot_summary(
         dynamics_range = dynamics_data.max() - dynamics_data.min()
         # Re-adjust ylim if dynamics oscillations are extremely small.
         if dynamics_range / np.abs(np.average(dynamics_data)) < 1e-4:
-            ax.set_ylim([0.0, 2 * np.average(dynamics_data)])
+            ax.set_ylim(np.sort([0.0, 2 * np.average(dynamics_data)]))
 
     # Padding between elements.
     if tight_layout_kwargs is None:
