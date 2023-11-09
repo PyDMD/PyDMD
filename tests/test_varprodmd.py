@@ -5,11 +5,11 @@ import numpy as np
 import pytest
 from pydmd.utils import compute_rank
 from pydmd.varprodmd import (
-    __OptimizeHelper,
-    __compute_dmd_rho,
-    __compute_dmd_jac,
-    __compute_rank,
-    __svht,
+    _OptimizeHelper,
+    _compute_dmd_rho,
+    _compute_dmd_jac,
+    _compute_rank,
+    _svht,
     compute_varprodmd_any,
     optdmd_predict,
     select_best_samples_fast,
@@ -43,12 +43,10 @@ def test_rank():
     __x, __time = np.meshgrid(x_loc, time)
     z = signal(__x, __time).T
     s = np.linalg.svd(z, full_matrices=False)[1]
-    assert __compute_rank(s, z.shape[0], z.shape[1], 0) == compute_rank(z, 0)
-    assert __compute_rank(s, z.shape[0], z.shape[1], 4) == 4
-    assert __compute_rank(s, z.shape[0], z.shape[1], 0.8) == compute_rank(
-        z, 0.8
-    )
-    assert __svht(s, z.shape[0], z.shape[1]) == compute_rank(z, 0)
+    assert _compute_rank(s, z.shape[0], z.shape[1], 0) == compute_rank(z, 0)
+    assert _compute_rank(s, z.shape[0], z.shape[1], 4) == 4
+    assert _compute_rank(s, z.shape[0], z.shape[1], 0.8) == compute_rank(z, 0.8)
+    assert _svht(s, z.shape[0], z.shape[1]) == compute_rank(z, 0)
 
 
 def test_varprodmd_rho():
@@ -70,8 +68,8 @@ def test_varprodmd_rho():
     res_flat_reals = np.zeros((2 * res_flat.shape[-1]))
     res_flat_reals[: res_flat_reals.shape[-1] // 2] = res_flat.real
     res_flat_reals[res_flat_reals.shape[-1] // 2 :] = res_flat.imag
-    opthelper = __OptimizeHelper(2, *data.shape)
-    rho_flat_out = __compute_dmd_rho(alphas_in, time, data, opthelper)
+    opthelper = _OptimizeHelper(2, *data.shape)
+    rho_flat_out = _compute_dmd_rho(alphas_in, time, data, opthelper)
     assert np.array_equal(rho_flat_out, res_flat_reals)
     assert np.array_equal(__u, opthelper.u_svd)
     assert np.array_equal(__s_inv, opthelper.s_inv)
@@ -100,7 +98,7 @@ def test_varprodmd_jac():  # pylint: disable=too-many-locals,too-many-statements
     __s_inv[__idx] = np.reciprocal(__s[__idx])
     phi_inv = (__v.conj().T * __s_inv.reshape((1, -1))) @ __u.conj().T
 
-    opthelper = __OptimizeHelper(2, *data.shape)
+    opthelper = _OptimizeHelper(2, *data.shape)
     opthelper.u_svd = __u
     opthelper.v_svd = __v.conj().T
     opthelper.s_inv = __s_inv
@@ -142,7 +140,7 @@ def test_varprodmd_jac():  # pylint: disable=too-many-locals,too-many-statements
     JAC_REAL[J_1_flat.shape[-1] :, 2] = J_1_flat.real
     JAC_REAL[: J_2_flat.shape[-1], 3] = -J_2_flat.imag
     JAC_REAL[J_2_flat.shape[-1] :, 3] = J_2_flat.real
-    __JAC_OUT_REAL = __compute_dmd_jac(alphas_in, time, data, opthelper)
+    __JAC_OUT_REAL = _compute_dmd_jac(alphas_in, time, data, opthelper)
 
     GRAD_REAL = JAC_REAL.T @ rho_real
     __GRAD_REAL = __JAC_OUT_REAL.T @ rho_real

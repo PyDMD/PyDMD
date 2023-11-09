@@ -17,7 +17,8 @@ Default optimizer arguments:
 """
 
 import warnings
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Tuple, Union, Optional
+from types import MappingProxyType
 import numpy as np
 from scipy.optimize import OptimizeResult, least_squares
 from scipy.linalg import qr
@@ -26,35 +27,37 @@ from .dmdoperator import DMDOperator
 from .snapshots import Snapshots
 
 
-OPT_DEF_ARGS: Dict[str, Any] = {  # pylint: disable=unused-variable
-    "method": "trf",
-    "tr_solver": "exact",
-    "loss": "linear",
-    "x_scale": "jac",
-    "gtol": 1e-8,
-    "xtol": 1e-8,
-    "ftol": 1e-8,
-}
+OPT_DEF_ARGS = MappingProxyType(
+    {
+        "method": "trf",
+        "tr_solver": "exact",
+        "loss": "linear",
+        "x_scale": "jac",
+        "gtol": 1e-8,
+        "xtol": 1e-8,
+        "ftol": 1e-8,
+    }
+)
 
 
-def __svht(
-    sigma_svd: np.ndarray,  # pylint: disable=unused-variable
+def _svht(
+    sigma_svd: np.ndarray,
     rows: int,
     cols: int,
-    sigma: float = None,
+    sigma: Optional[float] = None,
 ) -> int:
     """
     Determine optimal rank for svd matrix approximation,
     based on https://arxiv.org/pdf/1305.5870.pdf.
 
-    :param sigma_svd:  Diagonal matrix of "enonomy" SVD as 1d array.
+    :param sigma_svd: Diagonal matrix of "enonomy" SVD as 1d array.
     :type sigma_svd: np.ndarray
     :param rows: Number of rows of original data matrix.
     :type cols: int
     :param cols: Number of columns of original data matrix.
     :type cols: int
     :param sigma: Signal noise level if known, defaults to None.
-    :type sigma: float, optional
+    :type sigma: Optional[float], optional
     :raises ValueError: sigma_svd must be a 1d-array else exception is raised.
     :return: Optimal rank.
     :rtype: int
@@ -95,7 +98,7 @@ def __svht(
     return rank[-1] + 1
 
 
-def __compute_rank(
+def _compute_rank(
     sigma_x: np.ndarray,
     rows: int,
     cols: int,
@@ -133,7 +136,7 @@ def __compute_rank(
         cumulative_energy = np.cumsum(sigma_x_square / sigma_x_square.sum())
         __rank = np.searchsorted(cumulative_energy, rank) + 1
     elif rank == 0:
-        __rank = __svht(sigma_x, rows, cols, sigma)
+        __rank = _svht(sigma_x, rows, cols, sigma)
     elif rank >= 1:
         __rank = int(rank)
     else:
@@ -141,8 +144,8 @@ def __compute_rank(
     return min(__rank, sigma_x.size)
 
 
-def __compute_dmd_ev(
-    x_current: np.ndarray,  # pylint: disable=unused-variable
+def _compute_dmd_ev(
+    x_current: np.ndarray,
     x_next: np.ndarray,
     rank: Union[float, int] = 0,
 ) -> np.ndarray:
@@ -167,7 +170,7 @@ def __compute_dmd_ev(
     u_x, sigma_x, v_x_t = np.linalg.svd(
         x_current, full_matrices=False, hermitian=False
     )
-    __rank = __compute_rank(
+    __rank = _compute_rank(
         sigma_x, x_current.shape[0], x_current.shape[1], rank
     )
 
@@ -185,7 +188,7 @@ def __compute_dmd_ev(
     return np.linalg.eigvals(a_approx)
 
 
-class __OptimizeHelper:  # pylint: disable=too-few-public-methods
+class _OptimizeHelper:  # pylint: disable=too-few-public-methods
     """
     Helper Class to store intermediate results during the optimization.
     """
@@ -201,11 +204,11 @@ class __OptimizeHelper:  # pylint: disable=too-few-public-methods
         self.rho: np.ndarray = np.empty((m_in, n_in), dtype=np.complex128)
 
 
-def __compute_dmd_rho(
+def _compute_dmd_rho(
     alphas: np.ndarray,
     time: np.ndarray,
     data: np.ndarray,
-    opthelper: __OptimizeHelper,
+    opthelper: _OptimizeHelper,
 ) -> np.ndarray:
     r"""
     Compute the real residual vector :math:`\boldsymbol{\rho}` for
@@ -223,7 +226,7 @@ def __compute_dmd_rho(
     :type data: np.ndarray
     :param opthelper: Optimization helper to speed up computations
         mainly for Jacobian.
-    :type opthelper: __OptimizeHelper
+    :type opthelper: _OptimizeHelper
     :return: 1d residual vector for Levenberg-Marquardt update
         :math:`\boldsymbol{\rho} \in \mathbb{R}^{2mn}`.
     :rtype: np.ndarray
@@ -234,25 +237,25 @@ def __compute_dmd_rho(
     __alphas.imag = alphas[alphas.shape[-1] // 2 :]
 
     phi = np.exp(np.outer(time, __alphas))
-    __u, __s, __v_t = np.linalg.svd(phi, hermitian=False, full_matrices=False)
-    __idx = np.where(__s.real != 0.0)[0]
-    __s_inv = np.zeros_like(__s)
-    __s_inv[__idx] = np.reciprocal(__s[__idx])
+    u_phi, s_phi, v_phi_t = np.linalg.svd(phi, full_matrices=False)
+    idx = np.where(s_phi.real != 0.0)[0]
+    s_phi_inv = np.zeros_like(s_phi)
+    s_phi_inv[idx] = np.reciprocal(s_phi[idx])
 
-    rho = data - np.linalg.multi_dot([__u, __u.conj().T, data])
+    rho = data - np.linalg.multi_dot([u_phi, u_phi.conj().T, data])
     rho_flat = np.ravel(rho)
     rho_out = np.zeros((2 * rho_flat.shape[-1],), dtype=np.float64)
     rho_out[: rho_flat.shape[-1]] = rho_flat.real
     rho_out[rho_flat.shape[-1] :] = rho_flat.imag
 
     opthelper.phi = phi
-    opthelper.u_svd = __u
-    opthelper.s_inv = __s_inv
-    opthelper.v_svd = __v_t.conj().T
+    opthelper.u_svd = u_phi
+    opthelper.s_inv = s_phi_inv
+    opthelper.v_svd = v_phi_t.conj().T
     opthelper.rho = rho
     opthelper.b_matrix = np.linalg.multi_dot(
         [
-            opthelper.v_svd * __s_inv.reshape((1, -1)),
+            opthelper.v_svd * s_phi_inv[None],
             opthelper.u_svd.conj().T,
             data,
         ]
@@ -260,11 +263,11 @@ def __compute_dmd_rho(
     return rho_out
 
 
-def __compute_dmd_jac(
+def _compute_dmd_jac(
     alphas: np.ndarray,
     time: np.ndarray,
     data: np.ndarray,
-    opthelper: __OptimizeHelper,
+    opthelper: _OptimizeHelper,
 ) -> np.ndarray:
     r"""
     Compute the real Jacobian.
@@ -282,8 +285,8 @@ def __compute_dmd_jac(
         For DMD computation we set :math:`\boldsymbol{Y} = \boldsymbol{X}^T`.
     :type data: np.ndarray
     :param opthelper: Optimization helper to speed up computations
-        mainly for Jacobian. The entities are computed in `__compute_dmd_rho`.
-    :type opthelper: __OptimizeHelper
+        mainly for Jacobian. The entities are computed in `_compute_dmd_rho`.
+    :type opthelper: _OptimizeHelper
     :return: Jacobian :math:`\boldsymbol{J} \in \mathbb{R}^{mn \times 2l}`.
     :rtype: np.ndarray
     """
@@ -295,42 +298,40 @@ def __compute_dmd_jac(
 
     for j in range(__alphas.shape[-1]):
         d_phi_j = time * opthelper.phi[:, j]
-        __outer = np.outer(d_phi_j, opthelper.b_matrix[j, :])
-        __a_j = __outer - np.linalg.multi_dot(
-            [opthelper.u_svd, opthelper.u_svd.conj().T, __outer]
+        outer = np.outer(d_phi_j, opthelper.b_matrix[j])
+        a_j = outer - np.linalg.multi_dot(
+            [opthelper.u_svd, opthelper.u_svd.conj().T, outer]
         )
-        __g_j = np.linalg.multi_dot(
+        g_j = np.linalg.multi_dot(
             [
-                opthelper.u_svd * opthelper.s_inv.reshape((1, -1)),
+                opthelper.u_svd * opthelper.s_inv[None],
                 np.outer(
                     opthelper.v_svd[j, :].conj(), d_phi_j.conj() @ opthelper.rho
                 ),
             ]
         )
         # Compute the jacobian J_mat_j = - (A_j + G_j).
-        __jac = -__a_j - __g_j
-        __jac_flat = np.ravel(__jac)
+        jac = -a_j - g_j
+        jac_flat = np.ravel(jac)
 
         # construct the overall jacobian for optimized
         # J_real = |Re{J} -Im{J}|
         #          |Im{J}  Re{J}|
 
         # construct real part for optimization
-        jac_out[: jac_out.shape[0] // 2, j] = __jac_flat.real
-        jac_out[jac_out.shape[0] // 2 :, j] = __jac_flat.imag
+        jac_out[: jac_out.shape[0] // 2, j] = jac_flat.real
+        jac_out[jac_out.shape[0] // 2 :, j] = jac_flat.imag
 
         # construct imaginary part for optimization
         jac_out[
             : jac_out.shape[0] // 2, __alphas.shape[-1] + j
-        ] = -__jac_flat.imag
-        jac_out[
-            jac_out.shape[0] // 2 :, __alphas.shape[-1] + j
-        ] = __jac_flat.real
+        ] = -jac_flat.imag
+        jac_out[jac_out.shape[0] // 2 :, __alphas.shape[-1] + j] = jac_flat.real
 
     return jac_out
 
 
-def __varpro_preprocessing(
+def _varpro_preprocessing(
     data: np.ndarray,
     time: np.ndarray,
     rank: Union[float, int] = 0.0,
@@ -368,25 +369,25 @@ def __varpro_preprocessing(
     """
 
     u_r, s_r, v_r_t = np.linalg.svd(data, full_matrices=False)
-    __rank = __compute_rank(s_r, data.shape[0], data.shape[1], rank)
+    __rank = _compute_rank(s_r, data.shape[0], data.shape[1], rank)
     u_r = u_r[:, :__rank]
     s_r = s_r[:__rank]
-    v_r = v_r_t[:__rank, :].conj().T
-    data_out = v_r.conj().T * s_r.reshape((-1, 1)) if use_proj else data
+    v_r = v_r_t[:__rank].conj().T
+    data_out = v_r.conj().T * s_r[:, None] if use_proj else data
 
     # trapezoidal derivative approximation
     y_out = (data_out[:, :-1] + data_out[:, 1:]) / 2.0
     dt_in = time[1:] - time[:-1]
-    z_out = (data_out[:, 1:] - data_out[:, :-1]) / dt_in.reshape((1, -1))
+    z_out = (data_out[:, 1:] - data_out[:, :-1]) / dt_in[None]
 
     return z_out, y_out, data_out, u_r
 
 
-def __compute_dmd_varpro(
+def _compute_dmd_varpro(
     alphas_init: np.ndarray,
     time: np.ndarray,
     data: np.ndarray,
-    opthelper: __OptimizeHelper,
+    opthelper: _OptimizeHelper,
     **optargs,
 ) -> OptimizeResult:
     r"""
@@ -400,17 +401,17 @@ def __compute_dmd_varpro(
         For DMD computation we set :math:`\boldsymbol{Y} = \boldsymbol{X}^T`.
     :type data: np.ndarray
     :param opthelper: Optimization helper to speed up computations
-        mainly for Jacobian. The entities are computed in `__compute_dmd_rho`
-        and are used in `__compute_dmd_jac`.
-    :type opthelper: __OptimizeHelper
+        mainly for Jacobian. The entities are computed in `_compute_dmd_rho`
+        and are used in `_compute_dmd_jac`.
+    :type opthelper: _OptimizeHelper
     :return: Optimization result.
     :rtype: OptimizeResult
     """
 
     return least_squares(
-        __compute_dmd_rho,
+        _compute_dmd_rho,
         alphas_init,
-        __compute_dmd_jac,
+        _compute_dmd_jac,
         **optargs,
         args=[time, data, opthelper],
     )
@@ -442,8 +443,8 @@ def select_best_samples_fast(data: np.ndarray, comp: float = 0.9) -> np.ndarray:
 
     n_samples = int(data.shape[-1] * (1.0 - comp))
     pcolumn = qr(data, mode="economic", pivoting=True)[-1]
-    __idx = pcolumn[:n_samples]
-    return __idx
+
+    return pcolumn[:n_samples]
 
 
 def compute_varprodmd_any(  # pylint: disable=unused-variable
@@ -501,8 +502,8 @@ def compute_varprodmd_any(  # pylint: disable=unused-variable
         raise ValueError("time needs to be a 1D array")
 
     #  y_in, z_in, data_in, u_r
-    res = __varpro_preprocessing(data, time, rank, use_proj)
-    omegas = __compute_dmd_ev(res[0], res[1], res[-1].shape[-1])
+    res = _varpro_preprocessing(data, time, rank, use_proj)
+    omegas = _compute_dmd_ev(res[0], res[1], res[-1].shape[-1])
 
     if compression > 0:
         indices = select_best_samples_fast(res[2], compression)
@@ -523,8 +524,8 @@ def compute_varprodmd_any(  # pylint: disable=unused-variable
             )
         )
 
-    opthelper = __OptimizeHelper(res[-1].shape[-1], *res[2].shape)
-    opt = __compute_dmd_varpro(
+    opthelper = _OptimizeHelper(res[-1].shape[-1], *res[2].shape)
+    opt = _compute_dmd_varpro(
         np.concatenate([omegas.real, omegas.imag]),
         time[indices],
         res[2][:, indices].T,
@@ -535,10 +536,10 @@ def compute_varprodmd_any(  # pylint: disable=unused-variable
     omegas.imag = opt.x[opt.x.shape[-1] // 2 :]
     xi = res[-1] @ opthelper.b_matrix.T if use_proj else opthelper.b_matrix.T
     eigenf = np.linalg.norm(xi, axis=0)
-    return xi / eigenf.reshape((1, -1)), omegas, eigenf, indices, opt
+    return xi / eigenf[None], omegas, eigenf, indices, opt
 
 
-def optdmd_predict(  # pylint: disable=unused-variable
+def optdmd_predict(
     phi: np.ndarray,
     omegas: np.ndarray,
     eigenf: np.ndarray,
@@ -565,7 +566,7 @@ def optdmd_predict(  # pylint: disable=unused-variable
     :rtype: np.ndarray
     """
 
-    return phi @ (np.exp(np.outer(omegas, time)) * eigenf.reshape(-1, 1))
+    return phi @ (np.exp(np.outer(omegas, time)) * eigenf[:, None])
 
 
 class VarProOperator(DMDOperator):
@@ -927,7 +928,7 @@ class VarProDMD(DMDBase):
         """
 
         t_omega = np.exp(np.outer(self.eigs, self._original_time))
-        return self.amplitudes.reshape(-1, 1) * t_omega
+        return self.amplitudes[:, None] * t_omega
 
     @property
     def frequency(self):
