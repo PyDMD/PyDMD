@@ -7,7 +7,7 @@ import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
 
-def __svht(sigma_svd: np.ndarray, rows: int, cols: int) -> int:
+def _svht(sigma_svd: np.ndarray, rows: int, cols: int) -> int:
     """
     Singular Value Hard Threshold.
 
@@ -27,8 +27,7 @@ def __svht(sigma_svd: np.ndarray, rows: int, cols: int) -> int:
     https://ieeexplore.ieee.org/document/6846297
     """
     beta = np.divide(*sorted((rows, cols)))
-    beta_square = beta * beta
-    omega = 0.56 * beta_square * beta - 0.95 * beta_square + 1.82 * beta + 1.43
+    omega = 0.56 * beta**3 - 0.95 * beta**2 + 1.82 * beta + 1.43
     tau = np.median(sigma_svd) * omega
     rank = np.sum(sigma_svd > tau)
 
@@ -43,12 +42,13 @@ def __svht(sigma_svd: np.ndarray, rows: int, cols: int) -> int:
     return rank
 
 
-def __compute_rank(
+def _compute_rank(
     sigma_svd: np.ndarray, rows: int, cols: int, svd_rank: Union[float, int]
 ) -> int:
     """
     Rank computation for the truncated Singular Value Decomposition.
-    :param numpy.ndarray X: the matrix to decompose.
+    :param sigma_svd: 1D singular values of SVD.
+    :type sigma_svd: np.ndarray
     :param svd_rank: the rank for the truncation; If 0, the method computes
         the optimal rank and uses it for truncation; if positive interger,
         the method uses the argument for the truncation; if float between 0
@@ -64,18 +64,12 @@ def __compute_rank(
     (2014): 5040-5053.
     """
     if svd_rank == 0:
-        rank = __svht(sigma_svd, rows, cols)
-
+        rank = _svht(sigma_svd, rows, cols)
     elif 0 < svd_rank < 1:
-        sigma_svd_squared = np.square(sigma_svd)
-        cumulative_energy = np.cumsum(
-            sigma_svd_squared / sigma_svd_squared.sum()
-        )
+        cumulative_energy = np.cumsum(sigma_svd**2 / (sigma_svd**2).sum())
         rank = np.searchsorted(cumulative_energy, svd_rank) + 1
-
     elif svd_rank >= 1 and isinstance(svd_rank, int):
         rank = min(svd_rank, sigma_svd.size)
-
     else:
         rank = min(rows, cols)
 
@@ -101,7 +95,7 @@ def compute_rank(X: np.ndarray, svd_rank=0):
     (2014): 5040-5053.
     """
     _, s, _ = np.linalg.svd(X, full_matrices=False)
-    return __compute_rank(s, X.shape[0], X.shape[1], svd_rank)
+    return _compute_rank(s, X.shape[0], X.shape[1], svd_rank)
 
 
 def compute_tlsq(X, Y, tlsq_rank):
@@ -154,7 +148,7 @@ def compute_svd(X, svd_rank=0):
     (2014): 5040-5053.
     """
     U, s, V = np.linalg.svd(X, full_matrices=False)
-    rank = __compute_rank(s, X.shape[0], X.shape[1], svd_rank)
+    rank = _compute_rank(s, X.shape[0], X.shape[1], svd_rank)
     V = V.conj().T
 
     U = U[:, :rank]
