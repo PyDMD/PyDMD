@@ -534,6 +534,7 @@ def plot_snapshots_2D(
 
 def plot_summary(
     dmd,
+    *,
     continuous=False,
     snapshots_shape=None,
     index_modes=None,
