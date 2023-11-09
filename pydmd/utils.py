@@ -1,7 +1,8 @@
 """Utilities module."""
 
 import warnings
-from typing import Union
+from numbers import Number
+from typing import Tuple
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
@@ -43,10 +44,11 @@ def _svht(sigma_svd: np.ndarray, rows: int, cols: int) -> int:
 
 
 def _compute_rank(
-    sigma_svd: np.ndarray, rows: int, cols: int, svd_rank: Union[float, int]
+    sigma_svd: np.ndarray, rows: int, cols: int, svd_rank: Number
 ) -> int:
     """
     Rank computation for the truncated Singular Value Decomposition.
+
     :param sigma_svd: 1D singular values of SVD.
     :type sigma_svd: np.ndarray
     :param rows: Number of rows of original matrix.
@@ -62,6 +64,7 @@ def _compute_rank(
     :type svd_rank: int or float
     :return: the computed rank truncation.
     :rtype: int
+
     References:
     Gavish, Matan, and David L. Donoho, The optimal hard threshold for
     singular values is, IEEE Transactions on Information Theory 60.8
@@ -80,10 +83,12 @@ def _compute_rank(
     return rank
 
 
-def compute_rank(X: np.ndarray, svd_rank=0):
+def compute_rank(X: np.ndarray, svd_rank: Number = 0) -> int:
     """
     Rank computation for the truncated Singular Value Decomposition.
-    :param numpy.ndarray X: the matrix to decompose.
+
+    :param X: the matrix to decompose.
+    :type X: np.ndarray
     :param svd_rank: the rank for the truncation; If 0, the method computes
         the optimal rank and uses it for truncation; if positive interger,
         the method uses the argument for the truncation; if float between 0
@@ -93,6 +98,7 @@ def compute_rank(X: np.ndarray, svd_rank=0):
     :type svd_rank: int or float
     :return: the computed rank truncation.
     :rtype: int
+
     References:
     Gavish, Matan, and David L. Donoho, The optimal hard threshold for
     singular values is, IEEE Transactions on Information Theory 60.8
@@ -102,18 +108,23 @@ def compute_rank(X: np.ndarray, svd_rank=0):
     return _compute_rank(s, X.shape[0], X.shape[1], svd_rank)
 
 
-def compute_tlsq(X, Y, tlsq_rank):
+def compute_tlsq(
+    X: np.ndarray, Y: np.ndarray, tlsq_rank: int
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Compute Total Least Square.
 
-    :param numpy.ndarray X: the first matrix;
-    :param numpy.ndarray Y: the second matrix;
-    :param int tlsq_rank: the rank for the truncation; If 0, the method
+    :param X: the first matrix;
+    :type X: np.ndarray
+    :param Y: the second matrix;
+    :type Y: np.ndarray
+    :param tlsq_rank: the rank for the truncation; If 0, the method
         does not compute any noise reduction; if positive number, the
         method uses the argument for the SVD truncation used in the TLSQ
         method.
+    :type tlsq_rank: int
     :return: the denoised matrix X, the denoised matrix Y
-    :rtype: numpy.ndarray, numpy.ndarray
+    :rtype: Tuple[np.ndarray, np.ndarray]
 
     References:
     https://arxiv.org/pdf/1703.11004.pdf
@@ -130,11 +141,14 @@ def compute_tlsq(X, Y, tlsq_rank):
     return X.dot(VV), Y.dot(VV)
 
 
-def compute_svd(X, svd_rank=0):
+def compute_svd(
+    X: np.ndarray, svd_rank: Number = 0
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Truncated Singular Value Decomposition.
 
-    :param numpy.ndarray X: the matrix to decompose.
+    :param X: the matrix to decompose.
+    :type X: np.ndarray
     :param svd_rank: the rank for the truncation; If 0, the method computes
         the optimal rank and uses it for truncation; if positive interger,
         the method uses the argument for the truncation; if float between 0
@@ -144,7 +158,7 @@ def compute_svd(X, svd_rank=0):
     :type svd_rank: int or float
     :return: the truncated left-singular vectors matrix, the truncated
         singular values array, the truncated right-singular vectors matrix.
-    :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray
+    :rtype: Tuple[np.ndarray, np.ndarray, np.ndarray]
 
     References:
     Gavish, Matan, and David L. Donoho, The optimal hard threshold for
@@ -162,7 +176,7 @@ def compute_svd(X, svd_rank=0):
     return U, s, V
 
 
-def pseudo_hankel_matrix(X: np.ndarray, d: int):
+def pseudo_hankel_matrix(X: np.ndarray, d: int) -> np.ndarray:
     """
     Arrange the snapshot in the matrix `X` into the (pseudo) Hankel
     matrix. The attribute `d` controls the number of snapshot from `X` in
