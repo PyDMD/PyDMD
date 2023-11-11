@@ -7,6 +7,12 @@ from collections import namedtuple
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
+#  Named tuples used functions.
+#  compute_svd uses "SVD",
+#  compute_tlsq uses "TLSQ".
+SVD = namedtuple("SVD", ["U", "s", "V"])
+TLSQ = namedtuple("TLSQ", ["X_denoised", "Y_denoised"])
+
 
 def _svht(sigma_svd: np.ndarray, rows: int, cols: int) -> int:
     """
@@ -140,7 +146,7 @@ def compute_tlsq(
     V = np.linalg.svd(np.append(X, Y, axis=0), full_matrices=False)[-1]
     rank = min(tlsq_rank, V.shape[0])
     VV = V[:rank, :].conj().T.dot(V[:rank, :])
-    TLSQ = namedtuple("TLSQ", ["X_denoised", "Y_denoised"])
+
     return TLSQ(X.dot(VV), Y.dot(VV))
 
 
@@ -179,7 +185,6 @@ def compute_svd(
     U = U[:, :rank]
     V = V[:, :rank]
     s = s[:rank]
-    SVD = namedtuple("SVD", ["U", "s", "V"])
 
     return SVD(U, s, V)
 
