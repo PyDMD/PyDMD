@@ -2,8 +2,8 @@
 
 import warnings
 from numbers import Number
-from typing import Tuple
-
+from typing import NamedTuple
+from collections import namedtuple
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
@@ -110,7 +110,9 @@ def compute_rank(X: np.ndarray, svd_rank: Number = 0) -> int:
 
 def compute_tlsq(
     X: np.ndarray, Y: np.ndarray, tlsq_rank: int
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> NamedTuple(
+    "TLSQ", [("X_denoised", np.ndarray), ("Y_denoised", np.ndarray)]
+):
     """
     Compute Total Least Square.
 
@@ -124,7 +126,8 @@ def compute_tlsq(
         method.
     :type tlsq_rank: int
     :return: the denoised matrix X, the denoised matrix Y
-    :rtype: Tuple[np.ndarray, np.ndarray]
+    :rtype: NamedTuple("TLSQ", [('X_denoised', np.ndarray),
+                                ('Y_denoised', np.ndarray)])
 
     References:
     https://arxiv.org/pdf/1703.11004.pdf
@@ -137,13 +140,15 @@ def compute_tlsq(
     V = np.linalg.svd(np.append(X, Y, axis=0), full_matrices=False)[-1]
     rank = min(tlsq_rank, V.shape[0])
     VV = V[:rank, :].conj().T.dot(V[:rank, :])
-
-    return X.dot(VV), Y.dot(VV)
+    TLSQ = namedtuple("TLSQ", ["X_denoised", "Y_denoised"])
+    return TLSQ(X.dot(VV), Y.dot(VV))
 
 
 def compute_svd(
     X: np.ndarray, svd_rank: Number = 0
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> NamedTuple(
+    "SVD", [("U", np.ndarray), ("s", np.ndarray), ("V", np.ndarray)]
+):
     """
     Truncated Singular Value Decomposition.
 
@@ -158,7 +163,9 @@ def compute_svd(
     :type svd_rank: int or float
     :return: the truncated left-singular vectors matrix, the truncated
         singular values array, the truncated right-singular vectors matrix.
-    :rtype: Tuple[np.ndarray, np.ndarray, np.ndarray]
+    :rtype: NamedTuple("SVD", [('U', np.ndarray),
+                               ('s', np.ndarray),
+                               ('V', np.ndarray)])
 
     References:
     Gavish, Matan, and David L. Donoho, The optimal hard threshold for
@@ -172,8 +179,9 @@ def compute_svd(
     U = U[:, :rank]
     V = V[:, :rank]
     s = s[:rank]
+    SVD = namedtuple("SVD", ["U", "s", "V"])
 
-    return U, s, V
+    return SVD(U, s, V)
 
 
 def pseudo_hankel_matrix(X: np.ndarray, d: int) -> np.ndarray:
