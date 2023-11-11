@@ -7,7 +7,7 @@ from collections import namedtuple
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
-#  Named tuples used functions.
+#  Named tuples used in functions.
 #  compute_svd uses "SVD",
 #  compute_tlsq uses "TLSQ".
 SVD = namedtuple("SVD", ["U", "s", "V"])
