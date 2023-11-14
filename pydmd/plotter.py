@@ -13,6 +13,8 @@ from pydmd import MrDMD
 
 from .bopdmd import BOPDMD
 from .hankeldmd import HankelDMD
+from .havok import HAVOK
+from .preprocessing import PrePostProcessingDMD
 
 mpl.rcParams["figure.max_open_warning"] = 0
 
@@ -532,18 +534,32 @@ def plot_snapshots_2D(
 
 def plot_summary(
     dmd,
+    *,
+    continuous=False,
     snapshots_shape=None,
     index_modes=None,
     filename=None,
     order="C",
     figsize=(12, 8),
-    mode_colors=None,
+    dpi=200,
+    tight_layout_kwargs=None,
+    main_colors=("r", "b", "g", "gray"),
+    mode_color="k",
+    mode_cmap="bwr",
+    dynamics_color="tab:blue",
+    sval_ms=8,
+    max_eig_ms=10,
+    max_sval_plot=50,
+    title_fontsize=14,
+    label_fontsize=12,
+    plot_semilogy=False,
+    remove_cmap_ticks=False,
 ):
     """
-    Generate a 3x3 summarizing plot that contains the following components:
+    Generate a 3 x 3 summarizing plot that contains the following components:
     - the singular value spectrum of the data
-    - the discrete-time and continuous-time dmd eigenvalues
-    - the three dmd modes specified by the index_modes parameter
+    - the discrete-time and continuous-time DMD eigenvalues
+    - the three DMD modes specified by the `index_modes` parameter
     - the dynamics corresponding with each plotted mode
     Eigenvalues, modes, and dynamics are ordered according to the magnitude of
     their corresponding amplitude value. Singular values and eigenvalues that
@@ -551,11 +567,18 @@ def plot_summary(
 
     :param dmd: DMD instance.
     :type dmd: pydmd.DMDBase
-    :param snapshots_shape: Shape of the snapshots. If not provided, snapshots
-        and modes are assumed to be 1D and the data snapshot length is used.
-    :type snapshots_shape: int or tuple(int,int)
-    :param index_modes: The indices of the modes to plot. By default, the first
-        three leading modes are plotted.
+    :param continuous: Whether or not the eigenvalues of the given DMD instance
+        are continuous-time. If `False`, the eigenvalues are assumed to be the
+        discrete-time eigenvalues. If `True`, the eigenvalues are taken to be
+        the continuous-time eigenvalues. Note that `continuous` is
+        automatically assumed to be `True` if a `BOPDMD` model is given.
+    :type continuous: bool
+    :param snapshots_shape: Shape of the snapshots. If not provided, the shape
+        of the snapshots and modes is assumed to be the flattened space dim of
+        the snapshot data.
+    :type snapshots_shape: tuple(int, int)
+    :param index_modes: A list of the indices of the modes to plot. By default,
+        the first three leading modes are plotted.
     :type index_modes: list
     :param filename: If specified, the plot is saved at `filename`.
     :type filename: str
@@ -573,55 +596,124 @@ def plot_summary(
         "C" is used by default.
     :type order: {"C", "F", "A"}
     :param figsize: Tuple in inches defining the figure size.
-        Deafult is (12,8).
-    :type figsize: tuple(int,int)
-    :param mode_colors: List of strings defining the colors used to denote
+    :type figsize: tuple(int, int)
+    :param dpi: Figure resolution.
+    :type dpi: int
+    :param tight_layout_kwargs: Optional dictionary of
+        `matplotlib.pyplot.tight_layout()` parameters.
+    :type tight_layout_kwargs: dict
+    :param main_colors: Tuple of strings defining the colors used to denote
         eigenvalue, mode, dynamics associations. The first three colors are
         used to highlight the singular values and eigenvalues associated with
         the plotted modes and dynamics, while the fourth color is used to
-        denote all other singular values and eigenvalues. Default colors are
-        ["r","b","g","gray"].
-    :type mode_colors: list(str,str,str,str)
+        denote all other values.
+    :type main_colors: tuple(str, str, str, str)
+    :param mode_color: Color used to plot the modes, if modes are 1D.
+    :type mode_color: str
+    :param mode_cmap: Colormap used to plot the modes, if modes are 2D.
+    :type mode_cmap: str
+    :param dynamics_color: Color used to plot the dynamics.
+    :type dynamics_color: str
+    :param sval_ms: Marker size of all singular values.
+    :type sval_ms: int
+    :param max_eig_ms: Marker size of the most prominent eigenvalue. The marker
+        sizes of all other eigenvalues are then scaled according to eigenvalue
+        prominence.
+    :type max_eig_ms: int
+    :param max_sval_plot: Maximum number of singular values to plot.
+    :type max_sval_plot: int
+    :param title_fontsize: Fontsize used for subplot titles.
+    :type title_fontsize: int
+    :param label_fontsize: Fontsize used for axis labels.
+    :type label_fontsize: int
+    :param plot_semilogy: Whether or not to plot the singular values on a
+        semilogy plot. If `True`, a semilogy plot is used.
+    :type plot_semilogy: bool
+    :param remove_cmap_ticks: Whether or not to include the ticks on 2D mode
+        plots. If `True`, ticks are removed from all 2D mode plots.
+    :type remove_cmap_ticks: bool
     """
+
+    # This plotting method is inappropriate for plotting HAVOK results.
+    if isinstance(dmd, HAVOK):
+        raise ValueError("You should use HAVOK.plot_summary() instead.")
+
+    # Check that the DMD instance has been fitted.
     if dmd.modes is None:
         raise ValueError(
             "The modes have not been computed."
-            "You have to perform the fit method."
+            "You need to perform fit() first."
         )
 
+    # By default, snapshots_shape is the flattened space dimension.
     if snapshots_shape is None:
         snapshots_shape = (len(dmd.snapshots),)
-    elif isinstance(snapshots_shape, int):
-        snapshots_shape = (snapshots_shape,)
+    # Only 2D tuples are admissible for snapshots_shape.
     elif not isinstance(snapshots_shape, tuple) or len(snapshots_shape) != 2:
-        raise ValueError("snapshots_shape must be an int or a 2D tuple.")
+        raise ValueError("snapshots_shape must be None or a 2D tuple.")
 
+    # Override index_modes if there are less than 3 modes available.
     if len(dmd.eigs) < 3:
-        # Even if index_modes is provided, override it if there are fewer than
-        # three modes available. Alert the user of this plot alteration.
         warnings.warn(
             "Provided dmd model has less than 3 modes."
             "Plotting all available modes."
         )
         index_modes = list(range(len(dmd.eigs)))
+    # By default, we plot the 3 leading modes and their dynamics.
     elif index_modes is None:
         index_modes = list(range(3))
+    # index_modes was provided - check its type and its length.
     elif not isinstance(index_modes, list) or len(index_modes) > 3:
         raise ValueError("index_modes must be a list of length at most 3.")
-    elif np.any(np.array(index_modes) >= 50):
-        raise ValueError("Cannot view past the 50th mode.")
+    # Indices cannot go past the total number of available or plottable modes.
+    elif np.any(np.array(index_modes) >= min(len(dmd.eigs), max_sval_plot)):
+        raise ValueError(
+            f"Cannot view past mode {min(len(dmd.eigs), max_sval_plot)}."
+        )
 
-    if mode_colors is None:
-        mode_colors = ["r", "b", "g", "gray"]
-
-    # Order the DMD eigenvalues, modes, and dynamics according to amplitude.
+    # Sort eigenvalues, modes, and dynamics according to amplitude magnitude.
     mode_order = np.argsort(-np.abs(dmd.amplitudes))
     lead_eigs = dmd.eigs[mode_order]
     lead_modes = dmd.modes[:, mode_order]
     lead_dynamics = dmd.dynamics[mode_order]
-    if isinstance(dmd, BOPDMD):
-        # BOPDMD computes continuous-time eigenvalues.
-        lead_eigs = np.exp(lead_eigs)
+
+    # Get time information for eigenvalue conversions.
+    if isinstance(dmd, BOPDMD) or (
+        isinstance(dmd, PrePostProcessingDMD)
+        and isinstance(dmd.pre_post_processed_dmd, BOPDMD)
+    ):
+        # BOPDMD models store time in the time attribute.
+        # BOPDMD models also always compute continuous-time eigenvalues.
+        cont_eigs = lead_eigs
+        time = dmd.time
+        dt = dmd.time[1] - dmd.time[0]
+        if not np.allclose(dmd.time[1:] - dmd.time[:-1], dt):
+            warnings.warn(
+                "Time step is not uniform. "
+                "No discrete-time eigenvalues to plot..."
+            )
+            disc_eigs = None
+        else:
+            disc_eigs = np.exp(lead_eigs * dt)
+    else:
+        # For all other dmd models, go to the TimeDict for time information.
+        try:
+            time = dmd.dmd_timesteps
+            dt = dmd.original_time["dt"]
+        except AttributeError:
+            warnings.warn(
+                "No time step information available. "
+                "Using dt = 1 and t0 = 0."
+            )
+            time = np.arange(dmd.snapshots.shape[-1])
+            dt = 1.0
+
+        if continuous:
+            cont_eigs = lead_eigs
+            disc_eigs = np.exp(lead_eigs * dt)
+        else:
+            disc_eigs = lead_eigs
+            cont_eigs = np.log(lead_eigs) / dt
 
     # Compute the singular values of the data matrix.
     if isinstance(dmd, HankelDMD):
@@ -636,81 +728,97 @@ def plot_summary(
 
     # Generate the summarizing plot.
     fig, (eig_axes, mode_axes, dynamics_axes) = plt.subplots(
-        3, 3, figsize=figsize, dpi=200
+        3, 3, figsize=figsize, dpi=dpi
     )
 
-    # Plot 1: Plot the singular value spectrum (plot at most 50 values).
-    s_var_plot = s_var[:50]
-    eig_axes[0].set_title("Singular Values")
-    eig_axes[0].set_ylabel("% variance")
-    t = np.arange(len(s_var_plot)) + 1
-    eig_axes[0].plot(t, s_var_plot, "o", c=mode_colors[-1], ms=8, mec="k")
+    # PLOT 1: Plot the singular value spectrum.
+    s_var_plot = s_var[:max_sval_plot]
+    eig_axes[0].set_title("Singular Values", fontsize=title_fontsize)
+    eig_axes[0].set_ylabel("% variance", fontsize=label_fontsize)
+    s_t = np.arange(len(s_var_plot)) + 1
+    eig_axes[0].plot(
+        s_t, s_var_plot, "o", c=main_colors[-1], ms=sval_ms, mec="k"
+    )
     for i, idx in enumerate(index_modes):
         eig_axes[0].plot(
-            t[idx], s_var_plot[idx], "o", c=mode_colors[i], ms=8, mec="k"
+            s_t[idx],
+            s_var_plot[idx],
+            "o",
+            c=main_colors[i],
+            ms=sval_ms,
+            mec="k",
         )
+    if plot_semilogy:
+        eig_axes[0].semilogy()
 
-    # Plots 2-3: Plot the eigenvalues (discrete-time and continuous-time).
+    # PLOTS 2-3: Plot the eigenvalues (discrete-time and continuous-time).
     # Scale marker sizes to reflect the amount of variance captured.
-    max_marker_size = 10
-    ms_vals = max_marker_size * np.sqrt(s_var / s_var[0])
-    for i, ax in enumerate(eig_axes[1:]):
+    ms_vals = max_eig_ms * np.sqrt(s_var / s_var[0])
+    for i, (ax, eigs) in enumerate(zip(eig_axes[1:], [disc_eigs, cont_eigs])):
         # Plot the complex plane axes.
         ax.axvline(x=0, c="k", lw=1)
         ax.axhline(y=0, c="k", lw=1)
         ax.axis("equal")
-        # Plot 2: Plot the discrete-time eigenvalues with the unit circle.
+        # PLOT 2: Plot the discrete-time eigenvalues on the unit circle.
         if i == 0:
-            ax.set_title("Discrete-time Eigenvalues")
-            eigs = lead_eigs
+            ax.set_title("Discrete-time Eigenvalues", fontsize=title_fontsize)
             t = np.linspace(0, 2 * np.pi, 100)
             ax.plot(np.cos(t), np.sin(t), c="tab:blue", ls="--")
-            ax.set_xlabel("Real")
-            ax.set_ylabel("Imag")
-        # Plot 3: Plot the continuous-time eigenvalues
+            ax.set_xlabel(r"$Re(\lambda)$", fontsize=label_fontsize)
+            ax.set_ylabel(r"$Im(\lambda)$", fontsize=label_fontsize)
+        # PLOT 3: Plot the continuous-time eigenvalues.
         else:
-            ax.set_title("Continuous-time Eigenvalues")
-            eigs = np.log(lead_eigs)
-            ax.set_xlabel("Imag")
-            ax.set_ylabel("Real")
-        # Plot the eigenvalues.
-        for idx, eig in enumerate(eigs):
-            if idx in index_modes:
-                color = mode_colors[index_modes.index(idx)]
-            else:
-                color = mode_colors[-1]
-            if i == 0:
-                ax.plot(eig.real, eig.imag, "o", c=color, ms=ms_vals[idx])
-            else:
-                ax.plot(eig.imag, eig.real, "o", c=color, ms=ms_vals[idx])
+            ax.set_title("Continuous-time Eigenvalues", fontsize=title_fontsize)
+            ax.set_xlabel(r"$Im(\omega)$", fontsize=label_fontsize)
+            ax.set_ylabel(r"$Re(\omega)$", fontsize=label_fontsize)
+        # Plot the eigenvalues (discrete or continuous).
+        if eigs is not None:
+            for idx, eig in enumerate(eigs):
+                if idx in index_modes:
+                    color = main_colors[index_modes.index(idx)]
+                else:
+                    color = main_colors[-1]
+                if i == 0:
+                    ax.plot(eig.real, eig.imag, "o", c=color, ms=ms_vals[idx])
+                else:
+                    ax.plot(eig.imag, eig.real, "o", c=color, ms=ms_vals[idx])
 
-    # Plots 4-6: Plot the DMD modes.
-    for i, idx in enumerate(index_modes):
-        ax = mode_axes[i]
-        ax.set_title(f"Mode {idx + 1}", c=mode_colors[i], fontsize=15)
+    # PLOTS 4-6: Plot the DMD modes.
+    for i, (ax, idx) in enumerate(zip(mode_axes, index_modes)):
+        ax.set_title(
+            f"Mode {idx + 1}", c=main_colors[i], fontsize=title_fontsize
+        )
         # Plot modes in 1D.
         if len(snapshots_shape) == 1:
-            ax.plot(lead_modes[:, idx].real, c="tab:orange")
+            ax.plot(lead_modes[:, idx].real, c=mode_color)
         # Plot modes in 2D.
         else:
             mode = lead_modes[:, idx].reshape(*snapshots_shape, order=order)
-            # Multiply by factor of 0.9 to intensify the plotted image.
-            vmax = 0.9 * np.abs(mode.real).max()
-            im = ax.imshow(mode.real, vmax=vmax, vmin=-vmax, cmap="bwr")
+            vmax = np.abs(mode.real).max()
+            im = ax.imshow(mode.real, vmax=vmax, vmin=-vmax, cmap=mode_cmap)
             # Align the colorbar with the plotted image.
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="3%", pad=0.05)
             fig.colorbar(im, cax=cax)
+            if remove_cmap_ticks:
+                ax.set_xticks([])
+                ax.set_yticks([])
 
-    # Plots 7-9: Plot the DMD mode dynamics.
-    for i, idx in enumerate(index_modes):
-        ax = dynamics_axes[i]
-        ax.set_title("Mode Dynamics", c=mode_colors[i], fontsize=12)
-        ax.plot(lead_dynamics[idx].real)
-        ax.set_xlabel("Time")
+    # PLOTS 7-9: Plot the DMD mode dynamics.
+    for i, (ax, idx) in enumerate(zip(dynamics_axes, index_modes)):
+        dynamics_data = lead_dynamics[idx].real
+        ax.set_title("Mode Dynamics", c=main_colors[i], fontsize=title_fontsize)
+        ax.plot(time, dynamics_data, c=dynamics_color)
+        ax.set_xlabel("Time", fontsize=label_fontsize)
+        dynamics_range = dynamics_data.max() - dynamics_data.min()
+        # Re-adjust ylim if dynamics oscillations are extremely small.
+        if dynamics_range / np.abs(np.average(dynamics_data)) < 1e-4:
+            ax.set_ylim(np.sort([0.0, 2 * np.average(dynamics_data)]))
 
     # Padding between elements.
-    plt.tight_layout()
+    if tight_layout_kwargs is None:
+        tight_layout_kwargs = {}
+    plt.tight_layout(**tight_layout_kwargs)
 
     # Save plot if filename is provided.
     if filename:
