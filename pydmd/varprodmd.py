@@ -820,7 +820,7 @@ class VarProDMD(DMDBase):
 
         self._snapshots_holder = Snapshots(X)
         (self._b, self._optres, self._indices) = self._Atilde.compute_operator(
-            X, time
+            self._snapshots_holder.snapshots.astype(np.complex128), time
         )
         self._original_time = time
         self._dmd_time = time[self._indices]
