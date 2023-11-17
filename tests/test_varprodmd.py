@@ -3,20 +3,17 @@ Test module for VarProDMD
 """
 import numpy as np
 import pytest
-from pydmd.utils import compute_rank
+
+from pydmd import VarProDMD
 from pydmd.varprodmd import (
-    _OptimizeHelper,
-    _compute_dmd_rho,
+    OPT_DEF_ARGS,
     _compute_dmd_jac,
-    _compute_rank,
-    _svht,
+    _compute_dmd_rho,
+    _OptimizeHelper,
     compute_varprodmd_any,
     optdmd_predict,
     select_best_samples_fast,
-    OPT_DEF_ARGS,
 )
-
-from pydmd import VarProDMD
 
 
 def signal(x_loc: np.ndarray, time: np.ndarray) -> np.ndarray:
@@ -32,21 +29,6 @@ def signal(x_loc: np.ndarray, time: np.ndarray) -> np.ndarray:
     __f_1 = 1.0 / np.cosh(x_loc + 3) * np.exp(1j * 2.3 * time)
     __f_2 = 2.0 / np.cosh(x_loc) * np.tanh(x_loc) * np.exp(1j * 2.8 * time)
     return __f_1 + __f_2
-
-
-def test_rank():
-    """
-    Test SVHT rank (no duplicate SVD computation is performed).
-    """
-    time = np.linspace(0, 4 * np.pi, 100)
-    x_loc = np.linspace(-10, 10, 1024)
-    __x, __time = np.meshgrid(x_loc, time)
-    z = signal(__x, __time).T
-    s = np.linalg.svd(z, full_matrices=False)[1]
-    assert _compute_rank(s, z.shape[0], z.shape[1], 0) == compute_rank(z, 0)
-    assert _compute_rank(s, z.shape[0], z.shape[1], 4) == 4
-    assert _compute_rank(s, z.shape[0], z.shape[1], 0.8) == compute_rank(z, 0.8)
-    assert _svht(s, z.shape[0], z.shape[1]) == compute_rank(z, 0)
 
 
 def test_varprodmd_rho():

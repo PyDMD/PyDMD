@@ -17,15 +17,17 @@ Default optimizer arguments:
 """
 
 import warnings
-from typing import Any, Dict, Tuple, Union, Optional
 from types import MappingProxyType
+from typing import Any, Dict, Tuple, Union
+
 import numpy as np
-from scipy.optimize import OptimizeResult, least_squares
 from scipy.linalg import qr
+from scipy.optimize import OptimizeResult, least_squares
+
 from .dmd import DMDBase
 from .dmdoperator import DMDOperator
 from .snapshots import Snapshots
-
+from .utils import compute_svd
 
 OPT_DEF_ARGS = MappingProxyType(
     {
@@ -38,110 +40,6 @@ OPT_DEF_ARGS = MappingProxyType(
         "ftol": 1e-8,
     }
 )
-
-
-def _svht(
-    sigma_svd: np.ndarray,
-    rows: int,
-    cols: int,
-    sigma: Optional[float] = None,
-) -> int:
-    """
-    Determine optimal rank for svd matrix approximation,
-    based on https://arxiv.org/pdf/1305.5870.pdf.
-
-    :param sigma_svd: Diagonal matrix of "enonomy" SVD as 1d array.
-    :type sigma_svd: np.ndarray
-    :param rows: Number of rows of original data matrix.
-    :type cols: int
-    :param cols: Number of columns of original data matrix.
-    :type cols: int
-    :param sigma: Signal noise level if known, defaults to None.
-    :type sigma: Optional[float], optional
-    :raises ValueError: sigma_svd must be a 1d-array else exception is raised.
-    :return: Optimal rank.
-    :rtype: int
-    """
-
-    if len(sigma_svd.shape) != 1:
-        raise ValueError("Expected 1d array for diagonal matrix!")
-
-    beta = (
-        float(cols) / float(rows) if rows > cols else float(rows) / float(cols)
-    )
-
-    tau_star = 0
-
-    if sigma is not None:
-        sigma = abs(sigma)
-        lambda_star = np.sqrt(
-            2 * (beta + 1)
-            + (8 * beta / (beta + 1 + np.sqrt(beta * beta + 14 * beta + 1)))
-        )
-        tau_star = (
-            lambda_star
-            * sigma
-            * np.sqrt(float(cols) if cols > rows else float(rows))
-        )
-    else:
-        median = np.median(sigma_svd)
-        beta_square = beta * beta
-        beta_cubic = beta * beta_square
-        omega = 0.56 * beta_cubic - 0.95 * beta_square + 1.82 * beta + 1.43
-        tau_star = median * omega
-
-    rank = np.where(sigma_svd >= tau_star)[0]
-
-    if rank.size == 0:
-        return sigma_svd.shape[-1]
-
-    return rank[-1] + 1
-
-
-def _compute_rank(
-    sigma_x: np.ndarray,
-    rows: int,
-    cols: int,
-    rank: Union[float, int],
-    sigma: float = None,
-) -> int:
-    r"""
-    Compute rank without duplicate SVD computation.
-
-    :param sigma_x: Diagonal matrix of SVD as 1d array.
-    :type sigma_x: np.ndarray
-    :param rows: Number of rows of the original data matrix.
-    :type rows: int
-    :param cols: Number of columns of the original data matrix.
-    :type cols: int
-    :param rank: Desired input rank :math:`r`. If rank is an integer,
-        and :math:`r > 0`, the desired rank is used iff possible.
-        This depends on the size of parameter sigma_x. If the desired
-        rank exceeds the size of sigma_x, then the minimum of desired rank
-        and the size of sigma_x is used. If the rank is a float
-        and :math:`0 < r < 1`, than the rank is determined by investigating
-        the cumulative energy of the singular values.
-    :type rank: Union[float, int]
-    :param sigma: Noise level for SVHT algorithm. If it is unknown
-        keep it as None. Defaults to None.
-    :type sigma: float, optional
-    :raises ValueError: ValueError is raised if rank is negative
-        (:math:`r < 0`).
-    :return: Optimal rank.
-    :rtype: int
-    """
-
-    if 0 < rank < 1:
-        sigma_x_square = np.square(sigma_x)
-        cumulative_energy = np.cumsum(sigma_x_square / sigma_x_square.sum())
-        __rank = np.searchsorted(cumulative_energy, rank) + 1
-    elif rank == 0:
-        __rank = _svht(sigma_x, rows, cols, sigma)
-    elif rank >= 1:
-        __rank = int(rank)
-    else:
-        raise ValueError(f"Invalid rank specified, provided {rank}!")
-    return min(__rank, sigma_x.size)
 
 
 def _compute_dmd_ev(
@@ -167,22 +65,13 @@ def _compute_dmd_ev(
     :rtype: np.ndarray
     """
 
-    u_x, sigma_x, v_x_t = np.linalg.svd(
-        x_current, full_matrices=False, hermitian=False
-    )
-    __rank = _compute_rank(
-        sigma_x, x_current.shape[0], x_current.shape[1], rank
-    )
+    u_x, sigma_x, v_x = compute_svd(x_current, rank)
 
     # columns of v need to be multiplicated with inverse sigma
-    sigma_inv_approx = np.reciprocal(sigma_x[:__rank])
+    sigma_inv_approx = np.reciprocal(sigma_x)
 
     a_approx = np.linalg.multi_dot(
-        [
-            u_x[:, :__rank].conj().T,
-            x_next,
-            sigma_inv_approx[None] * v_x_t[:__rank, :].conj().T,
-        ]
+        [u_x.conj().T, x_next, sigma_inv_approx[None] * v_x]
     )
 
     return np.linalg.eigvals(a_approx)
@@ -368,11 +257,7 @@ def _varpro_preprocessing(
                   np.ndarray]
     """
 
-    u_r, s_r, v_r_t = np.linalg.svd(data, full_matrices=False)
-    __rank = _compute_rank(s_r, data.shape[0], data.shape[1], rank)
-    u_r = u_r[:, :__rank]
-    s_r = s_r[:__rank]
-    v_r = v_r_t[:__rank].conj().T
+    u_r, s_r, v_r = compute_svd(data, rank)
     data_out = v_r.conj().T * s_r[:, None] if use_proj else data
 
     # trapezoidal derivative approximation
