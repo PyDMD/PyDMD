@@ -535,6 +535,7 @@ def plot_snapshots_2D(
 def plot_summary(
     dmd,
     *,
+    d=1,
     continuous=False,
     snapshots_shape=None,
     index_modes=None,
@@ -567,6 +568,8 @@ def plot_summary(
 
     :param dmd: DMD instance.
     :type dmd: pydmd.DMDBase
+    :param d: Number of delays applied to the data passed to the DMD instance.
+    :type d: int
     :param continuous: Whether or not the eigenvalues of the given DMD instance
         are continuous-time. If `False`, the eigenvalues are assumed to be the
         discrete-time eigenvalues. If `True`, the eigenvalues are taken to be
@@ -714,6 +717,15 @@ def plot_summary(
         else:
             disc_eigs = lead_eigs
             cont_eigs = np.log(lead_eigs) / dt
+
+    # Get mode averages across delays if time-delay was used.
+    if d > 1:
+        lead_modes = np.average(
+            lead_modes.reshape(
+                d, lead_modes.shape[0] // d, lead_modes.shape[1]
+            ),
+            axis=0,
+        )
 
     # Compute the singular values of the data matrix.
     if isinstance(dmd, HankelDMD):

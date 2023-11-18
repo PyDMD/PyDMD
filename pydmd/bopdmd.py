@@ -748,7 +748,7 @@ class BOPDMDOperator(DMDOperator):
                 "Consider re-adjusting your variable projection parameters "
                 "with the varpro_opts_dict and consider setting verbose=True."
             )
-            print(msg)
+            warnings.warn(msg)
 
         # If num_trials isn't a positive int, perform standard optimized dmd.
         if self._num_trials <= 0 or not isinstance(self._num_trials, int):
