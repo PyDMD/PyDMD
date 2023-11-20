@@ -81,6 +81,12 @@ class PrePostProcessingDMD:
 
     @property
     def pre_post_processed_dmd(self):
+        """
+        Return the pre/post-processed DMD instance.
+
+        :return: decorated DMD instance.
+        :rtype: pydmd.DMDBase
+        """
         return self._pre_post_processed_dmd
 
     @property

@@ -569,6 +569,8 @@ def plot_summary(
     :param dmd: DMD instance.
     :type dmd: pydmd.DMDBase
     :param d: Number of delays applied to the data passed to the DMD instance.
+        If `d` is greater than 1, then each plotted mode will be the average
+        mode taken across all `d` delays.
     :type d: int
     :param continuous: Whether or not the eigenvalues of the given DMD instance
         are continuous-time. If `False`, the eigenvalues are assumed to be the
