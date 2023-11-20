@@ -80,6 +80,10 @@ class PrePostProcessingDMD:
         return None
 
     @property
+    def pre_post_processed_dmd(self):
+        return self._pre_post_processed_dmd
+
+    @property
     def modes_activation_bitmask(self):
         return self._pre_post_processed_dmd.modes_activation_bitmask
 
