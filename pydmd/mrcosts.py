@@ -15,53 +15,23 @@ class mrCOSTS:
     :type window_length_array: list of int
     :param step_size_array: Number of time steps to slide each CSM-DMD window.
     :type step_size_array: list of int
-    :param n_components_array: Number of frequency bands to use for clustering this
-        window length.
+    :param n_components_array: Number of frequency bands to use for clustering each
+        decomposition level. Only one of `cluster_sweep` or `n_components_array`
+        should be provided.
     :type n_components_array: list of int
     :param svd_rank_array: The rank of the BOPDMD fit.
     :type svd_rank_array: list of int
-    :param global_svd: Flag indicating whether to find the proj_basis and initial
+    :param global_svd_array: Flag indicating whether to find the proj_basis and initial
         values using the entire dataset instead of individually for each window.
         Generally using the global_svd speeds up the fitting process by not finding a
         new initial value for each window. Default is True.
-    :type global_svd: list of bool
-    :param initialize_artificially: Flag indicating whether to initialize the DMD
-        using imaginary eigenvalues (i.e., the imaginary component of the cluster
-        results from a previous iteration) through the `cluster_centroids` keyword.
-        Default is False.
-    :type initialize_artificially: list of bool
+    :type cluster_sweep: bool
+    :param cluster_sweep: Flag indicating whether to find the optimal value of `n_clusters`
+        for the clustering of fitted eigenvalues. Only one of `cluster_sweep` or
+        `n_components_array` should be provided.
+    :type global_svd_array: list of bool
     :param pydmd_kwargs: Keyword arguments to pass onto the BOPDMD object.
     :type pydmd_kwargs: dict
-    :param cluster_centroids: Cluster centroids from a previous fitting iteration to
-        use for the initial guess of the eigenvalues. Should only be the imaginary
-        component.
-    :type cluster_centroids: numpy array
-    :param reset_alpha_init: Flag indicating whether the initial guess for the BOPDMD
-        eigenvalues should be reset for each window. Resetting the initial value
-        increases the computation time due to finding a new initial guess. Default
-        is False.
-    :type reset_alpha_init: bool
-    :param force_even_eigs: Flag indicating whether an even svd_rank should be forced
-        when not specifying the svd_rank directly (i.e., svd_rank=0). Default is True.
-    :type global_svd: bool
-    :param max_rank: Maximum svd_rank allowed when the svd_rank is found through rank
-        truncation (i.e., svd_rank=0).
-    :type max_rank: int
-    :param use_kmean_freqs: Flag specifying if the BOPDMD fit should use initial values
-        taken from cluster centroids, e.g., from a previoius iteration.
-    :type use_kmean_freqs: bool
-    :param init_alpha: Initial guess for the eigenvalues provided to BOPDMD.
-        Must be equal to the `svd_rank`.
-    :type init_alpha: numpy array
-    :param max_rank: Maximum allowed `svd_rank`. Overrides the optimal rank truncation
-        if `svd_rank=0`.
-    :type max_rank: int
-    :param force_even_eigs: Flag specifying if the `svd_rank` should be forced to
-        be even.
-    :type force_even_eigs: bool
-    :param reset_alpha_init: Flag specifying if the initial eigenvalue guess should
-        be reset between windows.
-    :type reset_alpha_init: bool
     """
 
     def __init__(
@@ -70,16 +40,8 @@ class mrCOSTS:
         step_size_array=None,
         svd_rank_array=None,
         global_svd_array=None,
-        initialize_artificially=False,
-        use_last_freq=False,
-        use_kmean_freqs=False,
-        init_alpha=None,
         pydmd_kwargs=None,
         costs_recon_kwargs=None,
-        cluster_centroids=None,
-        reset_alpha_init=False,
-        force_even_eigs=True,
-        max_rank=None,
         n_components_array=None,
         cluster_sweep=False,
         transform_method=None,
@@ -91,14 +53,6 @@ class mrCOSTS:
         self._window_length_array = window_length_array
         self._svd_rank_array = svd_rank_array
         self._global_svd_array = global_svd_array
-        self._initialize_artificially = initialize_artificially
-        self._use_last_freq = use_last_freq
-        self._use_kmean_freqs = use_kmean_freqs
-        self._init_alpha = init_alpha
-        self._cluster_centroids = cluster_centroids
-        self._reset_alpha_init = reset_alpha_init
-        self._force_even_eigs = force_even_eigs
-        self._max_rank = max_rank
         self._cluster_sweep = cluster_sweep
         self._transform_method = transform_method
 
@@ -106,7 +60,6 @@ class mrCOSTS:
         self._n_decompositions = None
         self._n_data_vars = None
         self._n_time_steps = None
-        self._cluster_centroids = None
         self._omega_classes = None
         self._costs_array = None
         self._da_omega = None
@@ -235,11 +188,11 @@ class mrCOSTS:
         window_lengths = self._window_length_array
         step_sizes = self._step_size_array
         svd_ranks = self._svd_rank_array
+        self._n_decompositions = len(self._window_length_array)
         n_decompositions = self._n_decompositions
         transform_method = self._transform_method
 
         # Check for the n_components array and cluster sweeping.
-        self._n_decompositions = len(self._window_length_array)
         if self._cluster_sweep:
             if self._n_components_array is not None:
                 raise ValueError(
