@@ -13,6 +13,8 @@ frenet-serret frame, Proceedings of the Royal Society A, 477
 
 import warnings
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
 from scipy.signal import lsim, StateSpace
 
 from .bopdmd import BOPDMD
@@ -321,6 +323,9 @@ class HAVOK:
     def reconstructed_embeddings(self):
         """
         Get the reconstructed data.
+
+        :return:
+        :rtype: numpy.ndarray
         """
         # Build a system with the following form:
         #   dx/dt = Ax + Bu
@@ -361,6 +366,130 @@ class HAVOK:
 
         return self._dehankel(hankel_matrix_recon)
 
+    def plot_summary(
+        self,
+        num_plot=None,
+        index_linear=(0, 1, 2),
+        index_forcing=0,
+        forcing_threshold=1e-5,
+        min_jump_dist=100,
+        true_switch_indices=None,
+        figsize=(20, 4),
+        dpi=200,
+    ):
+        """
+        Generate a 5-element summarizing plot that contains the following:
+        - the time-series used to apply HAVOK
+        - the full linear operator, which contains A, B, and the bad fit
+        - the first linear embedding term and the first forcing term
+        - the HAVOK embeddings, along with active forcing times
+        - the HAVOK reconstruction of the embeddings.
+
+        :param num_plot:
+        :type num_plot: int
+        :param index_linear:
+        :type index_linear:
+        :param index_forcing:
+        :type index_forcing: int
+        :param forcing_threshold:
+        :type forcing_threshold:
+        """
+        if self._havok_operator is None:
+            raise ValueError("You need to call fit().")
+
+        if num_plot is None:
+            num_plot = len(self._delay_embeddings)
+
+        forcing = self.forcing[:num_plot, index_forcing]
+        active_indices = np.arange(num_plot)[forcing**2 > forcing_threshold]
+        active_slices = self._get_index_slices(active_indices, min_jump_dist)
+
+        fig = plt.figure(figsize=figsize, dpi=dpi)
+        gs = GridSpec(2, 5, figure=fig)
+        ax1 = fig.add_subplot(gs[:, 0])
+        ax2 = fig.add_subplot(gs[:, 1])
+        ax3 = fig.add_subplot(gs[0, 2])
+        ax4 = fig.add_subplot(gs[1, 2])
+        if len(index_linear) == 3:
+            ax5 = fig.add_subplot(gs[:, 3], projection="3d")
+            ax6 = fig.add_subplot(gs[:, 4], projection="3d")
+        else:
+            ax5 = fig.add_subplot(gs[:, 3])
+            ax6 = fig.add_subplot(gs[:, 4])
+
+        # (1) plot the time-series data (first coordinate).
+        ax1.set_title("Time series")
+        ax1.plot(self._time[:num_plot], self._snapshots[0, :num_plot], c="k")
+        ax1.set_xlabel("Time")
+
+        # (2) plot the HAVOK operator.
+        ax2.set_title("Regression model")
+        vmax = np.abs(self._havok_operator).max()
+        fig.colorbar(
+            ax2.imshow(
+                self._havok_operator,
+                vmax=vmax,
+                vmin=-vmax,
+                cmap="PuOr",
+            ),
+            fraction=0.046,
+            pad=0.04,
+        )
+        a = len(self._havok_operator) - self._num_chaos - 0.5
+        ax2.plot([a, a], [-0.5, a], c="k", lw=3)
+        ax2.axhline(y=a, c="k", lw=3)
+        ax2.set_xticks([])
+        ax2.set_yticks([])
+
+        # (3) plot the linear HAVOK embeddings (first coordinate).
+        ax3.set_title("Linear dynamics")
+        ax3.plot(
+            self._time[:num_plot],
+            self.linear_dynamics[:num_plot, index_linear[0]],
+            c="tab:blue",
+        )
+        ax3.set_xticks([])
+        ax3.set_yticks([])
+
+        # (4) plot the HAVOK forcing term with activation times.
+        ax4.set_title("Forcing")
+        ax4.plot(self._time[:num_plot], forcing, c="gray")
+        ax4.set_xticks([])
+        ax4.set_yticks([])
+
+        for ind1, ind2 in active_slices:
+            ax4.plot(self._time[ind1:ind2], forcing[ind1:ind2], c="r")
+
+        if true_switch_indices is not None:
+            true_switch_indices = true_switch_indices[
+                : np.where(true_switch_indices >= num_plot)[0][0]
+            ]
+            ax4.plot(
+                self._time[:num_plot][true_switch_indices],
+                np.zeros(len(true_switch_indices)),
+                "*",
+                mec="k",
+                mfc="y",
+                ms=12,
+            )
+
+        # (5) plot the embedded attractor with activation.
+        ax5.set_title("Embedded attractor")
+        ax5.plot(self.linear_dynamics[:num_plot, index_linear], c="gray")
+        for ind1, ind2 in active_slices:
+            ax5.plot(self.linear_dynamics[ind1:ind2, index_linear], c="r")
+        ax5.set_axis_off()
+
+        # (6) plot the reconstructed attractor.
+        ax6.set_title("Reconstructed attractor")
+        ax6.plot(
+            self.reconstructed_embeddings[:num_plot, index_linear],
+            c="tab:blue",
+        )
+        ax6.set_axis_off()
+        plt.tight_layout(pad=0.1)
+        plt.show()
+
     def _hankel(self, X):
         """
         Given a data matrix X as a 2D numpy.ndarray, uses the `_delays`
@@ -387,3 +516,23 @@ class HAVOK:
         n = int(H.shape[0] / self._delays)
         X = np.hstack([H[:n], H[n:, -1].reshape(n, -1, order="F")])
         return X
+
+    @staticmethod
+    def _get_index_slices(x, min_jump_dist):
+        """
+        Helper function that, given an array x of indices at which to plot,
+        computes and returns the beginning and ending index for each
+        consecutive set of indices.
+
+        :Example:
+            >>> a = np.array([2, 3, 4, 5, 10, 11, 12, 25, 26, 28])
+            >>> _get_index_slices(a, min_jump_dist=2)
+            [(2, 5), (10, 12), (25, 28)]
+        """
+        # Get the locations within x where a significant jump occurs.
+        jumps = x[1:] - x[:-1] > min_jump_dist
+        jump_starts = np.insert(x[1:][jumps], 0, x[0])
+        jump_ends = np.append(x[:-1][jumps], x[-1])
+        index_slices = list(zip(jump_starts, jump_ends))
+
+        return index_slices
