@@ -103,7 +103,7 @@ class HAVOK:
     @property
     def ho_snapshots(self):
         """
-        Get the time-delay data matrix.
+        Get the time-delay data matrix (i.e. the Hankel matrix).
 
         :return: the matrix that contains the time-delayed data.
         :rtype: numpy.ndarray
@@ -111,6 +111,19 @@ class HAVOK:
         if self._ho_snapshots is None:
             raise ValueError("You need to call fit().")
         return self._ho_snapshots
+
+    @property
+    def delay_embeddings(self):
+        """
+        Get all of the HAVOK embeddings (linear dynamics and forcing).
+        Coordinates are stored as columns of the returned matrix.
+
+        :return: matrix containing all of the HAVOK embeddings.
+        :rtype: numpy.ndarray
+        """
+        if self._delay_embeddings is None:
+            raise ValueError("You need to call fit().")
+        return self._delay_embeddings
 
     @property
     def linear_dynamics(self):
@@ -129,6 +142,7 @@ class HAVOK:
     def forcing(self):
         """
         Get the HAVOK embeddings that force the linear dynamics.
+        Coordinates are stored as columns of the returned matrix.
 
         :return: matrix containing the chaotic forcing terms.
         :rtype: numpy.ndarray
@@ -136,6 +150,19 @@ class HAVOK:
         if self._delay_embeddings is None:
             raise ValueError("You need to call fit().")
         return self._delay_embeddings[:, -self._num_chaos :]
+
+    @property
+    def operator(self):
+        """
+        Get the full HAVOK regression model,
+        which contains A, B, and the bad fit.
+
+        :return: the full HAVOK regression model.
+        :rtype: numpy.ndarray
+        """
+        if self._havok_operator is None:
+            raise ValueError("You need to call fit().")
+        return self._havok_operator
 
     @property
     def A(self):
@@ -178,27 +205,43 @@ class HAVOK:
     @property
     def eigs(self):
         """
-        Get the eigenvalues of the linear HAVOK operator.
+        Get the eigenvalues of the linear HAVOK operator A.
+    
+        :return: the eigenvalues of the operator A.
+        :rtype: numpy.ndarray
         """
         if self._eigenvalues is None:
             raise ValueError("You need to call fit().")
         return self._eigenvalues
 
+    @property
+    def singular_vals(self):
+        """
+        Get the singular value spectrum of the Hankel matrix.
+
+        :return: the singular values of the Hankel matrix.
+        :rtype: numpy.ndarray
+        """
+        if self._singular_vals is None:
+            raise ValueError("You need to call fit().")
+        return self._singular_vals
+
     def fit(self, X, t):
         """
-        Perform HAVOK analysis.
+        Perform the HAVOK analysis.
 
-        :param X:
-        :type X:
-        :param t:
-        :type t:
+        :param X: the input snapshots.
+        :type X: numpy.ndarray or iterable
+        :param t: the input time vector or uniform time-step between snapshots.
+        :type t: {numpy.ndarray, list} or {int, float}
         """
 
         # Confirm that delays, lag, and num_chaos are positive integers.
         for x in [self._delays, self._lag, self._num_chaos]:
             if not isinstance(x, int) or x < 1:
-                msg = "delays, lag, and num_chaos must be positive integers."
-                raise ValueError("num_chaos must be a positive integer.")
+                raise ValueError(
+                    "delays, lag, and num_chaos must be positive integers."
+                )
 
         # Confirm that dmd is a child of DMDBase, if provided.
         if self._dmd is not None and not isinstance(self._dmd, DMDBase):
@@ -207,20 +250,17 @@ class HAVOK:
         # Confirm that the input data is a 1D time-series or a 2D data matrix.
         X = np.squeeze(np.array(X))
         if X.ndim > 2:
-            msg = "Please ensure that input data is a 1D or 2D array."
-            raise ValueError(msg)
+            raise ValueError("Input data must be a 1D or 2D array.")
         if X.ndim == 1:
             X = X[None]
         n_samples = X.shape[-1]
 
         # Check that the input data contains enough observations.
         if n_samples < self._delays * self._lag:
-            msg = (
-                "Not enough snapshots provided for {} delays and a lag of {}."
-                "Please provide at least {} snapshots."
-            )
             raise ValueError(
-                msg.format(self._delays, self._lag, self._delays * self._lag)
+                "Not enough snapshots provided for "
+                f"{self._delays} delays and lag {self._lag}. Please "
+                f"provide at least {self._delays * self._lag} snapshots."
             )
 
         # Check the input time information and set the time vector.
@@ -231,25 +271,21 @@ class HAVOK:
 
             # Throw error if the time vector is not 1D or the correct length.
             if time.ndim != 1 or len(time) != n_samples:
-                msg = "Please provide a 1D array of {} time values."
-                raise ValueError(msg.format(n_samples))
+                raise ValueError(
+                    f"Please provide a 1D array of {n_samples} time values."
+                )
 
             # Generate warning if the times are not uniformly-spaced.
-            if not np.allclose(
-                time[1:] - time[:-1],
-                (time[1] - time[0]) * np.ones(len(time) - 1),
-            ):
-                msg = (
+            if not np.allclose(time[1:] - time[:-1], time[1] - time[0]):
+                warnings.warn(
                     "Input snapshots are unevenly-spaced in time. "
-                    "Note that unexpected results may occur because of this. "
+                    "Note that unexpected results may occur because of this."
                 )
-                warnings.warn(msg)
         else:
-            msg = (
+            raise ValueError(
                 "t must either be a single positive time step "
-                "or a 1D array of {} time values."
+                f"or a 1D array of {n_samples} time values."
             )
-            raise ValueError(msg.format(n_samples))
 
         # Set the time step - this is ignored if using BOP-DMD.
         dt = time[1] - time[0]
@@ -271,12 +307,12 @@ class HAVOK:
 
         # Generate an error if too few HAVOK embeddings are being used.
         if len(s) < self._num_chaos + 1:
-            msg = (
-                "HAVOK model is attempting to use r = {} embeddings when r "
-                "should be at least {}. Try increasing the number of delays "
-                "and/or providing a positive integer argument for svd_rank."
+            raise ValueError(
+                f"HAVOK model is attempting to use r = {len(s)} embeddings "
+                f"when r should be at least {self._num_chaos + 1}. "
+                "Try increasing the number of delays or providing "
+                "a positive integer argument for svd_rank."
             )
-            raise ValueError(msg.format(len(s), self._num_chaos + 1))
 
         # Use lstsq or pinv to compute the HAVOK operator.
         if self._dmd is None:
@@ -289,6 +325,11 @@ class HAVOK:
         else:
             if isinstance(self._dmd, BOPDMD):
                 self._dmd.fit(V.T, time)
+
+                if self._structured:
+                    warnings.warn(
+                        "Structured HAVOK cannot be performed with BOP-DMD."
+                    )
             else:
                 self._dmd.fit(V.T, V_dot.T)
 
@@ -315,16 +356,16 @@ class HAVOK:
         self._havok_operator = havok_operator
         self._eigenvalues = np.linalg.eig(
             havok_operator[: -self._num_chaos, : -self._num_chaos]
-        )
+        )[0]
 
         return self
 
     @property
     def reconstructed_embeddings(self):
         """
-        Get the reconstructed data.
+        Get the reconstructed time-delay embeddings.
 
-        :return:
+        :return: the matrix that contains the reconstructed embeddings.
         :rtype: numpy.ndarray
         """
         # Build a system with the following form:
