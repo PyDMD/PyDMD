@@ -2,7 +2,6 @@ import numpy as np
 import copy
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.metrics import silhouette_score, calinski_harabasz_score
-import matplotlib.pyplot as plt
 import xarray as xr
 from pydmd.costs import COSTS
 import os
@@ -15,53 +14,23 @@ class mrCOSTS:
     :type window_length_array: list of int
     :param step_size_array: Number of time steps to slide each CSM-DMD window.
     :type step_size_array: list of int
-    :param n_components_array: Number of frequency bands to use for clustering this
-        window length.
+    :param n_components_array: Number of frequency bands to use for clustering each
+        decomposition level. Only one of `cluster_sweep` or `n_components_array`
+        should be provided.
     :type n_components_array: list of int
     :param svd_rank_array: The rank of the BOPDMD fit.
     :type svd_rank_array: list of int
-    :param global_svd: Flag indicating whether to find the proj_basis and initial
+    :param global_svd_array: Flag indicating whether to find the proj_basis and initial
         values using the entire dataset instead of individually for each window.
         Generally using the global_svd speeds up the fitting process by not finding a
         new initial value for each window. Default is True.
-    :type global_svd: list of bool
-    :param initialize_artificially: Flag indicating whether to initialize the DMD
-        using imaginary eigenvalues (i.e., the imaginary component of the cluster
-        results from a previous iteration) through the `cluster_centroids` keyword.
-        Default is False.
-    :type initialize_artificially: list of bool
+    :type cluster_sweep: bool
+    :param cluster_sweep: Flag indicating whether to find the optimal value of `n_clusters`
+        for the clustering of fitted eigenvalues. Only one of `cluster_sweep` or
+        `n_components_array` should be provided.
+    :type global_svd_array: list of bool
     :param pydmd_kwargs: Keyword arguments to pass onto the BOPDMD object.
     :type pydmd_kwargs: dict
-    :param cluster_centroids: Cluster centroids from a previous fitting iteration to
-        use for the initial guess of the eigenvalues. Should only be the imaginary
-        component.
-    :type cluster_centroids: numpy array
-    :param reset_alpha_init: Flag indicating whether the initial guess for the BOPDMD
-        eigenvalues should be reset for each window. Resetting the initial value
-        increases the computation time due to finding a new initial guess. Default
-        is False.
-    :type reset_alpha_init: bool
-    :param force_even_eigs: Flag indicating whether an even svd_rank should be forced
-        when not specifying the svd_rank directly (i.e., svd_rank=0). Default is True.
-    :type global_svd: bool
-    :param max_rank: Maximum svd_rank allowed when the svd_rank is found through rank
-        truncation (i.e., svd_rank=0).
-    :type max_rank: int
-    :param use_kmean_freqs: Flag specifying if the BOPDMD fit should use initial values
-        taken from cluster centroids, e.g., from a previoius iteration.
-    :type use_kmean_freqs: bool
-    :param init_alpha: Initial guess for the eigenvalues provided to BOPDMD.
-        Must be equal to the `svd_rank`.
-    :type init_alpha: numpy array
-    :param max_rank: Maximum allowed `svd_rank`. Overrides the optimal rank truncation
-        if `svd_rank=0`.
-    :type max_rank: int
-    :param force_even_eigs: Flag specifying if the `svd_rank` should be forced to
-        be even.
-    :type force_even_eigs: bool
-    :param reset_alpha_init: Flag specifying if the initial eigenvalue guess should
-        be reset between windows.
-    :type reset_alpha_init: bool
     """
 
     def __init__(
@@ -70,16 +39,8 @@ class mrCOSTS:
         step_size_array=None,
         svd_rank_array=None,
         global_svd_array=None,
-        initialize_artificially=False,
-        use_last_freq=False,
-        use_kmean_freqs=False,
-        init_alpha=None,
         pydmd_kwargs=None,
         costs_recon_kwargs=None,
-        cluster_centroids=None,
-        reset_alpha_init=False,
-        force_even_eigs=True,
-        max_rank=None,
         n_components_array=None,
         cluster_sweep=False,
         transform_method=None,
@@ -91,14 +52,6 @@ class mrCOSTS:
         self._window_length_array = window_length_array
         self._svd_rank_array = svd_rank_array
         self._global_svd_array = global_svd_array
-        self._initialize_artificially = initialize_artificially
-        self._use_last_freq = use_last_freq
-        self._use_kmean_freqs = use_kmean_freqs
-        self._init_alpha = init_alpha
-        self._cluster_centroids = cluster_centroids
-        self._reset_alpha_init = reset_alpha_init
-        self._force_even_eigs = force_even_eigs
-        self._max_rank = max_rank
         self._cluster_sweep = cluster_sweep
         self._transform_method = transform_method
 
@@ -106,7 +59,6 @@ class mrCOSTS:
         self._n_decompositions = None
         self._n_data_vars = None
         self._n_time_steps = None
-        self._cluster_centroids = None
         self._omega_classes = None
         self._costs_array = None
         self._da_omega = None
@@ -208,38 +160,55 @@ class mrCOSTS:
         return self._n_components_array
 
     @property
-    def modes_array(self):
-        if not hasattr(self, "_modes_array"):
-            raise ValueError("You need to call fit before")
-        return self._modes_array
-
-    @property
     def cluster_centroids(self):
+        """
+        :return: Cluster centroids from clustering of eigenvalues.
+        :rtype: list of float
+        """
         if not hasattr(self, "_cluster_centroids"):
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._cluster_centroids
 
+    # @ToDo: Use the class variable instead of passing it around
     @property
     def omega_classes(self):
+        """
+        :return: Ints for each omega value indicating which cluster it belongs to.
+        :rtype: list of numpy.ndarrays
+        """
         if not hasattr(self, "_omega_classes"):
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._omega_classes
 
     @staticmethod
     def _data_shape(data):
+        """
+        :return: Shape of the data for fitting.
+        :rtype: Tuple of ints
+        """
         n_time_steps = np.shape(data)[1]
         n_data_vars = np.shape(data)[0]
         return n_time_steps, n_data_vars
 
     def fit(self, data, time, verbose=True):
+        """
+        Compute mrCOSTS for the given data.
+
+        :param data: the input snapshots.
+        :type data: numpy.ndarray
+        :param time: the input time vector.
+        :type time: numpy.ndarray
+        :param verbose: If mrCOSTS should report progress.
+        :type verbose: bool
+        """
         window_lengths = self._window_length_array
         step_sizes = self._step_size_array
         svd_ranks = self._svd_rank_array
+        self._n_decompositions = len(self._window_length_array)
         n_decompositions = self._n_decompositions
         transform_method = self._transform_method
 
         # Check for the n_components array and cluster sweeping.
-        self._n_decompositions = len(self._window_length_array)
         if self._cluster_sweep:
             if self._n_components_array is not None:
                 raise ValueError(
@@ -318,12 +287,18 @@ class mrCOSTS:
                 else:
                     data_iter = xr_low_frequency
 
-            # Save the object for later use.
+            # Save the fitted costs object.
             self._costs_array.append(copy.copy(mrd))
 
     def multi_res_interp(
         self,
     ):
+        """
+        Interpolate the mrCOSTS eigenvalues to the smallest decomposition level.
+
+        :return: Interpolated mrCOSTS eigenvalues
+        :rtype: xarray DataArray
+        """
         ds_list = [c.to_xarray() for c in self._costs_array]
         # Remove the low-frequency bands.
         da_to_concat = [
@@ -357,7 +332,17 @@ class mrCOSTS:
         self._da_omega = da_omega
 
     def multi_res_deterp(self, omega_classes):
+        """
+        Un-interpolate the mrCOSTS eigenvalues to the original spacing.
 
+        :param omega_classes:
+        :type omega_classes: numpy.ndarray
+
+        :return: Omega classes from global clustering.
+        :rtype: list of numpy.ndarrays
+        """
+
+        # @ToDo: should `omega_classes` be a call to an internal variable from the class?
         # Get the indices for the 3-d omega structure
         index = np.nonzero(~np.isnan(self._da_omega.values))
 
@@ -371,7 +356,7 @@ class mrCOSTS:
 
         # Build the omega_classes array into a labeled xarray DataArray object.
         da_omega_classes = xr.zeros_like(self._da_omega, dtype="int")
-        da_omega_classes.values = omega_classes_full  # .astype("str")
+        da_omega_classes.values = omega_classes_full
         da_omega_classes = da_omega_classes.swap_dims(
             {"window_length": "decomposition_level"}
         )
@@ -393,12 +378,18 @@ class mrCOSTS:
         return omega_classes_list
 
     def from_xarray(self, file_list):
-        """Create an mrcosts object from saved files."""
-        mrd_list = []
-        # ToDo: Check for file existence.
-        for f in file_list:
-            mrd_list.append(xr.load_dataset(f, engine="h5netcdf"))
+        """
+        Create an mrCoSTS object from saved netcdf files.
 
+        :param file_list: Filenames to open.
+        :type file_list: list of str
+        """
+        mrd_list = []
+        for f in file_list:
+            if os.path.isfile(f):
+                mrd_list.append(xr.load_dataset(f, engine="h5netcdf"))
+            else:
+                raise ValueError("{} was not found.".format(f))
         # Sort by window length
         mrd_list = sorted(mrd_list, key=lambda mrd: mrd.window_length)
 
@@ -412,9 +403,8 @@ class mrCOSTS:
         window_length_array = [mrd.window_length for mrd in mrd_list]
         step_size_array = [mrd.step_size for mrd in mrd_list]
         svd_rank_array = [mrd.svd_rank for mrd in mrd_list]
-        # ToDo: Don't access protected information.
-        n_components_array = [mrd._n_components for mrd in mrd_list]
-        global_svd_array = [mrd._global_svd for mrd in mrd_list]
+        n_components_array = [mrd.n_components for mrd in mrd_list]
+        global_svd_array = [mrd.global_svd for mrd in mrd_list]
 
         # ToDo: Find a more robust way of handling these cases.
         # A simple stop-gap to use the kwargs simply from the first element.
@@ -440,6 +430,15 @@ class mrCOSTS:
         self._n_time_steps = n_time_steps
 
     def to_xarray(self, filename):
+        """
+        Save the mrCoSTS fit to file in netcdf format.
+
+        Each decomposition level is saved as a separate file with a common
+        name and an identifier for the decomposition level.
+
+        :param filename: Common name shared by each file.
+        :type filename: str
+        """
         for c in self._costs_array:
             c.to_xarray().to_netcdf(
                 ".".join(
@@ -460,13 +459,25 @@ class mrCOSTS:
         kwargs=None,
         scale_reconstruction_kwargs=None,
     ):
-        """Plot reconstructions for a given local decomposition level.
+        """Plot reconstruction of each frequency band of a decomposition level.
 
-        @param level:
-        @param data:
-        @param kwargs:
-        @param scale_reconstruction_kwargs:
-        @return:
+        Plots are space-time diagrams assuming a 1D spatial dimension. These are the
+        local frequency band clusters, not the global clusters.
+
+        Requires the input data for the decomposition as well as reconstructing the fit.
+        Deriving the input data requires providing the actual input data for the first
+        decomposition. Otherwise, the input data is recovered by reconstructing
+        decomposition = level - 1.
+
+        :param level: Decomposition level to plot (zero indexed).
+        :type level: int
+        :param data: Original data, only necessary for level=0.
+        :type data: numpy.ndarray
+        :param kwargs: Keyword arguments given to costs.plot_reconstruction()
+        :type kwargs: dict
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the fit.\
+        :type scale_reconstruction_kwargs: dict
+        :return: None
         """
 
         if data is not None:
@@ -492,10 +503,30 @@ class mrCOSTS:
         self,
         level,
         data=None,
-        global_reconstruction=None,
         scale_reconstruction_kwargs=None,
         plot_kwargs=None,
     ):
+        """Plots the error for the local decomposition fit
+
+        Plots are a space-time diagram assuming a 1D spatial dimension.
+
+        Determining the error requires the input data for the decomposition as well as
+        reconstructing the fit. Deriving the input data requires providing the actual input
+        data for the first decomposition. Otherwise, the input data is recovered by
+        reconstructing decomposition = level - 1.
+
+        Error is expressed as a percent.
+
+        :param level: Decomposition level for plotting
+        :type level: int
+        :param data: Original data, only necessary for level=0.
+        :type data: numpy.ndarray
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the fit.
+        :type scale_reconstruction_kwargs: dict
+        :param plot_kwargs: Arguments passed to costs.plot_error().
+        :type scale_reconstruction_kwargs: dict
+        :return:
+        """
         if data is not None:
             x_iter = data
         else:
@@ -522,21 +553,23 @@ class mrCOSTS:
         plot_kwargs=None,
         scale_reconstruction_kwargs=None,
     ):
-        """Plot the local scale separation reconstructions.
+        """Plots local scale separation of the high and low frequency components.
 
-        Reconstruction plots require the input data for the level as well as the reconstruction
-        for the given level. Deriving the input data requires either providing the actual input
-        data (for the first decomposition). Otherwise, the input data is recovered by
-        first reconstructing decomposition = level - 1.
+        Requires the input data for the decomposition as well as reconstructing the fit.
+        Deriving the input data requires providing the actual input data for the first
+        decomposition. Otherwise, the input data is recovered by reconstructing
+        decomposition = level - 1.
 
-        @param scale_reconstruction_kwargs:
-        @param level:
-        @param data:
-        @param plot_kwargs:
-        @return:
+        :param level: Decomposition level for plotting
+        :type level: int
+        :param data: Original data, only necessary for level=0.
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the fit.
+        :param plot_kwargs: Arguments passed to costs.plot_scale_separation()
+        :return fig: figure handle for the plot
+        :rtype fig: matplotlib.figure()
+        :return axes: matplotlib subplot instances
+        :rtype fig: matplotlib.Axes()
         """
-        #
-
         if data is not None:
             x_iter = data
         else:
@@ -566,6 +599,24 @@ class mrCOSTS:
         plot_kwargs=None,
         scale_reconstruction_kwargs=None,
     ):
+        """Plots time series for an individual point.
+
+        Includes the input data for decomposition, the low-frequency component for the next
+        decomposition level, the residual of the high frequency component, and the
+        reconstructions of the frequency bands for the point.
+
+        :param space_index: Index of the point in space for the 1D snapshot.
+        :type space_index: int
+        :param level: Decomposition level for plotting
+        :type level: int
+        :param data: Original data, only necessary for level=0.
+        :type data: numpy.ndarray
+        :param plot_kwargs: Arguments passed to costs.plot_time_series()
+        :type plot_kwargs: dict
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the fit.
+        :type scale_reconstruction_kwargs: dict
+        :return:
+        """
         if data is not None:
             x_iter = data
         else:
@@ -591,16 +642,24 @@ class mrCOSTS:
     def global_cluster_hyperparameter_sweep(
         self,
         n_components_range,
-        method=None,
+        transform_method=None,
         score_method=None,
         verbose=True,
     ):
         """
         Hyperparameter search for n_components for kmeans clustering.
 
-        score_method: str or None
-            Valid scoring methods are 'silhouette' and 'calinski-harabasz'. Default is
+        :param n_components_range: Values of n_components for the hyperparameter sweep.
+        :type n_components_range: numpy.ndarray of ints
+        :param method: How to transform omega for clustering. See `global_cluster_omega`
+        :type method: str
+        :param score_method: Valid scoring methods are 'silhouette' and 'calinski-harabasz'. Default is
             the silhouette score, which can be slow for large numbers of samples.
+        :type score_method: str or None
+        :return score: Scores for each n_components in n_components_range
+        :rtype score: numpy.ndarray
+        :return n_components: Optimal n_components for frequency band separation
+        :rtype n_components: int
         """
         score = np.zeros_like(n_components_range, float)
 
@@ -608,7 +667,7 @@ class mrCOSTS:
             if verbose:
                 print("fitting n_components = {}".format(n))
             cluster_centroids, omega_classes, omega = self.global_cluster_omega(
-                n, method=method
+                n, transform_method=transform_method
             )
 
             if verbose:
@@ -632,13 +691,41 @@ class mrCOSTS:
         return score, n_components_range[np.argmax(score)]
 
     def global_cluster_omega(
-        self, n_components, method=None, kmeans_kwargs=None
+        self, n_components, transform_method=None, kmeans_kwargs=None
     ):
+        """Performs frequency band clustering on the global distribution of omega.
+
+        Uses k-means clustering with the MiniBatchKMeans method. The hyperparameter
+        for this unsupervised method is the number of clusters, given by `n_components`.
+        Transforming omega may be necessary to get well-separated frequency bands. Options
+        for transforming omega are:
+            "period": :math:`\\frac{1}{\\omega}`
+            "log10": :math:`log10(\\omega)`
+            "square_frequencies": :math:`\\omega^2`
+            "absolute": :math:`|\\omega|`
+        Default value is "absolute". All transformations and clustering are performed on
+        the imaginary portion of omega.
+
+        :param n_components: The number of clusters to find.
+        :type n_components: int
+        :param transform_method: How to transform omega. See docstring for valid options.
+        :type transform_method: str or NoneType
+        :param kmeans_kwargs: Arguments for MiniBatchKMeans
+        :type kmeans_kwargs: dict
+        :return cluster_centroids: Centroid values for each cluster in transformed omega
+        :rtype cluster_centroids: numpy.ndarray
+        :return omega_classes: Global frequency band cluster identifiers.
+        :rtype omega_classes: numpy.ndarray
+        :return omega_array: Transformed omega with NaNs removed
+        :rtype omega_array: numpy.ndarray
+        """
         omega_array = self._da_omega.values
         # This step flattens the array, which is desirable. We want to cluster on just
         # on the histogram of omega, which means just one "sample".
         omega_array = omega_array[~np.isnan(omega_array)]
-        omega_array = self.transform_omega(omega_array, method=method)
+        omega_array = self.transform_omega(
+            omega_array, transform_method=transform_method
+        )
 
         if kmeans_kwargs is None:
             random_state = 0
@@ -660,17 +747,31 @@ class mrCOSTS:
         return cluster_centroids, omega_classes, omega_array
 
     @staticmethod
-    def transform_omega(omega_array, method=None):
-        if method is None:
+    def transform_omega(omega_array, transform_method=None):
+        """Transform omega, primarily for clustering.
+        Options for transforming omega are:
+            "period": :math:`\\frac{1}{\\omega}`
+            "log10": :math:`log10(\\omega)`
+            "square_frequencies": :math:`\\omega^2`
+            "absolute": :math:`|\\omega|`
+        Default value is "absolute". All transformations and clustering are performed on
+        the imaginary portion of omega.
+
+        :param omega_array: Omega values
+        :type omega_array: numpy.ndarray
+        :param transform_method: How to transform the imaginary component of omega.
+        :type transform_method: str
+        :return: transformed omega array
+        :rtype: numpy.ndarray
+        """
+        if transform_method is None or transform_method == "absolute":
             omega_array = np.abs(omega_array.imag.astype("float"))
-        elif method == "square_frequencies":
+        elif transform_method == "square_frequencies":
             omega_array = (np.conj(omega_array) * omega_array).astype("float")
-        elif method == "period":
+        elif transform_method == "period":
             omega_array = 1 / np.abs(omega_array.imag.astype("float"))
-        elif method == "log10":
+        elif transform_method == "log10":
             omega_array = np.log10(np.abs(omega_array.imag.astype("float")))
-        elif method == "period":
-            omega_array = 1 / (np.abs(omega_array.imag.astype("float")))
 
         return omega_array
 
@@ -688,8 +789,15 @@ class mrCOSTS:
         and end of time series prone to larger errors. A best practice is
         to cut off `window_length` from each end before further analysis.
 
-        suppress_growth:
-        Kill positive real components of frequencies
+        :param suppress_growth: Kill positive real components of frequencies.
+            Should not be considered a stable api variable.
+        :param n_components: Number of frequency bands from the clustering.
+        :type n_components: int
+        :param omega_classes_list: Resulting cluster identifiers from clustering omega.
+        :type omega_classes_list: list of numpy.ndarrays
+        :return: Reconstruction with dimensions of:
+            n_decompositions x n_components x n_data_vars x n_time_steps
+        :rtype: numpy.ndarray
         """
 
         # Each individual reconstructed window
@@ -721,6 +829,7 @@ class mrCOSTS:
             )
             omega_classes = omega_classes_list[n_mrd]
 
+            # Iterate over each window slide performed.
             for k in range(mrd._n_slides):
                 w = mrd._modes_array[k]
                 b = mrd._amplitudes_array[k]
@@ -735,6 +844,7 @@ class mrCOSTS:
                 t_start = mrd._time_array[k, 0]
                 t = t - t_start
 
+                # Reconstruct each frequency band separately.
                 xr_sep_window = np.zeros(
                     (n_components, mrd._n_data_vars, mrd._window_length)
                 )
@@ -747,11 +857,16 @@ class mrCOSTS:
                         ]
                     )
 
+                    # Multiply by the reconstruction filter which weights
+                    # the reconstruction towards the middle of the window.
                     xr_sep_window[j, :, :] = (
                         xr_sep_window[j, :, :] * recon_filter
                     )
 
+                    # Get the indices for this window.
                     if k == mrd._n_slides - 1 and mrd._non_integer_n_slide:
+                        # Handle non-integer number of window slides by slightly
+                        # shortening the last window's slide.
                         window_indices = slice(-mrd._window_length, None)
                     else:
                         window_indices = slice(
@@ -763,8 +878,12 @@ class mrCOSTS:
                         + xr_sep_window[j, :, :]
                     )
 
+                # A normalization factor which weights the global reconstruction
+                # by the number of window centers it contains. This accounts for the
+                # convolution above.
                 xn[window_indices] += recon_filter
 
+            # Normalize by the reconstruction filter.
             xr_sep[n_mrd, :, :, :] = xr_sep[n_mrd, :, :, :] / xn
 
         return xr_sep
