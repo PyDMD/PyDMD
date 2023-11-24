@@ -243,6 +243,16 @@ class COSTS:
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._omega_classes
 
+    def periods(self):
+        """
+        :return: Time dynamics converted to periods
+        :rtype: numpy.ndarray
+        """
+        frequencies = np.abs(
+            self._omega_array[self._omega_classes > 0].imag.flatten()
+        )
+        return 2 * np.pi / frequencies
+
     @staticmethod
     def relative_error(x_est, x_true):
         """Helper function for calculating the relative error."""
