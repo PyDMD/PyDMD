@@ -642,7 +642,7 @@ class mrCOSTS:
     def global_cluster_hyperparameter_sweep(
         self,
         n_components_range,
-        method=None,
+        transform_method=None,
         score_method=None,
         verbose=True,
     ):
@@ -667,7 +667,7 @@ class mrCOSTS:
             if verbose:
                 print("fitting n_components = {}".format(n))
             cluster_centroids, omega_classes, omega = self.global_cluster_omega(
-                n, method=method
+                n, transform_method=transform_method
             )
 
             if verbose:
