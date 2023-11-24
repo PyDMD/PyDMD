@@ -132,6 +132,14 @@ class COSTS:
         return self._svd_rank
 
     @property
+    def global_svd(self):
+        """
+        :return: If a global svd was used for the BOP-DMD fit.
+        :rtype: int or float
+        """
+        return self._global_svd
+
+    @property
     def window_length(self):
         """
         :return: the length of the windows used for this decomposition level.
@@ -157,48 +165,80 @@ class COSTS:
 
     @property
     def modes_array(self):
+        """
+        :return: Modes for each window
+        :rtype: numpy.ndarray
+        """
         if not hasattr(self, "_modes_array"):
             raise ValueError("You need to call fit before")
         return self._modes_array
 
     @property
     def amplitudes_array(self):
+        """
+        :return: amplitudes of each window
+        :rtype: numpy.ndarray
+        """
         if not hasattr(self, "_amplitudes_array"):
             raise ValueError("You need to call fit first.")
         return self._amplitudes_array
 
     @property
     def omega_array(self):
+        """
+        :return: omega (a.k.a eigenvalues or time dynamics) for each window
+        :rtype: numpy.ndarray
+        """
         if not hasattr(self, "_omega_array"):
             raise ValueError("You need to call fit first.")
         return self._omega_array
 
     @property
     def time_array(self):
+        """
+        :return: time values for each fit window
+        :rtype: numpy.ndarray
+        """
         if not hasattr(self, "_time_array"):
             raise ValueError("You need to call fit first.")
         return self._time_array
 
     @property
     def window_means_array(self):
+        """
+        :return: Time mean of the data in each window
+        :rtype: numpy.ndarray
+        """
         if not hasattr(self, "_window_means_array"):
             raise ValueError("You need to call fit first.")
         return self._window_means_array
 
     @property
     def n_components(self):
+        """
+        :return: Number of frequency bands fit in the kmeans clustering
+        :rtype: int
+        """
         if not hasattr(self, "_n_components"):
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._n_components
 
     @property
     def cluster_centroids(self):
+        """
+        :return: Centroids of the frequency bands
+        :rtype: numpy.ndarray
+        """
         if not hasattr(self, "_cluster_centroids"):
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._cluster_centroids
 
     @property
     def omega_classes(self):
+        """
+        :return: Frequency band classifications, corresponds to omega_array
+        :rtype: numpy.ndarray
+        """
         if not hasattr(self, "_omega_classes"):
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._omega_classes
@@ -210,7 +250,18 @@ class COSTS:
 
     @staticmethod
     def build_windows(data, window_length, step_size, integer_windows=False):
-        """Calculate how many times to slide the window across the data."""
+        """How many times integer slides fit the data for a given step and window size.
+
+        :param data: 1D snapshots for fitting
+        :type data: numpy.ndarray
+        :param window_length: Length of the fitting window in units of time steps
+        :type window_length: int
+        :param step_size:  Distance to slide each window.
+        :type step_size: int
+        :param integer_windows: Whether to force an integer number of windows
+        :type integer_windows: bool
+        :return:
+        """
 
         if integer_windows:
             n_split = np.floor(data.shape[1] / window_length).astype(int)
@@ -250,6 +301,11 @@ class COSTS:
 
     @staticmethod
     def build_kern(window_length):
+        """Build the convolution kernel for the window reconstruction.
+
+        :param window_length: Length of the data window in units of time
+        :return:
+        """
         recon_filter_sd = window_length / 8
         recon_filter = np.exp(
             -((np.arange(window_length) - (window_length + 1) / 2) ** 2)
@@ -259,11 +315,13 @@ class COSTS:
 
     @staticmethod
     def _data_shape(data):
+        """Returns the shape of the data."""
         n_time_steps = np.shape(data)[1]
         n_data_vars = np.shape(data)[0]
         return n_time_steps, n_data_vars
 
     def _build_proj_basis(self, data, svd_rank=None):
+        """Build the projection basis."""
         self._svd_rank = compute_rank(data, svd_rank=svd_rank)
         # Recover the first r modes of the global svd
         # u, _, _ = scipy.linalg.svd(data, full_matrices=False)
@@ -271,8 +329,11 @@ class COSTS:
         return u
 
     def _build_initizialization(self):
-        """Method for making initial guess of DMD eigenvalues."""
+        """Method for making initial guess of DMD eigenvalues.
 
+        :return: First guess of eigenvalues
+        :rtype: numpy.ndarray or None
+        """
         # If not initial values are provided return None by default.
         init_alpha = None
         # User provided initial eigenvalues.
@@ -312,6 +373,22 @@ class COSTS:
         verbose=False,
         corner_sharpness=None,
     ):
+        """Fit COherent SpatioTemporal Scale separation (COSTS).
+
+        :param data: the input data to decompose (1D snapshots)
+        :type data: numpy.ndarray
+        :param time: time series labeling the 1D snapshots
+        :type time: numpy.ndarray
+        :param window_length: decomposition window length
+        :type window_length: int
+        :param step_size: how far to slide each window from the previous window.
+        :type step_size: int
+        :param verbose: notifies progress for fitting. Default is False.
+        :type verbose: bool
+        :param corner_sharpness: See `calculate_lv_kern`
+        :type corner_sharpness: float or int
+        """
+
         # Prepare window and data properties.
         self._window_length = window_length
         self._step_size = step_size
@@ -384,7 +461,9 @@ class COSTS:
             **self._pydmd_kwargs,
         )
 
-        # Round the corners of the window to shrink real components.
+        # Round the corners of the windowed data towards zero, which shrinks
+        # the real components of the fitted eigenvalues away from unrealistic
+        # exponential growth.
         lv_kern = self.calculate_lv_kern(
             self._window_length, corner_sharpness=corner_sharpness
         )
@@ -454,7 +533,10 @@ class COSTS:
         Handles non-integer number of slides by making the last slide
         correspond to `slice(-window_length, None)`.
 
-        @return:
+        :param k: Window to index
+        :type k: int
+        :return: slice indexing the given window
+        :rtype: slice
         """
         # Get the window indices and data.
         sample_start = self._step_size * k
@@ -469,23 +551,24 @@ class COSTS:
     def cluster_omega(
         self, n_components, kmeans_kwargs=None, transform_method=None
     ):
+        """Clusters fitted eigenvalues into frequency bands by the imaginary component.
+
+        :param n_components: Hyperparameter for k-means clustering, number of clusters.
+        :type n_components: int
+        :param kmeans_kwargs: Arguments for KMeans clustering.
+        :type kmeans_kwargs: dict
+        :param transform_method: How to transform omega. See docstring for valid options.
+        :type transform_method: str or NoneType
+        :return:
+        """
         # Reshape the omega array into a 1d array
         omega_array = self.omega_array
         n_slides = omega_array.shape[0]
         svd_rank = omega_array.shape[1]
         omega_rshp = omega_array.reshape(n_slides * svd_rank)
-
-        # Apply a transformation to omega to (maybe) better separate frequency bands
-        if transform_method == "squared":
-            omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
-        elif transform_method == "log10":
-            omega_transform = np.log10(np.abs(omega_rshp.imag.astype("float")))
-            # Impute log10(0) with the smallest non-zero values in log10(omega).
-            zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
-            omega_transform[~np.isfinite(omega_transform)] = zero_imputer
-        else:
-            transform_method = "absolute_value"
-            omega_transform = np.abs(omega_rshp.imag.astype("float"))
+        omega_transform = self.transform_omega(
+            omega_rshp, transform_method=transform_method
+        )
 
         if kmeans_kwargs is None:
             random_state = 0
@@ -513,11 +596,63 @@ class COSTS:
 
         return self
 
+    @staticmethod
+    def transform_omega(omega_array, transform_method=None):
+        """Transform omega, primarily for clustering.
+        Options for transforming omega are:
+            "period": :math:`\\frac{1}{\\omega}`
+            "log10": :math:`log10(\\omega)`
+            "square_frequencies": :math:`\\omega^2`
+            "absolute": :math:`|\\omega|`
+        Default value is "absolute". All transformations and clustering are performed on
+        the imaginary portion of omega.
+
+        :param omega_array:
+        :param transform_method:
+        :return: transformed omega array
+        :rtype: numpy.ndarray
+        """
+        # Apply a transformation to omega to improve frequency band separation
+        if transform_method is None or transform_method == "absolute":
+            omega_transform = np.abs(omega_array.imag.astype("float"))
+        elif transform_method == "square_frequencies":
+            omega_transform = (np.conj(omega_array) * omega_array).astype(
+                "float"
+            )
+        elif transform_method == "log10":
+            omega_transform = np.log10(np.abs(omega_array.imag.astype("float")))
+            # Impute log10(0) with the smallest non-zero values in log10(omega).
+            zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
+            omega_transform[~np.isfinite(omega_transform)] = zero_imputer
+        elif transform_method == "period":
+            omega_transform = 1 / np.abs(omega_array.imag.astype("float"))
+
+        return omega_transform
+
     def cluster_hyperparameter_sweep(
         self, n_components_range=None, transform_method=None
     ):
-        """Performs a hyperparameter search for the number of components
-        in the kmeans clustering."""
+        """Hyperparameter search for number of frequency bands.
+
+        Searches for the optimal number of clusters to use in kmeans clustering
+        separation of the frequency bands. To best separate frequency bands it may
+        be necessary to transform omega. Scores clusters using the silhouette score
+        which can be slow to compute.
+
+        Options for transforming omega are:
+            "period": :math:`\\frac{1}{\\omega}`
+            "log10": :math:`log10(\\omega)`
+            "square_frequencies": :math:`\\omega^2`
+            "absolute": :math:`|\\omega|`
+        Default value is "absolute". All transformations and clustering are performed on
+        the imaginary portion of omega.
+
+        :param n_components_range: Range of n_components for the sweep.
+        :type n_components_range: numpy.ndarray of ints
+        :param transform_method: How to transform the imaginary component of omega.
+        :type transform_method: str
+        :return: optimal value of `n_components` for clustering.
+        """
         if n_components_range is None:
             n_components_range = np.arange(
                 np.max((self.svd_rank // 4, 2)), self.svd_rank
@@ -530,16 +665,10 @@ class COSTS:
         svd_rank = omega_array.shape[1]
         omega_rshp = omega_array.reshape(n_slides * svd_rank)
 
-        # Apply a transformation to omega to (maybe) better separate frequency bands
-        if transform_method == "squared":
-            omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
-        elif transform_method == "log10":
-            omega_transform = np.log10(np.abs(omega_rshp.imag.astype("float")))
-            # Impute log10(0) with the smallest non-zero values in log10(omega).
-            zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
-            omega_transform[~np.isfinite(omega_transform)] = zero_imputer
-        else:
-            omega_transform = np.abs(omega_rshp.imag.astype("float"))
+        # Apply the transformation
+        omega_transform = self.transform_omega(
+            omega_rshp, transform_method=transform_method
+        )
 
         for nind, n in enumerate(n_components_range):
             _ = self.cluster_omega(n_components=n, transform_method=False)
@@ -554,31 +683,39 @@ class COSTS:
         return n_components_range[np.argmax(score)]
 
     def plot_omega_histogram(self):
+        """Histogram of fit frequencies.
+
+        This plot is useful for assessing if the frequencies bands were well separated.
+        A good choice of transformation and clustering will have clearly separated clusters.
+
+        :return fig: Figure handle for the plot
+        :return ax: Axes handle for the plot
+        """
         # Reshape the omega array into a 1d array
         omega_array = self.omega_array
         n_slides = omega_array.shape[0]
         svd_rank = omega_array.shape[1]
         omega_rshp = omega_array.reshape(n_slides * svd_rank)
 
+        # Apply the transformation to omega
+        omega_transform = self.transform_omega(
+            omega_rshp, transform_method=self._transform_method
+        )
+
         hist_kwargs = {"bins": 64}
-        # Apply a transformation to omega to (maybe) better separate frequency bands
-        if self._transform_method == "squared":
-            omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
+        if (
+            self._transform_method is None
+            or self._transform_method == "absolute"
+        ):
+            label = r"$|\omega|$"
+        elif self._transform_method == "square_frequencies":
             label = r"$|\omega|^{2}$"
         elif self._transform_method == "log10":
-            omega_rshp = np.abs(omega_rshp.imag)
-            omega_transform = np.log10(np.abs(omega_rshp.imag.astype("float")))
-            # Impute log10(0) with the smallest non-zero values in log10(omega).
-            zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
-            omega_transform[~np.isfinite(omega_transform)] = zero_imputer
             label = r"$log_{10}(|\omega|)$"
             hist_kwargs["bins"] = np.linspace(
                 np.min(np.log10(omega_transform[omega_rshp > 0])),
                 np.max(np.log10(omega_transform[omega_rshp > 0])),
             )
-        else:
-            omega_transform = np.abs(omega_rshp.imag.astype("float"))
-            label = r"$|\omega|$"
 
         cluster_centroids = self._cluster_centroids
 
@@ -596,6 +733,13 @@ class COSTS:
         return fig, ax
 
     def plot_omega_squared_time_series(self):
+        """Time series of transformed omega colored by frequency band.
+
+        :return fig: figure handle for the plot
+        :rtype fig: matplotlib.figure()
+        :return ax: matplotlib subplot instances
+        :rtype ax: matplotlib.Axes()
+        """
         fig, ax = plt.subplots(1, 1)
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
@@ -605,16 +749,20 @@ class COSTS:
         svd_rank = omega_array.shape[1]
         omega_rshp = omega_array.reshape(n_slides * svd_rank)
 
-        # Apply a transformation to omega to (maybe) better separate frequency bands
-        if self._transform_method == "squared":
-            omega_transform = (np.conj(omega_rshp) * omega_rshp).astype("float")
+        # Apply the transformation to omega
+        omega_transform = self.transform_omega(
+            omega_rshp, transform_method=self._transform_method
+        )
+
+        if (
+            self._transform_method is None
+            or self._transform_method == "absolute"
+        ):
+            label = r"$|\omega|$"
+        elif self._transform_method == "squared":
             label = r"$|\omega|^{2}$"
         elif self._transform_method == "log10":
-            omega_transform = np.log10(np.abs(omega_array.imag.astype("float")))
             label = r"$log_{10}(|\omega|)$"
-        else:
-            omega_transform = np.abs(omega_rshp.imag.astype("float"))
-            label = r"$|\omega|$"
 
         for ncomponent, component in enumerate(range(self._n_components)):
             ax.plot(
@@ -633,7 +781,13 @@ class COSTS:
         return fig, ax
 
     def global_reconstruction(self, scale_reconstruction_kwargs=None):
-        """Helper function for generating the global reconstruction."""
+        """Helper function for generating the global reconstruction.
+
+        :param scale_reconstruction_kwargs: Arguments for the scale reconstruction.
+        :type scale_reconstruction_kwargs: dict
+        :return: Global reconstruction (sum of all frequency bands)
+        :rtype: numpy.ndarray
+        """
         if scale_reconstruction_kwargs is None:
             scale_reconstruction_kwargs = {}
         xr_sep = self.scale_reconstruction(**scale_reconstruction_kwargs)
@@ -645,7 +799,7 @@ class COSTS:
         suppress_growth=True,
         include_means=True,
     ):
-        """Reconstruct the sliding mrDMD into the constituent components.
+        """Reconstruct the spatiotemporal features for each frequency band.
 
         The reconstructed data are convolved with a guassian filter since
         points near the middle of the window are more reliable than points
@@ -653,8 +807,11 @@ class COSTS:
         and end of time series prone to larger errors. A best practice is
         to cut off `window_length` from each end before further analysis.
 
-        suppress_growth:
-        Kill positive real components of frequencies
+        :param suppress_growth: Not API stable
+        :param include_means: Not API stable
+        :return: Reconstruction for each frequency band with dimensions of:
+            n_components x n_data_vars x n_time_steps
+        :rtype: numpy.ndarray
         """
 
         # Each individual reconstructed window
@@ -666,7 +823,8 @@ class COSTS:
         xn = np.zeros(self._n_time_steps)
 
         # Convolve each windowed reconstruction with a gaussian filter.
-        # Std dev of gaussian filter
+        # Weights points in the middle of the window and de-emphasizes the
+        # edges of the window.
         recon_filter = self.build_kern(self._window_length)
 
         for k in range(self._n_slides):
@@ -725,6 +883,13 @@ class COSTS:
         as the data for the next decomposition level. The high frequencies should have
         frequencies shorter than 1 / window_length.
 
+        :param scale_reconstruction_kwargs: Arguments passed to `scale_reconstruction`
+        :return xr_low_frequency: Reconstruction of the low frequency component with
+            dimensions of n_data_vars x n_time_steps.
+        :rtype xr_low_frequency: numpy.ndarray
+        :return xr_high_frequency: Sum of all high frequency bands with dimensions of
+            n_data_vars x n_time_steps
+        :rtype xr_high_frequency: numpy.ndarray
         """
 
         if scale_reconstruction_kwargs is None:
@@ -746,7 +911,32 @@ class COSTS:
         hf_plot_kwargs=None,
         plot_contours=False,
     ):
-        """Plot the scale-separated low and high frequency bands."""
+        """Plot the scale-separated low and high frequency bands.
+
+        The reconstructions are plotted in a time-space diagram. The high frequency
+        component is the sum of all high frequency bands except the low frequency
+        band which is plotted separately.
+
+        :param data: Data used for the decomposition. An array of 1D snapshots.
+        :type data: numpy.ndarray
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the COSTS fit.
+        :type scale_reconstruction_kwargs: dict
+        :param plot_residual: If the error should be fit. Will plot
+            `data - low frequency - high frequency` yielding the error in absolute units.
+        :type plot_residual: bool
+        :param fig_kwargs: Arguments for the figure creation.
+        :type fig_kwargs: dict
+        :param plot_kwargs: Arguments for plotting the low frequency and data.
+        :type plot_kwargs: dict
+        :param hf_plot_kwargs: Arguments for the high frequency plotting.
+        :type hf_plot_kwargs: dict
+        :param plot_contours: Indicates if contours should be plotted.
+        :type plot_contours: bool
+        :return fig: figure handle for the plot
+        :rtype fig: matplotlib.figure()
+        :return axes: matplotlib subplot instances
+        :rtype fig: matplotlib.Axes()
+        """
         if scale_reconstruction_kwargs is None:
             scale_reconstruction_kwargs = {}
 
@@ -827,10 +1017,32 @@ class COSTS:
         hf_plot_kwargs=None,
         plot_contours=False,
     ):
+        """Time-space plots for each individual frequency band and the fitted data.
+
+        :param data: Data used for the decomposition. An array of 1D snapshots.
+        :type data: numpy.ndarray
+        :param plot_period:
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the COSTS fit.
+        :type scale_reconstruction_kwargs: dict
+        :param plot_residual: Indicates if the residual of the fit should be plotted
+        :type plot_residual: bool
+        :param fig_kwargs: Arguments for the figure creation.
+        :type fig_kwargs: dict
+        :param plot_kwargs: Arguments for plotting the low frequency and data.
+        :type plot_kwargs: dict
+        :param hf_plot_kwargs: Arguments for the high frequency plotting.
+        :type hf_plot_kwargs: dict
+        :param plot_contours: Indicates if contours should be plotted.
+        :type plot_contours: bool
+        :return fig: figure handle for the plot
+        :rtype fig: matplotlib.figure()
+        :return axes: matplotlib subplot instances
+        :rtype fig: matplotlib.Axes()
+        """
         if scale_reconstruction_kwargs is None:
             scale_reconstruction_kwargs = {}
 
-        xr_sep = self.scale_reconstruction(scale_reconstruction_kwargs)
+        xr_sep = self.scale_reconstruction(**scale_reconstruction_kwargs)
 
         if fig_kwargs is None:
             fig_kwargs = {}
@@ -913,6 +1125,21 @@ class COSTS:
     def plot_error(
         self, data, scale_reconstruction_kwargs=None, plot_kwargs=None
     ):
+        """Plots the error for the COSTS fit
+
+        Plots are a space-time diagram assuming a 1D spatial dimension.
+
+        Determining the error requires the input data and the fit will be
+        reconstructed.
+
+        :param data: Data on which COSTS was fit
+        :type data: numpy.ndarray
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the fit.
+        :type scale_reconstruction_kwargs: dict
+        :param plot_kwargs: Arguments passed to costs.plot_error().
+        :type scale_reconstruction_kwargs: dict
+        :return:
+        """
         if scale_reconstruction_kwargs is None:
             scale_reconstruction_kwargs = {}
         if plot_kwargs is None:
@@ -951,13 +1178,19 @@ class COSTS:
     ):
         """Plots CoSTS for a single spatial point.
 
-        @param space_index:
-        @param data:
-        @param scale_reconstruction_kwargs:
-        @param include_residual:
-        @return:
-        """
+        Includes the input data for decomposition, the low-frequency component for the next
+        decomposition level, the residual of the high frequency component, and the
+        reconstructions of the frequency bands for the point.
 
+        :param space_index: Index of the point in space for the 1D snapshot.
+        :type space_index: int
+        :param data: Original data, only necessary for level=0.
+        :type data: numpy.ndarray
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the fit.
+        :type scale_reconstruction_kwargs: dict
+        :param include_residual:
+        :return:
+        """
         ground_truth_mean = data.mean(axis=1)
         ground_truth = (data.T - ground_truth_mean).T
         ground_truth = ground_truth[space_index, :]
@@ -1050,6 +1283,8 @@ class COSTS:
         levels with an average number of frequency bands across decomposition
         levels equal to 8 becomes 1.3GB once reconstructed for each band.
 
+        :return: COSTS fit in xarray format
+        :rtype: xarray.Dataset
         """
         ds = xr.Dataset(
             {
@@ -1111,7 +1346,7 @@ class COSTS:
     def from_xarray(self, ds):
         """Convert xarray Dataset into a fitted CoSTS object
 
-        @return:
+        :return: Previously fitted COSTS.
         """
 
         self._omega_array = ds.omega.values
