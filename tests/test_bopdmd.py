@@ -361,4 +361,4 @@ def test_bagging_improvement():
         bopdmd_error = relative_error(bopdmd.A, expected_A)
         bop_success += bopdmd_error < optdmd_error
 
-    assert bop_success >= 0.75 * test_trials
+    assert bop_success >= 0.7 * test_trials

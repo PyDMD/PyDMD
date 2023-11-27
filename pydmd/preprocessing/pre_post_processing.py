@@ -80,6 +80,16 @@ class PrePostProcessingDMD:
         return None
 
     @property
+    def pre_post_processed_dmd(self):
+        """
+        Return the pre/post-processed DMD instance.
+
+        :return: decorated DMD instance.
+        :rtype: pydmd.DMDBase
+        """
+        return self._pre_post_processed_dmd
+
+    @property
     def modes_activation_bitmask(self):
         return self._pre_post_processed_dmd.modes_activation_bitmask
 
