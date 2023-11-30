@@ -237,4 +237,4 @@ def differentiate(X, dt):
     X_prime[:, 1:-1] = (X[:, 2:] - X[:, :-2]) / (2 * dt)
     X_prime[:, 0] = (-3 * X[:, 0] + 4 * X[:, 1] - X[:, 2]) / (2 * dt)
     X_prime[:, -1] = (3 * X[:, -1] - 4 * X[:, -2] + X[:, -3]) / (2 * dt)
-    return X_prime
+    return np.squeeze(X_prime)

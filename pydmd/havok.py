@@ -206,7 +206,7 @@ class HAVOK:
     def eigs(self):
         """
         Get the eigenvalues of the linear HAVOK operator A.
-    
+
         :return: the eigenvalues of the operator A.
         :rtype: numpy.ndarray
         """
@@ -360,6 +360,27 @@ class HAVOK:
 
         return self
 
+    def predict(self, forcing, time, V0):
+        """
+        Use a custom forcing input to make system predictions.
+
+        :param forcing: (m, `num_chaos`) array of forcing inputs.
+        :type forcing: numpy.ndarray
+        :param time: (m,) array that contains the times that correspond with
+            the provided forcing inputs. These will also be the times at which
+            system predictions are computed.
+        :type time: numpy.ndarray
+        :param V0: (`r` - `num_chaos`,) array that contains the initial
+            condition of the linear dynamics. This array should contain the
+            linear dynamics evaluated at the first time in the `time` array.
+        :type V0: numpy.ndarray
+        :return: system predictions evaluated at the times in `time`.
+        :rtype: numpy.ndarray
+        """
+        return self._embeddings_to_original(
+            self._compute_embeddings(forcing, time, V0)
+        )
+
     @property
     def reconstructed_embeddings(self):
         """
@@ -368,22 +389,11 @@ class HAVOK:
         :return: the matrix that contains the reconstructed embeddings.
         :rtype: numpy.ndarray
         """
-        # Build a system with the following form:
-        #   dx/dt = Ax + Bu
-        #   y = Cx + Du
-        C = np.eye(len(self.A))
-        D = 0.0 * self.B
-        havok_system = StateSpace(self.A, self.B, C, D)
-
-        # Reconstruct the linear dynamics using the HAVOK system.
-        linear_recon = lsim(
-            havok_system,
-            U=self.forcing,
-            T=self._time[: len(self.forcing)],
-            X0=self.linear_dynamics[0],
-        )[1]
-
-        return linear_recon
+        return self._compute_embeddings(
+            self.forcing,
+            self._time[: len(self.forcing)],
+            self.linear_dynamics[0],
+        )
 
     @property
     def reconstructed_data(self):
@@ -393,30 +403,19 @@ class HAVOK:
         :return: the matrix that contains the reconstructed snapshots.
         :rtype: numpy.ndarray
         """
-        # Reconstruct the linear dynamics using the HAVOK system.
-        linear_recon = self.reconstructed_embeddings
-
-        # Send the reconstructions back to the space of the original data.
-        hankel_matrix_recon = np.linalg.multi_dot(
-            [
-                self._singular_vecs[:, : -self._num_chaos],
-                np.diag(self._singular_vals[: -self._num_chaos]),
-                linear_recon.conj().T,
-            ]
-        )
-
-        return self._dehankel(hankel_matrix_recon)
+        return self._embeddings_to_original(self.reconstructed_embeddings)
 
     def plot_summary(
         self,
         num_plot=None,
         index_linear=(0, 1, 2),
         index_forcing=0,
-        forcing_threshold=1e-5,
-        min_jump_dist=100,
+        forcing_threshold=np.inf,
+        min_jump_dist=None,
         true_switch_indices=None,
         figsize=(20, 4),
         dpi=200,
+        filename=None,
     ):
         """
         Generate a 5-element summarizing plot that contains the following:
@@ -426,14 +425,37 @@ class HAVOK:
         - the HAVOK embeddings, along with active forcing times
         - the HAVOK reconstruction of the embeddings.
 
-        :param num_plot:
+        :param num_plot: The number of time points to plot across all subplots.
+            By default, all available data points are plotted.
         :type num_plot: int
-        :param index_linear:
-        :type index_linear:
-        :param index_forcing:
+        :param index_linear: Tuple of indices of the linear embeddings to be
+            plotted. May contain either 2 or 3 valid indices. The final two
+            subplots will be plotted in 2D or 3D depending on the number of
+            indices provided. Also note that the first index in this tuple
+            will determine the embedding plotted in the third subplot.
+        :type index_linear: tuple
+        :param index_forcing: Index of the forcing term to be plotted. Note
+            that this index refers to indices of the forcing term itself rather
+            than the full matrix of time-delay embeddings. Hence if 0, the
+            first forcing term will be plotted, and so on.
         :type index_forcing: int
-        :param forcing_threshold:
-        :type forcing_threshold:
+        :param forcing_threshold: Threshold value at which the absolute value
+            of the forcing signal is considered large enough to be "active".
+        :type forcing_threshold: float
+
+        :param min_jump_dist: The number of indices 
+        :type min_jump_dist:
+
+        :param true_switch_indices: Optional vector that contains the indices
+            at which true chaotic bursting occurs. If provided, true bursting
+            times are plotted on top of the forcing term.
+        :type true_switch_indices: numpy.ndarray or iterable
+        :param figsize: Tuple in inches defining the figure size.
+        :type figsize: tuple(int, int)
+        :param dpi: Figure resolution.
+        :type dpi: int
+        :param filename: If specified, the plot is saved at `filename`.
+        :type filename: str
         """
         if self._havok_operator is None:
             raise ValueError("You need to call fit().")
@@ -441,8 +463,11 @@ class HAVOK:
         if num_plot is None:
             num_plot = len(self._delay_embeddings)
 
+        if min_jump_dist is None:
+            min_jump_dist = int(0.5 / (self._time[1] - self._time[0]))
+
         forcing = self.forcing[:num_plot, index_forcing]
-        active_indices = np.arange(num_plot)[forcing**2 > forcing_threshold]
+        active_indices = np.arange(num_plot)[np.abs(forcing) > forcing_threshold]
         active_slices = self._get_index_slices(active_indices, min_jump_dist)
 
         fig = plt.figure(figsize=figsize, dpi=dpi)
@@ -502,6 +527,7 @@ class HAVOK:
             ax4.plot(self._time[ind1:ind2], forcing[ind1:ind2], c="r")
 
         if true_switch_indices is not None:
+            # TODO: catch when empty
             true_switch_indices = true_switch_indices[
                 : np.where(true_switch_indices >= num_plot)[0][0]
             ]
@@ -529,7 +555,13 @@ class HAVOK:
         )
         ax6.set_axis_off()
         plt.tight_layout(pad=0.1)
-        plt.show()
+
+        # Save plot if filename is provided.
+        if filename:
+            plt.savefig(filename)
+            plt.close(fig)
+        else:
+            plt.show()
 
     def _hankel(self, X):
         """
@@ -557,6 +589,40 @@ class HAVOK:
         n = int(H.shape[0] / self._delays)
         X = np.hstack([H[:n], H[n:, -1].reshape(n, -1, order="F")])
         return X
+
+    def _compute_embeddings(self, forcing, time, V0):
+        """
+        Helper function that uses the fitted HAVOK model to reconstruct the
+        time-delay embeddings for a generic forcing term, set of times, and
+        initial condition for the time-delay embeddings.
+        """
+        # Build a system with the following form:
+        #   dx/dt = Ax + Bu
+        #   y = Cx + Du
+        C = np.eye(len(self.A))
+        D = 0.0 * self.B
+        havok_system = StateSpace(self.A, self.B, C, D)
+
+        # Reconstruct the linear dynamics using the HAVOK system.
+        embeddings = lsim(
+            havok_system,
+            U=forcing,
+            T=time,
+            X0=V0,
+        )[1]
+
+        return embeddings
+
+    def _embeddings_to_original(self, V):
+        """
+        Helper function that uses SVD and Hankel parameter information stored
+        in the HAVOK model to convert data in time-delay embedding space back
+        to the space of the original input data.
+        """
+        U = self._singular_vecs[:, : V.shape[-1]]
+        s = self._singular_vals[: V.shape[-1]]
+        H = np.linalg.multi_dot([U, np.diag(s), V.conj().T])
+        return self._dehankel(H)
 
     @staticmethod
     def _get_index_slices(x, min_jump_dist):
