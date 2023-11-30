@@ -87,6 +87,7 @@ class HAVOK:
         # Keep track of the full HAVOK operator.
         self._havok_operator = None
         self._eigenvalues = None
+        self._r = None
 
     @property
     def snapshots(self):
@@ -113,10 +114,48 @@ class HAVOK:
         return self._ho_snapshots
 
     @property
+    def time(self):
+        """
+        Get the times of the input data.
+
+        :return: the vector that contains the times of the input data.
+        :rtype: numpy.ndarray
+        """
+        if self._time is None:
+            raise ValueError("You need to call fit().")
+        return self._time
+
+    @property
+    def modes(self):
+        """
+        Get the U matrix from the SVD of the Hankel matrix. Note that the
+        columns of this matrix are referred to as the eigen-time-delay modes.
+
+        :return: matrix containing the eigen-time-delay modes.
+        :rtype: numpy.ndarray
+        """
+        if self._singular_vecs is None:
+            raise ValueError("You need to call fit().")
+        return self._singular_vecs
+
+    @property
+    def singular_vals(self):
+        """
+        Get the singular value spectrum of the Hankel matrix.
+
+        :return: the singular values of the Hankel matrix.
+        :rtype: numpy.ndarray
+        """
+        if self._singular_vals is None:
+            raise ValueError("You need to call fit().")
+        return self._singular_vals
+
+    @property
     def delay_embeddings(self):
         """
         Get all of the HAVOK embeddings (linear dynamics and forcing).
         Coordinates are stored as columns of the returned matrix.
+        Note that this is the V matrix from the SVD of the Hankel matrix.
 
         :return: matrix containing all of the HAVOK embeddings.
         :rtype: numpy.ndarray
@@ -191,18 +230,6 @@ class HAVOK:
         return self._havok_operator[: -self._num_chaos, -self._num_chaos :]
 
     @property
-    def r(self):
-        """
-        Get the number of HAVOK embeddings utilized by the HAVOK model.
-
-        :return: rank of the HAVOK model.
-        :rtype: int
-        """
-        if self._havok_operator is None:
-            raise ValueError("You need to call fit().")
-        return len(self._havok_operator)
-
-    @property
     def eigs(self):
         """
         Get the eigenvalues of the linear HAVOK operator A.
@@ -215,16 +242,17 @@ class HAVOK:
         return self._eigenvalues
 
     @property
-    def singular_vals(self):
+    def r(self):
         """
-        Get the singular value spectrum of the Hankel matrix.
+        Get the number of HAVOK embeddings utilized by the HAVOK model.
+        Note that this is essentially the integer rank truncation used.
 
-        :return: the singular values of the Hankel matrix.
-        :rtype: numpy.ndarray
+        :return: rank of the HAVOK model.
+        :rtype: int
         """
-        if self._singular_vals is None:
+        if self._r is None:
             raise ValueError("You need to call fit().")
-        return self._singular_vals
+        return self._r
 
     def fit(self, X, t):
         """
@@ -233,7 +261,7 @@ class HAVOK:
         :param X: the input snapshots.
         :type X: numpy.ndarray or iterable
         :param t: the input time vector or uniform time-step between snapshots.
-        :type t: {numpy.ndarray, list} or {int, float}
+        :type t: {numpy.ndarray, iterable} or {int, float}
         """
 
         # Confirm that delays, lag, and num_chaos are positive integers.
@@ -266,7 +294,7 @@ class HAVOK:
         # Check the input time information and set the time vector.
         if isinstance(t, (int, float)) and t > 0.0:
             time = np.arange(n_samples) * t
-        elif isinstance(t, (list, np.ndarray)):
+        else:
             time = np.squeeze(np.array(t))
 
             # Throw error if the time vector is not 1D or the correct length.
@@ -279,13 +307,8 @@ class HAVOK:
             if not np.allclose(time[1:] - time[:-1], time[1] - time[0]):
                 warnings.warn(
                     "Input snapshots are unevenly-spaced in time. "
-                    "Note that unexpected results may occur because of this."
+                    "Unexpected results may occur because of this."
                 )
-        else:
-            raise ValueError(
-                "t must either be a single positive time step "
-                f"or a 1D array of {n_samples} time values."
-            )
 
         # Set the time step - this is ignored if using BOP-DMD.
         dt = time[1] - time[0]
@@ -296,19 +319,21 @@ class HAVOK:
         # Perform structured HAVOK (sHAVOK).
         if self._structured:
             U, s, V = compute_svd(hankel_matrix[:, 1:-1], self._svd_rank)
-            V1 = compute_svd(hankel_matrix[:, :-2], len(s))
-            V2 = compute_svd(hankel_matrix[:, 2:], len(s))
+            self._r = len(s)
+            V1 = compute_svd(hankel_matrix[:, :-2], self._r)
+            V2 = compute_svd(hankel_matrix[:, 2:], self._r)
             V_dot = (V2 - V1) / (2 * dt)
 
         # Perform standard HAVOK.
         else:
             U, s, V = compute_svd(hankel_matrix, self._svd_rank)
+            self._r = len(s)
             V_dot = differentiate(V.T, dt).T
 
         # Generate an error if too few HAVOK embeddings are being used.
-        if len(s) < self._num_chaos + 1:
+        if self._r < self._num_chaos + 1:
             raise ValueError(
-                f"HAVOK model is attempting to use r = {len(s)} embeddings "
+                f"HAVOK is attempting to use r = {self._r} embeddings "
                 f"when r should be at least {self._num_chaos + 1}. "
                 "Try increasing the number of delays or providing "
                 "a positive integer argument for svd_rank."
@@ -328,7 +353,8 @@ class HAVOK:
 
                 if self._structured:
                     warnings.warn(
-                        "Structured HAVOK cannot be performed with BOP-DMD."
+                        "Structured HAVOK cannot be performed with BOP-DMD. "
+                        "Performing normal HAVOK instead..."
                     )
             else:
                 self._dmd.fit(V.T, V_dot.T)
@@ -443,7 +469,7 @@ class HAVOK:
             of the forcing signal is considered large enough to be "active".
         :type forcing_threshold: float
 
-        :param min_jump_dist: The number of indices 
+        :param min_jump_dist: The number of indices
         :type min_jump_dist:
 
         :param true_switch_indices: Optional vector that contains the indices
@@ -467,7 +493,9 @@ class HAVOK:
             min_jump_dist = int(0.5 / (self._time[1] - self._time[0]))
 
         forcing = self.forcing[:num_plot, index_forcing]
-        active_indices = np.arange(num_plot)[np.abs(forcing) > forcing_threshold]
+        active_indices = np.arange(num_plot)[
+            np.abs(forcing) > forcing_threshold
+        ]
         active_slices = self._get_index_slices(active_indices, min_jump_dist)
 
         fig = plt.figure(figsize=figsize, dpi=dpi)
