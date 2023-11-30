@@ -555,10 +555,11 @@ class HAVOK:
             ax4.plot(self._time[ind1:ind2], forcing[ind1:ind2], c="r")
 
         if true_switch_indices is not None:
-            # TODO: catch when empty
-            true_switch_indices = true_switch_indices[
-                : np.where(true_switch_indices >= num_plot)[0][0]
-            ]
+            # Remove indices that fall outside of the plotting range.
+            outside_indices = np.where(true_switch_indices >= num_plot)[0]
+            if len(outside_indices) > 0:
+                true_switch_indices = true_switch_indices[:outside_indices[0]]
+
             ax4.plot(
                 self._time[:num_plot][true_switch_indices],
                 np.zeros(len(true_switch_indices)),
