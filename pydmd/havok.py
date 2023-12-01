@@ -16,6 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from scipy.signal import lsim, StateSpace
+from scipy.stats import norm
 
 from .bopdmd import BOPDMD
 from .dmdbase import DMDBase
@@ -431,12 +432,64 @@ class HAVOK:
         """
         return self._embeddings_to_original(self.reconstructed_embeddings)
 
+    def compute_threshold(self, forcing, p=0.01, plot=False, bins="auto"):
+        """
+        Use the distribution of forcing terms to determine a threshold at which
+        the absolute value of the forcing is large enough to be considered
+        "active". This method uses a histogram of the forcing signal values
+        and a forcing event probability in order to estimate this threshold.
+
+        :param forcing: (m,) array of forcing inputs to be thresholded.
+        :type forcing: numpy.ndarray
+        :param p: desired approximate probability that a forcing event occurs.
+            Note that `p` must be a float between 0.0 and 1.0, and that smaller
+            values of `p` will result in larger threshold values.
+        :type p: float
+        :param plot: whether or not to plot the computed histogram of forcing
+            values and the computed threshold. A Gaussian distribution fitted
+            to the computed histogram is also plotted if `plot=True`.
+        :type plot: bool
+        :param bins: `bins` input to the `numpy.histogram` function.
+        :type bins: int or sequence of scalars or str
+        :return: active threshold for the absolute value of the forcing terms.
+        :rtype: float
+        """
+        # Compute histogram of the forcing values.
+        hy, hx = np.histogram(forcing, bins=bins, density=True)
+        hx = 0.5 * (hx[:-1] + hx[1:])
+        hy /= hy.sum()
+
+        # Threshold is the average of the left and right threshold.
+        ind1 = np.where(np.cumsum(hy) > 0.5 * p)[0][0]
+        ind2 = np.where(1 - np.cumsum(hy) < 0.5 * p)[0][0]
+        threshold = 0.5 * (abs(hx[ind1]) + abs(hx[ind2]))
+
+        if plot:
+            # Fit a Gaussian to the forcing values.
+            mu, std = norm.fit(forcing)
+            gauss = norm.pdf(hx, mu, std)
+            gauss /= np.sum(gauss)
+
+            # Plot the histogram, fitted Gaussian, and the computed threshold.
+            plt.figure(figsize=(5, 4))
+            plt.plot(hx, hy, c="tab:red", label="Forcing", lw=2)
+            plt.plot(hx, gauss, c="k", label="Gaussian", lw=2, ls="--")
+            plt.axvline(x=threshold, lw=2, label="Threshold")
+            plt.axvline(x=-threshold, lw=2)
+            plt.xlabel("vr")
+            plt.ylabel("p", rotation=0)
+            plt.semilogy()
+            plt.legend()
+            plt.show()
+
+        return threshold
+
     def plot_summary(
         self,
         num_plot=None,
         index_linear=(0, 1, 2),
         index_forcing=0,
-        forcing_threshold=np.inf,
+        forcing_threshold=None,
         min_jump_dist=None,
         true_switch_indices=None,
         figsize=(20, 4),
@@ -468,10 +521,11 @@ class HAVOK:
         :param forcing_threshold: Threshold value at which the absolute value
             of the forcing signal is considered large enough to be "active".
         :type forcing_threshold: float
-
-        :param min_jump_dist: The number of indices
-        :type min_jump_dist:
-
+        :param min_jump_dist: The minimum number of indices used to separate
+            distinct forcing events. Decreasing this parameter will lead to
+            many short forcing events, while increasing this parameter will
+            lead to fewer longer forcing events.
+        :type min_jump_dist: int
         :param true_switch_indices: Optional vector that contains the indices
             at which true chaotic bursting occurs. If provided, true bursting
             times are plotted on top of the forcing term.
@@ -486,12 +540,21 @@ class HAVOK:
         if self._havok_operator is None:
             raise ValueError("You need to call fit().")
 
+        # Plot as many time points as possible.
         if num_plot is None:
             num_plot = len(self._delay_embeddings)
 
+        # Compute a threshold based on the distribution of all forcing terms.
+        if forcing_threshold is None:
+            forcing_threshold = self.compute_threshold(
+                self.forcing[:, index_forcing]
+            )
+
+        # Use the time step to estimate a reasonable jump.
         if min_jump_dist is None:
             min_jump_dist = int(0.5 / (self._time[1] - self._time[0]))
 
+        # Get index slices at which the forcing is considered active.
         forcing = self.forcing[:num_plot, index_forcing]
         active_indices = np.arange(num_plot)[
             np.abs(forcing) > forcing_threshold
@@ -558,8 +621,7 @@ class HAVOK:
             # Remove indices that fall outside of the plotting range.
             outside_indices = np.where(true_switch_indices >= num_plot)[0]
             if len(outside_indices) > 0:
-                true_switch_indices = true_switch_indices[:outside_indices[0]]
-
+                true_switch_indices = true_switch_indices[: outside_indices[0]]
             ax4.plot(
                 self._time[:num_plot][true_switch_indices],
                 np.zeros(len(true_switch_indices)),
