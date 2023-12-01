@@ -593,8 +593,8 @@ class HAVOK:
             pad=0.04,
         )
         a = len(self._havok_operator) - self._num_chaos - 0.5
-        ax2.plot([a, a], [-0.5, a], c="k", lw=3)
-        ax2.axhline(y=a, c="k", lw=3)
+        ax2.plot([a, a], [-0.5, a], c="k", lw=1)
+        ax2.axhline(y=a, c="k", lw=1)
         ax2.set_xticks([])
         ax2.set_yticks([])
 
@@ -633,17 +633,23 @@ class HAVOK:
 
         # (5) plot the embedded attractor with activation.
         ax5.set_title("Embedded attractor")
-        ax5.plot(self.linear_dynamics[:num_plot, index_linear], c="gray")
+        linear_dynamics = [
+            self.linear_dynamics[:num_plot, i] for i in index_linear
+        ]
+        ax5.plot(*linear_dynamics, c="gray")
         for ind1, ind2 in active_slices:
-            ax5.plot(self.linear_dynamics[ind1:ind2, index_linear], c="r")
+            active_dynamics = [
+                self.linear_dynamics[ind1:ind2, i] for i in index_linear
+            ]
+            ax5.plot(*active_dynamics, c="r")
         ax5.set_axis_off()
 
         # (6) plot the reconstructed attractor.
         ax6.set_title("Reconstructed attractor")
-        ax6.plot(
-            self.reconstructed_embeddings[:num_plot, index_linear],
-            c="tab:blue",
-        )
+        reconstruction = [
+            self.reconstructed_embeddings[:num_plot, i] for i in index_linear
+        ]
+        ax6.plot(*reconstruction, c="tab:blue")
         ax6.set_axis_off()
         plt.tight_layout(pad=0.1)
 
