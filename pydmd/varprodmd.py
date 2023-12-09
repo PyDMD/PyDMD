@@ -84,13 +84,13 @@ class _OptimizeHelper:  # pylint: disable=too-few-public-methods
 
     __slots__ = ["phi", "phi_inv", "u_svd", "s_inv", "v_svd", "b_matrix", "rho"]
 
-    def __init__(self, l_in: int, m_in: int, n_in: int) -> None:
-        self.phi: np.ndarray = np.empty((m_in, l_in), dtype=np.complex128)
-        self.u_svd: np.ndarray = np.empty((m_in, l_in), dtype=np.complex128)
-        self.s_inv: np.ndarray = np.empty((l_in,), dtype=np.complex128)
-        self.v_svd: np.ndarray = np.empty((l_in, l_in), dtype=np.complex128)
-        self.b_matrix: np.ndarray = np.empty((l_in, n_in), dtype=np.complex128)
-        self.rho: np.ndarray = np.empty((m_in, n_in), dtype=np.complex128)
+    def __init__(self, l_in: int, m_in: int, n_in: int):
+        self.phi = np.empty((m_in, l_in), dtype=np.complex128)
+        self.u_svd = np.empty((m_in, l_in), dtype=np.complex128)
+        self.s_inv = np.empty((l_in,), dtype=np.complex128)
+        self.v_svd = np.empty((l_in, l_in), dtype=np.complex128)
+        self.b_matrix = np.empty((l_in, n_in), dtype=np.complex128)
+        self.rho = np.empty((m_in, n_in), dtype=np.complex128)
 
 
 def _compute_dmd_rho(
@@ -121,11 +121,11 @@ def _compute_dmd_rho(
     :rtype: np.ndarray
     """
 
-    __alphas = np.zeros((alphas.shape[-1] // 2,), dtype=np.complex128)
-    __alphas.real = alphas[: alphas.shape[-1] // 2]
-    __alphas.imag = alphas[alphas.shape[-1] // 2 :]
+    _alphas = np.zeros((alphas.shape[-1] // 2,), dtype=np.complex128)
+    _alphas.real = alphas[: alphas.shape[-1] // 2]
+    _alphas.imag = alphas[alphas.shape[-1] // 2 :]
 
-    phi = np.exp(np.outer(time, __alphas))
+    phi = np.exp(np.outer(time, _alphas))
     u_phi, s_phi, v_phi_t = np.linalg.svd(phi, full_matrices=False)
     idx = np.where(s_phi.real != 0.0)[0]
     s_phi_inv = np.zeros_like(s_phi)
@@ -180,12 +180,12 @@ def _compute_dmd_jac(
     :rtype: np.ndarray
     """
 
-    __alphas = np.zeros((alphas.shape[-1] // 2,), dtype=np.complex128)
-    __alphas.real = alphas[: alphas.shape[-1] // 2]
-    __alphas.imag = alphas[alphas.shape[-1] // 2 :]
+    _alphas = np.zeros((alphas.shape[-1] // 2,), dtype=np.complex128)
+    _alphas.real = alphas[: alphas.shape[-1] // 2]
+    _alphas.imag = alphas[alphas.shape[-1] // 2 :]
     jac_out = np.zeros((2 * np.prod(data.shape), alphas.shape[-1]))
 
-    for j in range(__alphas.shape[-1]):
+    for j in range(_alphas.shape[-1]):
         d_phi_j = time * opthelper.phi[:, j]
         outer = np.outer(d_phi_j, opthelper.b_matrix[j])
         a_j = outer - np.linalg.multi_dot(
@@ -195,7 +195,7 @@ def _compute_dmd_jac(
             [
                 opthelper.u_svd * opthelper.s_inv[None],
                 np.outer(
-                    opthelper.v_svd[j, :].conj(), d_phi_j.conj() @ opthelper.rho
+                    opthelper.v_svd[j].conj(), d_phi_j.conj() @ opthelper.rho
                 ),
             ]
         )
