@@ -212,9 +212,7 @@ def _compute_dmd_jac(
         jac_out[jac_out.shape[0] // 2 :, j] = jac_flat.imag
 
         # construct imaginary part for optimization
-        jac_out[
-            : jac_out.shape[0] // 2, _alphas.shape[-1] + j
-        ] = -jac_flat.imag
+        jac_out[: jac_out.shape[0] // 2, _alphas.shape[-1] + j] = -jac_flat.imag
         jac_out[jac_out.shape[0] // 2 :, _alphas.shape[-1] + j] = jac_flat.real
 
     return jac_out
