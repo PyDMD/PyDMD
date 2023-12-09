@@ -424,7 +424,7 @@ def compute_varprodmd_any(  # pylint: disable=unused-variable
     return xi / eigenf[None], omegas, eigenf, indices, opt
 
 
-def optdmd_predict(
+def varprodmd_predict(
     phi: np.ndarray,
     omegas: np.ndarray,
     eigenf: np.ndarray,
@@ -575,14 +575,12 @@ class VarProOperator(DMDOperator):
             if self._sorted_eigs == "auto":
                 eigs_real = self._eigenvalues.real
                 eigs_imag = self._eigenvalues.imag
-                __eigs_abs = np.abs(self._eigenvalues)
+                _eigs_abs = np.abs(self._eigenvalues)
                 var_real = np.var(eigs_real)
                 var_imag = np.var(eigs_imag)
-                var_abs = np.var(__eigs_abs)
-                __array = np.array([var_real, var_imag, var_abs])
-                eigs_abs = (eigs_real, eigs_imag, __eigs_abs)[
-                    np.argmax(__array)
-                ]
+                var_abs = np.var(_eigs_abs)
+                array = np.array([var_real, var_imag, var_abs])
+                eigs_abs = (eigs_real, eigs_imag, _eigs_abs)[np.argmax(array)]
 
             elif self._sorted_eigs == "real":
                 eigs_abs = np.abs(self._eigenvalues.real)
@@ -726,7 +724,7 @@ class VarProDMD(DMDBase):
         if not self.fitted:
             raise ValueError("Nothing fitted yet. Call fit-method first!")
 
-        return optdmd_predict(
+        return varprodmd_predict(
             self._Atilde.modes, self._Atilde.eigenvalues, self._b, time
         )
 
