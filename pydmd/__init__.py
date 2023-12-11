@@ -16,6 +16,7 @@ __all__ = [
     "bopdmd",
     "pidmd",
     "edmd",
+    "varprodmd",
     "lando",
 ]
 
@@ -41,3 +42,4 @@ from .preprocessing import PrePostProcessingDMD
 from .rdmd import RDMD
 from .spdmd import SpDMD
 from .subspacedmd import SubspaceDMD
+from .varprodmd import VarProDMD
