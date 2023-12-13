@@ -77,6 +77,8 @@ class COSTS:
         max_rank=None,
         n_components=None,
     ):
+        self._hist_kwargs = None
+        self._omega_label = None
         self._step_size = None
         self._window_length = None
         self._n_components = n_components
@@ -385,7 +387,7 @@ class COSTS:
     ):
         """Fit COherent SpatioTemporal Scale separation (COSTS).
 
-        :param data: the input data to decompose (1D snapshots)
+        :param data: the input data to decompose (1D snapshots). Dimensions space vs time.
         :type data: numpy.ndarray
         :param time: time series labeling the 1D snapshots
         :type time: numpy.ndarray
@@ -606,8 +608,7 @@ class COSTS:
 
         return self
 
-    @staticmethod
-    def transform_omega(omega_array, transform_method=None):
+    def transform_omega(self, omega_array, transform_method=None):
         """Transform omega, primarily for clustering.
         Options for transforming omega are:
             "period": :math:`\\frac{1}{\\omega}`
@@ -625,17 +626,33 @@ class COSTS:
         # Apply a transformation to omega to improve frequency band separation
         if transform_method is None or transform_method == "absolute":
             omega_transform = np.abs(omega_array.imag.astype("float"))
+            self._omega_label = r"$|\omega|$"
+            self._hist_kwargs = {"bins": 64}
         elif transform_method == "square_frequencies":
             omega_transform = (np.conj(omega_array) * omega_array).astype(
                 "float"
             )
+            self._omega_label = r"$|\omega|^{2}$"
+            self._hist_kwargs = {"bins": 64}
         elif transform_method == "log10":
             omega_transform = np.log10(np.abs(omega_array.imag.astype("float")))
             # Impute log10(0) with the smallest non-zero values in log10(omega).
             zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
             omega_transform[~np.isfinite(omega_transform)] = zero_imputer
+            self._omega_label = r"$log_{10}(|\omega|)$"
+            self._hist_kwargs["bins"] = np.linspace(
+                np.min(np.log10(omega_transform[omega_array > 0])),
+                np.max(np.log10(omega_transform[omega_array > 0])),
+            )
         elif transform_method == "period":
             omega_transform = 1 / np.abs(omega_array.imag.astype("float"))
+            self._omega_label = "Period"
+            # @ToDo: Specify bins like in log10 transform
+            self._hist_kwargs = {"bins": 64}
+        else:
+            return ValueError(
+                "Transform method {} not supported.".format(transform_method)
+            )
 
         return omega_transform
 
@@ -712,20 +729,8 @@ class COSTS:
             omega_rshp, transform_method=self._transform_method
         )
 
-        hist_kwargs = {"bins": 64}
-        if (
-            self._transform_method is None
-            or self._transform_method == "absolute"
-        ):
-            label = r"$|\omega|$"
-        elif self._transform_method == "square_frequencies":
-            label = r"$|\omega|^{2}$"
-        elif self._transform_method == "log10":
-            label = r"$log_{10}(|\omega|)$"
-            hist_kwargs["bins"] = np.linspace(
-                np.min(np.log10(omega_transform[omega_rshp > 0])),
-                np.max(np.log10(omega_transform[omega_rshp > 0])),
-            )
+        label = self._omega_label
+        hist_kwargs = self._hist_kwargs
 
         cluster_centroids = self._cluster_centroids
 
@@ -742,7 +747,7 @@ class COSTS:
 
         return fig, ax
 
-    def plot_omega_squared_time_series(self):
+    def plot_omega_time_series(self):
         """Time series of transformed omega colored by frequency band.
 
         :return fig: figure handle for the plot
@@ -763,16 +768,7 @@ class COSTS:
         omega_transform = self.transform_omega(
             omega_rshp, transform_method=self._transform_method
         )
-
-        if (
-            self._transform_method is None
-            or self._transform_method == "absolute"
-        ):
-            label = r"$|\omega|$"
-        elif self._transform_method == "squared":
-            label = r"$|\omega|^{2}$"
-        elif self._transform_method == "log10":
-            label = r"$log_{10}(|\omega|)$"
+        label = self._omega_label
 
         for ncomponent, component in enumerate(range(self._n_components)):
             ax.plot(
@@ -786,7 +782,7 @@ class COSTS:
             )
         ax.set_ylabel(label)
         ax.set_xlabel("Time")
-        ax.set_title(r"$\omega$ Time Series")
+        ax.set_title("Time dynamics time series")
 
         return fig, ax
 
