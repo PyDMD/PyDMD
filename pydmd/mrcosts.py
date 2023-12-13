@@ -174,11 +174,47 @@ class mrCOSTS:
     def omega_classes(self):
         """
         :return: Ints for each omega value indicating which cluster it belongs to.
-        :rtype: list of numpy.ndarrays
+        :rtype: list of numpy.ndarray
         """
         if not hasattr(self, "_omega_classes"):
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._omega_classes
+
+    @property
+    def ragged_omega_array(self):
+        """
+        :return: list of omega arrays for each decomposition level.
+        :rtype: list of numpy.ndarray
+        """
+        if not hasattr(self, "_costs_array"):
+            raise ValueError(
+                "You need to `fit` or load previous fit from file first."
+            )
+        return [c.omega_array for c in self._costs_array]
+
+    @property
+    def ragged_modes_array(self):
+        """
+        :return: list of modes arrays for each decomposition level.
+        :rtype: list of numpy.ndarray
+        """
+        if not hasattr(self, "_costs_array"):
+            raise ValueError(
+                "You need to `fit` or load previous fit from file first."
+            )
+        return [c.modes_array for c in self._costs_array]
+
+    @property
+    def ragged_amplitudes_array(self):
+        """
+        :return: list of amplitudes arrays for each decomposition level.
+        :rtype: list of numpy.ndarray
+        """
+        if not hasattr(self, "_costs_array"):
+            raise ValueError(
+                "You need to `fit` or load previous fit from file first."
+            )
+        return [c.amplitudes_array for c in self._costs_array]
 
     @staticmethod
     def _data_shape(data):
