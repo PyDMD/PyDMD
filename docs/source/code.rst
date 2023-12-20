@@ -26,4 +26,5 @@ Code Documentation
    rdmd
    spdmd
    subspacedmd
+   varprodmd
    utils
