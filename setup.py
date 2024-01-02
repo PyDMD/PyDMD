@@ -7,7 +7,7 @@ with open("pydmd/meta.py") as fp:
 # Package meta-data.
 NAME = meta["__title__"]
 DESCRIPTION = "Python Dynamic Mode Decomposition."
-URL = "https://github.com/mathLab/PyDMD"
+URL = "https://github.com/PyDMD/PyDMD"
 MAIL = meta["__mail__"]
 AUTHOR = meta["__author__"]
 VERSION = meta["__version__"]
