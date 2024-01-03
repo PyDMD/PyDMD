@@ -548,6 +548,7 @@ def plot_summary(
     main_colors=("r", "b", "g", "gray"),
     mode_color="k",
     mode_cmap="bwr",
+    sval_color="tab:orange",
     dynamics_color="tab:blue",
     sval_ms=8,
     max_eig_ms=10,
@@ -666,13 +667,16 @@ def plot_summary(
     elif not isinstance(snapshots_shape, tuple) or len(snapshots_shape) != 2:
         raise ValueError("snapshots_shape must be None or a 2D tuple.")
 
+    # Get the actual rank used for the DMD fit.
+    rank = len(dmd.eigs)
+
     # Override index_modes if there are less than 3 modes available.
-    if len(dmd.eigs) < 3:
+    if rank < 3:
         warnings.warn(
             "Provided dmd model has less than 3 modes."
             "Plotting all available modes."
         )
-        index_modes = list(range(len(dmd.eigs)))
+        index_modes = list(range(rank))
     # By default, we plot the 3 leading modes and their dynamics.
     elif index_modes is None:
         index_modes = list(range(3))
@@ -680,9 +684,9 @@ def plot_summary(
     elif not isinstance(index_modes, list) or len(index_modes) > 3:
         raise ValueError("index_modes must be a list of length at most 3.")
     # Indices cannot go past the total number of available or plottable modes.
-    elif np.any(np.array(index_modes) >= min(len(dmd.eigs), max_sval_plot)):
+    elif np.any(np.array(index_modes) >= min(len(rank, max_sval_plot)):
         raise ValueError(
-            f"Cannot view past mode {min(len(dmd.eigs), max_sval_plot)}."
+            f"Cannot view past mode {min(rank, max_sval_plot)}."
         )
 
     # Sort eigenvalues, modes, and dynamics according to amplitude magnitude.
@@ -771,15 +775,18 @@ def plot_summary(
     eig_axes[0].plot(
         s_t, s_var_plot, "o", c=main_colors[-1], ms=sval_ms, mec="k"
     )
-    for i, idx in enumerate(index_modes):
-        eig_axes[0].plot(
-            s_t[idx],
-            s_var_plot[idx],
-            "o",
-            c=main_colors[i],
-            ms=sval_ms,
-            mec="k",
-        )
+    eig_axes[0].plot(
+        s_t[:rank], s_var_plot[:rank], "o", c=sval_color, ms=sval_ms, mec="k"
+    )
+    # for i, idx in enumerate(index_modes):
+    #     eig_axes[0].plot(
+    #         s_t[idx],
+    #         s_var_plot[idx],
+    #         "o",
+    #         c=main_colors[i],
+    #         ms=sval_ms,
+    #         mec="k",
+    #     )
     if plot_semilogy:
         eig_axes[0].semilogy()
 
