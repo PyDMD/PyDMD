@@ -545,7 +545,7 @@ def plot_summary(
     figsize=(12, 8),
     dpi=200,
     tight_layout_kwargs=None,
-    main_colors=("r", "b", "g", "gray"),
+    main_colors=("r", "b", "g"),
     mode_color="k",
     mode_cmap="bwr",
     sval_color="tab:orange",
@@ -618,11 +618,8 @@ def plot_summary(
         `matplotlib.pyplot.tight_layout()` parameters.
     :type tight_layout_kwargs: dict
     :param main_colors: Tuple of strings defining the colors used to denote
-        eigenvalue, mode, dynamics associations. The first three colors are
-        used to highlight the singular values and eigenvalues associated with
-        the plotted modes and dynamics, while the fourth color is used to
-        denote all other values.
-    :type main_colors: tuple(str, str, str, str)
+        eigenvalue, mode, dynamics associations.
+    :type main_colors: tuple(str, str, str)
     :param mode_color: Color used to plot the modes, if modes are 1D.
     :type mode_color: str
     :param mode_cmap: Colormap used to plot the modes, if modes are 2D.
@@ -684,7 +681,7 @@ def plot_summary(
     elif not isinstance(index_modes, list) or len(index_modes) > 3:
         raise ValueError("index_modes must be a list of length at most 3.")
     # Indices cannot go past the total number of available or plottable modes.
-    elif np.any(np.array(index_modes) >= min(len(rank, max_sval_plot)):
+    elif np.any(np.array(index_modes) >= min(rank, max_sval_plot)):
         raise ValueError(
             f"Cannot view past mode {min(rank, max_sval_plot)}."
         )
@@ -694,6 +691,7 @@ def plot_summary(
     lead_eigs = dmd.eigs[mode_order]
     lead_modes = dmd.modes[:, mode_order]
     lead_dynamics = dmd.dynamics[mode_order]
+    lead_amplitudes = np.abs(dmd.amplitudes[mode_order])
 
     # Get time information for eigenvalue conversions.
     if isinstance(dmd, BOPDMD) or (
@@ -772,12 +770,11 @@ def plot_summary(
     eig_axes[0].set_title("Singular Values", fontsize=title_fontsize)
     eig_axes[0].set_ylabel("% variance", fontsize=label_fontsize)
     s_t = np.arange(len(s_var_plot)) + 1
-    eig_axes[0].plot(
-        s_t, s_var_plot, "o", c=main_colors[-1], ms=sval_ms, mec="k"
-    )
+    eig_axes[0].plot(s_t, s_var_plot, "o", c="gray", ms=sval_ms, mec="k")
     eig_axes[0].plot(
         s_t[:rank], s_var_plot[:rank], "o", c=sval_color, ms=sval_ms, mec="k"
     )
+
     # for i, idx in enumerate(index_modes):
     #     eig_axes[0].plot(
     #         s_t[idx],
@@ -787,12 +784,18 @@ def plot_summary(
     #         ms=sval_ms,
     #         mec="k",
     #     )
+
     if plot_semilogy:
         eig_axes[0].semilogy()
 
     # PLOTS 2-3: Plot the eigenvalues (discrete-time and continuous-time).
-    # Scale marker sizes to reflect the amount of variance captured.
-    ms_vals = max_eig_ms * np.sqrt(s_var / s_var[0])
+
+    # # Scale marker sizes to reflect the amount of variance captured.
+    # ms_vals = max_eig_ms * np.sqrt(s_var / s_var[0])
+
+    # Scale marker sizes to reflect their associated amplitude.
+    ms_vals = max_eig_ms * np.sqrt(lead_amplitudes / lead_amplitudes[0])
+
     for i, (ax, eigs) in enumerate(zip(eig_axes[1:], [disc_eigs, cont_eigs])):
         # Plot the complex plane axes.
         ax.axvline(x=0, c="k", lw=1)
@@ -816,7 +819,7 @@ def plot_summary(
                 if idx in index_modes:
                     color = main_colors[index_modes.index(idx)]
                 else:
-                    color = main_colors[-1]
+                    color = "gray"
                 if i == 0:
                     ax.plot(eig.real, eig.imag, "o", c=color, ms=ms_vals[idx])
                 else:
