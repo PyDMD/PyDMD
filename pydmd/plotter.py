@@ -535,6 +535,7 @@ def plot_snapshots_2D(
 def plot_summary(
     dmd,
     *,
+    t=None,
     d=1,
     continuous=False,
     snapshots_shape=None,
@@ -568,6 +569,14 @@ def plot_summary(
 
     :param dmd: DMD instance.
     :type dmd: pydmd.DMDBase
+    :param t: the input time vector or uniform time-step between snapshots.
+        Note that the time-step must be accurate in order to visualize accurate
+        discrete and continuous-time eigenvalues, as well as accurate times of
+        the dynamics. For non-`BOPDMD` models, times of data collection must be
+        uniformly-spaced, and if not provided, TimeDict information stored in
+        the provided DMD instance is used instead. This parameter is ignored if
+        an instance of `BOPDMD` is provided.
+    :type t: {numpy.ndarray, list} or {int, float}
     :param d: Number of delays applied to the data passed to the DMD instance.
         If `d` is greater than 1, then each plotted mode will be the average
         mode taken across all `d` delays.
@@ -701,17 +710,26 @@ def plot_summary(
         else:
             disc_eigs = np.exp(lead_eigs * dt)
     else:
-        # For all other dmd models, go to the TimeDict for time information.
-        try:
-            time = dmd.dmd_timesteps
-            dt = dmd.original_time["dt"]
-        except AttributeError:
-            warnings.warn(
-                "No time step information available. "
-                "Using dt = 1 and t0 = 0."
-            )
-            time = np.arange(dmd.snapshots.shape[-1])
-            dt = 1.0
+        # For all other dmd models, go to the TimeDict for time information,
+        # that or use the user-provided time information in t if available.
+        if isinstance(t, (int, float)):
+            time = np.arange(dmd.snapshots.shape[-1]) * t
+            dt = t
+        elif isinstance(t, (np.ndarray, list)):
+            # Note: assumes uniform spacing in the provided time vector.
+            time = np.squeeze(np.array(t))
+            dt = time[1] - time[0]
+        else:
+            try:
+                time = dmd.original_timesteps
+                dt = dmd.original_time["dt"]
+            except AttributeError:
+                warnings.warn(
+                    "No time step information available. "
+                    "Using dt = 1 and t0 = 0."
+                )
+                time = np.arange(dmd.snapshots.shape[-1])
+                dt = 1.0
 
         if continuous:
             cont_eigs = lead_eigs
