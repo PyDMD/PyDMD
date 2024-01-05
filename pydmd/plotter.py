@@ -746,8 +746,7 @@ def plot_summary(
                 dt = dmd.original_time["dt"]
             except AttributeError:
                 warnings.warn(
-                    "No time information available. "
-                    "Using dt = 1 and t0 = 0."
+                    "No time information available. " "Using dt = 1 and t0 = 0."
                 )
                 time = np.arange(dmd.snapshots.shape[-1])
                 dt = 1.0
@@ -830,7 +829,9 @@ def plot_summary(
     eig_axes[2].axvline(x=0, c="k", lw=1)
     eig_axes[2].axhline(y=0, c="k", lw=1)
     eig_axes[2].axis("equal")
-    eig_axes[2].set_title("Continuous-time Eigenvalues", fontsize=title_fontsize)
+    eig_axes[2].set_title(
+        "Continuous-time Eigenvalues", fontsize=title_fontsize
+    )
     if flip_continuous_axes:
         eig_axes[2].set_xlabel(r"$Im(\omega)$", fontsize=label_fontsize)
         eig_axes[2].set_ylabel(r"$Re(\omega)$", fontsize=label_fontsize)
@@ -849,14 +850,20 @@ def plot_summary(
                     ax.plot(
                         eigs[idx].real,
                         eigs[idx].imag,
-                        "o", c=main_colors[i], ms=ms_vals[idx], mec="k",
+                        "o",
+                        c=main_colors[i],
+                        ms=ms_vals[idx],
+                        mec="k",
                     )
                     mode_colors[idx] = main_colors[i]
             for idx in other_eigs:
                 ax.plot(
                     eigs[idx].real,
                     eigs[idx].imag,
-                    "o", c=rank_color, ms=ms_vals[idx], mec="k",
+                    "o",
+                    c=rank_color,
+                    ms=ms_vals[idx],
+                    mec="k",
                 )
 
     # PLOTS 4-6: Plot the DMD modes.
@@ -864,7 +871,9 @@ def plot_summary(
         x = np.arange(snapshots_shape[0])
 
     for i, (ax, idx) in enumerate(zip(mode_axes, index_modes)):
-        ax.set_title(f"Mode {idx + 1}", c=mode_colors[idx], fontsize=title_fontsize)
+        ax.set_title(
+            f"Mode {idx + 1}", c=mode_colors[idx], fontsize=title_fontsize
+        )
         # Plot modes in 1-D.
         if len(snapshots_shape) == 1:
             ax.plot(x, lead_modes[:, idx].real, c=mode_color)
@@ -875,7 +884,9 @@ def plot_summary(
             ygrid, xgrid = np.meshgrid(y, x)
             mode = lead_modes[:, idx].reshape(*snapshots_shape, order=order)
             vmax = np.abs(mode.real).max()
-            im = ax.pcolormesh(xgrid, ygrid, mode.real, vmax=vmax, vmin=-vmax, cmap=mode_cmap)
+            im = ax.pcolormesh(
+                xgrid, ygrid, mode.real, vmax=vmax, vmin=-vmax, cmap=mode_cmap
+            )
             # Align the colorbar with the plotted image.
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="3%", pad=0.05)
@@ -884,7 +895,9 @@ def plot_summary(
     # PLOTS 7-9: Plot the DMD mode dynamics.
     for i, (ax, idx) in enumerate(zip(dynamics_axes, index_modes)):
         dynamics_data = lead_dynamics[idx].real
-        ax.set_title("Mode Dynamics", c=mode_colors[idx], fontsize=title_fontsize)
+        ax.set_title(
+            "Mode Dynamics", c=mode_colors[idx], fontsize=title_fontsize
+        )
         ax.plot(time, dynamics_data, c=dynamics_color)
         ax.set_xlabel("Time", fontsize=label_fontsize)
 
