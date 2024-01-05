@@ -795,7 +795,7 @@ def plot_summary(
     for idx in index_modes:
         eig = cont_eigs[idx]
         if eig.conj() not in cont_eigs:
-            index_modes_cc.append((idx,))
+            index_modes_cc.append((idx, idx))
         elif idx not in np.array(index_modes_cc):
             index_modes_cc.append((idx, list(cont_eigs).index(eig.conj())))
     other_eigs = np.setdiff1d(np.arange(rank), np.array(index_modes_cc))
