@@ -732,23 +732,27 @@ def plot_summary(
     else:
         # For all other dmd models, go to the TimeDict for time information,
         # that or use the user-provided time information in t if available.
+        num_samples = dmd.snapshots.shape[-1]
         if isinstance(t, (int, float)):
-            time = np.arange(dmd.snapshots.shape[-1]) * t
+            time = np.arange(num_samples) * t
             dt = t
         elif t is not None:
             time = np.squeeze(np.array(t))
             dt = time[1] - time[0]
             if not np.allclose(time[1:] - time[:-1], dt):
-                raise ValueError("Time step is not uniform. Check t vector.")
+                warnings.warn(
+                    "Time step is not uniform. DMD might produce unexpected "
+                    "results. Consider using BOP-DMD instead."
+                )
         else:
             try:
                 time = dmd.original_timesteps
                 dt = dmd.original_time["dt"]
             except AttributeError:
                 warnings.warn(
-                    "No time information available. " "Using dt = 1 and t0 = 0."
+                    "No time information available. Using dt = 1 and t0 = 0."
                 )
-                time = np.arange(dmd.snapshots.shape[-1])
+                time = np.arange(num_samples)
                 dt = 1.0
 
         if continuous:
@@ -762,7 +766,9 @@ def plot_summary(
     if d > 1:
         lead_modes = np.average(
             lead_modes.reshape(
-                d, lead_modes.shape[0] // d, lead_modes.shape[1]
+                d,
+                lead_modes.shape[0] // d,
+                lead_modes.shape[1],
             ),
             axis=0,
         )
@@ -779,20 +785,27 @@ def plot_summary(
     s_var = s * (100 / np.sum(s))
     s_var = s_var[:max_sval_plot]
 
-    # Build a list of the complex conjugate pairs to be highlighted.
+    # Build a list of indices of the complex conjugate pairs to highlight.
+    # Example: If index_modes = [idx1, idx2, idx3, idx4], such that...
+    #   idx1 has no complex conjugate pair
+    #   idx2 and idx3 are complex conjugates
+    #   idx4 and idx5 are complex conjugates
+    # Then index_modes_cc = [(idx1, idx1), (idx2, idx3), (idx4, idx5)]
     index_modes_cc = []
-    for idx1 in index_modes:
-        eig = cont_eigs[idx1]
-        idx2 = list(cont_eigs).index(eig.conj())
+    for idx in index_modes:
+        eig = cont_eigs[idx]
         if eig.conj() not in cont_eigs:
-            index_modes_cc.append((idx1,))
-        elif idx2 not in np.array(index_modes_cc):
-            index_modes_cc.append((idx1, idx2))
+            index_modes_cc.append((idx,))
+        elif idx not in np.array(index_modes_cc):
+            index_modes_cc.append((idx, list(cont_eigs).index(eig.conj())))
     other_eigs = np.setdiff1d(np.arange(rank), np.array(index_modes_cc))
 
     # Generate the summarizing plot.
     fig, (eig_axes, mode_axes, dynamics_axes) = plt.subplots(
-        3, 3, figsize=figsize, dpi=dpi
+        3,
+        3,
+        figsize=figsize,
+        dpi=dpi,
     )
 
     # PLOT 1: Plot the singular value spectrum.
@@ -800,10 +813,20 @@ def plot_summary(
     eig_axes[0].set_ylabel("% variance", fontsize=label_fontsize)
     s_t = np.arange(len(s_var)) + 1
     eig_axes[0].plot(
-        s_t[:rank], s_var[:rank], "o", c=rank_color, ms=sval_ms, mec="k"
+        s_t[:rank],
+        s_var[:rank],
+        "o",
+        c=rank_color,
+        ms=sval_ms,
+        mec="k",
     )
     eig_axes[0].plot(
-        s_t[rank:], s_var[rank:], "o", c="gray", ms=sval_ms, mec="k"
+        s_t[rank:],
+        s_var[rank:],
+        "o",
+        c="gray",
+        ms=sval_ms,
+        mec="k",
     )
     eig_axes[0].legend(
         handles=[Patch(facecolor=rank_color, label="Rank of fit")]
@@ -830,7 +853,8 @@ def plot_summary(
     eig_axes[2].axhline(y=0, c="k", lw=1)
     eig_axes[2].axis("equal")
     eig_axes[2].set_title(
-        "Continuous-time Eigenvalues", fontsize=title_fontsize
+        "Continuous-time Eigenvalues",
+        fontsize=title_fontsize,
     )
     if flip_continuous_axes:
         eig_axes[2].set_xlabel(r"$Im(\omega)$", fontsize=label_fontsize)
@@ -845,6 +869,7 @@ def plot_summary(
     mode_colors = {}
     for ax, eigs in zip([eig_axes[1], eig_axes[2]], [disc_eigs, cont_eigs]):
         if eigs is not None:
+            # Plot the main indices and their complex conjugate.
             for i, indices in enumerate(index_modes_cc):
                 for idx in indices:
                     ax.plot(
@@ -856,6 +881,7 @@ def plot_summary(
                         mec="k",
                     )
                     mode_colors[idx] = main_colors[i]
+            # Plot all other DMD eigenvalues.
             for idx in other_eigs:
                 ax.plot(
                     eigs[idx].real,
@@ -866,26 +892,35 @@ def plot_summary(
                     mec="k",
                 )
 
-    # PLOTS 4-6: Plot the DMD modes.
+    # Build the spatial grid for the mode plots.
     if x is None:
         x = np.arange(snapshots_shape[0])
+    if len(snapshots_shape) == 2:
+        if y is None:
+            y = np.arange(snapshots_shape[1])
+        ygrid, xgrid = np.meshgrid(y, x)
 
+    # PLOTS 4-6: Plot the DMD modes.
     for i, (ax, idx) in enumerate(zip(mode_axes, index_modes)):
         ax.set_title(
-            f"Mode {idx + 1}", c=mode_colors[idx], fontsize=title_fontsize
+            f"Mode {idx + 1}",
+            c=mode_colors[idx],
+            fontsize=title_fontsize,
         )
-        # Plot modes in 1-D.
         if len(snapshots_shape) == 1:
+            # Plot modes in 1-D.
             ax.plot(x, lead_modes[:, idx].real, c=mode_color)
-        # Plot modes in 2-D.
         else:
-            if y is None:
-                y = np.arange(snapshots_shape[1])
-            ygrid, xgrid = np.meshgrid(y, x)
+            # Plot modes in 2-D.
             mode = lead_modes[:, idx].reshape(*snapshots_shape, order=order)
             vmax = np.abs(mode.real).max()
             im = ax.pcolormesh(
-                xgrid, ygrid, mode.real, vmax=vmax, vmin=-vmax, cmap=mode_cmap
+                xgrid,
+                ygrid,
+                mode.real,
+                vmax=vmax,
+                vmin=-vmax,
+                cmap=mode_cmap,
             )
             # Align the colorbar with the plotted image.
             divider = make_axes_locatable(ax)
@@ -896,7 +931,9 @@ def plot_summary(
     for i, (ax, idx) in enumerate(zip(dynamics_axes, index_modes)):
         dynamics_data = lead_dynamics[idx].real
         ax.set_title(
-            "Mode Dynamics", c=mode_colors[idx], fontsize=title_fontsize
+            "Mode Dynamics",
+            c=mode_colors[idx],
+            fontsize=title_fontsize,
         )
         ax.plot(time, dynamics_data, c=dynamics_color)
         ax.set_xlabel("Time", fontsize=label_fontsize)
