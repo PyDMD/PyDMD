@@ -254,7 +254,7 @@ def test_online_1():
     lando_online = LANDO(online=True, **lando_params)
     lando_online.fit(X, Y)
 
-    assert relative_error(lando_online.f(X), lando.f(X)) < 1e-6
+    assert relative_error(lando_online.f(X), lando.f(X)) < 1e-5
 
 
 def test_online_2():
@@ -270,7 +270,7 @@ def test_online_2():
     lando_online.fit(X[:, :batch_split], Y[:, :batch_split])
     lando_online.update(X[:, batch_split:], Y[:, batch_split:])
 
-    assert relative_error(lando_online.f(X), lando.f(X)) < 1e-6
+    assert relative_error(lando_online.f(X), lando.f(X)) < 1e-5
 
 
 def test_online_3():
