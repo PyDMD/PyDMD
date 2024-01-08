@@ -690,10 +690,6 @@ def plot_summary(
     if rank > max_sval_plot:
         raise ValueError(f"max_sval_plot must be at least {rank}.")
 
-    # Indices cannot go past the total number of available modes.
-    if np.any(np.array(index_modes) >= rank):
-        raise ValueError(f"Cannot view past mode {rank}.")
-
     # Override index_modes if there are less than 3 modes available.
     if rank < 3:
         warnings.warn(
@@ -701,6 +697,10 @@ def plot_summary(
             "Plotting all available modes..."
         )
         index_modes = np.arange(rank)
+
+    # Indices cannot go past the total number of available modes.
+    if np.any(np.array(index_modes) >= rank):
+        raise ValueError(f"Cannot view past mode {rank}.")
 
     # Sort eigenvalues, modes, and dynamics according to amplitude magnitude.
     mode_order = np.argsort(-np.abs(dmd.amplitudes))
