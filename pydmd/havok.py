@@ -317,19 +317,18 @@ class HAVOK:
         # We have enough data - compute the Hankel matrix.
         hankel_matrix = self._hankel(X)
 
-        # Compute the SVD of the Hankel matrix.
-        U, s, V = compute_svd(hankel_matrix, self._svd_rank)
-        self._r = len(s)
-
         # Perform structured HAVOK (sHAVOK).
         if self._structured:
-            V = V[1:-1, :]
+            U, s, V = compute_svd(hankel_matrix[:, 1:-1], self._svd_rank)
+            self._r = len(s)
             V1 = compute_svd(hankel_matrix[:, :-2], self._r)[-1]
             V2 = compute_svd(hankel_matrix[:, 2:], self._r)[-1]
             V_dot = (V2 - V1) / (2 * dt)
 
         # Perform standard HAVOK.
         else:
+            U, s, V = compute_svd(hankel_matrix, self._svd_rank)
+            self._r = len(s)
             V_dot = differentiate(V.T, dt).T
 
         # Generate an error if too few HAVOK embeddings are being used.
