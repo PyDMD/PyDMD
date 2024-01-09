@@ -421,8 +421,10 @@ class HAVOK:
         :return: system predictions evaluated at the times in `time`.
         :rtype: numpy.ndarray
         """
-        return self._embeddings_to_original(
-            self._compute_embeddings(forcing, time, V0)
+        return np.squeeze(
+            self._embeddings_to_original(
+                self._compute_embeddings(forcing, time, V0)
+            )
         )
 
     @property
