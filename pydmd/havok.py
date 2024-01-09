@@ -14,12 +14,12 @@ frenet-serret frame, Proceedings of the Royal Society A, 477
 import warnings
 import numpy as np
 import matplotlib.pyplot as plt
+
 from matplotlib.gridspec import GridSpec
 from scipy.signal import lsim, StateSpace
 from scipy.stats import norm
 
 from .bopdmd import BOPDMD
-from .dmdbase import DMDBase
 from .utils import compute_svd, differentiate
 
 
@@ -40,7 +40,8 @@ class HAVOK:
         will contain n * `delays` rows.
     :type delays: int
     :param lag: the number of time steps between each time-shifted copy of
-        data in the Hankel matrix.
+        data in the Hankel matrix. This means that each row of the Hankel
+        matrix will be separated by a time-step of dt * `lag`.
     :type lag: int
     :param num_chaos: the number of forcing terms to use in the HAVOK model.
     :type num_chaos: int
@@ -89,6 +90,26 @@ class HAVOK:
         self._havok_operator = None
         self._eigenvalues = None
         self._r = None
+
+    @property
+    def delays(self):
+        """
+        Get the number of delays used when building Hankel matrices.
+
+        :return: the number of Hankel matrix delays.
+        :rtype: int
+        """
+        return self._delays
+
+    @property
+    def lag(self):
+        """
+        Get the lag used when building Hankel matrices.
+
+        :return: the number of time-steps used for Hankel matrix lag.
+        :rtype: int
+        """
+        return self._lag
 
     @property
     def snapshots(self):
@@ -272,14 +293,10 @@ class HAVOK:
                     "delays, lag, and num_chaos must be positive integers."
                 )
 
-        # Confirm that dmd is a child of DMDBase, if provided.
-        if self._dmd is not None and not isinstance(self._dmd, DMDBase):
-            raise ValueError("dmd must be None or a pydmd.DMDBase object.")
-
-        # Confirm that the input data is a 1D time-series or a 2D data matrix.
+        # Confirm that the input data is 1-D or 2-D.
         X = np.squeeze(np.array(X))
         if X.ndim > 2:
-            raise ValueError("Input data must be a 1D or 2D array.")
+            raise ValueError("Input data must be a 1-D or 2-D array.")
         if X.ndim == 1:
             X = X[None]
         n_samples = X.shape[-1]
@@ -293,7 +310,7 @@ class HAVOK:
             )
 
         # Check the input time information and set the time vector.
-        if isinstance(t, (int, float)) and t > 0.0:
+        if isinstance(t, (int, float)):
             time = np.arange(n_samples) * t
         else:
             time = np.squeeze(np.array(t))
@@ -301,7 +318,7 @@ class HAVOK:
             # Throw error if the time vector is not 1D or the correct length.
             if time.ndim != 1 or len(time) != n_samples:
                 raise ValueError(
-                    f"Please provide a 1D array of {n_samples} time values."
+                    f"Please provide a 1-D array of {n_samples} time values."
                 )
 
             # Generate warning if the times are not uniformly-spaced.
@@ -350,7 +367,7 @@ class HAVOK:
         # Use the provided DMDBase object to compute the operator.
         else:
             if isinstance(self._dmd, BOPDMD):
-                self._dmd.fit(V.T, time)
+                self._dmd.fit(V.T, time[: len(V)])
 
                 if self._structured:
                     warnings.warn(
@@ -430,9 +447,12 @@ class HAVOK:
         :return: the matrix that contains the reconstructed snapshots.
         :rtype: numpy.ndarray
         """
-        return self._embeddings_to_original(self.reconstructed_embeddings)
+        return np.squeeze(
+            self._embeddings_to_original(self.reconstructed_embeddings)
+        )
 
-    def compute_threshold(self, forcing, p=0.01, plot=False, bins="auto"):
+    @staticmethod
+    def compute_threshold(forcing, p=0.01, bins=50, plot=False, ylim=None):
         """
         Use the distribution of forcing terms to determine a threshold at which
         the absolute value of the forcing is large enough to be considered
@@ -443,33 +463,46 @@ class HAVOK:
         :type forcing: numpy.ndarray
         :param p: desired approximate probability that a forcing event occurs.
             Note that `p` must be a float between 0.0 and 1.0, and that smaller
-            values of `p` will result in larger threshold values.
-        :type p: float
+            values of `p` will result in larger threshold values. If `p` lies
+            outside of this range, the forcing term histogram's intersection
+            with a fitted Gaussian distribution is used as the threshold.
+        :type p: int or float
+        :param bins: `bins` input to the `numpy.histogram` function.
+        :type bins: int or sequence of scalars or str
         :param plot: whether or not to plot the computed histogram of forcing
             values and the computed threshold. A Gaussian distribution fitted
             to the computed histogram is also plotted if `plot=True`.
         :type plot: bool
-        :param bins: `bins` input to the `numpy.histogram` function.
-        :type bins: int or sequence of scalars or str
+        :param ylim: set the y-axis limit of the histogram plot.
+        :type ylim: iterable
         :return: active threshold for the absolute value of the forcing terms.
         :rtype: float
         """
         # Compute histogram of the forcing values.
         hy, hx = np.histogram(forcing, bins=bins, density=True)
-        hx = 0.5 * (hx[:-1] + hx[1:])
+        hx = 0.5 * (hx[:-1] + hx[1:])  # get bin centers
         hy /= hy.sum()
 
-        # Threshold is the average of the left and right threshold.
-        ind1 = np.where(np.cumsum(hy) > 0.5 * p)[0][0]
-        ind2 = np.where(1 - np.cumsum(hy) < 0.5 * p)[0][0]
-        threshold = 0.5 * (abs(hx[ind1]) + abs(hx[ind2]))
+        # Fit a Gaussian to the forcing values.
+        mu, std = norm.fit(forcing)
+        gauss = norm.pdf(hx, mu, std)
+        gauss /= np.sum(gauss)
+
+        if p <= 0.0 or p >= 1.0:
+            # Use Gaussian intersection.
+            a = gauss - hy
+            ind_sign_change = np.where(np.sign(a[:-1]) - np.sign(a[1:]) != 0)[0]
+            thres_1 = np.abs(hx[ind_sign_change])
+            thres_2 = np.abs(hx[ind_sign_change + 1])
+            threshold_candidates = np.sort(0.5 * (thres_1 + thres_2))
+            threshold = threshold_candidates[p]
+        else:
+            # Use probability p of switching.
+            ind1 = np.where(np.cumsum(hy) > 0.5 * p)[0][0]
+            ind2 = np.where(1 - np.cumsum(hy) < 0.5 * p)[0][0]
+            threshold = 0.5 * (abs(hx[ind1]) + abs(hx[ind2]))
 
         if plot:
-            # Fit a Gaussian to the forcing values.
-            mu, std = norm.fit(forcing)
-            gauss = norm.pdf(hx, mu, std)
-            gauss /= np.sum(gauss)
-
             # Plot the histogram, fitted Gaussian, and the computed threshold.
             plt.figure(figsize=(5, 4))
             plt.plot(hx, hy, c="tab:red", label="Forcing", lw=2)
@@ -480,6 +513,8 @@ class HAVOK:
             plt.ylabel("p", rotation=0)
             plt.semilogy()
             plt.legend()
+            if ylim is not None:
+                plt.ylim(ylim)
             plt.show()
 
         return threshold
