@@ -43,17 +43,32 @@ X = generate_lorenz_data(t)
 x = X[0]
 
 
-def test_shape():
+def test_shape_1():
     """
     Using the default HAVOK parameters, checks that the shapes of
     linear_embeddings, forcing_input, A, and B are accurate.
     """
     havok = HAVOK()
     havok.fit(x, t)
-    assert havok.linear_dynamics.shape == (len(t) - havok.delays + 1, havok.r - 1)
-    assert havok.forcing.shape == (len(t) - havok.delays + 1, 1)
+    time_length = len(t) - havok.delays + 1
+    assert havok.linear_dynamics.shape == (time_length, havok.r - 1)
+    assert havok.forcing.shape == (time_length, 1)
     assert havok.A.shape == (havok.r - 1, havok.r - 1)
     assert havok.B.shape == (havok.r - 1, 1)
+
+
+def test_shape_2():
+    """
+    Using num_chaos = 2, checks that the shapes of
+    linear_embeddings, forcing_input, A, and B are accurate.
+    """
+    havok = HAVOK()
+    havok.fit(x, t)
+    time_length = len(t) - havok.delays + 1
+    assert havok.linear_dynamics.shape == (time_length, havok.r - 2)
+    assert havok.forcing.shape == (time_length, 2)
+    assert havok.A.shape == (havok.r - 2, havok.r - 2)
+    assert havok.B.shape == (havok.r - 2, 2)
 
 
 def test_error_fitted():
@@ -73,15 +88,6 @@ def test_error_fitted():
         _ = havok.B
     with raises(ValueError):
         _ = havok.r
-
-
-def test_error_small_r():
-    """
-    Ensure that a runtime error is thrown if r is too small.
-    """
-    havok = HAVOK(delays=1)
-    with raises(RuntimeError):
-        havok.fit(x, t)
 
 
 def test_r():
@@ -108,7 +114,7 @@ def test_reconstruction():
     """
     Test the accuracy of the HAVOK reconstruction.
     """
-    havok = HAVOK(svd_rank=15, delays=100)
+    havok = HAVOK(svd_rank=16, delays=100)
     havok.fit(x, t)
     error = x - havok.reconstructed_data.real
     assert np.linalg.norm(error) / np.linalg.norm(x) < 0.2

@@ -404,7 +404,7 @@ class HAVOK:
 
         return self
 
-    def predict(self, forcing, time, V0):
+    def predict(self, forcing, time, V0=0):
         """
         Use a custom forcing input to make system predictions.
 
@@ -417,10 +417,19 @@ class HAVOK:
         :param V0: (`r` - `num_chaos`,) array that contains the initial
             condition of the linear dynamics. This array should contain the
             linear dynamics evaluated at the first time in the `time` array.
-        :type V0: numpy.ndarray
+            If not provided, this initial condition is assumed to be the
+            initial condition stored in this `HAVOK` model instance. If `V0`
+            is an int, `V0` is assumed to be the index of the stored linear
+            dynamics to use as an initial condition.
+        :type V0: {numpy.ndarray, iterable} or int
         :return: system predictions evaluated at the times in `time`.
         :rtype: numpy.ndarray
         """
+        if isinstance(V0, int):
+            V0 = self.linear_dynamics[V0]
+        else:
+            V0 = np.array(V0)
+
         return np.squeeze(
             self._embeddings_to_original(
                 self._compute_embeddings(forcing, time, V0)
@@ -546,10 +555,9 @@ class HAVOK:
         :type num_plot: int
         :param index_linear: Tuple of indices of the linear embeddings to be
             plotted. May contain either 2 or 3 valid indices. The final two
-            subplots will be plotted in 2D or 3D depending on the number of
-            indices provided. Also note that the first index in this tuple
-            will determine the embedding plotted in the third subplot.
-        :type index_linear: tuple
+            subplots will be plotted in 2-D or 3-D depending on the number of
+            indices provided.
+        :type index_linear: iterable
         :param index_forcing: Index of the forcing term to be plotted. Note
             that this index refers to indices of the forcing term itself rather
             than the full matrix of time-delay embeddings. Hence if 0, the
@@ -639,7 +647,7 @@ class HAVOK:
         ax3.set_title("Linear dynamics")
         ax3.plot(
             self._time[:num_plot],
-            self.linear_dynamics[:num_plot, index_linear[0]],
+            self.linear_dynamics[:num_plot, 0],
             c="tab:blue",
         )
         ax3.set_xticks([])
