@@ -461,8 +461,14 @@ class HAVOK:
             self._embeddings_to_original(self.reconstructed_embeddings)
         )
 
-    @staticmethod
-    def compute_threshold(forcing, p=0.01, bins=50, plot=False, ylim=None):
+    def compute_threshold(
+            self,
+            forcing=0,
+            p=0.01,
+            bins=50,
+            plot=False,
+            plot_kwargs=None,
+        ):
         """
         Use the distribution of forcing terms to determine a threshold at which
         the absolute value of the forcing is large enough to be considered
@@ -470,12 +476,16 @@ class HAVOK:
         and a forcing event probability in order to estimate this threshold.
 
         :param forcing: (m,) array of forcing inputs to be thresholded.
-        :type forcing: numpy.ndarray
+            Alternatively, users may provide an integer, which will be used to
+            index the stored forcing terms. By default, the first forcing term
+            stored will be used.
+        :type forcing: {numpy.ndarray, iterable} or int
         :param p: desired approximate probability that a forcing event occurs.
             Note that `p` must be a float between 0.0 and 1.0, and that smaller
-            values of `p` will result in larger threshold values. If `p` lies
-            outside of this range, the forcing term histogram's intersection
-            with a fitted Gaussian distribution is used as the threshold.
+            values of `p` will result in larger threshold values. If `p` is an
+            integer instead, `p` will be used to index candidate thresholds
+            that are located at the intersection of the forcing term histogram
+            and a fitted Gaussian distribution.
         :type p: int or float
         :param bins: `bins` input to the `numpy.histogram` function.
         :type bins: int or sequence of scalars or str
@@ -483,11 +493,18 @@ class HAVOK:
             values and the computed threshold. A Gaussian distribution fitted
             to the computed histogram is also plotted if `plot=True`.
         :type plot: bool
-        :param ylim: set the y-axis limit of the histogram plot.
-        :type ylim: iterable
+        :param plot_kwargs: optional dictionary of plot parameters. Currently,
+            one may set the figure size, the y-axis limits, and whether or not
+            to use a semilogy scale.
+        :type plot_kwargs: dict
         :return: active threshold for the absolute value of the forcing terms.
         :rtype: float
         """
+        if isinstance(forcing, int):
+            forcing = self.forcing[:, forcing]
+        else:
+            forcing = np.array(forcing)
+
         # Compute histogram of the forcing values.
         hy, hx = np.histogram(forcing, bins=bins, density=True)
         hx = 0.5 * (hx[:-1] + hx[1:])  # get bin centers
@@ -498,12 +515,12 @@ class HAVOK:
         gauss = norm.pdf(hx, mu, std)
         gauss /= np.sum(gauss)
 
-        if p <= 0.0 or p >= 1.0:
+        if isinstance(p, int):
             # Use Gaussian intersection.
             a = gauss - hy
-            ind_sign_change = np.where(np.sign(a[:-1]) - np.sign(a[1:]) != 0)[0]
-            thres_1 = np.abs(hx[ind_sign_change])
-            thres_2 = np.abs(hx[ind_sign_change + 1])
+            ind_signchange = np.where(np.sign(a[:-1]) - np.sign(a[1:]) != 0)[0]
+            thres_1 = np.abs(hx[ind_signchange])
+            thres_2 = np.abs(hx[ind_signchange + 1])
             threshold_candidates = np.sort(0.5 * (thres_1 + thres_2))
             threshold = threshold_candidates[p]
         else:
@@ -513,18 +530,27 @@ class HAVOK:
             threshold = 0.5 * (abs(hx[ind1]) + abs(hx[ind2]))
 
         if plot:
-            # Plot the histogram, fitted Gaussian, and the computed threshold.
-            plt.figure(figsize=(5, 4))
+            # Set the plotting parameters first.
+            if plot_kwargs is None:
+                plot_kwargs = {}
+            if "figsize" not in plot_kwargs:
+                plot_kwargs["figsize"] = (5, 4)
+            if "semilogy" not in plot_kwargs:
+                plot_kwargs["semilogy"] = True
+
+            # Plot the histogram, fitted Gaussian, and the threshold.
+            plt.figure(figsize=plot_kwargs["figsize"])
             plt.plot(hx, hy, c="tab:red", label="Forcing", lw=2)
             plt.plot(hx, gauss, c="k", label="Gaussian", lw=2, ls="--")
             plt.axvline(x=threshold, lw=2, label="Threshold")
             plt.axvline(x=-threshold, lw=2)
-            plt.xlabel("vr")
-            plt.ylabel("p", rotation=0)
-            plt.semilogy()
+            plt.xlabel("$v_r$")
+            plt.ylabel("$p$", rotation=0)
             plt.legend()
-            if ylim is not None:
-                plt.ylim(ylim)
+            if plot_kwargs["semilogy"]:
+                plt.semilogy()
+            if "ylim" in plot_kwargs:
+                plt.ylim(plot_kwargs["ylim"])
             plt.show()
 
         return threshold
