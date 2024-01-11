@@ -462,13 +462,13 @@ class HAVOK:
         )
 
     def compute_threshold(
-            self,
-            forcing=0,
-            p=0.01,
-            bins=50,
-            plot=False,
-            plot_kwargs=None,
-        ):
+        self,
+        forcing=0,
+        p=0.01,
+        bins=50,
+        plot=False,
+        plot_kwargs=None,
+    ):
         """
         Use the distribution of forcing terms to determine a threshold at which
         the absolute value of the forcing is large enough to be considered
