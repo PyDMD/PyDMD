@@ -304,6 +304,7 @@ class HAVOK:
             H[i * n : (i + 1) * n] = X[
                 :, i * self._lag : i * self._lag + num_cols
             ]
+
         return H
 
     def dehankel(self, H):
@@ -319,8 +320,21 @@ class HAVOK:
         if not isinstance(H, np.ndarray) or H.ndim != 2:
             raise ValueError("Please ensure that input data is a 2D array.")
         n = int(H.shape[0] / self._delays)
-        X = np.hstack([H[:n], H[n:, -1].reshape(n, -1, order="F")])
+        # TODO: debug this!
+        m = 
+        X = np.empty(n, )
+        for 
+        X = np.hstack([H[:n], H[n:, -self._lag].reshape(n, -1, order="F")])
         return X
+
+    # dummy_data = np.array([[1, 2, 3, 4, 5, 6]])
+    # H2 = np.array([
+    #     [1, 2, 3, 4],
+    #     [3, 4, 5, 6]]) # lag=2, delays=2
+    # H3 = np.array([
+    #     [1, 2],
+    #     [3, 4],
+    #     [5, 6]]) # lag=2, delays=3
 
     def fit(self, X, t):
         """

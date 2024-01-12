@@ -84,7 +84,7 @@ def test_hankel_1():
     """
     Test
     """
-    dummy_data = np.array([1, 2, 3, 4])
+    dummy_data = np.array([[1, 2, 3, 4]])
 
     havok = HAVOK(delays=1)
     assert_equal(havok.hankel(dummy_data), np.array([[1, 2, 3, 4],]))
@@ -103,7 +103,59 @@ def test_hankel_1():
     assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
 
     with raises(ValueError):
-        havok = HAVOK(delays=5).fit(dummy_data, dummy_time)
+        havok = HAVOK(delays=5)
+        havok.hankel(dummy_data)
+
+
+def test_hankel_2():
+    """
+    Test
+    """
+    dummy_data = np.array([[1, 2, 3], [4, 5, 6]])
+    H2 = np.array([[1, 2], [4, 5], [2, 3], [5, 6]])
+    H3 = np.array([[1, 4, 2, 5, 3, 6]]).T
+
+    havok = HAVOK(delays=1)
+    assert_equal(havok.hankel(dummy_data), dummy_data)
+    assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
+
+    havok = HAVOK(delays=2)
+    assert_equal(havok.hankel(dummy_data), H2)
+    assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
+
+    havok = HAVOK(delays=3)
+    assert_equal(havok.hankel(dummy_data), H3)
+    assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
+
+    with raises(ValueError):
+        havok = HAVOK(delays=4)
+        havok.hankel(dummy_data)
+
+
+def test_hankel_3():
+    """
+    Test
+    """
+    dummy_data = np.array([[1, 2, 3, 4, 5, 6]])
+    H2 = np.array([[1, 2, 3, 4], [3, 4, 5, 6]])
+    H3 = np.array([[1, 2], [3, 4], [5, 6]])
+
+    # If only 1 delay is requested, the lag won't matter.
+    havok = HAVOK(delays=1, lag=2)
+    assert_equal(havok.hankel(dummy_data), dummy_data)
+    assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
+
+    havok = HAVOK(delays=2, lag=2)
+    assert_equal(havok.hankel(dummy_data), H2)
+    assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
+
+    havok = HAVOK(delays=3, lag=3)
+    assert_equal(havok.hankel(dummy_data), H3)
+    assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
+
+    with raises(ValueError):
+        havok = HAVOK(delays=2, lag=2)
+        havok.hankel(dummy_data)
 
 
 def test_shape_1():
