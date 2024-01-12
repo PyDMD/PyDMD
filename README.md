@@ -31,7 +31,7 @@
     </a>
     <br>
     <a href="#developers-and-contributors">
-      <img alt="All Contributors" src="https://img.shields.io/badge/all_contributors-24-orange.svg?style=for-the-badge"/>
+      <img alt="All Contributors" src="https://img.shields.io/badge/all_contributors-25-orange.svg?style=for-the-badge"/>
     </a>
     <a href="#stargazers">
       <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/PyDMD/PyDMD?style=for-the-badge">
@@ -43,6 +43,7 @@
 * [Description](#description)
 * [Dependencies and installation](#dependencies-and-installation)
 * [Examples and Tutorials](#examples-and-tutorials)
+* [Using PyDMD](#using-pydmd)
 * [Awards](#awards)
 * [References](#references)
 * [Developers and contributors](#developers-and-contributors)
@@ -56,10 +57,10 @@ With PyDMD, users can easily decompose complex, high-dimensional datasets into a
 
 PyDMD offers a seamless integration with the scientific Python ecosystem, leveraging popular libraries such as NumPy and SciPy for efficient numerical computations and data manipulation. It also offers a variety of visualization tools, including mode reconstruction, energy spectrum analysis, and time evolution plotting. These capabilities enable users to gain insights into the dominant modes of the system, identify significant features, and understand the temporal evolution of the dynamics.
 
-PyDMD promotes ease of use and customization, providing a well-documented API with intuitive function names and clear parameter descriptions. The package is actively maintained and updated, ensuring compatibility with the latest Python versions and incorporating user feedback to improve functionality and performance. We provide many tutorials showing the characteristics of the software. See the [**Examples**](#examples-and-tutorials) section below and the [**Tutorials**](tutorials/README.md) to have an idea of the potential of this package.
+PyDMD promotes ease of use and customization, providing a well-documented API with intuitive function names and clear parameter descriptions. The package is actively maintained and updated, ensuring compatibility with the latest Python versions and incorporating user feedback to improve functionality and performance. We provide many tutorials showing the characteristics of the software. See the [**Examples**](#examples-and-tutorials) section below and the [**Tutorials**](tutorials/README.md) to have an idea of the potential of this package. Also see the diagram below for a summary of all available tools and functionalities. Currently in-progress contributions are represented by semi-transparent boxes.
 
 <p align="center">
-    <img src="readme/pydmd_capabilities.png" width="800" />
+    <img src="readme/pydmd_capabilities.svg" width="1000" />
 </p>
 
 ## Dependencies and installation
@@ -98,6 +99,37 @@ Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/t
 <em>The system evolution reconstructed with dynamic mode decomposition</em>
 </p>
 
+## Using PyDMD
+To perform DMD, simply begin by initializing a PyDMD module that implements your DMD method of choice. Here, we demonstrate how a user might build a customized BOP-DMD model. Models may then be fitted by calling the `fit()` method and passing in the necessary data. This step performs the DMD algorithm, after which users may use PyDMD plotting tools in order to visualize their results.
+```python3
+from pydmd import BOPDMD
+from pydmd.plotter import plot_summary
+
+# Build a bagging, optimized DMD (BOP-DMD) model.
+dmd = BOPDMD(
+    svd_rank=15,  # rank of the DMD fit
+    num_trials=100,  # number of bagging trials to perform
+    trial_size=0.5,  # use 50% of the total number of snapshots per trial
+    eig_constraints={"imag", "conjugate_pairs"},  # constrain the eigenvalue structure
+    varpro_opts_dict={"tol":0.2, "verbose":True},  # set variable projection parameters
+)
+
+# Fit the DMD model.
+# X = (n, m) numpy array of time-varying snapshot data
+# t = (m,) numpy array of times of data collection
+dmd.fit(X, t)
+
+# Display a summary of the DMD results.
+plot_summary(dmd)
+```
+Note that modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to module documentation, plotting tool documentation, and to our module-specific [tutorials](tutorials/README.md) for more information.
+
+For users who are unsure of which DMD method is best for them, we provide the following flow chart, which outlines how one might choose an appropriate DMD variant based on specific problem types or data sets.
+
+<p align="center">
+    <img src="readme/pydmd_guide.svg" width="1000" />
+</p>
+
 ## Awards
 
 First prize winner in **DSWeb 2019 Contest** _Tutorials on Dynamical Systems Software_ (Junior Faculty Category). You can read the winner tutorial (PDF format) in the [tutorials](tutorials/tutorial_dsweb.pdf) folder.
@@ -105,16 +137,35 @@ First prize winner in **DSWeb 2019 Contest** _Tutorials on Dynamical Systems Sof
 ## References
 To implement the various versions of the DMD algorithm we follow these works:
 
-* Kutz, Brunton, Brunton, Proctor. *Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems*. SIAM Other Titles in Applied Mathematics, 2016. [[DOI](https://doi.org/10.1137/1.9781611974508)] [[bibitem](readme/Kutz2016_1.bib)].
-* Gavish, Donoho. *The optimal hard threshold for singular values is 4/sqrt(3)*. IEEE Transactions on Information Theory, 2014. [[DOI](https://doi.org/10.1109/TIT.2014.2323359)] [[bibitem](readme/Gavish2014.bib)].
-* Matsumoto, Indinger. *On-the-fly algorithm for Dynamic Mode Decomposition using Incremental Singular Value Decomposition and Total Least Squares*. 2017. [[arXiv](https://arxiv.org/abs/1703.11004)] [[bibitem](readme/Matsumoto2017.bib)].
-* Hemati, Rowley, Deem, Cattafesta. *De-biasing the dynamic mode decomposition for applied Koopman spectral analysis of noisy datasets*. Theoretical and Computational Fluid Dynamics, 2017. [[DOI](https://doi.org/10.1007/s00162-017-0432-2)] [[bibitem](readme/Hemati2017.bib)].
-* Dawson, Hemati, Williams, Rowley. *Characterizing and correcting for the effect of sensor noise in the dynamic mode decomposition*. Experiments in Fluids, 2016. [[DOI](https://doi.org/10.1007/s00348-016-2127-7)] [[bibitem](readme/Dawson2016.bib)].
-* Kutz, Fu, Brunton. *Multiresolution Dynamic Mode Decomposition*. SIAM Journal on Applied Dynamical Systems, 2016. [[DOI](https://doi.org/10.1137/15M1023543)] [[bibitem](readme/Kutz2016_2.bib)].
-* Erichson, Brunton, Kutz. *Compressed dynamic mode decomposition for background modeling*. Journal of Real-Time Image Processing, 2016. [[DOI](https://doi.org/10.1007/s11554-016-0655-2)] [[bibitem](readme/Erichson2016.bib)].
-* Le Clainche, Vega. *Higher Order Dynamic Mode Decomposition*. Journal on Applied Dynamical Systems, 2017. [[DOI](https://doi.org/10.1137/15M1054924)] [[bibitem](readme/LeClainche2017.bib)].
-* Andreuzzi, Demo, Rozza. *A dynamic mode decomposition extension for the forecasting of parametric dynamical systems*. 2021.  [[arXiv](https://arxiv.org/pdf/2110.09155)] [[bibitem](readme/Andreuzzi2021.bib)].
-* Jovanović, Schmid, Nichols *Sparsity-promoting dynamic mode decomposition*. 2014.  [[arXiv](https://arxiv.org/abs/1309.4165)] [[bibitem](readme/Jovanovic2014.bib)].
+### General DMD References
+* Kutz, Brunton, Brunton, Proctor. *Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems*. SIAM Other Titles in Applied Mathematics, 2016. [[DOI](https://doi.org/10.1137/1.9781611974508)] [[bibitem](readme/refs/Kutz2016_1.bib)].
+* Brunton, Budišić, Kaiser, Kutz. *Modern Koopman Theory for Dynamical Systems*. SIAM Review, 2022. [[DOI](https://doi.org/10.1137/21M1401243)] [[bibitem](readme/refs/Brunton2022.bib)].
+
+### DMD Variants: Noise-robust Methods
+* **Forward-backward DMD:** Dawson, Hemati, Williams, Rowley. *Characterizing and correcting for the effect of sensor noise in the dynamic mode decomposition*. Experiments in Fluids, 2016. [[DOI](https://doi.org/10.1007/s00348-016-2127-7)] [[bibitem](readme/refs/Dawson2016.bib)].
+* **Total least-squares DMD:** Hemati, Rowley, Deem, Cattafesta. *De-biasing the dynamic mode decomposition for applied Koopman spectral analysis of noisy datasets*. Theoretical and Computational Fluid Dynamics, 2017. [[DOI](https://doi.org/10.1007/s00162-017-0432-2)] [[bibitem](readme/refs/Hemati2017.bib)].
+* **Optimal closed-form DMD:** Héas, Herzet. *Low-rank dynamic mode decomposition: An exact and tractable solution*. Journal of Nonlinear Science, 2022. [[DOI](https://doi.org/10.1007/s00332-021-09770-w)] [[bibitem](readme/refs/Heas2022.bib)].
+* **Subspace DMD:** Takeishi, Kawahara, Yairi. *Subspace dynamic mode decomposition for stochastic Koopman analysis*. Physical Review E, 2017. [[DOI](https://doi.org/10.1103/PhysRevE.96.033310)] [[bibitem](readme/refs/Takeishi2017.bib)].
+* **Physics-informed DMD:** Baddoo, Herrmann, McKeon, Kutz, Brunton. *Physics-informed dynamic mode decomposition*. Proceedings of the Royal Society A, 2023. [[DOI](https://doi.org/10.1098/rspa.2022.0576)] [[bibitem](readme/refs/Baddoo2023.bib)].
+* **Optimized DMD:** Askham, Kutz. *Variable projection methods for an optimized dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2018. [[DOI](https://doi.org/10.1137/M1124176)] [[bibitem](readme/refs/Askham2018.bib)].
+* **Bagging, optimized DMD:** Sashidhar, Kutz. *Bagging, optimized dynamic mode decomposition for robust, stable forecasting with spatial and temporal uncertainty quantification*. Proceedings of the Royal Society A, 2022. [[DOI](https://doi.org/10.1098/rsta.2021.0199)] [[bibitem](readme/refs/Sashidhar2022.bib)].
+
+### DMD Variants: Additional Methods and Extensions
+* **DMD with Control:** Proctor, Brunton, Kutz. *Dynamic mode decomposition with control*. SIAM Journal on Applied Dynamical Systems, 2016. [[DOI](https://doi.org/10.1137/15M1013857)] [[bibitem](readme/refs/Proctor2016.bib)].
+* **Multiresolution DMD:** Kutz, Fu, Brunton. *Multiresolution dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2016. [[DOI](https://doi.org/10.1137/15M1023543)] [[bibitem](readme/refs/Kutz2016_2.bib)].
+* **Sparsity-promoting DMD:** Jovanović, Schmid, Nichols *Sparsity-promoting dynamic mode decomposition*. Physics of Fluids, 2014. [[DOI](https://doi.org/10.1063/1.4863670)] [[bibitem](readme/refs/Jovanovic2014.bib)].
+* **Compressed DMD:** Erichson, Brunton, Kutz. *Compressed dynamic mode decomposition for background modeling*. Journal of Real-Time Image Processing, 2016. [[DOI](https://doi.org/10.1007/s11554-016-0655-2)] [[bibitem](readme/refs/Erichson2016.bib)].
+* **Randomized DMD:** Erichson, Mathelin, Kutz, Brunton. *Randomized dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2019. [[DOI](https://doi.org/10.1137/18M1215013)] [[bibitem](readme/refs/Erichson2019.bib)].
+* **Higher Order DMD:** Le Clainche, Vega. *Higher order dynamic mode decomposition*. Journal on Applied Dynamical Systems, 2017. [[DOI](https://doi.org/10.1137/15M1054924)] [[bibitem](readme/refs/LeClainche2017.bib)].
+* **HAVOK:** Brunton, Brunton, Proctor, Kaiser, Kutz. *Chaos as an intermittently forced linear system*. Nature Communications, 2017. [[DOI](https://doi.org/10.1038/s41467-017-00030-8)] [[bibitem](readme/refs/Brunton2017.bib)].
+* **Parametric DMD:** Andreuzzi, Demo, Rozza. *A dynamic mode decomposition extension for the forecasting of parametric dynamical systems*. SIAM Journal on Applied Dynamical Systems, 2023.  [[DOI](https://doi.org/10.1137/22M1481658)] [[bibitem](readme/refs/Andreuzzi2021.bib)].
+* **Extended DMD:** Williams, Rowley, Kevrekidis. *A kernel-based method for data-driven koopman spectral analysis*. Journal of Computational Dynamics, 2015. [[DOI](https://doi.org/10.3934/jcd.2015005)] [[bibitem](readme/refs/Williams2015.bib)].
+* **LANDO:** Baddoo, Herrmann, McKeon, Brunton. *Kernel learning for robust dynamic mode decomposition: linear and nonlinear disambiguation optimization*. Proceedings of the Royal Society A, 2022. [[DOI](https://doi.org/10.1098/rspa.2021.0830)] [[bibitem](readme/refs/Baddoo2022.bib)].
+
+### Implementation Tools and Preprocessing
+* Gavish, Donoho. *The optimal hard threshold for singular values is 4/sqrt(3)*. IEEE Transactions on Information Theory, 2014. [[DOI](https://doi.org/10.1109/TIT.2014.2323359)] [[bibitem](readme/refs/Gavish2014.bib)].
+* Matsumoto, Indinger. *On-the-fly algorithm for dynamic mode decomposition using incremental singular value decomposition and total least squares*. 2017. [[arXiv](https://arxiv.org/abs/1703.11004)] [[bibitem](readme/refs/Matsumoto2017.bib)].
+* Hirsh, Harris, Kutz, Brunton. *Centering data improves the dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2020. [[DOI](https://doi.org/10.1137/19M1289881)] [[bibitem](readme/refs/Hirsh2020.bib)]
 
 ### Recent works using PyDMD
 You can find a list of the scientific works using **PyDMD** [here](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=5544023489671534143).

@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 meta = {}
 with open("pydmd/meta.py") as fp:
@@ -7,13 +7,13 @@ with open("pydmd/meta.py") as fp:
 # Package meta-data.
 NAME = meta["__title__"]
 DESCRIPTION = "Python Dynamic Mode Decomposition."
-URL = "https://github.com/mathLab/PyDMD"
+URL = "https://github.com/PyDMD/PyDMD"
 MAIL = meta["__mail__"]
 AUTHOR = meta["__author__"]
 VERSION = meta["__version__"]
 KEYWORDS = "dynamic-mode-decomposition dmd"
 
-REQUIRED = ["numpy", "scipy", "matplotlib", "scikit-learn"]
+REQUIRED = ["numpy<2", "scipy", "matplotlib", "scikit-learn"]
 EXTRAS_REQUIRE = {
     "costs": ["scikit-learn", "xarray", "h5netcdf"],
 }
@@ -77,7 +77,7 @@ setup(
     keywords=KEYWORDS,
     url=URL,
     license="MIT",
-    packages=[NAME],
+    packages=find_packages(),
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,

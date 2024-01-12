@@ -1,4 +1,5 @@
 import os
+from unittest.mock import Mock, ANY
 
 import numpy as np
 from ezyrb import POD, RBF
@@ -6,7 +7,6 @@ from pytest import raises
 
 from pydmd import DMD, ParametricDMD
 from pydmd.dmdbase import DMDTimeDict
-from pydmd.paramdmd import back_roll_shape, roll_shape
 
 testdir = "tests/test_datasets/param_dmd/"
 
@@ -593,3 +593,36 @@ def test_no_parameters_error():
         match="Unknown parameters not found. Did you set `ParametricDMD.parameters`?",
     ):
         p.reconstructed_data
+
+
+def init_sub_dmd():
+    dmd = Mock()
+    dmd.fit = Mock()
+    return dmd
+
+
+def test_dmd_fit_args_monolithic():
+    dmd = init_sub_dmd()
+    p = ParametricDMD(
+        dmd,
+        POD(rank=5),
+        RBF(),
+        dmd_fit_args=(1, 2, None),
+        dmd_fit_kwargs={"label": "PIPPO", "n": 2},
+    )
+    p.fit(training_data, params)
+    dmd.fit.assert_called_once_with(ANY, 1, 2, None, label="PIPPO", n=2)
+
+
+def test_dmd_fit_args_partitioned():
+    dmds = [init_sub_dmd() for _ in range(len(training_data))]
+    p = ParametricDMD(
+        dmds,
+        POD(rank=5),
+        RBF(),
+        dmd_fit_args=(1, 2, None),
+        dmd_fit_kwargs={"label": "PIPPO", "n": 2},
+    )
+    p.fit(training_data, params)
+    for dmd in dmds:
+        dmd.fit.assert_called_once_with(ANY, 1, 2, None, label="PIPPO", n=2)

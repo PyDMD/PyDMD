@@ -1,6 +1,5 @@
 import pkgutil
-from os import walk
-from os import path
+from os import path, walk
 
 
 def test_import_dm_1():
