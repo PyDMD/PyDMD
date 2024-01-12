@@ -86,10 +86,8 @@ class COSTS:
         self._global_svd = global_svd
         self._initialize_artificially = initialize_artificially
         self._use_last_freq = use_last_freq
-        self._use_kmean_freqs = use_kmean_freqs
         self._init_alpha = init_alpha
         self._cluster_centroids = cluster_centroids
-        self._reset_alpha_init = reset_alpha_init
         self._force_even_eigs = force_even_eigs
         self._max_rank = max_rank
 
@@ -336,7 +334,6 @@ class COSTS:
         """Build the projection basis."""
         self._svd_rank = compute_rank(data, svd_rank=svd_rank)
         # Recover the first r modes of the global svd
-        # u, _, _ = scipy.linalg.svd(data, full_matrices=False)
         u, _, _ = compute_svd(data, svd_rank=svd_rank)
         return u
 
@@ -589,6 +586,7 @@ class COSTS:
         if kmeans_kwargs is None:
             random_state = 0
             kmeans_kwargs = {
+                "n_init": "auto",
                 "random_state": random_state,
             }
         if method == "KMeans":
@@ -636,8 +634,10 @@ class COSTS:
             omega_transform = np.abs(omega_array.imag.astype("float"))
             self._omega_label = r"$|\omega|$"
             self._hist_kwargs = {"bins": 64}
+        # Outstanding question: should this be the complex conjugate or
+        # the imaginary component squared?
         elif transform_method == "square_frequencies":
-            omega_transform = (np.conj(omega_array) * omega_array).astype(
+            omega_transform = (np.conj(omega_array) * omega_array).real.astype(
                 "float"
             )
             self._omega_label = r"$|\omega|^{2}$"
@@ -875,7 +875,7 @@ class COSTS:
                         np.diag(b[classification == j]),
                         np.exp(omega[classification == j] * t),
                     ]
-                )
+                ).real
 
                 # Add the constant offset to the lowest frequency cluster.
                 if include_means and (j == np.argmin(self._cluster_centroids)):
@@ -1396,12 +1396,14 @@ class COSTS:
 
     @staticmethod
     def _xarray_sanitize(value):
-        if value == None:
+        if value is None:
             value = "None"
         return value
 
     @staticmethod
     def _xarray_unsanitize(value):
+        # The future warning issued here is not easily resolved (to my knowledge)
+        # until numpy and python resolve their dispute.
         if value == "None":
             value = None
         return value
