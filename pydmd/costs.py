@@ -586,7 +586,7 @@ class COSTS:
         if kmeans_kwargs is None:
             random_state = 0
             kmeans_kwargs = {
-                "n_init": "auto",
+                # "n_init": "auto",
                 "random_state": random_state,
             }
         if method == "KMeans":
