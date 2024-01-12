@@ -383,7 +383,7 @@ class HAVOK:
                     np.diag(self._dmd.eigs),
                     np.linalg.pinv(self._dmd.modes),
                 ]
-            )
+            ).real
 
         # Set the input data information.
         self._snapshots = X
