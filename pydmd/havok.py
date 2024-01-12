@@ -289,6 +289,15 @@ class HAVOK:
         if not isinstance(X, np.ndarray) or X.ndim != 2:
             raise ValueError("Please ensure that input data is a 2D array.")
         n, m = X.shape
+
+        # Check that the input data contains enough observations.
+        if m < self._delays * self._lag:
+            raise ValueError(
+                "Not enough snapshots provided for "
+                f"{self._delays} delays and lag {self._lag}. Please "
+                f"provide at least {self._delays * self._lag} snapshots."
+            )
+
         num_cols = m - ((self._delays - 1) * self._lag)
         H = np.empty((n * self._delays, num_cols))
         for i in range(self._delays):
@@ -338,13 +347,8 @@ class HAVOK:
             X = X[None]
         n_samples = X.shape[-1]
 
-        # Check that the input data contains enough observations.
-        if n_samples < self._delays * self._lag:
-            raise ValueError(
-                "Not enough snapshots provided for "
-                f"{self._delays} delays and lag {self._lag}. Please "
-                f"provide at least {self._delays * self._lag} snapshots."
-            )
+        # Compute the Hankel matrix.
+        hankel_matrix = self.hankel(X)
 
         # Check the input time information and set the time vector.
         if isinstance(t, (int, float)):
@@ -367,9 +371,6 @@ class HAVOK:
 
         # Set the time step - this is ignored if using BOP-DMD.
         dt = time[1] - time[0]
-
-        # We have enough data - compute the Hankel matrix.
-        hankel_matrix = self.hankel(X)
 
         # Perform structured HAVOK (sHAVOK).
         if self._structured:

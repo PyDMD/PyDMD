@@ -87,23 +87,23 @@ def test_hankel_1():
     dummy_data = np.array([1, 2, 3, 4])
 
     havok = HAVOK(delays=1)
-    assert_equal(
-        havok._hankel(dummy_data), np.array([[1, 2, 3, 4],])
-    )
-    havok = HAVOK(svd_rank=-1, delays=2).fit(dummy_data, dummy_time)
-    assert_equal(
-        havok.ho_snapshots, np.array([[1, 2, 3], [2, 3, 4]])
-    )
-    havok = HAVOK(svd_rank=-1, delays=3).fit(dummy_data, dummy_time)
-    assert_equal(
-        havok.ho_snapshots, np.array([[1, 2], [2, 3], [3, 4]])
-    )
-    havok = HAVOK(svd_rank=-1, delays=4).fit(dummy_data, dummy_time)
-    assert_equal(
-        havok.ho_snapshots, np.array([[1,], [2,], [3,], [4,]])
-    )
+    assert_equal(havok.hankel(dummy_data), np.array([[1, 2, 3, 4],]))
+    assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
+
+    havok = HAVOK(delays=2)
+    assert_equal(havok.hankel(dummy_data), np.array([[1, 2, 3], [2, 3, 4]]))
+    assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
+
+    havok = HAVOK(delays=3)
+    assert_equal(havok.hankel(dummy_data), np.array([[1, 2], [2, 3], [3, 4]]))
+    assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
+
+    havok = HAVOK(delays=4)
+    assert_equal(havok.hankel(dummy_data), np.array([[1,], [2,], [3,], [4,]]))
+    assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
+
     with raises(ValueError):
-        havok = HAVOK(svd_rank=-1, delays=5).fit(dummy_data, dummy_time)
+        havok = HAVOK(delays=5).fit(dummy_data, dummy_time)
 
 
 def test_shape_1():
