@@ -561,7 +561,11 @@ class COSTS:
         return sample_slice
 
     def cluster_omega(
-        self, n_components, kmeans_kwargs=None, transform_method=None
+        self,
+        n_components,
+        kmeans_kwargs=None,
+        transform_method=None,
+        method="KMeans",
     ):
         """Clusters fitted eigenvalues into frequency bands by the imaginary component.
 
@@ -585,13 +589,17 @@ class COSTS:
         if kmeans_kwargs is None:
             random_state = 0
             kmeans_kwargs = {
-                "n_init": "auto",
                 "random_state": random_state,
             }
-        kmeans = KMeans(n_clusters=n_components, **kmeans_kwargs)
-        omega_classes = kmeans.fit_predict(np.atleast_2d(omega_transform).T)
+        if method == "KMeans":
+            clustering = KMeans(n_clusters=n_components, **kmeans_kwargs)
+        elif method == "KMediods":
+            from sklearn_extra.cluster import KMedoids
+
+            clustering = KMedoids(n_clusters=n_components, **kmeans_kwargs)
+        omega_classes = clustering.fit_predict(np.atleast_2d(omega_transform).T)
         omega_classes = omega_classes.reshape(n_slides, svd_rank)
-        cluster_centroids = kmeans.cluster_centers_.flatten()
+        cluster_centroids = clustering.cluster_centers_.flatten()
 
         # Sort the clusters by the centroid magnitude.
         idx = np.argsort(cluster_centroids)
@@ -640,17 +648,20 @@ class COSTS:
             zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
             omega_transform[~np.isfinite(omega_transform)] = zero_imputer
             self._omega_label = r"$log_{10}(|\omega|)$"
-            self._hist_kwargs["bins"] = np.linspace(
-                np.min(np.log10(omega_transform[omega_array > 0])),
-                np.max(np.log10(omega_transform[omega_array > 0])),
-            )
+            self._hist_kwargs = {
+                "bins": np.linspace(
+                    np.min(np.log10(omega_transform[omega_transform > 0])),
+                    np.max(np.log10(omega_transform[omega_transform > 0])),
+                    64,
+                )
+            }
         elif transform_method == "period":
             omega_transform = 1 / np.abs(omega_array.imag.astype("float"))
             self._omega_label = "Period"
             # @ToDo: Specify bins like in log10 transform
             self._hist_kwargs = {"bins": 64}
         else:
-            return ValueError(
+            raise ValueError(
                 "Transform method {} not supported.".format(transform_method)
             )
 
@@ -779,6 +790,8 @@ class COSTS:
                     np.nan,
                 ),
                 color=colors[ncomponent % len(colors)],
+                ls="None",
+                marker=".",
             )
         ax.set_ylabel(label)
         ax.set_xlabel("Time")
