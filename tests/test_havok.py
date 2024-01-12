@@ -2,6 +2,8 @@ import numpy as np
 from pytest import raises
 from scipy.integrate import solve_ivp
 
+from numpy.testing import assert_equal
+
 from pydmd import HAVOK
 
 
@@ -37,10 +39,71 @@ def generate_lorenz_data(t_eval):
 
 # Generate Lorenz system data.
 dt = 0.001 # time step
-m = 100000  # number of data samples
+m = 50000  # number of data samples
 t = np.arange(m) * dt
 X = generate_lorenz_data(t)
 x = X[0]
+
+
+def test_error_fitted():
+    """
+    Ensure that attempting to get attributes results
+    in an error if fit() has not yet been called.
+    """
+    havok = HAVOK()
+
+    with raises(ValueError):
+        _ = havok.snapshots
+    with raises(ValueError):
+        _ = havok.ho_snapshots
+    with raises(ValueError):
+        _ = havok.time
+    with raises(ValueError):
+        _ = havok.modes
+    with raises(ValueError):
+        _ = havok.singular_vals
+    with raises(ValueError):
+        _ = havok.delay_embeddings
+    with raises(ValueError):
+        _ = havok.linear_dynamics
+    with raises(ValueError):
+        _ = havok.forcing
+    with raises(ValueError):
+        _ = havok.operator
+    with raises(ValueError):
+        _ = havok.A
+    with raises(ValueError):
+        _ = havok.B
+    with raises(ValueError):
+        _ = havok.eigs
+    with raises(ValueError):
+        _ = havok.r
+
+
+def test_hankel_1():
+    """
+    Test
+    """
+    dummy_data = np.array([1, 2, 3, 4])
+
+    havok = HAVOK(delays=1)
+    assert_equal(
+        havok._hankel(dummy_data), np.array([[1, 2, 3, 4],])
+    )
+    havok = HAVOK(svd_rank=-1, delays=2).fit(dummy_data, dummy_time)
+    assert_equal(
+        havok.ho_snapshots, np.array([[1, 2, 3], [2, 3, 4]])
+    )
+    havok = HAVOK(svd_rank=-1, delays=3).fit(dummy_data, dummy_time)
+    assert_equal(
+        havok.ho_snapshots, np.array([[1, 2], [2, 3], [3, 4]])
+    )
+    havok = HAVOK(svd_rank=-1, delays=4).fit(dummy_data, dummy_time)
+    assert_equal(
+        havok.ho_snapshots, np.array([[1,], [2,], [3,], [4,]])
+    )
+    with raises(ValueError):
+        havok = HAVOK(svd_rank=-1, delays=5).fit(dummy_data, dummy_time)
 
 
 def test_shape_1():
@@ -62,32 +125,13 @@ def test_shape_2():
     Using num_chaos = 2, checks that the shapes of
     linear_embeddings, forcing_input, A, and B are accurate.
     """
-    havok = HAVOK()
+    havok = HAVOK(num_chaos=2)
     havok.fit(x, t)
     time_length = len(t) - havok.delays + 1
     assert havok.linear_dynamics.shape == (time_length, havok.r - 2)
     assert havok.forcing.shape == (time_length, 2)
     assert havok.A.shape == (havok.r - 2, havok.r - 2)
     assert havok.B.shape == (havok.r - 2, 2)
-
-
-def test_error_fitted():
-    """
-    Ensure that attempting to get the attributes linear_embeddings,
-    forcing_input, A, B, or r results in a RuntimeError if fit()
-    has not yet been called.
-    """
-    havok = HAVOK()
-    with raises(ValueError):
-        _ = havok.linear_dynamics
-    with raises(ValueError):
-        _ = havok.forcing
-    with raises(ValueError):
-        _ = havok.A
-    with raises(ValueError):
-        _ = havok.B
-    with raises(ValueError):
-        _ = havok.r
 
 
 def test_r():

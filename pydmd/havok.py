@@ -276,6 +276,43 @@ class HAVOK:
             raise ValueError("You need to call fit().")
         return self._r
 
+    def hankel(self, X):
+        """
+        Given a data matrix X as a 2D numpy.ndarray, uses the `_delays`
+        and `_lag` attributes to return the data as a Hankel matrix.
+
+        :param X: (n, m) array of data.
+        :type X: numpy.ndarray
+        :return: Hankel matrix of data.
+        :rtype: numpy.ndarray
+        """
+        if not isinstance(X, np.ndarray) or X.ndim != 2:
+            raise ValueError("Please ensure that input data is a 2D array.")
+        n, m = X.shape
+        num_cols = m - ((self._delays - 1) * self._lag)
+        H = np.empty((n * self._delays, num_cols))
+        for i in range(self._delays):
+            H[i * n : (i + 1) * n] = X[
+                :, i * self._lag : i * self._lag + num_cols
+            ]
+        return H
+
+    def dehankel(self, H):
+        """
+        Given a Hankel matrix H as a 2D numpy.ndarray, uses the `_delays`
+        and `_lag` attributes to unravel the data in the Hankel matrix.
+
+        :param H: Hankel matrix of data.
+        :type H: numpy.ndarray
+        :return: de-Hankeled (n, m) array of data.
+        :rtype: numpy.ndarray
+        """
+        if not isinstance(H, np.ndarray) or H.ndim != 2:
+            raise ValueError("Please ensure that input data is a 2D array.")
+        n = int(H.shape[0] / self._delays)
+        X = np.hstack([H[:n], H[n:, -1].reshape(n, -1, order="F")])
+        return X
+
     def fit(self, X, t):
         """
         Perform the HAVOK analysis.
@@ -332,7 +369,7 @@ class HAVOK:
         dt = time[1] - time[0]
 
         # We have enough data - compute the Hankel matrix.
-        hankel_matrix = self._hankel(X)
+        hankel_matrix = self.hankel(X)
 
         # Perform structured HAVOK (sHAVOK).
         if self._structured:
@@ -383,7 +420,7 @@ class HAVOK:
                     np.diag(self._dmd.eigs),
                     np.linalg.pinv(self._dmd.modes),
                 ]
-            ).real
+            )
 
         # Set the input data information.
         self._snapshots = X
@@ -651,10 +688,10 @@ class HAVOK:
 
         # (2) plot the HAVOK operator.
         ax2.set_title("Regression model")
-        vmax = np.abs(self._havok_operator).max()
+        vmax = np.abs(self._havok_operator.real).max()
         fig.colorbar(
             ax2.imshow(
-                self._havok_operator,
+                self._havok_operator.real,
                 vmax=vmax,
                 vmin=-vmax,
                 cmap="PuOr",
@@ -730,33 +767,6 @@ class HAVOK:
         else:
             plt.show()
 
-    def _hankel(self, X):
-        """
-        Given a data matrix X as a 2D numpy.ndarray, uses the `_delays`
-        and `_lag` attributes to return the data as a Hankel matrix.
-        """
-        if not isinstance(X, np.ndarray) or X.ndim != 2:
-            raise ValueError("Please ensure that input data is a 2D array.")
-        n, m = X.shape
-        num_cols = m - ((self._delays - 1) * self._lag)
-        H = np.empty((n * self._delays, num_cols))
-        for i in range(self._delays):
-            H[i * n : (i + 1) * n] = X[
-                :, i * self._lag : i * self._lag + num_cols
-            ]
-        return H
-
-    def _dehankel(self, H):
-        """
-        Given a Hankel matrix H as a 2D numpy.ndarray, uses the `_delays`
-        and `_lag` attributes to unravel the data in the Hankel matrix.
-        """
-        if not isinstance(H, np.ndarray) or H.ndim != 2:
-            raise ValueError("Please ensure that input data is a 2D array.")
-        n = int(H.shape[0] / self._delays)
-        X = np.hstack([H[:n], H[n:, -1].reshape(n, -1, order="F")])
-        return X
-
     def _compute_embeddings(self, forcing, time, V0):
         """
         Helper function that uses the fitted HAVOK model to reconstruct the
@@ -789,7 +799,7 @@ class HAVOK:
         U = self._singular_vecs[:, : V.shape[-1]]
         s = self._singular_vals[: V.shape[-1]]
         H = np.linalg.multi_dot([U, np.diag(s), V.conj().T])
-        return self._dehankel(H)
+        return self.dehankel(H)
 
     @staticmethod
     def _get_index_slices(x, min_jump_dist):
