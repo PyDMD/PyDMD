@@ -320,7 +320,7 @@ class HAVOK:
         Hn, Hm = H.shape
         n = int(Hn / self._delays)
         m = int(Hm + ((self._delays - 1) * self._lag))
-        X = np.empty(n, m)
+        X = np.empty((n, m))
         for i in range(self._delays):
             X[:, i * self._lag : i * self._lag + Hm] = H[i * n : (i + 1) * n]
         return X
