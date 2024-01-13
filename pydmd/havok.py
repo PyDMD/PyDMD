@@ -298,12 +298,10 @@ class HAVOK:
                 f"provide at least {self._delays * self._lag} snapshots."
             )
 
-        num_cols = m - ((self._delays - 1) * self._lag)
-        H = np.empty((n * self._delays, num_cols))
+        Hm = m - ((self._delays - 1) * self._lag)
+        H = np.empty((n * self._delays, Hm))
         for i in range(self._delays):
-            H[i * n : (i + 1) * n] = X[
-                :, i * self._lag : i * self._lag + num_cols
-            ]
+            H[i * n : (i + 1) * n] = X[:, i * self._lag : i * self._lag + Hm]
 
         return H
 
@@ -319,12 +317,12 @@ class HAVOK:
         """
         if not isinstance(H, np.ndarray) or H.ndim != 2:
             raise ValueError("Please ensure that input data is a 2D array.")
-        n = int(H.shape[0] / self._delays)
-        # TODO: debug this!
-        m = 
-        X = np.empty(n, )
-        for 
-        X = np.hstack([H[:n], H[n:, -self._lag].reshape(n, -1, order="F")])
+        Hn, Hm = H.shape
+        n = int(Hn / self._delays)
+        m = int(Hm + ((self._delays - 1) * self._lag))
+        X = np.empty(n, m)
+        for i in range(self._delays):
+            X[:, i * self._lag : i * self._lag + Hm] = H[i * n : (i + 1) * n]
         return X
 
     # dummy_data = np.array([[1, 2, 3, 4, 5, 6]])
