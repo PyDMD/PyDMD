@@ -291,11 +291,12 @@ class HAVOK:
         n, m = X.shape
 
         # Check that the input data contains enough observations.
-        if m < self._delays * self._lag:
+        m_min = self._lag * (self._delays - 1) + 1
+        if m < m_min:
             raise ValueError(
                 "Not enough snapshots provided for "
-                f"{self._delays} delays and lag {self._lag}. Please "
-                f"provide at least {self._delays * self._lag} snapshots."
+                f"{self._delays} delays and lag {self._lag}. "
+                f"Please provide at least {m_min} snapshots."
             )
 
         Hm = m - ((self._delays - 1) * self._lag)
@@ -324,15 +325,6 @@ class HAVOK:
         for i in range(self._delays):
             X[:, i * self._lag : i * self._lag + Hm] = H[i * n : (i + 1) * n]
         return X
-
-    # dummy_data = np.array([[1, 2, 3, 4, 5, 6]])
-    # H2 = np.array([
-    #     [1, 2, 3, 4],
-    #     [3, 4, 5, 6]]) # lag=2, delays=2
-    # H3 = np.array([
-    #     [1, 2],
-    #     [3, 4],
-    #     [5, 6]]) # lag=2, delays=3
 
     def fit(self, X, t):
         """
