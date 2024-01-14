@@ -84,14 +84,7 @@ def test_hankel_1():
     dummy_data = np.array([[1, 2, 3, 4]])
 
     havok = HAVOK(delays=1)
-    assert_equal(
-        havok.hankel(dummy_data),
-        np.array(
-            [
-                [1, 2, 3, 4],
-            ]
-        ),
-    )
+    assert_equal(havok.hankel(dummy_data), np.array([[1, 2, 3, 4]]))
     assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
 
     havok = HAVOK(delays=2)
@@ -103,25 +96,7 @@ def test_hankel_1():
     assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
 
     havok = HAVOK(delays=4)
-    assert_equal(
-        havok.hankel(dummy_data),
-        np.array(
-            [
-                [
-                    1,
-                ],
-                [
-                    2,
-                ],
-                [
-                    3,
-                ],
-                [
-                    4,
-                ],
-            ]
-        ),
-    )
+    assert_equal(havok.hankel(dummy_data), np.array([[1, 2, 3, 4]]).T)
     assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
 
     with raises(ValueError):
