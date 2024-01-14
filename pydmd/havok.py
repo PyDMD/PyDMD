@@ -300,7 +300,7 @@ class HAVOK:
             )
 
         Hm = m - ((self._delays - 1) * self._lag)
-        H = np.empty((n * self._delays, Hm))
+        H = np.empty((n * self._delays, Hm), dtype="complex")
         for i in range(self._delays):
             H[i * n : (i + 1) * n] = X[:, i * self._lag : i * self._lag + Hm]
 
@@ -321,7 +321,7 @@ class HAVOK:
         Hn, Hm = H.shape
         n = int(Hn / self._delays)
         m = int(Hm + ((self._delays - 1) * self._lag))
-        X = np.empty((n, m))
+        X = np.empty((n, m), dtype="complex")
         for i in range(self._delays):
             X[:, i * self._lag : i * self._lag + Hm] = H[i * n : (i + 1) * n]
         return X
