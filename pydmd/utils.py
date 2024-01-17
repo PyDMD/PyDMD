@@ -233,7 +233,7 @@ def differentiate(X, dt):
         raise ValueError("Please ensure that input data is a 1D or 2D array.")
     if X.ndim == 1:
         X = X[None]
-    X_prime = np.empty(X.shape, dtype="complex")
+    X_prime = np.empty(X.shape)
     X_prime[:, 1:-1] = (X[:, 2:] - X[:, :-2]) / (2 * dt)
     X_prime[:, 0] = (-3 * X[:, 0] + 4 * X[:, 1] - X[:, 2]) / (2 * dt)
     X_prime[:, -1] = (3 * X[:, -1] - 4 * X[:, -2] + X[:, -3]) / (2 * dt)
