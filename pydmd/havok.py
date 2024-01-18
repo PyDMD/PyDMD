@@ -564,7 +564,8 @@ class HAVOK:
         if isinstance(p, int):
             # Use Gaussian intersection.
             a = gauss - hy
-            ind_signchange = np.where(np.sign(a[:-1]) - np.sign(a[1:]) != 0)[0]
+            sgn = np.sign(a)
+            ind_signchange = np.where(sgn(a[:-1]) * sgn(a[1:]) > 0)[0]
             thres_1 = np.abs(hx[ind_signchange])
             thres_2 = np.abs(hx[ind_signchange + 1])
             threshold_candidates = np.sort(0.5 * (thres_1 + thres_2))
