@@ -368,6 +368,17 @@ def test_threshold_2():
     assert thres_1 == thres_2
 
 
+def test_threshold_3():
+    """
+    Test compute_threshold function.
+    Test that the threshold computation function properly throws an
+    error if it is invoked with the default parameters prior to fitting.
+    """
+    havok = HAVOK(svd_rank=16, delays=100)
+    with raises(ValueError):
+        _ = havok.compute_threshold()
+
+
 def test_dmd_1():
     """
     Test that HAVOK works when used with an externally-defined DMD model.
