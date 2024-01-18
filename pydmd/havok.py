@@ -133,7 +133,7 @@ class HAVOK:
         """
         if self._ho_snapshots is None:
             raise ValueError("You need to call fit().")
-        return np.squeeze(self._ho_snapshots)
+        return self._ho_snapshots
 
     @property
     def time(self):
