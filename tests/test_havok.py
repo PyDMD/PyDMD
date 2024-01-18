@@ -81,7 +81,7 @@ def test_hankel_1():
     Test that the hankel and dehankel functions work as intended.
     Use 1-D data, lag = 1, and various delay values.
     """
-    dummy_data = np.array([[1, 2, 3, 4]])
+    dummy_data = np.array([1, 2, 3, 4])
 
     havok = HAVOK(delays=1)
     assert_equal(havok.hankel(dummy_data), np.array([[1, 2, 3, 4]]))
@@ -135,13 +135,14 @@ def test_hankel_3():
     Test that the hankel and dehankel functions work as intended.
     Use 1-D data, lag = 2, and various delay values.
     """
-    dummy_data = np.array([[1, 2, 3, 4, 5, 6]])
+    dummy_data = np.array([1, 2, 3, 4, 5, 6])
+    H1 = np.array([[1, 2, 3, 4, 5, 6]])
     H2 = np.array([[1, 2, 3, 4], [3, 4, 5, 6]])
     H3 = np.array([[1, 2], [3, 4], [5, 6]])
 
     # If only 1 delay is requested, the lag won't matter.
     havok = HAVOK(delays=1, lag=2)
-    assert_equal(havok.hankel(dummy_data), dummy_data)
+    assert_equal(havok.hankel(dummy_data), H1)
     assert_equal(havok.dehankel(havok.hankel(dummy_data)), dummy_data)
 
     havok = HAVOK(delays=2, lag=2)
@@ -297,7 +298,7 @@ def test_predict_1():
     """
     havok = HAVOK(svd_rank=16, delays=100).fit(x, t)
     assert_equal(
-        havok.predict(havok.forcing, havok.time),
+        havok.predict(havok.forcing, havok.time[: len(havok.forcing)]),
         havok.reconstructed_data,
     )
 
@@ -330,17 +331,18 @@ def test_predict_3():
     the same as predicting with array-valued V0 inputs.
     """
     havok = HAVOK(svd_rank=16, delays=100).fit(x, t)
+    t_forcing = havok.time[: len(havok.forcing)]
     assert_equal(
-        havok.predict(havok.forcing, havok.time, V0=0),
-        havok.predict(havok.forcing, havok.time, V0=havok.linear_dynamics[0]),
+        havok.predict(havok.forcing, t_forcing, V0=0),
+        havok.predict(havok.forcing, t_forcing, V0=havok.linear_dynamics[0]),
     )
     assert_equal(
-        havok.predict(havok.forcing, havok.time, V0=1),
-        havok.predict(havok.forcing, havok.time, V0=havok.linear_dynamics[1]),
+        havok.predict(havok.forcing, t_forcing, V0=1),
+        havok.predict(havok.forcing, t_forcing, V0=havok.linear_dynamics[1]),
     )
     assert_equal(
-        havok.predict(havok.forcing, havok.time, V0=-1),
-        havok.predict(havok.forcing, havok.time, V0=havok.linear_dynamics[-1]),
+        havok.predict(havok.forcing, t_forcing, V0=-1),
+        havok.predict(havok.forcing, t_forcing, V0=havok.linear_dynamics[-1]),
     )
 
 
