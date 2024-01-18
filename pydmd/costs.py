@@ -1388,7 +1388,8 @@ class COSTS:
         self._pydmd_kwargs = {}
         for attr in ds.attrs:
             if "pydmd_kwargs" in attr:
-                self._pydmd_kwargs[attr] = self._xarray_unsanitize(
+                new_attr_name = attr.replace("pydmd_kwargs__", "")
+                self._pydmd_kwargs[new_attr_name] = self._xarray_unsanitize(
                     ds.attrs[attr]
                 )
 
@@ -1404,6 +1405,6 @@ class COSTS:
     def _xarray_unsanitize(value):
         # The future warning issued here is not easily resolved (to my knowledge)
         # until numpy and python resolve their dispute.
-        if value == "None":
+        if ~hasattr(value, "shape") and value == "None":
             value = None
         return value
