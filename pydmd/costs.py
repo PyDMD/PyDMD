@@ -406,6 +406,13 @@ class COSTS:
             data, self._window_length, self._step_size
         )
 
+        if self._window_length < self._n_time_steps:
+            raise ValueError(
+                "Window length (n={}) is larger than the time dimension (n={})".format(
+                    self._window_length, self._n_time_steps
+                )
+            )
+
         # If the window size and step size do not span the data in an integer
         # number of slides, we add one last window that has a smaller step spacing
         # relative to the other window spacings.
