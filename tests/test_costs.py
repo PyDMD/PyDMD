@@ -251,3 +251,12 @@ def test_to_xarray():
     for kw in mrd._pydmd_kwargs:
         if not kw == "proj_basis":
             assert mrd._pydmd_kwargs[kw] == mrd_convert._pydmd_kwargs[kw]
+
+
+def test_plotters():
+    mrd.plot_reconstructions(data)
+    mrd.plot_scale_separation(data)
+    mrd.plot_error(data)
+    mrd.plot_time_series(1, data)
+    mrd.plot_omega_histogram()
+    mrd.plot_omega_time_series()

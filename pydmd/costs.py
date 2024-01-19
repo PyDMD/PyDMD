@@ -705,7 +705,7 @@ class COSTS:
         if n_components_range is None:
             n_components_range = np.arange(
                 np.max((self.svd_rank // 4, 2)),
-                self.svd_rank // 2,
+                self.svd_rank // 2 + 1,
             )
         score = np.zeros_like(n_components_range, float)
 
