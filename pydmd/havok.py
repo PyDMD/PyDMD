@@ -278,8 +278,8 @@ class HAVOK:
 
     def hankel(self, X):
         """
-        Given a data matrix X as a 1D or 2D numpy.ndarray, uses the `delays`
-        and `lag` attributes to return the data as a 2D Hankel matrix.
+        Given a data matrix X as a 1-D or 2-D numpy.ndarray, uses the `delays`
+        and `lag` attributes to return the data as a 2-D Hankel matrix.
 
         :param X: (m,) or (n, m) array of data.
         :type X: numpy.ndarray
@@ -287,7 +287,7 @@ class HAVOK:
         :rtype: numpy.ndarray
         """
         if not isinstance(X, np.ndarray) or X.ndim > 2:
-            raise ValueError("Data must be a 1D or 2D numpy array.")
+            raise ValueError("Data must be a 1-D or 2-D numpy array.")
         if X.ndim == 1:
             X = X[None]
         n, m = X.shape
@@ -310,16 +310,16 @@ class HAVOK:
 
     def dehankel(self, H):
         """
-        Given a Hankel matrix H as a 2D numpy.ndarray, uses the `delays`
+        Given a Hankel matrix H as a 2-D numpy.ndarray, uses the `delays`
         and `lag` attributes to unravel the data in the Hankel matrix.
 
-        :param H: Hankel matrix of data.
+        :param H: 2-D Hankel matrix of data.
         :type H: numpy.ndarray
         :return: de-Hankeled (m,) or (n, m) array of data.
         :rtype: numpy.ndarray
         """
         if not isinstance(H, np.ndarray) or H.ndim != 2:
-            raise ValueError("Data must be a 2D numpy array.")
+            raise ValueError("Data must be a 2-D numpy array.")
 
         Hn, Hm = H.shape
         n = int(Hn / self._delays)
@@ -364,7 +364,7 @@ class HAVOK:
         else:
             time = np.squeeze(np.array(t))
 
-            # Throw error if the time vector is not 1D or the correct length.
+            # Throw error if the time vector is not 1-D or the correct length.
             if time.ndim != 1 or len(time) != n_samples:
                 raise ValueError(
                     f"Please provide a 1-D array of {n_samples} time values."
