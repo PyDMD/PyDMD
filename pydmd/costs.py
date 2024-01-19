@@ -704,7 +704,8 @@ class COSTS:
         """
         if n_components_range is None:
             n_components_range = np.arange(
-                np.max((self.svd_rank // 4, 2)), self.svd_rank
+                np.max((self.svd_rank // 4, 2)),
+                self.svd_rank // 2,
             )
         score = np.zeros_like(n_components_range, float)
 
@@ -1359,7 +1360,9 @@ class COSTS:
             },
             attrs={
                 "svd_rank": self.svd_rank,
-                "omega_transformation": self._transform_method,
+                "omega_transformation": self._xarray_sanitize(
+                    self._transform_method
+                ),
                 "n_slides": self._n_slides,
                 "window_length": self._window_length,
                 "num_frequency_bands": self.n_components,
@@ -1411,6 +1414,8 @@ class COSTS:
                 self._pydmd_kwargs[new_attr_name] = self._xarray_unsanitize(
                     ds.attrs[attr]
                 )
+            elif "omega_transformation" in attr:
+                self._transform_method = self._xarray_unsanitize(ds.attrs[attr])
 
         return self
 

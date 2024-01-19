@@ -526,6 +526,9 @@ class mrCOSTS:
             elif level > 0:
                 x_iter, _ = self.costs_array[level - 1].scale_separation()
 
+        if not x_iter.shape == (self._n_data_vars, self._n_time_steps):
+            raise ValueError("Input data has the wrong shape.")
+
         if kwargs is None:
             kwargs = {}
 
