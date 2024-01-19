@@ -243,3 +243,11 @@ def test_to_xarray():
     assert np.allclose(mrd.omega_array, mrd_convert.omega_array)
     assert np.allclose(mrd.modes_array, mrd_convert.modes_array)
     assert np.allclose(mrd.cluster_centroids, mrd_convert.cluster_centroids)
+
+    # The round trip of the pydmd_kwargs is sensitive to python and numpy version.
+    assert np.allclose(
+        mrd._pydmd_kwargs["proj_basis"], mrd_convert._pydmd_kwargs["proj_basis"]
+    )
+    for kw in mrd._pydmd_kwargs:
+        if not kw == "proj_basis":
+            assert mrd._pydmd_kwargs[kw] == mrd_convert._pydmd_kwargs[kw]

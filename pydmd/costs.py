@@ -1302,6 +1302,9 @@ class COSTS:
         levels with an average number of frequency bands across decomposition
         levels equal to 8 becomes 1.3GB once reconstructed for each band.
 
+        The functions `to_xarray` and `from_xarray` should allow for a complete
+        round trip of the COSTS object without alteration.
+
         :return: COSTS fit in xarray format
         :rtype: xarray.Dataset
         """
@@ -1363,9 +1366,12 @@ class COSTS:
         return ds
 
     def from_xarray(self, ds):
-        """Convert xarray Dataset into a fitted CoSTS object
+        """Convert xarray Dataset into a fitted CoSTS object.
 
-        :return: Previously fitted COSTS.
+        The functions `to_xarray` and `from_xarray` should allow for a complete
+        round trip of the COSTS object without alteration.
+
+        :return: Previously fitted COSTS object.
         """
 
         self._omega_array = ds.omega.values
@@ -1397,14 +1403,39 @@ class COSTS:
 
     @staticmethod
     def _xarray_sanitize(value):
+        """Handle Nones in the pydmd_kwargs (i.e., used default values)
+
+        Netcdf cannot handle NoneTypes. To allow the xarray DataSet to be
+        saved to file we have to "sanitize" the NoneTypes. These two functions
+        allow for a round trip recovery of `pydmd_kwargs`.
+
+        :param value: Value to be stored in the attributes of an xarray Dataset.
+        :return: value unaltered except if value NoneType.
+        """
         if value is None:
             value = "None"
         return value
 
     @staticmethod
     def _xarray_unsanitize(value):
-        # The future warning issued here is not easily resolved (to my knowledge)
-        # until numpy and python resolve their dispute.
-        if ~hasattr(value, "shape") and value == "None":
-            value = None
+        """Handle Nones in the pydmd_kwargs (i.e., used default values)
+
+        Netcdf cannot handle NoneTypes. To allow the xarray DataSet to be
+        saved to file we have to "sanitize" the NoneTypes. These two functions
+        allow for a round trip recovery of `pydmd_kwargs`.
+
+        :param value: Value stored in the attributes of an xarray Dataset.
+        :return: value unaltered except if value is the string "None".
+        """
+        # To handle the varying behavior between python versions when evaluating
+        # a mixed type statement we have to try to catch cases when `value` is
+        # an array (e.g., `proj_basis` kwarg). The except block should not be
+        # triggered but is meant to catch edge cases when the user provides
+        # an unexpected type (e.g., tuple).
+        if not hasattr(value, "shape"):
+            try:
+                if value == "None":
+                    return None
+            except ValueError:
+                return value
         return value
