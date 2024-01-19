@@ -406,7 +406,7 @@ class COSTS:
             data, self._window_length, self._step_size
         )
 
-        if self._window_length < self._n_time_steps:
+        if self._window_length > self._n_time_steps:
             raise ValueError(
                 "Window length (n={}) is larger than the time dimension (n={})".format(
                     self._window_length, self._n_time_steps
@@ -573,6 +573,9 @@ class COSTS:
     ):
         """Clusters fitted eigenvalues into frequency bands by the imaginary component.
 
+        :param method: Choose clustering strategy: KMeans (default) or KMediods
+            (requires sklearn_extras).
+        :type method: str
         :param n_components: Hyperparameter for k-means clustering, number of clusters.
         :type n_components: int
         :param kmeans_kwargs: Arguments for KMeans clustering.
@@ -602,6 +605,7 @@ class COSTS:
             from sklearn_extra.cluster import KMedoids
 
             clustering = KMedoids(n_clusters=n_components, **kmeans_kwargs)
+
         omega_classes = clustering.fit_predict(np.atleast_2d(omega_transform).T)
         omega_classes = omega_classes.reshape(n_slides, svd_rank)
         cluster_centroids = clustering.cluster_centers_.flatten()
@@ -716,7 +720,9 @@ class COSTS:
         )
 
         for nind, n in enumerate(n_components_range):
-            _ = self.cluster_omega(n_components=n, transform_method=False)
+            _ = self.cluster_omega(
+                n_components=n, transform_method=transform_method
+            )
 
             classes_reshape = self.omega_classes.reshape(n_slides * svd_rank)
 

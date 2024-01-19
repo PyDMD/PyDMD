@@ -808,6 +808,9 @@ class mrCOSTS:
             omega_array = 1 / np.abs(omega_array.imag.astype("float"))
         elif transform_method == "log10":
             omega_array = np.log10(np.abs(omega_array.imag.astype("float")))
+            # Impute log10(0) with the smallest non-zero values in log10(omega).
+            zero_imputer = omega_array[np.isfinite(omega_array)].min()
+            omega_array[~np.isfinite(omega_array)] = zero_imputer
 
         return omega_array
 
