@@ -68,7 +68,6 @@ class COSTS:
         global_svd=True,
         initialize_artificially=False,
         use_last_freq=False,
-        use_kmean_freqs=False,
         init_alpha=None,
         pydmd_kwargs=None,
         cluster_centroids=None,
@@ -90,6 +89,7 @@ class COSTS:
         self._cluster_centroids = cluster_centroids
         self._force_even_eigs = force_even_eigs
         self._max_rank = max_rank
+        self._reset_alpha_init = reset_alpha_init
 
         # Initialize variables that are defined in fitting.
         self._n_data_vars = None
@@ -169,8 +169,6 @@ class COSTS:
         :return: Modes for each window
         :rtype: numpy.ndarray
         """
-        if not hasattr(self, "_modes_array"):
-            raise ValueError("You need to call fit before")
         return self._modes_array
 
     @property
@@ -179,8 +177,6 @@ class COSTS:
         :return: amplitudes of each window
         :rtype: numpy.ndarray
         """
-        if not hasattr(self, "_amplitudes_array"):
-            raise ValueError("You need to call fit first.")
         return self._amplitudes_array
 
     @property
@@ -189,8 +185,6 @@ class COSTS:
         :return: omega (a.k.a eigenvalues or time dynamics) for each window
         :rtype: numpy.ndarray
         """
-        if not hasattr(self, "_omega_array"):
-            raise ValueError("You need to call fit first.")
         return self._omega_array
 
     @property
@@ -199,8 +193,6 @@ class COSTS:
         :return: time values for each fit window
         :rtype: numpy.ndarray
         """
-        if not hasattr(self, "_time_array"):
-            raise ValueError("You need to call fit first.")
         return self._time_array
 
     @property
@@ -209,8 +201,6 @@ class COSTS:
         :return: Time mean of the data in each window
         :rtype: numpy.ndarray
         """
-        if not hasattr(self, "_window_means_array"):
-            raise ValueError("You need to call fit first.")
         return self._window_means_array
 
     @property
@@ -219,8 +209,6 @@ class COSTS:
         :return: Number of frequency bands fit in the kmeans clustering
         :rtype: int
         """
-        if not hasattr(self, "_n_components"):
-            raise ValueError("You need to call `cluster_omega()` first.")
         return self._n_components
 
     @property
@@ -229,8 +217,6 @@ class COSTS:
         :return: Centroids of the frequency bands
         :rtype: numpy.ndarray
         """
-        if not hasattr(self, "_cluster_centroids"):
-            raise ValueError("You need to call `cluster_omega()` first.")
         return self._cluster_centroids
 
     @property
@@ -239,8 +225,6 @@ class COSTS:
         :return: Frequency band classifications, corresponds to omega_array
         :rtype: numpy.ndarray
         """
-        if not hasattr(self, "_omega_classes"):
-            raise ValueError("You need to call `cluster_omega()` first.")
         return self._omega_classes
 
     def periods(self):
@@ -248,6 +232,8 @@ class COSTS:
         :return: Time dynamics converted to periods
         :rtype: numpy.ndarray
         """
+        if self._omega_array is None:
+            raise ValueError("The object must be fit first.")
         frequencies = np.abs(
             self._omega_array[self._omega_classes > 0].imag.flatten()
         )
@@ -403,7 +389,9 @@ class COSTS:
         self._step_size = step_size
         self._n_time_steps, self._n_data_vars = self._data_shape(data)
         self._n_slides = self.build_windows(
-            data, self._window_length, self._step_size
+            data,
+            self._window_length,
+            self._step_size,
         )
 
         if self._window_length > self._n_time_steps:
@@ -535,13 +523,17 @@ class COSTS:
 
             # Reset optdmd between iterations
             if not self._global_svd:
-                # The default behavior is to reset the optdmd object to use the default
-                # initial value (None) or the user provided values.
-                if not self._use_last_freq:
+                # The default behavior is to reset the optdmd object to use the initial
+                # value from the first window.
+                if not self._use_last_freq and not self._reset_alpha_init:
                     optdmd.init_alpha = self._init_alpha
-                # Otherwise use the eigenvalues from this window to seed the next window.
+                # Use the eigenvalues from this window to seed the next window.
                 elif self._use_last_freq:
                     optdmd.init_alpha = optdmd.eigs
+                # Remove the initial guess for the eigenvalues entirely. This is much
+                # more computationally expensive.
+                elif self._reset_alpha_init:
+                    optdmd.init_alpha = None
 
     def get_window_indices(self, k):
         """Returns the window indices for slide `k`.
@@ -596,7 +588,6 @@ class COSTS:
         if kmeans_kwargs is None:
             random_state = 0
             kmeans_kwargs = {
-                # "n_init": "auto",
                 "random_state": random_state,
             }
         if method == "KMeans":
@@ -605,6 +596,10 @@ class COSTS:
             from sklearn_extra.cluster import KMedoids
 
             clustering = KMedoids(n_clusters=n_components, **kmeans_kwargs)
+        else:
+            raise ValueError(
+                "Unrecognized clustering method {}.".format(method)
+            )
 
         omega_classes = clustering.fit_predict(np.atleast_2d(omega_transform).T)
         omega_classes = omega_classes.reshape(n_slides, svd_rank)
@@ -648,9 +643,11 @@ class COSTS:
         # Outstanding question: should this be the complex conjugate or
         # the imaginary component squared?
         elif transform_method == "square_frequencies":
-            omega_transform = (np.conj(omega_array) * omega_array).real.astype(
-                "float"
-            )
+            # omega_transform = (np.conj(omega_array) * omega_array).real.astype(
+            #     "float"
+            # )
+            omega_transform = (omega_array.imag**2).real.astype("float")
+
             self._omega_label = r"$|\omega|^{2}$"
             self._hist_kwargs = {"bins": 64}
         elif transform_method == "log10":
@@ -659,13 +656,14 @@ class COSTS:
             zero_imputer = omega_transform[np.isfinite(omega_transform)].min()
             omega_transform[~np.isfinite(omega_transform)] = zero_imputer
             self._omega_label = r"$log_{10}(|\omega|)$"
-            self._hist_kwargs = {
-                "bins": np.linspace(
-                    np.min(np.log10(omega_transform[omega_transform > 0])),
-                    np.max(np.log10(omega_transform[omega_transform > 0])),
-                    64,
-                )
-            }
+            self._hist_kwargs = {"bins": 64}
+            #     {
+            #     "bins": np.linspace(
+            #         np.min(np.log10(omega_transform[omega_transform > 0])),
+            #         np.max(np.log10(omega_transform[omega_transform > 0])),
+            #         64,
+            #     )
+            # }
         elif transform_method == "period":
             omega_transform = 1 / np.abs(omega_array.imag.astype("float"))
             self._omega_label = "Period"
@@ -829,7 +827,7 @@ class COSTS:
 
     def scale_reconstruction(
         self,
-        suppress_growth=True,
+        suppress_growth=False,
         include_means=True,
     ):
         """Reconstruct the spatiotemporal features for each frequency band.
@@ -1238,7 +1236,7 @@ class COSTS:
             nrows=self.n_components + 2,
             sharex=True,
             sharey=True,
-            figsize=(8, 1.5 * self.n_components),
+            figsize=(8, np.max((8, 1.5 * self.n_components))),
         )
 
         ax = axes[0]
@@ -1414,6 +1412,10 @@ class COSTS:
                 self._pydmd_kwargs[new_attr_name] = self._xarray_unsanitize(
                     ds.attrs[attr]
                 )
+                if new_attr_name == "eig_constraints":
+                    self._pydmd_kwargs[new_attr_name] = set(
+                        self._pydmd_kwargs[new_attr_name]
+                    )
             elif "omega_transformation" in attr:
                 self._transform_method = self._xarray_unsanitize(ds.attrs[attr])
 
@@ -1432,6 +1434,8 @@ class COSTS:
         """
         if value is None:
             value = "None"
+        elif isinstance(value, set):
+            value = list(value)
         return value
 
     @staticmethod

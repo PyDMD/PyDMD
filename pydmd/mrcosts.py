@@ -55,6 +55,14 @@ class mrCOSTS:
         self._cluster_sweep = cluster_sweep
         self._transform_method = transform_method
 
+        if (self._n_components_array is not None) and (
+            self._step_size_array is not None
+        ):
+            if not len(self._n_components_array) == len(self._step_size_array):
+                raise ValueError(
+                    "n_components_array and step_size_array must be the same length."
+                )
+
         # Initialize variables that are defined in fitting.
         self._n_decompositions = None
         self._n_data_vars = None
@@ -343,13 +351,30 @@ class mrCOSTS:
 
         # Interpolate the larger decomposition levels to the timestep of the
         # smallest decomposition level.
+
+        # Previously there was a mistake in the frequencies squared omega
+        # transformation which made this step particularly likely to fail
+        # in difficult to discover ways. The interpolation was over-engineered
+        # prior to discovering this mistake, but is more explicit than the
+        # previous version.
         for ds in ds_list[1:]:
             da = ds.omega.where(ds.omega_classes > 0, drop=True)
-            da = da.interp(
+            da_real = da.real
+            da_imag = da.imag
+
+            da_real = da_real.interp(
                 window_time_means=ds_list[0].window_time_means,
                 method="nearest",
-                kwargs={"fill_value": "extrapolate"},
+                kwargs={"fill_value": (da_real.min(), da_real.max())},
             )
+
+            da_imag = da_imag.interp(
+                window_time_means=ds_list[0].window_time_means,
+                method="nearest",
+                kwargs={"fill_value": (da_imag.min(), da_imag.max())},
+            )
+
+            da = da_real + 1j * da_imag
             da_to_concat.append(da)
 
         da_omega = xr.concat(
@@ -361,9 +386,6 @@ class mrCOSTS:
             "window_length",
             np.arange(len(da_omega.window_length)),
         )
-
-        # ToDo: Verify this can handle variable number of svd_ranks
-        #   for each decomposition level
 
         self._da_omega = da_omega
 
@@ -442,8 +464,8 @@ class mrCOSTS:
         n_components_array = [mrd.n_components for mrd in mrd_list]
         global_svd_array = [mrd.global_svd for mrd in mrd_list]
 
-        # ToDo: Find a more robust way of handling these cases.
-        # A simple stop-gap to use the kwargs simply from the first element.
+        # mrCOSTS currently does not support variable pydmd_kwargs
+        # for each level.
         pydmd_kwargs = mrd_list[0]._pydmd_kwargs
         # costs_recon_kwargs = mrd_list[0]._costs_recon_kwargs
 
@@ -684,6 +706,7 @@ class mrCOSTS:
         transform_method=None,
         score_method=None,
         verbose=True,
+        method=None,
     ):
         """
         Hyperparameter search for n_components for kmeans clustering.
@@ -700,13 +723,19 @@ class mrCOSTS:
         :return n_components: Optimal n_components for frequency band separation
         :rtype n_components: int
         """
+
+        if method is None:
+            method = "KMeans"
+
         score = np.zeros_like(n_components_range, float)
 
         for nind, n in enumerate(n_components_range):
             if verbose:
                 print("fitting n_components = {}".format(n))
             cluster_centroids, omega_classes, omega = self.global_cluster_omega(
-                n, transform_method=transform_method
+                n,
+                transform_method=transform_method,
+                method=method,
             )
 
             if verbose:
@@ -730,7 +759,11 @@ class mrCOSTS:
         return score, n_components_range[np.argmax(score)]
 
     def global_cluster_omega(
-        self, n_components, transform_method=None, kmeans_kwargs=None
+        self,
+        n_components,
+        transform_method=None,
+        kmeans_kwargs=None,
+        method="KMeans",
     ):
         """Performs frequency band clustering on the global distribution of omega.
 
@@ -769,12 +802,23 @@ class mrCOSTS:
         if kmeans_kwargs is None:
             random_state = 0
             kmeans_kwargs = {
-                "n_init": "auto",
                 "random_state": random_state,
             }
-        kmeans = MiniBatchKMeans(n_clusters=n_components, **kmeans_kwargs)
-        omega_classes = kmeans.fit_predict(np.atleast_2d(omega_array).T)
-        cluster_centroids = kmeans.cluster_centers_.flatten()
+        if method == "KMeans":
+            clustering = MiniBatchKMeans(
+                n_clusters=n_components, **kmeans_kwargs
+            )
+        elif method == "KMediods":
+            from sklearn_extra.cluster import KMedoids
+
+            clustering = KMedoids(n_clusters=n_components, **kmeans_kwargs)
+        else:
+            raise ValueError(
+                "Unrecognized clustering method {}.".format(method)
+            )
+
+        omega_classes = clustering.fit_predict(np.atleast_2d(omega_array).T)
+        cluster_centroids = clustering.cluster_centers_.flatten()
 
         # Sort the clusters by the centroid magnitude.
         idx = np.argsort(cluster_centroids)
