@@ -396,7 +396,7 @@ class COSTS:
 
         if self._window_length > self._n_time_steps:
             raise ValueError(
-                "Window length (n={}) is larger than the time dimension (n={})".format(
+                "Window length ({}) is larger than the time dimension ({})".format(
                     self._window_length, self._n_time_steps
                 )
             )

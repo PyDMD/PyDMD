@@ -70,6 +70,8 @@ class mrCOSTS:
         self._omega_classes = None
         self._costs_array = None
         self._da_omega = None
+        self._n_components_global = None
+        self._cluster_centroids = None
 
         # Specify default keywords to hand to CoSTS's BOPDMD model.
         if pydmd_kwargs is None:
@@ -177,16 +179,44 @@ class mrCOSTS:
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._cluster_centroids
 
+    @property
+    def n_components_global(self):
+        """
+        :return: Number of global frequency bands
+        :rtype: list of float
+        """
+        if self._n_components_global is None:
+            raise ValueError(
+                "You need to call `global_cluster_hyperparameter_sweep()` first"
+            )
+        return self._n_components_global
+
     # @ToDo: Use the class variable instead of passing it around
     @property
-    def omega_classes(self):
+    def omega_classes_interpolated(self):
         """
+
+        Note, this returns the multi-resolution interpolation of omega classes.
+
         :return: Ints for each omega value indicating which cluster it belongs to.
         :rtype: list of numpy.ndarray
         """
-        if not hasattr(self, "_omega_classes"):
+        if self._omega_classes is None:
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._omega_classes
+
+    @property
+    def ragged_omega_classes(self):
+        """
+
+        Note, this returns a list of ragged numpy arrays.
+
+        :return: Ints for each omega value indicating which cluster it belongs to.
+        :rtype: list of numpy.ndarray
+        """
+        if self._omega_classes is None:
+            raise ValueError("You need to call `cluster_omega()` first.")
+        return self.multi_res_deterp()
 
     @property
     def ragged_omega_array(self):
@@ -194,7 +224,7 @@ class mrCOSTS:
         :return: list of omega arrays for each decomposition level.
         :rtype: list of numpy.ndarray
         """
-        if not hasattr(self, "_costs_array"):
+        if self._costs_array is None:
             raise ValueError(
                 "You need to `fit` or load previous fit from file first."
             )
@@ -206,7 +236,7 @@ class mrCOSTS:
         :return: list of modes arrays for each decomposition level.
         :rtype: list of numpy.ndarray
         """
-        if not hasattr(self, "_costs_array"):
+        if self._costs_array is None:
             raise ValueError(
                 "You need to `fit` or load previous fit from file first."
             )
@@ -218,7 +248,7 @@ class mrCOSTS:
         :return: list of amplitudes arrays for each decomposition level.
         :rtype: list of numpy.ndarray
         """
-        if not hasattr(self, "_costs_array"):
+        if self._costs_array is None:
             raise ValueError(
                 "You need to `fit` or load previous fit from file first."
             )
@@ -389,7 +419,7 @@ class mrCOSTS:
 
         self._da_omega = da_omega
 
-    def multi_res_deterp(self, omega_classes):
+    def multi_res_deterp(self):
         """
         Un-interpolate the mrCOSTS eigenvalues to the original spacing.
 
@@ -400,7 +430,6 @@ class mrCOSTS:
         :rtype: list of numpy.ndarrays
         """
 
-        # @ToDo: should `omega_classes` be a call to an internal variable from the class?
         # Get the indices for the 3-d omega structure
         index = np.nonzero(~np.isnan(self._da_omega.values))
 
@@ -410,7 +439,7 @@ class mrCOSTS:
         omega_classes_full = (
             np.zeros_like(self._da_omega.values, dtype="int") - 1
         )
-        omega_classes_full[index] = omega_classes
+        omega_classes_full[index] = self._omega_classes
 
         # Build the omega_classes array into a labeled xarray DataArray object.
         da_omega_classes = xr.zeros_like(self._da_omega, dtype="int")
@@ -435,7 +464,7 @@ class mrCOSTS:
 
         return omega_classes_list
 
-    def from_xarray(self, file_list):
+    def from_netcdf(self, file_list):
         """
         Create an mrCoSTS object from saved netcdf files.
 
@@ -467,7 +496,6 @@ class mrCOSTS:
         # mrCOSTS currently does not support variable pydmd_kwargs
         # for each level.
         pydmd_kwargs = mrd_list[0]._pydmd_kwargs
-        # costs_recon_kwargs = mrd_list[0]._costs_recon_kwargs
 
         # Initialize the mrcosts object.
         self.__init__(
@@ -476,7 +504,6 @@ class mrCOSTS:
             svd_rank_array=svd_rank_array,
             global_svd_array=global_svd_array,
             pydmd_kwargs=pydmd_kwargs,
-            # costs_recon_kwargs=costs_recon_kwargs,
             n_components_array=n_components_array,
             store_data=False,
         )
@@ -487,7 +514,7 @@ class mrCOSTS:
         self._n_data_vars = n_data_vars
         self._n_time_steps = n_time_steps
 
-    def to_xarray(self, filename):
+    def to_netcdf(self, filename):
         """
         Save the mrCoSTS fit to file in netcdf format.
 
@@ -598,6 +625,9 @@ class mrCOSTS:
             elif level > 0:
                 x_iter, _ = self.costs_array[level - 1].scale_separation()
 
+        if not x_iter.shape == (self._n_data_vars, self._n_time_steps):
+            raise ValueError("Input data has the wrong shape.")
+
         if plot_kwargs is None:
             plot_kwargs = {}
 
@@ -640,6 +670,9 @@ class mrCOSTS:
                 )
             elif level > 0:
                 x_iter, _ = self.costs_array[level - 1].scale_separation()
+
+        if not x_iter.shape == (self._n_data_vars, self._n_time_steps):
+            raise ValueError("Input data has the wrong shape.")
 
         if plot_kwargs is None:
             plot_kwargs = {}
@@ -711,6 +744,8 @@ class mrCOSTS:
         """
         Hyperparameter search for n_components for kmeans clustering.
 
+        :param verbose:
+        :param transform_method:
         :param n_components_range: Values of n_components for the hyperparameter sweep.
         :type n_components_range: numpy.ndarray of ints
         :param method: How to transform omega for clustering. See `global_cluster_omega`
@@ -733,7 +768,7 @@ class mrCOSTS:
             if verbose:
                 print("fitting n_components = {}".format(n))
             cluster_centroids, omega_classes, omega = self.global_cluster_omega(
-                n,
+                n_components=n,
                 transform_method=transform_method,
                 method=method,
             )
@@ -756,11 +791,13 @@ class mrCOSTS:
                     omega_classes.reshape(-1, 1),
                 )
 
+        self._n_components_global = n_components_range[np.argmax(score)]
+
         return score, n_components_range[np.argmax(score)]
 
     def global_cluster_omega(
         self,
-        n_components,
+        n_components=None,
         transform_method=None,
         kmeans_kwargs=None,
         method="KMeans",
@@ -791,6 +828,19 @@ class mrCOSTS:
         :return omega_array: Transformed omega with NaNs removed
         :rtype omega_array: numpy.ndarray
         """
+        if self._da_omega is None:
+            self._da_omega = self.multi_res_interp()
+
+        if n_components is None:
+            if self._n_components_global is not None:
+                n_components = self._n_components_global
+            else:
+                raise ValueError(
+                    "Either perform a cluster hyperparameter sweep or provide `n_components`"
+                )
+        elif n_components is not None:
+            self._n_components_global = n_components
+
         omega_array = self._da_omega.values
         # This step flattens the array, which is desirable. We want to cluster on just
         # on the histogram of omega, which means just one "sample".
@@ -827,6 +877,9 @@ class mrCOSTS:
         omega_classes = lut[omega_classes]
         cluster_centroids = cluster_centroids[idx]
 
+        self._cluster_centroids = cluster_centroids
+        self._omega_classes = omega_classes
+
         return cluster_centroids, omega_classes, omega_array
 
     @staticmethod
@@ -847,10 +900,12 @@ class mrCOSTS:
         :return: transformed omega array
         :rtype: numpy.ndarray
         """
+        # @ToDo: Move to a set-based evaluation.
         if transform_method is None or transform_method == "absolute":
             omega_array = np.abs(omega_array.imag.astype("float"))
         elif transform_method == "square_frequencies":
-            omega_array = (np.conj(omega_array) * omega_array).astype("float")
+            # omega_array = (np.conj(omega_array) * omega_array).astype("float")
+            omega_array = (omega_array.imag**2).real.astype("float")
         elif transform_method == "period":
             omega_array = 1 / np.abs(omega_array.imag.astype("float"))
         elif transform_method == "log10":
@@ -858,16 +913,19 @@ class mrCOSTS:
             # Impute log10(0) with the smallest non-zero values in log10(omega).
             zero_imputer = omega_array[np.isfinite(omega_array)].min()
             omega_array[~np.isfinite(omega_array)] = zero_imputer
+        else:
+            # @ToDo: Return accepted methods
+            raise ValueError(
+                "Transform method {} not supported.".format(transform_method)
+            )
 
         return omega_array
 
     def global_scale_reconstruction(
         self,
-        n_components,
-        omega_classes_list,
-        suppress_growth=True,
+        suppress_growth=False,
     ):
-        """Reconstruct the sliding mrDMD into the constituent components.
+        """Reconstruct mrCOSTS into the constituent frequency bands.
 
         The reconstructed data are convolved with a guassian filter since
         points near the middle of the window are more reliable than points
@@ -890,11 +948,13 @@ class mrCOSTS:
         xr_sep = np.zeros(
             (
                 self.n_decompositions,
-                n_components,
+                self._n_components_global,
                 self._n_data_vars,
                 self._n_time_steps,
             )
         )
+
+        omega_classes_list = self.multi_res_deterp()
 
         for n_mrd, mrd in enumerate(self._costs_array):
             # Track the total contribution from all windows to each time step
@@ -932,9 +992,13 @@ class mrCOSTS:
 
                 # Reconstruct each frequency band separately.
                 xr_sep_window = np.zeros(
-                    (n_components, mrd._n_data_vars, mrd._window_length)
+                    (
+                        self._n_components_global,
+                        mrd._n_data_vars,
+                        mrd._window_length,
+                    )
                 )
-                for j in np.arange(0, n_components):
+                for j in np.arange(0, self._n_components_global):
                     xr_sep_window[j, :, :] = np.linalg.multi_dot(
                         [
                             w[:, classification == j],
@@ -980,5 +1044,13 @@ class mrCOSTS:
         background = self.costs_array[-1].scale_reconstruction()[0, :, :]
         return background
 
+    def global_reconstruction(self):
+        """Global reconstruction across all global frequency bands and decomposition levels.
 
-# ToDo: Make reconstruction equivalent for costs.scale_separation and costs.global_reconstruction
+        :return: Global reconstruction with background component.
+        """
+        xr_sep = self.global_scale_reconstruction()
+        xr_sep = xr_sep.sum(axis=(0, 1))
+        xr_background = self.get_background()
+
+        return xr_sep + xr_background

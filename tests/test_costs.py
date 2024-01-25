@@ -2,13 +2,11 @@ import numpy as np
 from scipy.integrate import solve_ivp
 import scipy
 from pytest import raises
-import os
 
 from pydmd.costs import COSTS
 
 # Test ideas:
 # Access clustering dependent results before clustering
-# Assert omega transforms
 
 
 def overlapping_oscillators():
@@ -55,16 +53,16 @@ def overlapping_oscillators():
 
     # RK4 integration of the mixed system
     dt = 0.0001 * 8
-    time = np.arange(0, T, dt)
+    t_solution = np.arange(0, T, dt)
 
     # Solve the FitzHugh-Nagumo Model
     solution_fn = solve_ivp(
-        rhs_FNM, [0, T], x0, t_eval=time, args=(tau1, a, b, Iext)
+        rhs_FNM, [0, T], x0, t_eval=t_solution, args=(tau1, a, b, Iext)
     )
 
     # Solve the Unforced Duffing Oscillator Model
     solution_ufd = solve_ivp(
-        rhs_UFD, [0, T], y0, t_eval=time, args=(eta, epsilon, tau2)
+        rhs_UFD, [0, T], y0, t_eval=t_solution, args=(eta, epsilon, tau2)
     )
 
     seed = 1
@@ -80,7 +78,6 @@ def overlapping_oscillators():
     # Subsample after solving the pdes
     substep = 100
     uv_tiled = uv_tiled[0::substep, :]
-    t_solution = np.arange(0, T, dt)
     t_solution = t_solution[0::substep]
 
     # Dimension of space to map into
@@ -137,7 +134,7 @@ def test_construction():
 
     n_space_dims = np.shape(data)[0]
 
-    assert mrd.n_slides == 63
+    assert mrd.n_slides == expected_n_slides
     assert mrd.window_length == window
     assert np.shape(mrd.time_array) == (mrd.n_slides, mrd.window_length)
     assert np.shape(mrd.modes_array) == (
@@ -149,6 +146,20 @@ def test_construction():
         mrd.n_slides,
         mrd.svd_rank,
     )
+    assert mrd.global_svd is True
+    assert mrd.step_size == step
+
+
+def test_bad_construction():
+    mrd_alternative = COSTS()
+    with raises(ValueError):
+        mrd_alternative.fit(
+            data, np.atleast_2d(time), len(time) + 1, step, verbose=False
+        )
+
+
+def test_window_construction():
+    assert mrd.build_windows(data, window, step, integer_windows=True) == 61
 
 
 def test_frequency_band_centroids():
