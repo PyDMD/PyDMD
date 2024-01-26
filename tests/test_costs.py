@@ -202,7 +202,7 @@ def test_omega_transforms():
     - squared eigenvalues for "square_frequencies"
     - 1 / absolute eigenvalues for "period"
     - log10 of the eignevalues for "log10"
-    Eigenvalue constraint combinations are also tested.
+    - a bad transformation which shouldn't work.
     """
 
     list_transform_methods = [
