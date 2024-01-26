@@ -5,9 +5,6 @@ from pytest import raises
 
 from pydmd.costs import COSTS
 
-# Test ideas:
-# Access clustering dependent results before clustering
-
 
 def overlapping_oscillators():
     """

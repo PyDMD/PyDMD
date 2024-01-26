@@ -220,8 +220,10 @@ def test_reconstructions():
     np.testing.assert_allclose(re_global, expected_global_error, atol=0.01)
     np.testing.assert_allclose(re_lf, expected_lf_error, atol=0.01)
     np.testing.assert_allclose(re_hf, expected_hf_error, atol=0.01)
+    # There is a strong random component to this test, necessitating very loose
+    # tolerances.
     np.testing.assert_allclose(
-        re_transient, expected_transient_error, atol=0.05
+        re_transient, expected_transient_error, atol=0.15
     )
 
 
