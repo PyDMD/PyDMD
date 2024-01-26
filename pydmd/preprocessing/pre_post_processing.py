@@ -3,6 +3,7 @@ Pre/post-processing capability for DMD instances.
 """
 
 from typing import Callable, Dict
+
 from pydmd.dmdbase import DMDBase
 
 
@@ -77,6 +78,16 @@ class PrePostProcessingDMD:
                 return PrePostProcessingDMD.__getattribute__(sub_dmd, name)
             return object.__getattribute__(self._pre_post_processed_dmd, name)
         return None
+
+    @property
+    def pre_post_processed_dmd(self):
+        """
+        Return the pre/post-processed DMD instance.
+
+        :return: decorated DMD instance.
+        :rtype: pydmd.DMDBase
+        """
+        return self._pre_post_processed_dmd
 
     @property
     def modes_activation_bitmask(self):

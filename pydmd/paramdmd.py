@@ -1,5 +1,10 @@
 """
 Module for the parametric Dynamic Mode Decomposition.
+
+References:
+- A Dynamic Mode Decomposition Extension for the Forecasting of Parametric 
+Dynamical Systems, F. Andreuzzi, N. Demo, G. Rozza, 2023, SIAM Journal on 
+Applied Dynamical Systems
 """
 import pickle
 
@@ -49,12 +54,35 @@ class ParametricDMD:
         instance uses less memory since it caches a smaller number of resources.
         Setting `light=True` might invalidate several properties (see also
         :meth:`training_modal_coefficients`).
+    :param dmd_fit_args: Positional arguments to be passed to the `fit` method
+        of the given DMD instance.
+    :param dmd_fit_kwargs: Keyword arguments to be passed to the `fit` method
+        of the given DMD instance.
     """
 
-    def __init__(self, dmd, spatial_pod, approximation, light=False):
+    def __init__(
+        self,
+        dmd,
+        spatial_pod,
+        approximation,
+        light=False,
+        dmd_fit_args=None,
+        dmd_fit_kwargs=None,
+    ):
         self._dmd = dmd
         self._spatial_pod = spatial_pod
         self._approximation = approximation
+
+        if dmd_fit_args is None:
+            dmd_fit_args = tuple()
+        if not isinstance(dmd_fit_args, (list, tuple)):
+            raise TypeError("Expected list, tuple or None for dmd_fit_args")
+        self._dmd_fit_args = dmd_fit_args
+        if dmd_fit_kwargs is None:
+            dmd_fit_kwargs = {}
+        if not isinstance(dmd_fit_kwargs, dict):
+            raise TypeError("Expected dict or None for dmd_fit_kwargs")
+        self._dmd_fit_kwargs = dmd_fit_kwargs
 
         self._training_parameters = None
         self._parameters = None
@@ -62,7 +90,6 @@ class ParametricDMD:
         self._time_instants = None
         self._space_dim = None
         self._light = light
-
         self._training_modal_coefficients = None
 
     @property
@@ -374,10 +401,12 @@ class ParametricDMD:
         if self.is_partitioned:
             # partitioned parametric DMD
             for dmd, data in zip(self._dmd, training_modal_coefficients):
-                dmd.fit(data)
+                dmd.fit(data, *self._dmd_fit_args, **self._dmd_fit_kwargs)
         else:
             spacemu_time = np.vstack(training_modal_coefficients)
-            self._dmd.fit(spacemu_time)
+            self._dmd.fit(
+                spacemu_time, *self._dmd_fit_args, **self._dmd_fit_kwargs
+            )
 
     # ------------------------------------------------------------
     # getter properties for intermediate values of the computation
