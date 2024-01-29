@@ -44,9 +44,7 @@ class mrCOSTS:
         n_components_array=None,
         cluster_sweep=False,
         transform_method=None,
-        store_data=True,
     ):
-        self._store_data = store_data
         self._n_components_array = n_components_array
         self._step_size_array = step_size_array
         self._window_length_array = window_length_array
@@ -91,23 +89,9 @@ class mrCOSTS:
             self._pydmd_kwargs["use_proj"] = pydmd_kwargs.get("use_proj", False)
 
         if costs_recon_kwargs is None:
-            self._costs_recon_kwargs = {
-                "suppress_growth": False,
-            }
+            self._costs_recon_kwargs = {}
         else:
             self._costs_recon_kwargs = costs_recon_kwargs
-            self._costs_recon_kwargs[
-                "suppress_growth"
-            ] = costs_recon_kwargs.get("suppress_growth", False)
-
-    @property
-    def store_data(self):
-        """
-        :return: If the low-frequency components were stored (True)
-            or discarded (False).
-        :rtype: bool
-        """
-        return self._store_data
 
     @property
     def costs_array(self):
@@ -297,23 +281,12 @@ class mrCOSTS:
         self._costs_array = []
         self._n_time_steps, self._n_data_vars = self._data_shape(data)
 
-        if self._store_data:
-            data_iter = np.zeros(
-                (n_decompositions, self._n_data_vars, self._n_time_steps)
-            )
-            data_iter[0, :, :] = data
-        else:
-            data_iter = data
+        x_iter = data
 
         for n_decomp, (window, step, rank) in enumerate(
             zip(window_lengths, step_sizes, svd_ranks)
         ):
             global_svd = self._global_svd_array[n_decomp]
-
-            if self._store_data:
-                x_iter = data_iter[n_decomp, :, :].squeeze()
-            else:
-                x_iter = data_iter.squeeze()
 
             mrd = COSTS(
                 svd_rank=rank,
@@ -349,17 +322,13 @@ class mrCOSTS:
                 re = mrd.relative_error(global_reconstruction.real, x_iter)
                 print("Error in Global Reconstruction = {:.2}".format(re))
 
-            # Scale separation
-            xr_low_frequency, xr_high_frequency = mrd.scale_separation(
-                scale_reconstruction_kwargs=self._costs_recon_kwargs
-            )
-
             # Pass the low frequency component to the next level of decomposition.
             if n_decomp < n_decompositions - 1:
-                if self._store_data:
-                    data_iter[n_decomp + 1, :, :] = xr_low_frequency
-                else:
-                    data_iter = xr_low_frequency
+                # Scale separation
+                xr_low_frequency, xr_high_frequency = mrd.scale_separation(
+                    scale_reconstruction_kwargs=self._costs_recon_kwargs
+                )
+                x_iter = xr_low_frequency
 
             # Save the fitted costs object.
             self._costs_array.append(copy.copy(mrd))
@@ -505,7 +474,6 @@ class mrCOSTS:
             global_svd_array=global_svd_array,
             pydmd_kwargs=pydmd_kwargs,
             n_components_array=n_components_array,
-            store_data=False,
         )
 
         # Initialize variables that are defined in fitting.
@@ -923,7 +891,6 @@ class mrCOSTS:
 
     def global_scale_reconstruction(
         self,
-        suppress_growth=False,
     ):
         """Reconstruct mrCOSTS into the constituent frequency bands.
 
@@ -933,8 +900,6 @@ class mrCOSTS:
         and end of time series prone to larger errors. A best practice is
         to cut off `window_length` from each end before further analysis.
 
-        :param suppress_growth: Kill positive real components of frequencies.
-            Should not be considered a stable api variable.
         :param n_components: Number of frequency bands from the clustering.
         :type n_components: int
         :param omega_classes_list: Resulting cluster identifiers from clustering omega.
@@ -981,9 +946,6 @@ class mrCOSTS:
                 b = mrd._amplitudes_array[k]
                 omega = np.atleast_2d(mrd._omega_array[k]).T
                 classification = omega_classes[k]
-
-                if suppress_growth:
-                    omega[omega.real > 0] = 1j * omega[omega.real > 0].imag
 
                 # Compute each segment of xr starting at "t = 0"
                 t = mrd._time_array[k]

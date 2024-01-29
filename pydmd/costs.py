@@ -827,7 +827,6 @@ class COSTS:
 
     def scale_reconstruction(
         self,
-        suppress_growth=False,
         include_means=True,
     ):
         """Reconstruct the spatiotemporal features for each frequency band.
@@ -838,7 +837,6 @@ class COSTS:
         and end of time series prone to larger errors. A best practice is
         to cut off `window_length` from each end before further analysis.
 
-        :param suppress_growth: Not API stable
         :param include_means: Not API stable
         :return: Reconstruction for each frequency band with dimensions of:
             n_components x n_data_vars x n_time_steps
@@ -863,12 +861,8 @@ class COSTS:
 
             w = self._modes_array[k]
             b = self._amplitudes_array[k]
-            # @ToDo: global flag for suppressing growth?
             omega = copy.deepcopy(np.atleast_2d(self._omega_array[k]).T)
             classification = self._omega_classes[k]
-
-            if suppress_growth:
-                omega[omega.real > 0] = 1j * omega[omega.real > 0].imag
 
             c = np.atleast_2d(self._window_means_array[k]).T
 
