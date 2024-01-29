@@ -2,16 +2,18 @@
 
 import warnings
 from numbers import Number
-from typing import NamedTuple
+from typing import NamedTuple, Union
 from collections import namedtuple
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
 #  Named tuples used in functions.
 #  compute_svd uses "SVD",
-#  compute_tlsq uses "TLSQ".
+#  compute_tlsq uses "TLSQ",
+#  compute_rqb uses "RQB".
 SVD = namedtuple("SVD", ["U", "s", "V"])
 TLSQ = namedtuple("TLSQ", ["X_denoised", "Y_denoised"])
+RQB = namedtuple("RQB", ["Q", "B", "Omega"])
 
 
 def _svht(sigma_svd: np.ndarray, rows: int, cols: int) -> int:
@@ -187,6 +189,44 @@ def compute_svd(
     s = s[:rank]
 
     return SVD(U, s, V)
+
+
+def compute_rqb(
+    X: np.ndarray,
+    svd_rank: Number,
+    oversampling: int = 10,
+    power_iters: int = 2,
+    Omega: np.ndarray = None,
+    seed: Union[None, int] = None,
+) -> NamedTuple(
+    "RQB", [("Q", np.ndarray), ("B", np.ndarray), ("Omega", np.ndarray)]
+):
+    if X.ndim != 2:
+        raise ValueError("Please ensure that input data is a 2D array.")
+
+    # Define the random test matrix if not provided.
+    if Omega is None:
+        m = X.shape[-1]
+        r = compute_rank(X, svd_rank)
+        rng = np.random.default_rng(seed)
+        Omega = rng.standard_normal((m, r + oversampling))
+
+    # Compute sampling matrix.
+    Y = X.dot(Omega)
+
+    # Perform power iterations.
+    for _ in range(power_iters):
+        Q = np.linalg.qr(Y)[0]
+        Z = np.linalg.qr(X.conj().T.dot(Q))[0]
+        Y = X.dot(Z)
+
+    # Orthonormalize the sampling matrix.
+    Q = np.linalg.qr(Y)[0]
+
+    # Project the snapshot matrix onto the smaller space.
+    B = Q.conj().T.dot(X)
+
+    return RQB(Q, B, Omega)
 
 
 def pseudo_hankel_matrix(X: np.ndarray, d: int) -> np.ndarray:
