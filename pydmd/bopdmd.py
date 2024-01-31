@@ -1003,6 +1003,10 @@ class BOPDMD(DMDBase):
         """
         return self._svd_rank
 
+    @svd_rank.setter
+    def svd_rank(self, value):
+        self._svd_rank = value
+
     @property
     def compute_A(self):
         """
@@ -1032,6 +1036,10 @@ class BOPDMD(DMDBase):
             )
             raise RuntimeError(msg)
         return self._init_alpha
+
+    @init_alpha.setter
+    def init_alpha(self, value):
+        self._init_alpha = value
 
     @property
     def proj_basis(self):
