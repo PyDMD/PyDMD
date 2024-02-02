@@ -2,7 +2,7 @@ import numpy as np
 from pydmd.bopdmd import BOPDMD
 from .utils import compute_rank, compute_svd
 import copy
-from sklearn.cluster import KMeans
+from sklearn.cluster import MiniBatchKMeans
 from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import xarray as xr
@@ -258,7 +258,6 @@ class COSTS:
         :type integer_windows: bool
         :return:
         """
-
         if integer_windows:
             n_split = np.floor(data.shape[1] / window_length).astype(int)
         else:
@@ -329,11 +328,9 @@ class COSTS:
         :return: First guess of eigenvalues
         :rtype: numpy.ndarray or None
         """
-        # If not initial values are provided return None by default.
-        init_alpha = None
         # User provided initial eigenvalues.
         if self._initialize_artificially and self._init_alpha is not None:
-            init_alpha = self._init_alpha
+            return self._init_alpha
         # Initial eigenvalue guesses from kmeans clustering.
         elif (
             self._initialize_artificially
@@ -347,6 +344,7 @@ class COSTS:
             init_alpha = init_alpha * np.tile(
                 [1, -1], int(self._svd_rank / self._n_components)
             )
+            return init_alpha
         # The user accidentally provided both methods of initializing the eigenvalues.
         elif (
             self._initialize_artificially
@@ -356,8 +354,9 @@ class COSTS:
             raise ValueError(
                 "Only one of `init_alpha` and `cluster_centroids` can be provided"
             )
-
-        return init_alpha
+        # If not initial values are provided return None by default.
+        else:
+            return None
 
     def fit(
         self,
@@ -516,7 +515,9 @@ class COSTS:
             self._amplitudes_array[
                 k, : optdmd.eigs.shape[0]
             ] = optdmd.amplitudes
-            self._window_means_array[k] = c.flatten()
+            self._window_means_array[k] = np.mean(
+                data_window, 1, keepdims=True
+            ).flatten()
             self._time_array[k] = original_time_window
 
             # Reset optdmd between iterations
@@ -549,16 +550,14 @@ class COSTS:
         if k == self._n_slides - 1 and self._non_integer_n_slide:
             return slice(-self._window_length, None)
         else:
-            return slice(
-                sample_start, sample_start + self._window_length
-            )
+            return slice(sample_start, sample_start + self._window_length)
 
     def cluster_omega(
         self,
         n_components,
         kmeans_kwargs=None,
         transform_method=None,
-        method="KMeans",
+        method=MiniBatchKMeans,
     ):
         """Clusters fitted eigenvalues into frequency bands by the imaginary component.
 
@@ -567,35 +566,33 @@ class COSTS:
         :type method: str
         :param n_components: Hyperparameter for k-means clustering, number of clusters.
         :type n_components: int
-        :param kmeans_kwargs: Arguments for KMeans clustering.
+        :param kmeans_kwargs: Arguments for KMeans clustering. The default is
+            random_state = 0.
         :type kmeans_kwargs: dict
         :param transform_method: How to transform omega. See docstring for valid options.
         :type transform_method: str or NoneType
         :return:
         """
         # Reshape the omega array into a 1d array
-        omega_array = self.omega_array
-        n_slides = omega_array.shape[0]
-        svd_rank = omega_array.shape[1]
-        omega_rshp = omega_array.reshape(n_slides * svd_rank)
+        n_slides = self.omega_array.shape[0]
+        svd_rank = self.omega_array.shape[1]
+        omega_rshp = self.omega_array.reshape(n_slides * svd_rank)
         omega_transform = self.transform_omega(
             omega_rshp, transform_method=transform_method
         )
 
         if kmeans_kwargs is None:
+            kmeans_kwargs = {}
             random_state = 0
-            kmeans_kwargs = {
-                "random_state": random_state,
-            }
-        if method == "KMeans":
-            clustering = KMeans(n_clusters=n_components, **kmeans_kwargs)
-        elif method == "KMediods":
-            from sklearn_extra.cluster import KMedoids
-
-            clustering = KMedoids(n_clusters=n_components, **kmeans_kwargs)
-        else:
+            kmeans_kwargs["random_state"] = kmeans_kwargs.get(
+                "random_state", random_state
+            )
+        clustering = method(n_clusters=n_components, **kmeans_kwargs)
+        if not hasattr(clustering, "fit_predict") and callable(
+            getattr(clustering, "fit_predict")
+        ):
             raise ValueError(
-                "Unrecognized clustering method {}.".format(method)
+                "Clustering method must have `fit_predict()` method."
             )
 
         omega_classes = clustering.fit_predict(np.atleast_2d(omega_transform).T)
@@ -615,9 +612,7 @@ class COSTS:
         self._transform_method = transform_method
         self._n_components = n_components
 
-        return self
-
-    def transform_omega(self, omega_array, transform_method=None):
+    def transform_omega(self, omega_array, transform_method="absolute"):
         """Transform omega, primarily for clustering.
         Options for transforming omega are:
             "period": :math:`\\frac{1}{\\omega}`
@@ -633,18 +628,14 @@ class COSTS:
         :rtype: numpy.ndarray
         """
         # Apply a transformation to omega to improve frequency band separation
-        if transform_method is None or transform_method == "absolute":
+        if transform_method == "absolute":
             omega_transform = np.abs(omega_array.imag.astype("float"))
             self._omega_label = r"$|\omega|$"
             self._hist_kwargs = {"bins": 64}
         # Outstanding question: should this be the complex conjugate or
         # the imaginary component squared?
         elif transform_method == "square_frequencies":
-            # omega_transform = (np.conj(omega_array) * omega_array).real.astype(
-            #     "float"
-            # )
             omega_transform = (omega_array.imag**2).real.astype("float")
-
             self._omega_label = r"$|\omega|^{2}$"
             self._hist_kwargs = {"bins": 64}
         elif transform_method == "log10":
@@ -654,17 +645,9 @@ class COSTS:
             omega_transform[~np.isfinite(omega_transform)] = zero_imputer
             self._omega_label = r"$log_{10}(|\omega|)$"
             self._hist_kwargs = {"bins": 64}
-            #     {
-            #     "bins": np.linspace(
-            #         np.min(np.log10(omega_transform[omega_transform > 0])),
-            #         np.max(np.log10(omega_transform[omega_transform > 0])),
-            #         64,
-            #     )
-            # }
         elif transform_method == "period":
             omega_transform = 1 / np.abs(omega_array.imag.astype("float"))
             self._omega_label = "Period"
-            # @ToDo: Specify bins like in log10 transform
             self._hist_kwargs = {"bins": 64}
         else:
             raise ValueError(
@@ -716,7 +699,7 @@ class COSTS:
         )
 
         for nind, n in enumerate(n_components_range):
-            _ = self.cluster_omega(
+            self.cluster_omega(
                 n_components=n, transform_method=transform_method
             )
 
@@ -872,11 +855,12 @@ class COSTS:
                 (self._n_components, self._n_data_vars, self._window_length)
             )
             for j in np.unique(self._omega_classes):
+                class_index = classification == j
                 xr_sep_window[j] = np.linalg.multi_dot(
                     [
-                        w[:, classification == j],
-                        np.diag(b[classification == j]),
-                        np.exp(omega[classification == j] * t),
+                        w[:, class_index],
+                        np.diag(b[class_index]),
+                        np.exp(omega[class_index] * t),
                     ]
                 ).real
 
@@ -1222,7 +1206,6 @@ class COSTS:
             scale_reconstruction_kwargs = {}
         xr_sep = self.scale_reconstruction(**scale_reconstruction_kwargs)
 
-        # ToDo: Make these kwargs adjustable inputs.
         fig, axes = plt.subplots(
             nrows=self.n_components + 2,
             sharex=True,

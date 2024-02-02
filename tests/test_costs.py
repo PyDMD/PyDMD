@@ -8,11 +8,11 @@ from pydmd.costs import COSTS
 
 def overlapping_oscillators():
     """
-    Given a time vector t_eval = t1, t2, ..., evaluates and returns
-    the snapshots z(t1), z(t2), ... as columns of the matrix Z.
-    Simulates data z given by the system of ODEs
-        z' = Az
-    where A = [1 -2; 1 -1] and z_0 = [1, 0.1].
+    Simulates a system with two oscillators with ocasionally overlapping
+    frequencies. This example was adapted from Dylewsky et al., 2019.
+
+    Oscillator #1: FitzHugh-Nagumo Model
+    Oscillator #2: Unforced Duffing Oscillator
     """
 
     def rhs_FNM(t, x, tau, a, b, Iext):
