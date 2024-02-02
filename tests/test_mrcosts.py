@@ -323,4 +323,6 @@ def test_plot_local_time_series():
 
 
 def tear_down():
-    os.remove("*tests*")
+    file_list = glob.glob("*tests*.nc")
+    for f in file_list:
+        os.remove(f)

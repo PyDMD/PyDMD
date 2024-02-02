@@ -178,9 +178,7 @@ class mrCOSTS:
     # @ToDo: Use the class variable instead of passing it around
     @property
     def omega_classes_interpolated(self):
-        """
-
-        Note, this returns the multi-resolution interpolation of omega classes.
+        """Returns the multi-resolution interpolation of omega classes
 
         :return: Ints for each omega value indicating which cluster it belongs to.
         :rtype: list of numpy.ndarray
@@ -191,11 +189,9 @@ class mrCOSTS:
 
     @property
     def ragged_omega_classes(self):
-        """
+        """Omega classes for each decomposition level after global clustering.
 
-        Note, this returns a list of ragged numpy arrays.
-
-        :return: Ints for each omega value indicating which cluster it belongs to.
+        :return: list of classes for each omega value for each decomposition level.
         :rtype: list of numpy.ndarray
         """
         if self._omega_classes is None:
@@ -204,7 +200,8 @@ class mrCOSTS:
 
     @property
     def ragged_omega_array(self):
-        """
+        """Omega values for each decomposition level.
+
         :return: list of omega arrays for each decomposition level.
         :rtype: list of numpy.ndarray
         """
@@ -216,7 +213,8 @@ class mrCOSTS:
 
     @property
     def ragged_modes_array(self):
-        """
+        """Modes for each decomposition level.
+
         :return: list of modes arrays for each decomposition level.
         :rtype: list of numpy.ndarray
         """
@@ -228,7 +226,8 @@ class mrCOSTS:
 
     @property
     def ragged_amplitudes_array(self):
-        """
+        """Amplitudes for each decomposition level.
+
         :return: list of amplitudes arrays for each decomposition level.
         :rtype: list of numpy.ndarray
         """
@@ -240,7 +239,8 @@ class mrCOSTS:
 
     @staticmethod
     def _data_shape(data):
-        """
+        """Give the data shape.
+
         :return: Shape of the data for fitting.
         :rtype: Tuple of ints
         """
@@ -695,7 +695,6 @@ class mrCOSTS:
         fig, axes = self.costs_array[level].plot_time_series(
             space_index,
             x_iter,
-            # plot_kwargs=plot_kwargs,
             scale_reconstruction_kwargs=scale_reconstruction_kwargs,
         )
 
@@ -707,7 +706,8 @@ class mrCOSTS:
         transform_method=None,
         score_method=None,
         verbose=True,
-        method=None,
+        method=MiniBatchKMeans,
+        kmeans_kwargs=None,
     ):
         """
         Hyperparameter search for n_components for kmeans clustering.
@@ -741,11 +741,9 @@ class mrCOSTS:
                 n_components=n,
                 transform_method=transform_method,
                 method=method,
+                kmeans_kwargs=kmeans_kwargs,
             )
 
-            if verbose:
-                print("scoring")
-                print(np.unique(omega_classes.reshape(-1, 1)))
             if score_method is None or score_method == "silhouette":
                 score[nind] = silhouette_score(
                     omega.reshape(-1, 1),
@@ -770,7 +768,7 @@ class mrCOSTS:
         n_components=None,
         transform_method=None,
         kmeans_kwargs=None,
-        method="KMeans",
+        method=MiniBatchKMeans,
     ):
         """Performs frequency band clustering on the global distribution of omega.
 
@@ -785,6 +783,8 @@ class mrCOSTS:
         Default value is "absolute". All transformations and clustering are performed on
         the imaginary portion of omega.
 
+        :param method: Clustering method following the sklearn pattern (has `fit_predict`)
+            and `n_clusters` keyword.
         :param n_components: The number of clusters to find.
         :type n_components: int
         :param transform_method: How to transform omega. See docstring for valid options.
@@ -820,21 +820,17 @@ class mrCOSTS:
         )
 
         if kmeans_kwargs is None:
+            kmeans_kwargs = {}
             random_state = 0
-            kmeans_kwargs = {
-                "random_state": random_state,
-            }
-        if method == "KMeans":
-            clustering = MiniBatchKMeans(
-                n_clusters=n_components, **kmeans_kwargs
+            kmeans_kwargs["random_state"] = kmeans_kwargs.get(
+                "random_state", random_state
             )
-        elif method == "KMediods":
-            from sklearn_extra.cluster import KMedoids
-
-            clustering = KMedoids(n_clusters=n_components, **kmeans_kwargs)
-        else:
+        clustering = method(n_clusters=n_components, **kmeans_kwargs)
+        if not hasattr(clustering, "fit_predict") and callable(
+            getattr(clustering, "fit_predict")
+        ):
             raise ValueError(
-                "Unrecognized clustering method {}.".format(method)
+                "Clustering method must have `fit_predict()` method."
             )
 
         omega_classes = clustering.fit_predict(np.atleast_2d(omega_array).T)
@@ -874,7 +870,6 @@ class mrCOSTS:
         if transform_method is None or transform_method == "absolute":
             omega_array = np.abs(omega_array.imag.astype("float"))
         elif transform_method == "square_frequencies":
-            # omega_array = (np.conj(omega_array) * omega_array).astype("float")
             omega_array = (omega_array.imag**2).real.astype("float")
         elif transform_method == "period":
             omega_array = 1 / np.abs(omega_array.imag.astype("float"))
@@ -963,11 +958,12 @@ class mrCOSTS:
                     )
                 )
                 for j in np.arange(0, self._n_components_global):
+                    class_ind = classification == j
                     xr_sep_window[j, :, :] = np.linalg.multi_dot(
                         [
-                            w[:, classification == j],
-                            np.diag(b[classification == j]),
-                            np.exp(omega[classification == j] * t),
+                            w[:, class_ind],
+                            np.diag(b[class_ind]),
+                            np.exp(omega[class_ind] * t),
                         ]
                     )
 
