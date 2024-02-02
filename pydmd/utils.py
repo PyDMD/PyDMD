@@ -194,8 +194,8 @@ def compute_svd(
 def compute_rqb(
     X: np.ndarray,
     svd_rank: Number,
-    oversampling: int = 10,
-    power_iters: int = 2,
+    oversampling: int,
+    power_iters: int,
     Omega: np.ndarray = None,
     seed: Union[None, int] = None,
 ) -> NamedTuple(
