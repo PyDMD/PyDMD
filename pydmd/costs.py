@@ -474,9 +474,8 @@ class COSTS:
 
         # Perform the sliding window DMD fitting.
         for k in range(self._n_slides):
-            if verbose:
-                if k // 50 == k / 50:
-                    print("{} of {}".format(k, self._n_slides))
+            if verbose and k % 50 == 0:
+                print("{} of {}".format(k, self._n_slides))
 
             sample_slice = self.get_window_indices(k)
             data_window = data[:, sample_slice]
@@ -487,8 +486,7 @@ class COSTS:
             time_window = original_time_window - t_start
 
             # Subtract off the time mean before rounding corners.
-            c = np.mean(data_window, 1, keepdims=True)
-            data_window = data_window - c
+            data_window -= np.mean(data_window, 1, keepdims=True)
 
             # Round the corners of the window.
             data_window = data_window * lv_kern
@@ -518,8 +516,8 @@ class COSTS:
             self._amplitudes_array[
                 k, : optdmd.eigs.shape[0]
             ] = optdmd.amplitudes
-            self._window_means_array[k, :] = c.flatten()
-            self._time_array[k, :] = original_time_window
+            self._window_means_array[k] = c.flatten()
+            self._time_array[k] = original_time_window
 
             # Reset optdmd between iterations
             if not self._global_svd:
@@ -549,12 +547,11 @@ class COSTS:
         # Get the window indices and data.
         sample_start = self._step_size * k
         if k == self._n_slides - 1 and self._non_integer_n_slide:
-            sample_slice = slice(-self._window_length, None)
+            return slice(-self._window_length, None)
         else:
-            sample_slice = slice(
+            return slice(
                 sample_start, sample_start + self._window_length
             )
-        return sample_slice
 
     def cluster_omega(
         self,
@@ -875,7 +872,7 @@ class COSTS:
                 (self._n_components, self._n_data_vars, self._window_length)
             )
             for j in np.unique(self._omega_classes):
-                xr_sep_window[j, :, :] = np.linalg.multi_dot(
+                xr_sep_window[j] = np.linalg.multi_dot(
                     [
                         w[:, classification == j],
                         np.diag(b[classification == j]),
@@ -884,12 +881,12 @@ class COSTS:
                 ).real
 
                 # Add the constant offset to the lowest frequency cluster.
-                if include_means and (j == np.argmin(self._cluster_centroids)):
-                    xr_sep_window[j, :, :] += c
-                xr_sep_window[j, :, :] = xr_sep_window[j, :, :] * recon_filter
+                if include_means and j == np.argmin(self._cluster_centroids):
+                    xr_sep_window[j] += c
+                xr_sep_window[j] = xr_sep_window[j] * recon_filter
 
                 xr_sep[j, :, window_indices] = (
-                    xr_sep[j, :, window_indices] + xr_sep_window[j, :, :]
+                    xr_sep[j, :, window_indices] + xr_sep_window[j]
                 )
 
             xn[window_indices] += recon_filter
@@ -921,8 +918,8 @@ class COSTS:
             scale_reconstruction_kwargs = {}
 
         xr_sep = self.scale_reconstruction(**scale_reconstruction_kwargs)
-        xr_low_frequency = xr_sep[0, :, :]
-        xr_high_frequency = xr_sep[1:, :, :].sum(axis=0)
+        xr_low_frequency = xr_sep[0]
+        xr_high_frequency = xr_sep[1:].sum(axis=0)
 
         return xr_low_frequency, xr_high_frequency
 
