@@ -1,11 +1,22 @@
-import numpy as np
-from pydmd.bopdmd import BOPDMD
-from .utils import compute_rank, compute_svd
+"""
+Module for the Coherent Spatio-Temporal Scale Separation with DMD.
+
+References:
+- Dylewsky, D., Tao, M., & Kutz, J. N. (2019). Dynamic mode decomposition for
+multiscale nonlinear physics. Physics Review E, 99(6),
+10.1103/PhysRevE.99.063311. https://doi.org/10.1103/PhysRevE.99.063311
+"""
+
 import copy
+
+import numpy as np
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import xarray as xr
+
+from .utils import compute_rank, compute_svd
+from pydmd.bopdmd import BOPDMD
 
 
 class COSTS:
@@ -15,50 +26,57 @@ class COSTS:
     :type window_length: int
     :param step_size: Number of time steps to slide each CSM-DMD window.
     :type step_size: int
-    :param n_components: Number of independent frequency bands for this window length.
+    :param n_components: Number of independent frequency bands for this
+        window length.
     :type n_components: int
     :param svd_rank: The rank of the BOPDMD fit.
     :type svd_rank: int
-    :param global_svd: Flag indicating whether to find the proj_basis and initial
-        values using the entire dataset instead of individually for each window.
-        Generally using the global_svd speeds up the fitting process by not finding a
-        new initial value for each window. Default is True.
+    :param global_svd: Flag indicating whether to find the proj_basis and
+        initial values using the entire dataset instead of individually for
+        each window. Generally using the global_svd speeds up the fitting
+        process by not finding a new initial value for each window. Default
+        is True.
     :type global_svd: bool
-    :param initialize_artificially: Flag indicating whether to initialize the DMD using
-        imaginary eigenvalues (i.e., the imaginary component of the cluster results from a
-        previous iteration) through the `cluster_centroids` keyword. Default is False.
+    :param initialize_artificially: Flag indicating whether to initialize the
+        DMD using imaginary eigenvalues (i.e., the imaginary component of the
+        cluster results from a previous iteration) through the
+        `cluster_centroids` keyword. Default is False.
     :type initialize_artificially: bool
     :param pydmd_kwargs: Keyword arguments to pass onto the BOPDMD object.
     :type pydmd_kwargs: dict
-    :param cluster_centroids: Cluster centroids from a previous fitting iteration to
-        use for the initial guess of the eigenvalues. Should only be the imaginary
-        component.
+    :param cluster_centroids: Cluster centroids from a previous fitting
+        iteration to use for the initial guess of the eigenvalues. Should
+        only be the imaginary component.
     :type cluster_centroids: numpy array
-    :param reset_alpha_init: Flag indicating whether the initial guess for the BOPDMD
-        eigenvalues should be reset for each window. Resetting the initial value increases
-        the computation time due to finding a new initial guess. Default is False.
+    :param reset_alpha_init: Flag indicating whether the initial guess for
+        the BOPDMD eigenvalues should be reset for each window. Resetting the
+        initial value increases the computation time due to finding a new
+        initial guess. Default is False.
     :type reset_alpha_init: bool
-    :param force_even_eigs: Flag indicating whether an even svd_rank should be forced
-        when not specifying the svd_rank directly (i.e., svd_rank=0). Default is True.
+    :param force_even_eigs: Flag indicating whether an even svd_rank should be
+        forced when not specifying the svd_rank directly (i.e., svd_rank=0).
+        Default is True.
     :type global_svd: bool
-    :param max_rank: Maximum svd_rank allowed when the svd_rank is found through rank
-        truncation (i.e., svd_rank=0).
+    :param max_rank: Maximum svd_rank allowed when the svd_rank is found
+        through rank truncation (i.e., svd_rank=0).
     :type max_rank: int
-    :param use_kmean_freqs: Flag specifying if the BOPDMD fit should use initial values
-        taken from cluster centroids, e.g., from a previoius iteration.
+    :param use_kmean_freqs: Flag specifying if the BOPDMD fit should use
+        initial values taken from cluster centroids, e.g., from a previoius
+        iteration.
     :type use_kmean_freqs: bool
-    :param init_alpha: Initial guess for the eigenvalues provided to BOPDMD. Must be equal
-        to the `svd_rank`.
+    :param init_alpha: Initial guess for the eigenvalues provided to BOPDMD.
+        Must be equal to the `svd_rank`.
     :type init_alpha: numpy array
-    :param max_rank: Maximum allowed `svd_rank`. Overrides the optimal rank truncation if
-        `svd_rank=0`.
+    :param max_rank: Maximum allowed `svd_rank`. Overrides the optimal rank
+        truncation if `svd_rank=0`.
     :type max_rank: int
     :param n_components: Number of frequency bands to use for clustering.
     :type n_components: int
-    :param force_even_eigs: Flag specifying if the `svd_rank` should be forced to be even.
+    :param force_even_eigs: Flag specifying if the `svd_rank` should be forced
+        to be even.
     :type force_even_eigs: bool
-    :param reset_alpha_init: Flag specifying if the initial eigenvalue guess should be reset
-        between windows.
+    :param reset_alpha_init: Flag specifying if the initial eigenvalue guess
+        should be reset between windows.
     :type reset_alpha_init: bool
     """
 
@@ -246,17 +264,20 @@ class COSTS:
 
     @staticmethod
     def build_windows(data, window_length, step_size, integer_windows=False):
-        """How many times integer slides fit the data for a given step and window size.
+        """How many times integer slides fit the data for a given step and
+        window size.
 
         :param data: 1D snapshots for fitting
         :type data: numpy.ndarray
-        :param window_length: Length of the fitting window in units of time steps
+        :param window_length: Length of the fitting window in units of time
+            steps
         :type window_length: int
         :param step_size:  Distance to slide each window.
         :type step_size: int
         :param integer_windows: Whether to force an integer number of windows
         :type integer_windows: bool
-        :return:
+        :return: Number of windows to fit.
+        :rtype: int
         """
         if integer_windows:
             n_split = np.floor(data.shape[1] / window_length).astype(int)
@@ -272,7 +293,16 @@ class COSTS:
 
     @staticmethod
     def calculate_lv_kern(window_length, corner_sharpness=None):
-        """Calculate the kerning window for suppressing real eigenvalues."""
+        """Calculate the kerning window for suppressing real eigenvalues.
+
+        :param corner_sharpness: Parameter specifying how sharp the kerning
+            window should be. Default is 16.
+        :type corner_sharpness: int
+        :param window_length: Size of the window in time steps to kern.
+        :type window_length: int
+        :return: Kernel for convolving with the windowed data.
+        :rtype: np.ndarray
+        """
 
         # Higher = sharper corners
         if corner_sharpness is None:
@@ -298,8 +328,14 @@ class COSTS:
     def build_kern(window_length):
         """Build the convolution kernel for the window reconstruction.
 
+        Each window is convolved with a gaussian filter for the
+        reconstruction, which weights points in the middle of the window and
+        de-emphasizes the edges of the window that are more poorly fit.
+
         :param window_length: Length of the data window in units of time
-        :return:
+        :type window_length: int
+        :return: Gaussian filter of length `window_length`
+        :rtype: np.ndarray
         """
         recon_filter_sd = window_length / 8
         recon_filter = np.exp(
@@ -319,8 +355,7 @@ class COSTS:
         """Build the projection basis."""
         self._svd_rank = compute_rank(data, svd_rank=svd_rank)
         # Recover the first r modes of the global svd
-        u, _, _ = compute_svd(data, svd_rank=svd_rank)
-        return u
+        return compute_svd(data, svd_rank=svd_rank)[0]
 
     def _build_initizialization(self):
         """Method for making initial guess of DMD eigenvalues.
@@ -345,7 +380,8 @@ class COSTS:
                 [1, -1], int(self._svd_rank / self._n_components)
             )
             return init_alpha
-        # The user accidentally provided both methods of initializing the eigenvalues.
+        # The user accidentally provided both methods of initializing the
+        # eigenvalues.
         elif (
             self._initialize_artificially
             and self._init_alpha is not None
@@ -369,7 +405,8 @@ class COSTS:
     ):
         """Fit COherent SpatioTemporal Scale separation (COSTS).
 
-        :param data: the input data to decompose (1D snapshots). Dimensions space vs time.
+        :param data: the input data to decompose (1D snapshots). Dimensions of
+            space vs time.
         :type data: numpy.ndarray
         :param time: time series labeling the 1D snapshots
         :type time: numpy.ndarray
@@ -395,14 +432,14 @@ class COSTS:
 
         if self._window_length > self._n_time_steps:
             raise ValueError(
-                "Window length ({}) is larger than the time dimension ({})".format(
-                    self._window_length, self._n_time_steps
-                )
+                (
+                    "Window length ({}) is larger than the time dimension ({})"
+                ).format(self._window_length, self._n_time_steps)
             )
 
         # If the window size and step size do not span the data in an integer
-        # number of slides, we add one last window that has a smaller step spacing
-        # relative to the other window spacings.
+        # number of slides, we add one last window that has a smaller step
+        # spacing relative to the other window spacings.
         n_slide_last_window = self._n_time_steps - (
             self._step_size * (self._n_slides - 1) + self._window_length
         )
@@ -420,7 +457,7 @@ class COSTS:
                 "use_proj", False
             )
             self._svd_rank = compute_rank(data, svd_rank=self._svd_rank)
-            svd_rank_pre_allocate = self._svd_rank
+            self._svd_rank_pre_allocate = self._svd_rank
         elif not self._global_svd and self._svd_rank > 0:
             if self._force_even_eigs and self._svd_rank % 2:
                 raise ValueError(
@@ -430,27 +467,30 @@ class COSTS:
                 raise ValueError(
                     "Rank is larger than the data spatial dimension."
                 )
-            svd_rank_pre_allocate = compute_rank(data, svd_rank=self._svd_rank)
-        # If not using a global svd or a specified svd_rank, local u from each window is
-        # used instead. The optimal svd_rank may change when using the locally optimal
-        # svd_rank. To deal with this situation in the pre-allocation we give the
-        # maximally allowed svd_rank for pre-allocation.
+            self._svd_rank_pre_allocate = compute_rank(
+                data, svd_rank=self._svd_rank
+            )
+        # If not using a global svd or a specified svd_rank, local u from
+        # each window is used instead. The optimal svd_rank may change when
+        # using the locally optimal svd_rank. To deal with this situation in
+        # the pre-allocation we give the maximally allowed svd_rank for
+        # pre-allocation.
         elif self._max_rank is not None:
-            svd_rank_pre_allocate = self._max_rank
+            self._svd_rank_pre_allocate = self._max_rank
         else:
-            svd_rank_pre_allocate = self._n_data_vars
+            self._svd_rank_pre_allocate = self._n_data_vars
 
         # Pre-allocate all elements for the sliding window DMD.
         self._time_array = np.zeros((self._n_slides, self._window_length))
         self._modes_array = np.zeros(
-            (self._n_slides, self._n_data_vars, svd_rank_pre_allocate),
+            (self._n_slides, self._n_data_vars, self._svd_rank_pre_allocate),
             np.complex128,
         )
         self._omega_array = np.zeros(
-            (self._n_slides, svd_rank_pre_allocate), np.complex128
+            (self._n_slides, self._svd_rank_pre_allocate), np.complex128
         )
         self._amplitudes_array = np.zeros(
-            (self._n_slides, svd_rank_pre_allocate), np.complex128
+            (self._n_slides, self._svd_rank_pre_allocate), np.complex128
         )
         self._window_means_array = np.zeros((self._n_slides, self._n_data_vars))
 
@@ -522,15 +562,15 @@ class COSTS:
 
             # Reset optdmd between iterations
             if not self._global_svd:
-                # The default behavior is to reset the optdmd object to use the initial
-                # value from the first window.
+                # The default behavior is to reset the optdmd object to use
+                # the initial value from the first window.
                 if not self._use_last_freq and not self._reset_alpha_init:
                     optdmd.init_alpha = self._init_alpha
                 # Use the eigenvalues from this window to seed the next window.
                 elif self._use_last_freq:
                     optdmd.init_alpha = optdmd.eigs
-                # Remove the initial guess for the eigenvalues entirely. This is much
-                # more computationally expensive.
+                # Remove the initial guess for the eigenvalues entirely. This
+                # is much more computationally expensive.
                 elif self._reset_alpha_init:
                     optdmd.init_alpha = None
 
@@ -559,44 +599,95 @@ class COSTS:
         transform_method=None,
         method=MiniBatchKMeans,
     ):
-        """Clusters fitted eigenvalues into frequency bands by the imaginary component.
+        """Clusters fitted eigenvalues into frequency bands by the imaginary
+        component.
 
-        :param method: Choose clustering strategy: KMeans (default) or KMediods
-            (requires sklearn_extras).
-        :type method: str
-        :param n_components: Hyperparameter for k-means clustering, number of clusters.
+        Assigns the clustering results to the object.
+
+        :param n_components: Hyperparameter for k-means clustering, number of
+            clusters.
         :type n_components: int
         :param kmeans_kwargs: Arguments for KMeans clustering. The default is
             random_state = 0.
         :type kmeans_kwargs: dict
-        :param transform_method: How to transform omega. See docstring for valid options.
+        :param transform_method: How to transform omega. See docstring for
+            valid options.
         :type transform_method: str or NoneType
-        :return:
+        :param method: Clustering method following the sklearn pattern (has
+            `fit_predict` and `n_clusters` keywords). Default is
+            MiniBatchKMeans.
+        :type method: method
         """
-        # Reshape the omega array into a 1d array
-        n_slides = self.omega_array.shape[0]
-        svd_rank = self.omega_array.shape[1]
-        omega_rshp = self.omega_array.reshape(n_slides * svd_rank)
-        omega_transform = self.transform_omega(
-            omega_rshp, transform_method=transform_method
+
+        cluster_centroids, omega_classes = self._cluster(
+            n_components,
+            kmeans_kwargs=kmeans_kwargs,
+            transform_method=transform_method,
+            method=method,
         )
 
+        # Assign the results to the object.
+        self._cluster_centroids = cluster_centroids
+        self._omega_classes = omega_classes
+        self._transform_method = transform_method
+        self._n_components = n_components
+
+    def _cluster(
+        self,
+        n_components,
+        kmeans_kwargs=None,
+        transform_method=None,
+        method=MiniBatchKMeans,
+    ):
+        """Clusters fitted eigenvalues into frequency bands by the imaginary
+        component.
+
+        :param n_components: Hyperparameter for k-means clustering, number of
+            clusters.
+        :type n_components: int
+        :param kmeans_kwargs: Arguments for KMeans clustering. The default is
+            random_state = 0.
+        :type kmeans_kwargs: dict or NoneType
+        :param transform_method: How to transform omega. See docstring for
+            valid options.
+        :type transform_method: str or NoneType
+        :param method: Clustering method following the sklearn pattern (has
+            `fit_predict` and `n_clusters` keywords). Default is
+            MiniBatchKMeans.
+        :type method: method
+        :return omega_classes: Classes defining the frequency bands ordered
+            from the largest frequency to the smallest frequency.
+        :rtype omega_classes: numpy.ndarray
+        :return cluster_centroids: Centroids of the frequency bands. Order
+            corresponds to the classes.
+        :rtype cluster_centroids: numpy.ndarray
+        """
         if kmeans_kwargs is None:
             kmeans_kwargs = {}
             random_state = 0
             kmeans_kwargs["random_state"] = kmeans_kwargs.get(
                 "random_state", random_state
             )
-        clustering = method(n_clusters=n_components, **kmeans_kwargs)
-        if not hasattr(clustering, "fit_predict") and callable(
-            getattr(clustering, "fit_predict")
+        if not hasattr(method, "fit_predict") and callable(
+            getattr(method, "fit_predict")
         ):
             raise ValueError(
                 "Clustering method must have `fit_predict()` method."
             )
+        clustering = method(n_clusters=n_components, **kmeans_kwargs)
+
+        # Reshape the omega array into a 1d array
+        omega_rshp = self.omega_array.reshape(
+            self._n_slides * self._svd_rank_pre_allocate
+        )
+        omega_transform = self.transform_omega(
+            omega_rshp, transform_method=transform_method
+        )
 
         omega_classes = clustering.fit_predict(np.atleast_2d(omega_transform).T)
-        omega_classes = omega_classes.reshape(n_slides, svd_rank)
+        omega_classes = omega_classes.reshape(
+            self._n_slides, self._svd_rank_pre_allocate
+        )
         cluster_centroids = clustering.cluster_centers_.flatten()
 
         # Sort the clusters by the centroid magnitude.
@@ -606,11 +697,10 @@ class COSTS:
         omega_classes = lut[omega_classes]
         cluster_centroids = cluster_centroids[idx]
 
-        # Assign the results to the object.
-        self._cluster_centroids = cluster_centroids
-        self._omega_classes = omega_classes
-        self._transform_method = transform_method
-        self._n_components = n_components
+        return (
+            cluster_centroids,
+            omega_classes,
+        )
 
     def transform_omega(self, omega_array, transform_method="absolute"):
         """Transform omega, primarily for clustering.
@@ -619,8 +709,8 @@ class COSTS:
             "log10": :math:`log10(\\omega)`
             "square_frequencies": :math:`\\omega^2`
             "absolute": :math:`|\\omega|`
-        Default value is "absolute". All transformations and clustering are performed on
-        the imaginary portion of omega.
+        Default value is "absolute". All transformations and clustering are
+        performed on the imaginary portion of omega.
 
         :param omega_array:
         :param transform_method:
@@ -657,27 +747,36 @@ class COSTS:
         return omega_transform
 
     def cluster_hyperparameter_sweep(
-        self, n_components_range=None, transform_method=None
+        self,
+        n_components_range=None,
+        transform_method=None,
+        method=MiniBatchKMeans,
+        kneans_kwargs=None,
     ):
         """Hyperparameter search for number of frequency bands.
 
         Searches for the optimal number of clusters to use in kmeans clustering
-        separation of the frequency bands. To best separate frequency bands it may
-        be necessary to transform omega. Scores clusters using the silhouette score
-        which can be slow to compute.
+        separation of the frequency bands. To best separate frequency bands
+        it may be necessary to transform omega. Scores clusters using the
+        silhouette score which can be slow to compute.
 
         Options for transforming omega are:
             "period": :math:`\\frac{1}{\\omega}`
             "log10": :math:`log10(\\omega)`
             "square_frequencies": :math:`\\omega^2`
             "absolute": :math:`|\\omega|`
-        Default value is "absolute". All transformations and clustering are performed on
-        the imaginary portion of omega.
+        Default value is "absolute". All transformations and clustering are
+        performed on the imaginary portion of omega.
 
         :param n_components_range: Range of n_components for the sweep.
         :type n_components_range: numpy.ndarray of ints
-        :param transform_method: How to transform the imaginary component of omega.
+        :param transform_method: How to transform the imaginary component of
+            omega.
         :type transform_method: str
+        :param method: Clustering method following the sklearn pattern (has
+            `fit_predict` and `n_clusters` keywords). Default is
+            MiniBatchKMeans.
+        :type method: method
         :return: optimal value of `n_components` for clustering.
         """
         if n_components_range is None:
@@ -687,23 +786,28 @@ class COSTS:
             )
         score = np.zeros_like(n_components_range, float)
 
-        # Reshape the omega array into a 1d array
-        omega_array = self.omega_array
-        n_slides = omega_array.shape[0]
-        svd_rank = omega_array.shape[1]
-        omega_rshp = omega_array.reshape(n_slides * svd_rank)
-
+        # Reshape the omega array into a 1d array. This is done here and not
+        # in the _cluster() helper to reduce the number of times the variable
+        # is computed.
+        omega_rshp = self.omega_array.reshape(
+            self._n_slides * self._svd_rank_pre_allocate
+        )
         # Apply the transformation
         omega_transform = self.transform_omega(
             omega_rshp, transform_method=transform_method
         )
 
         for nind, n in enumerate(n_components_range):
-            self.cluster_omega(
-                n_components=n, transform_method=transform_method
+            self._cluster(
+                n_components=n,
+                transform_method=transform_method,
+                kmeans_kwargs=kneans_kwargs,
+                method=method,
             )
 
-            classes_reshape = self.omega_classes.reshape(n_slides * svd_rank)
+            classes_reshape = self.omega_classes.reshape(
+                self._n_slides * self._svd_rank_pre_allocate
+            )
 
             score[nind] = silhouette_score(
                 np.atleast_2d(omega_transform).T,
@@ -715,21 +819,21 @@ class COSTS:
     def plot_omega_histogram(self):
         """Histogram of fit frequencies.
 
-        This plot is useful for assessing if the frequencies bands were well separated.
-        A good choice of transformation and clustering will have clearly separated clusters.
+        This plot is useful for assessing if the frequencies bands were well
+        separated. A good choice of transformation and clustering will have
+        clearly separated clusters.
 
         :return fig: Figure handle for the plot
         :return ax: Axes handle for the plot
         """
         # Reshape the omega array into a 1d array
         omega_array = self.omega_array
-        n_slides = omega_array.shape[0]
-        svd_rank = omega_array.shape[1]
-        omega_rshp = omega_array.reshape(n_slides * svd_rank)
+        # n_slides = omega_array.shape[0]
+        # svd_rank = omega_array.shape[1]
 
         # Apply the transformation to omega
         omega_transform = self.transform_omega(
-            omega_rshp, transform_method=self._transform_method
+            self.omega_array.flatten(), transform_method=self._transform_method
         )
 
         label = self._omega_label
@@ -763,14 +867,15 @@ class COSTS:
 
         # Reshape the omega array into a 1d array
         omega_array = self.omega_array
-        n_slides = omega_array.shape[0]
-        svd_rank = omega_array.shape[1]
-        omega_rshp = omega_array.reshape(n_slides * svd_rank)
+        # n_slides = omega_array.shape[0]
+        # svd_rank = omega_array.shape[1]
+        # omega_rshp = omega_array.reshape(n_slides * svd_rank)
 
         # Apply the transformation to omega
         omega_transform = self.transform_omega(
-            omega_rshp, transform_method=self._transform_method
+            self.omega_array.flatten(), transform_method=self._transform_method
         )
+
         label = self._omega_label
 
         for ncomponent, component in enumerate(range(self._n_components)):
@@ -778,7 +883,9 @@ class COSTS:
                 np.mean(self.time_array, axis=1),
                 np.where(
                     self._omega_classes == component,
-                    omega_transform.reshape((n_slides, svd_rank)),
+                    omega_transform.reshape(
+                        (self._n_slides, self._svd_rank_pre_allocate)
+                    ),
                     np.nan,
                 ),
                 color=colors[ncomponent % len(colors)],
@@ -794,7 +901,8 @@ class COSTS:
     def global_reconstruction(self, scale_reconstruction_kwargs=None):
         """Helper function for generating the global reconstruction.
 
-        :param scale_reconstruction_kwargs: Arguments for the scale reconstruction.
+        :param scale_reconstruction_kwargs: Arguments for the scale
+            reconstruction.
         :type scale_reconstruction_kwargs: dict
         :return: Global reconstruction (sum of all frequency bands)
         :rtype: numpy.ndarray
@@ -885,16 +993,17 @@ class COSTS:
     ):
         """Separate the lowest frequency band from the high frequency bands.
 
-        The lowest frequency band should contain the window means and can be passed on
-        as the data for the next decomposition level. The high frequencies should have
-        frequencies shorter than 1 / window_length.
+        The lowest frequency band should contain the window means and can be
+        passed on as the data for the next decomposition level. The high
+        frequencies should have frequencies shorter than 1 / window_length.
 
-        :param scale_reconstruction_kwargs: Arguments passed to `scale_reconstruction`
-        :return xr_low_frequency: Reconstruction of the low frequency component with
-            dimensions of n_data_vars x n_time_steps.
+        :param scale_reconstruction_kwargs: Arguments passed to
+            `scale_reconstruction`
+        :return xr_low_frequency: Reconstruction of the low frequency
+            component with dimensions of n_data_vars x n_time_steps.
         :rtype xr_low_frequency: numpy.ndarray
-        :return xr_high_frequency: Sum of all high frequency bands with dimensions of
-            n_data_vars x n_time_steps
+        :return xr_high_frequency: Sum of all high frequency bands with
+            dimensions of n_data_vars x n_time_steps
         :rtype xr_high_frequency: numpy.ndarray
         """
 
@@ -919,16 +1028,18 @@ class COSTS:
     ):
         """Plot the scale-separated low and high frequency bands.
 
-        The reconstructions are plotted in a time-space diagram. The high frequency
-        component is the sum of all high frequency bands except the low frequency
-        band which is plotted separately.
+        The reconstructions are plotted in a time-space diagram. The high
+        frequency component is the sum of all high frequency bands except the
+        low frequency band which is plotted separately.
 
         :param data: Data used for the decomposition. An array of 1D snapshots.
         :type data: numpy.ndarray
-        :param scale_reconstruction_kwargs: Arguments for reconstructing the COSTS fit.
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the
+            COSTS fit.
         :type scale_reconstruction_kwargs: dict
         :param plot_residual: If the error should be fit. Will plot
-            `data - low frequency - high frequency` yielding the error in absolute units.
+            `data - low frequency - high frequency` yielding the error in
+            absolute units.
         :type plot_residual: bool
         :param fig_kwargs: Arguments for the figure creation.
         :type fig_kwargs: dict
@@ -1023,14 +1134,17 @@ class COSTS:
         hf_plot_kwargs=None,
         plot_contours=False,
     ):
-        """Time-space plots for each individual frequency band and the fitted data.
+        """Time-space plots for each individual frequency band and the fitted
+        data.
 
         :param data: Data used for the decomposition. An array of 1D snapshots.
         :type data: numpy.ndarray
         :param plot_period:
-        :param scale_reconstruction_kwargs: Arguments for reconstructing the COSTS fit.
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the
+            COSTS fit.
         :type scale_reconstruction_kwargs: dict
-        :param plot_residual: Indicates if the residual of the fit should be plotted
+        :param plot_residual: Indicates if the residual of the fit should be
+            plotted
         :type plot_residual: bool
         :param fig_kwargs: Arguments for the figure creation.
         :type fig_kwargs: dict
@@ -1043,7 +1157,7 @@ class COSTS:
         :return fig: figure handle for the plot
         :rtype fig: matplotlib.figure()
         :return axes: matplotlib subplot instances
-        :rtype fig: matplotlib.Axes()
+        :rtype axes: matplotlib.Axes()
         """
         if scale_reconstruction_kwargs is None:
             scale_reconstruction_kwargs = {}
@@ -1057,7 +1171,8 @@ class COSTS:
             "figsize", (6, 1.5 * len(self._cluster_centroids) + 1)
         )
 
-        # Low frequency and input data often require separate plotting parameters.
+        # Low frequency and input data often require separate plotting
+        # parameters.
         if plot_kwargs is None:
             plot_kwargs = {}
         plot_kwargs["vmin"] = plot_kwargs.get("vmin", -np.abs(data).max())
@@ -1075,8 +1190,8 @@ class COSTS:
         )
         hf_plot_kwargs["cmap"] = hf_plot_kwargs.get("cmap", "RdBu_r")
 
-        # Determine the number of plotting elements, which changes depending on if the
-        # residual is included.
+        # Determine the number of plotting elements, which changes depending on
+        # if the residual is included.
         if plot_residual:
             num_plot_elements = len(self._cluster_centroids) + 2
         else:
@@ -1140,11 +1255,15 @@ class COSTS:
 
         :param data: Data on which COSTS was fit
         :type data: numpy.ndarray
-        :param scale_reconstruction_kwargs: Arguments for reconstructing the fit.
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the
+            fit.
         :type scale_reconstruction_kwargs: dict
         :param plot_kwargs: Arguments passed to costs.plot_error().
         :type scale_reconstruction_kwargs: dict
-        :return:
+        :return fig: figure handle for the plot
+        :rtype fig: matplotlib.figure()
+        :return axes: matplotlib subplot instances
+        :rtype axes: matplotlib.Axes()
         """
         if scale_reconstruction_kwargs is None:
             scale_reconstruction_kwargs = {}
@@ -1184,18 +1303,22 @@ class COSTS:
     ):
         """Plots CoSTS for a single spatial point.
 
-        Includes the input data for decomposition, the low-frequency component for the next
-        decomposition level, the residual of the high frequency component, and the
-        reconstructions of the frequency bands for the point.
+        Includes the input data for decomposition, the low-frequency component
+        for the next decomposition level, the residual of the high frequency
+        component, and the reconstructions of the frequency bands for the point.
 
         :param space_index: Index of the point in space for the 1D snapshot.
         :type space_index: int
         :param data: Original data, only necessary for level=0.
         :type data: numpy.ndarray
-        :param scale_reconstruction_kwargs: Arguments for reconstructing the fit.
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the
+            fit.
         :type scale_reconstruction_kwargs: dict
         :param include_residual:
-        :return:
+        :return fig: figure handle for the plot
+        :rtype fig: matplotlib.figure()
+        :return axes: matplotlib subplot instances
+        :rtype axes: matplotlib.Axes()
         """
         ground_truth_mean = data.mean(axis=1)
         ground_truth = (data.T - ground_truth_mean).T

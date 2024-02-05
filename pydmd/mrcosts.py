@@ -1,33 +1,46 @@
-import numpy as np
+"""
+Module for the multi-resolution Coherent Spatio-Temporal Scale Separation with
+DMD.
+
+References:
+- Dylewsky, D., Tao, M., & Kutz, J. N. (2019). Dynamic mode decomposition for
+multiscale nonlinear physics. Physics Review E, 99(6),
+10.1103/PhysRevE.99.063311. https://doi.org/10.1103/PhysRevE.99.063311
+"""
+
 import copy
+import numpy as np
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.metrics import silhouette_score, calinski_harabasz_score
 import xarray as xr
-from pydmd.costs import COSTS
 import os
+from pydmd.costs import COSTS
 
 
 class mrCOSTS:
-    """Multi-resolution Coherent Spatio-Temporal Scale Separation (mrCOSTS) with DMD.
+    """Multi-resolution Coherent Spatio-Temporal Scale Separation (mrCOSTS)
+    with DMD.
 
-    :param window_length_array: Length of the analysis window in number of time steps.
+    :param window_length_array: Length of the analysis window in number of time
+        steps.
     :type window_length_array: list of int
     :param step_size_array: Number of time steps to slide each CSM-DMD window.
     :type step_size_array: list of int
-    :param n_components_array: Number of frequency bands to use for clustering each
-        decomposition level. Only one of `cluster_sweep` or `n_components_array`
-        should be provided.
+    :param n_components_array: Number of frequency bands to use for clustering
+        each decomposition level. Only one of `cluster_sweep` or
+        `n_components_array` should be provided.
     :type n_components_array: list of int
     :param svd_rank_array: The rank of the BOPDMD fit.
     :type svd_rank_array: list of int
-    :param global_svd_array: Flag indicating whether to find the proj_basis and initial
-        values using the entire dataset instead of individually for each window.
-        Generally using the global_svd speeds up the fitting process by not finding a
-        new initial value for each window. Default is True.
+    :param global_svd_array: Flag indicating whether to find the proj_basis and
+        initial values using the entire dataset instead of individually for
+        each window. Generally using the global_svd speeds up the fitting
+        process by not finding a new initial value for each window. Default
+        is True.
     :type cluster_sweep: bool
-    :param cluster_sweep: Flag indicating whether to find the optimal value of `n_clusters`
-        for the clustering of fitted eigenvalues. Only one of `cluster_sweep` or
-        `n_components_array` should be provided.
+    :param cluster_sweep: Flag indicating whether to find the optimal value
+        of `n_clusters` for the clustering of fitted eigenvalues. Only one of
+        `cluster_sweep` or `n_components_array` should be provided.
     :type global_svd_array: list of bool
     :param pydmd_kwargs: Keyword arguments to pass onto the BOPDMD object.
     :type pydmd_kwargs: dict
@@ -58,7 +71,10 @@ class mrCOSTS:
         ):
             if not len(self._n_components_array) == len(self._step_size_array):
                 raise ValueError(
-                    "n_components_array and step_size_array must be the same length."
+                    (
+                        "n_components_array and step_size_array must be the"
+                        "same length."
+                    )
                 )
 
         # Initialize variables that are defined in fitting.
@@ -148,7 +164,8 @@ class mrCOSTS:
     @property
     def n_components_array(self):
         """
-        :return: the number of frequency bands used for each decomposition level.
+        :return: the number of frequency bands used for each decomposition
+            level.
         :rtype: list of int or float
         """
         return self._n_components_array
@@ -180,7 +197,8 @@ class mrCOSTS:
     def omega_classes_interpolated(self):
         """Returns the multi-resolution interpolation of omega classes
 
-        :return: Ints for each omega value indicating which cluster it belongs to.
+        :return: Ints for each omega value indicating which cluster it
+            belongs to.
         :rtype: list of numpy.ndarray
         """
         if self._omega_classes is None:
@@ -191,7 +209,8 @@ class mrCOSTS:
     def ragged_omega_classes(self):
         """Omega classes for each decomposition level after global clustering.
 
-        :return: list of classes for each omega value for each decomposition level.
+        :return: list of classes for each omega value for each decomposition
+            level.
         :rtype: list of numpy.ndarray
         """
         if self._omega_classes is None:
@@ -270,7 +289,10 @@ class mrCOSTS:
         if self._cluster_sweep:
             if self._n_components_array is not None:
                 raise ValueError(
-                    "Only one of `cluster_sweep` and `n_components_array` can be provided."
+                    (
+                        "Only one of `cluster_sweep` and `n_components_array` "
+                        "can be provided."
+                    )
                 )
             self._n_components_array = np.zeros(self._n_decompositions) * np.nan
 
@@ -310,7 +332,7 @@ class mrCOSTS:
             else:
                 n_components = self._n_components_array[n_decomp]
 
-            _ = mrd.cluster_omega(
+            mrd.cluster_omega(
                 n_components=n_components, transform_method=transform_method
             )
 
@@ -322,10 +344,11 @@ class mrCOSTS:
                 re = mrd.relative_error(global_reconstruction.real, x_iter)
                 print("Error in Global Reconstruction = {:.2}".format(re))
 
-            # Pass the low frequency component to the next level of decomposition.
+            # Pass the low frequency component to the next level of
+            # decomposition.
             if n_decomp < n_decompositions - 1:
                 # Scale separation
-                xr_low_frequency, xr_high_frequency = mrd.scale_separation(
+                xr_low_frequency, _ = mrd.scale_separation(
                     scale_reconstruction_kwargs=self._costs_recon_kwargs
                 )
                 x_iter = xr_low_frequency
@@ -391,9 +414,6 @@ class mrCOSTS:
     def multi_res_deterp(self):
         """
         Un-interpolate the mrCOSTS eigenvalues to the original spacing.
-
-        :param omega_classes:
-        :type omega_classes: numpy.ndarray
 
         :return: Omega classes from global clustering.
         :rtype: list of numpy.ndarrays
@@ -514,12 +534,13 @@ class mrCOSTS:
     ):
         """Plot reconstruction of each frequency band of a decomposition level.
 
-        Plots are space-time diagrams assuming a 1D spatial dimension. These are the
-        local frequency band clusters, not the global clusters.
+        Plots are space-time diagrams assuming a 1D spatial dimension. These
+        are the local frequency band clusters, not the global clusters.
 
-        Requires the input data for the decomposition as well as reconstructing the fit.
-        Deriving the input data requires providing the actual input data for the first
-        decomposition. Otherwise, the input data is recovered by reconstructing
+        Requires the input data for the decomposition as well as
+        reconstructing the fit. Deriving the input data requires providing
+        the actual input data for the first decomposition. Otherwise,
+        the input data is recovered by reconstructing
         decomposition = level - 1.
 
         :param level: Decomposition level to plot (zero indexed).
@@ -528,7 +549,8 @@ class mrCOSTS:
         :type data: numpy.ndarray
         :param kwargs: Keyword arguments given to costs.plot_reconstruction()
         :type kwargs: dict
-        :param scale_reconstruction_kwargs: Arguments for reconstructing the fit.\
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the
+            fit.
         :type scale_reconstruction_kwargs: dict
         :return: None
         """
@@ -538,7 +560,10 @@ class mrCOSTS:
         else:
             if level == 0:
                 raise ValueError(
-                    "Data must be provided when plotting the first decomposition level"
+                    (
+                        "Data must be provided when plotting the first "
+                        "decomposition level"
+                    )
                 )
             elif level > 0:
                 x_iter, _ = self.costs_array[level - 1].scale_separation()
@@ -588,7 +613,10 @@ class mrCOSTS:
         else:
             if level == 0:
                 raise ValueError(
-                    "Data must be provided when plotting the first decomposition level"
+                    (
+                        "Data must be provided when plotting the first "
+                        "decomposition level"
+                    )
                 )
             elif level > 0:
                 x_iter, _ = self.costs_array[level - 1].scale_separation()
@@ -634,7 +662,10 @@ class mrCOSTS:
         else:
             if level == 0:
                 raise ValueError(
-                    "Data must be provided when plotting the first decomposition level"
+                    (
+                        "Data must be provided when plotting the first "
+                        "decomposition level"
+                    )
                 )
             elif level > 0:
                 x_iter, _ = self.costs_array[level - 1].scale_separation()
@@ -663,9 +694,10 @@ class mrCOSTS:
     ):
         """Plots time series for an individual point.
 
-        Includes the input data for decomposition, the low-frequency component for the next
-        decomposition level, the residual of the high frequency component, and the
-        reconstructions of the frequency bands for the point.
+        Includes the input data for decomposition, the low-frequency
+        component for the next decomposition level, the residual of the high
+        frequency component, and the reconstructions of the frequency bands
+        for the point.
 
         :param space_index: Index of the point in space for the 1D snapshot.
         :type space_index: int
@@ -675,7 +707,8 @@ class mrCOSTS:
         :type data: numpy.ndarray
         :param plot_kwargs: Arguments passed to costs.plot_time_series()
         :type plot_kwargs: dict
-        :param scale_reconstruction_kwargs: Arguments for reconstructing the fit.
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the
+            fit.
         :type scale_reconstruction_kwargs: dict
         :return:
         """
@@ -684,7 +717,10 @@ class mrCOSTS:
         else:
             if level == 0:
                 raise ValueError(
-                    "Data must be provided when plotting the first decomposition level"
+                    (
+                        "Data must be provided when plotting the first "
+                        "decomposition level"
+                    )
                 )
             elif level > 0:
                 x_iter, _ = self.costs_array[level - 1].scale_separation()
@@ -712,23 +748,29 @@ class mrCOSTS:
         """
         Hyperparameter search for n_components for kmeans clustering.
 
-        :param verbose:
-        :param transform_method:
-        :param n_components_range: Values of n_components for the hyperparameter sweep.
+        :param verbose: Flag for informing the user of parameter sweep progress.
+        :type verbose: bool
+        :param transform_method: How to transform omega for clustering. See
+            `global_cluster_omega`
+        :type transform_method: str
+        :param n_components_range: Values of n_components for the
+            hyperparameter sweep.
         :type n_components_range: numpy.ndarray of ints
-        :param method: How to transform omega for clustering. See `global_cluster_omega`
-        :type method: str
-        :param score_method: Valid scoring methods are 'silhouette' and 'calinski-harabasz'. Default is
-            the silhouette score, which can be slow for large numbers of samples.
+        :param method: Clustering method following the sklearn pattern (has
+            `fit_predict` and `n_clusters` keywords). Default is
+            MiniBatchKMeans.
+        :type method: method
+        :param score_method: Valid scoring methods are 'silhouette' and
+            'calinski-harabasz'. Default is the silhouette score, which can
+            be slow for large numbers of samples.
         :type score_method: str or None
+        :param kmeans_kwargs: Keywords to pass to the clustering method.
         :return score: Scores for each n_components in n_components_range
         :rtype score: numpy.ndarray
         :return n_components: Optimal n_components for frequency band separation
         :rtype n_components: int
         """
 
-        if method is None:
-            method = "KMeans"
         if transform_method is None:
             transform_method = self._transform_method
 
@@ -751,8 +793,8 @@ class mrCOSTS:
                 )
             # Calinski-Harabasz is not a good counter to the silhouette score
             # since it just increases with increasing number of clusters. It is
-            # only included as a reference and should be replaced if a serious look
-            # is given to altering the clustering algorithm.
+            # only included as a reference and should be replaced if a serious
+            # look is given to altering the clustering algorithm.
             elif score_method == "calinski-harabasz":
                 score[nind] = calinski_harabasz_score(
                     omega.reshape(-1, 1),
@@ -770,28 +812,33 @@ class mrCOSTS:
         kmeans_kwargs=None,
         method=MiniBatchKMeans,
     ):
-        """Performs frequency band clustering on the global distribution of omega.
+        """Performs frequency band clustering on the global distribution of
+        omega.
 
-        Uses k-means clustering with the MiniBatchKMeans method. The hyperparameter
-        for this unsupervised method is the number of clusters, given by `n_components`.
-        Transforming omega may be necessary to get well-separated frequency bands. Options
-        for transforming omega are:
+        Uses k-means clustering with the MiniBatchKMeans method. The
+        hyperparameter for this unsupervised method is the number of
+        clusters, given by `n_components`. Transforming omega may be
+        necessary to get well-separated frequency bands. Options for
+        transforming omega are:
             "period": :math:`\\frac{1}{\\omega}`
             "log10": :math:`log10(\\omega)`
             "square_frequencies": :math:`\\omega^2`
             "absolute": :math:`|\\omega|`
-        Default value is "absolute". All transformations and clustering are performed on
-        the imaginary portion of omega.
+        Default value is "absolute". All transformations and clustering are
+        performed on the imaginary portion of omega.
 
-        :param method: Clustering method following the sklearn pattern (has `fit_predict`)
-            and `n_clusters` keyword.
+        :param method: Clustering method following the sklearn pattern (has
+            `fit_predict` and `n_clusters` keywords). Default is
+            MiniBatchKMeans.
+        :type method: method
         :param n_components: The number of clusters to find.
         :type n_components: int
-        :param transform_method: How to transform omega. See docstring for valid options.
+        :param transform_method: How to transform omega.
         :type transform_method: str or NoneType
-        :param kmeans_kwargs: Arguments for MiniBatchKMeans
+        :param kmeans_kwargs: Arguments for clustering method.
         :type kmeans_kwargs: dict
-        :return cluster_centroids: Centroid values for each cluster in transformed omega
+        :return cluster_centroids: Centroid values for each cluster in
+            transformed omega.
         :rtype cluster_centroids: numpy.ndarray
         :return omega_classes: Global frequency band cluster identifiers.
         :rtype omega_classes: numpy.ndarray
@@ -806,14 +853,18 @@ class mrCOSTS:
                 n_components = self._n_components_global
             else:
                 raise ValueError(
-                    "Either perform a cluster hyperparameter sweep or provide `n_components`"
+                    (
+                        "Either perform a cluster hyperparameter sweep or "
+                        "provide `n_components`"
+                    )
                 )
         elif n_components is not None:
             self._n_components_global = n_components
 
         omega_array = self._da_omega.values
-        # This step flattens the array, which is desirable. We want to cluster on just
-        # on the histogram of omega, which means just one "sample".
+        # This step flattens the array, which is desirable. We want to
+        # cluster on just on the histogram of omega, which means just one
+        # "sample".
         omega_array = omega_array[~np.isnan(omega_array)]
         omega_array = self.transform_omega(
             omega_array, transform_method=transform_method
@@ -856,12 +907,13 @@ class mrCOSTS:
             "log10": :math:`log10(\\omega)`
             "square_frequencies": :math:`\\omega^2`
             "absolute": :math:`|\\omega|`
-        Default value is "absolute". All transformations and clustering are performed on
-        the imaginary portion of omega.
+        Default value is "absolute". All transformations and clustering are
+        performed on the imaginary portion of omega.
 
         :param omega_array: Omega values
         :type omega_array: numpy.ndarray
-        :param transform_method: How to transform the imaginary component of omega.
+        :param transform_method: How to transform the imaginary component of
+            omega.
         :type transform_method: str
         :return: transformed omega array
         :rtype: numpy.ndarray
@@ -899,7 +951,8 @@ class mrCOSTS:
 
         :param n_components: Number of frequency bands from the clustering.
         :type n_components: int
-        :param omega_classes_list: Resulting cluster identifiers from clustering omega.
+        :param omega_classes_list: Resulting cluster identifiers from
+            clustering omega.
         :type omega_classes_list: list of numpy.ndarrays
         :return: Reconstruction with dimensions of:
             n_decompositions x n_components x n_data_vars x n_time_steps
