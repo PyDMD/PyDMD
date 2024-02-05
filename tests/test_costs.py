@@ -16,7 +16,10 @@ def overlapping_oscillators():
     """
 
     def rhs_FNM(t, x, tau, a, b, Iext):
-        # FitzHugh-Nagumo Model
+        """FitzHugh-Nagumo Model
+
+        See costs-tutorial_toy-data for details.
+        """
         v = x[0]
         w = x[1]
         vdot = v - (v**3) / 3 - w + Iext
@@ -26,7 +29,10 @@ def overlapping_oscillators():
         return dx
 
     def rhs_UFD(t, y, eta, epsilon, tau):
-        # Unforced Duffing Oscillator
+        """Unforced Duffing Oscillator
+
+        See costs-tutorial_toy-data for details.
+        """
         p = y[0]
         q = y[1]
         pdot = q
@@ -121,7 +127,7 @@ mrd = COSTS(
 )
 mrd.fit(data, np.atleast_2d(time), window, step, verbose=False)
 # Force the clustering to use two components due to the nature of the toy data.
-_ = mrd.cluster_omega(n_components=2, transform_method=transform_method)
+mrd.cluster_omega(n_components=2, transform_method=transform_method)
 
 
 def test_construction():
@@ -148,6 +154,7 @@ def test_construction():
 
 
 def test_bad_construction():
+    """Test bad fit and construction keywords and parameters."""
     mrd_alternative = COSTS()
     with raises(ValueError):
         mrd_alternative.fit(
@@ -156,6 +163,7 @@ def test_bad_construction():
 
 
 def test_window_construction():
+    """Determine that the correct number of windows were found."""
     assert mrd.build_windows(data, window, step, integer_windows=True) == 61
 
 
@@ -244,7 +252,7 @@ def test_omega_transforms():
 
 
 def test_to_xarray():
-    """ """
+    """Tests the round trip conversion to and from xarray."""
     ds = mrd.to_xarray()
     mrd_convert = mrd.from_xarray(ds)
 
@@ -252,7 +260,8 @@ def test_to_xarray():
     assert np.allclose(mrd.modes_array, mrd_convert.modes_array)
     assert np.allclose(mrd.cluster_centroids, mrd_convert.cluster_centroids)
 
-    # The round trip of the pydmd_kwargs is sensitive to python and numpy version.
+    # The round trip of the pydmd_kwargs is sensitive to python and numpy
+    # version.
     assert np.allclose(
         mrd._pydmd_kwargs["proj_basis"], mrd_convert._pydmd_kwargs["proj_basis"]
     )
@@ -262,6 +271,7 @@ def test_to_xarray():
 
 
 def test_plotters():
+    """Determine no errors are triggered when plotting."""
     mrd.plot_reconstructions(data)
     mrd.plot_scale_separation(data)
     mrd.plot_error(data)

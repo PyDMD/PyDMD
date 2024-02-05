@@ -9,10 +9,23 @@ from pydmd.mrcosts import mrCOSTS
 
 
 def build_multiscale_process():
-    """ """
+    """
+    Simulates a system with two oscillators with occasionally overlapping
+    frequencies (adapted from Dylewsky et al., 2019) with a transient
+    coherent wave packet constructive interfering with the system.
+
+    Oscillator #1: FitzHugh-Nagumo Model
+    Oscillator #2: Unforced Duffing Oscillator
+
+    Data are sub-selected to reduce the computational load from minutes to
+    10s of seconds. See costs-tutorial_toy-data for details.
+    """
 
     def rhs_FNM(t, x, tau, a, b, Iext):
-        # FitzHugh-Nagumo Model
+        """FitzHugh-Nagumo Model
+
+        See costs-tutorial_toy-data for details.
+        """
         v = x[0]
         w = x[1]
         vdot = v - (v**3) / 3 - w + Iext
@@ -22,7 +35,10 @@ def build_multiscale_process():
         return dx
 
     def rhs_UFD(t, y, eta, epsilon, tau):
-        # Unforced Duffing Oscillator
+        """Unforced Duffing Oscillator
+
+        See costs-tutorial_toy-data for details.
+        """
         p = y[0]
         q = y[1]
         pdot = q
@@ -269,7 +285,10 @@ def test_omega_transforms():
 
 
 def test_netcdf():
-    """ """
+    """
+    Test the round trip conversion of the mrCOSTS object to file in
+    netcdf format and back to mrCOSTS.
+    """
     mrc.to_netcdf("tests")
     file_list = glob.glob("*tests*.nc")
     mrc_from_file = mrCOSTS()
@@ -283,6 +302,10 @@ def test_netcdf():
 
 
 def test_plot_local_reconstructions():
+    """
+    Test that the local reconstruction plot works and raises the appropriate
+    errors when trying to plot the first decomposition level without data.
+    """
     mrc.plot_local_reconstructions(0, data=data)
 
     with raises(ValueError):
@@ -293,6 +316,10 @@ def test_plot_local_reconstructions():
 
 
 def test_plot_local_error():
+    """
+    Test that the local error plot works and raises the appropriate
+    errors when trying to plot the first decomposition level without data.
+    """
     mrc.plot_local_error(0, data=data)
 
     with raises(ValueError):
@@ -303,6 +330,10 @@ def test_plot_local_error():
 
 
 def test_plot_local_scale_separation():
+    """
+    Test that the local scale separation plot works and raises the appropriate
+    errors when trying to plot the first decomposition level without data.
+    """
     _ = mrc.plot_local_scale_separation(0, data=data)
 
     with raises(ValueError):
@@ -313,6 +344,11 @@ def test_plot_local_scale_separation():
 
 
 def test_plot_local_time_series():
+    """
+    Test that the local time series of a point plot works and raises the
+    appropriate errors when trying to plot the first decomposition level
+    without data.
+    """
     _ = mrc.plot_local_time_series(0, 0, data=data)
 
     with raises(ValueError):
@@ -323,6 +359,7 @@ def test_plot_local_time_series():
 
 
 def tear_down():
+    """Remove the files generated in `test_netcdf`"""
     file_list = glob.glob("*tests*.nc")
     for f in file_list:
         os.remove(f)
