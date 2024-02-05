@@ -485,6 +485,8 @@ class COSTS:
             time_window = original_time_window - t_start
 
             # Subtract off the time mean before rounding corners.
+            c = np.mean(data_window, 1, keepdims=True)
+            data_window = data_window - c
             data_window -= np.mean(data_window, 1, keepdims=True)
 
             # Round the corners of the window.
@@ -515,9 +517,7 @@ class COSTS:
             self._amplitudes_array[
                 k, : optdmd.eigs.shape[0]
             ] = optdmd.amplitudes
-            self._window_means_array[k] = np.mean(
-                data_window, 1, keepdims=True
-            ).flatten()
+            self._window_means_array[k] = c.flatten()
             self._time_array[k] = original_time_window
 
             # Reset optdmd between iterations
