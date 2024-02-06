@@ -10,7 +10,7 @@ Systems, 18, 2019.
 import numpy as np
 
 from .cdmd import CDMD
-from .utils import compute_rank, compute_rqb
+from .utils import compute_rqb
 
 
 class RDMD(CDMD):
@@ -24,13 +24,13 @@ class RDMD(CDMD):
     :param seed: Seed used to initialize the random generator when computing
         random test matrices.
     :type seed: int
-    :param oversampling: Number of additional samples (beyond the desired rank)
-        to use when computing the random test matrix. Note that values {5,10}
-        tend to be sufficient.
+    :param oversampling: Number of additional samples (beyond the target rank)
+        to use when computing the random test matrix. Note that values in the
+        range [5, 10] tend to be sufficient.
     :type oversampling: int
     :param power_iters: Number of power iterations to perform when executing
-        the Randomized QB Decomposition. Note that values {1,2} often lead to
-        considerable improvements.
+        the Randomized QB Decomposition. Note that as many as 1 to 2 power
+        iterations often lead to considerable improvements.
     :type power_iters: int
     """
 
