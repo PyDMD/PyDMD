@@ -201,6 +201,45 @@ def compute_rqb(
 ) -> NamedTuple(
     "RQB", [("Q", np.ndarray), ("B", np.ndarray), ("Omega", np.ndarray)]
 ):
+    """
+    Randomized QB Decomposition.
+
+    :param X: the matrix to decompose.
+    :type X: np.ndarray
+    :param svd_rank: the rank for the truncation; If 0, the method computes
+        the optimal rank and uses it for truncation; if positive interger,
+        the method uses the argument for the truncation; if float between 0
+        and 1, the rank is the number of the biggest singular values that
+        are needed to reach the 'energy' specified by `svd_rank`; if -1,
+        the method does not compute truncation. Use this parameter to
+        define the target rank of the input matrix.
+    :type svd_rank: int or float
+    :param oversampling: Number of additional samples (beyond the target rank)
+        to use when computing the random test matrix. Note that values in the
+        range [5, 10] tend to be sufficient.
+    :type oversampling: int
+    :param power_iters: Number of power iterations to perform when executing
+        the Randomized QB Decomposition. Note that as many as 1 to 2 power
+        iterations often lead to considerable improvements.
+    :type power_iters: int
+    :param Omega: The random test matrix that will be used when executing
+        the Randomized QB Decomposition. If not provided, the `svd_rank` and
+        `oversampling` parameters will be used to compute the random matrix.
+    :type Omega: numpy.ndarray
+    :param seed: Seed used to initialize the random generator when computing
+        random test matrices.
+    :type seed: int
+    :return: the orthonormal basis matrix, the transformed data matrix, and
+        the random test matrix.
+    :rtype: NamedTuple("RQB", [('Q', np.ndarray),
+                               ('B', np.ndarray),
+                               ('Omega', np.ndarray)])
+
+    References:
+    N. Benjamin Erichson, Lionel Mathelin, J. Nathan Kutz, Steven L. Brunton.
+    Randomized dynamic mode decomposition. SIAM Journal on Applied Dynamical
+    Systems, 18, 2019.
+    """
     if X.ndim != 2:
         raise ValueError("Please ensure that input data is a 2D array.")
 
