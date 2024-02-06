@@ -84,28 +84,4 @@ class RDMD(CDMD):
         self._compression_matrix = Q.conj().T
         self._test_matrix = Omega
 
-        # # Define the random test matrix if not provided.
-        # if self._test_matrix is None:
-        #     m = self.snapshots.shape[-1]
-        #     r = compute_rank(self.snapshots, self._svd_rank)
-        #     self._test_matrix = np.random.randn(m, r + self._oversampling)
-
-        # # Compute sampling matrix.
-        # Y = self.snapshots.dot(self._test_matrix)
-
-        # # Perform power iterations.
-        # for _ in range(self._power_iters):
-        #     Q = np.linalg.qr(Y)[0]
-        #     Z = np.linalg.qr(self.snapshots.conj().T.dot(Q))[0]
-        #     Y = self.snapshots.dot(Z)
-
-        # # Orthonormalize the sampling matrix.
-        # Q = np.linalg.qr(Y)[0]
-
-        # # Project the snapshot matrix onto the smaller space.
-        # B = Q.conj().T.dot(self.snapshots)
-
-        # # Save the compression matrix.
-        # self._compression_matrix = Q.conj().T
-
         return B
