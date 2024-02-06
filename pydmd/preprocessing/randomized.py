@@ -16,8 +16,8 @@ svd_rank_type = Union[int, float]
 def randomized_preprocessing(
     dmd: DMDBase,
     svd_rank: svd_rank_type,
-    oversampling: int,
-    power_iters: int,
+    oversampling: int = 10,
+    power_iters: int = 2,
     test_matrix: np.ndarray = None,
     seed: int = None,
 ):
