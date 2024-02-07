@@ -162,9 +162,9 @@ def test_bad_construction():
         )
 
 
-def test_window_construction():
-    """Determine that the correct number of windows were found."""
-    assert mrd.build_windows(data, window, step, integer_windows=True) == 61
+def test_integer_window_construction():
+    """Force COSTS to build an integer number of windows."""
+    assert mrd._build_windows(data, window, step, integer_windows=True) == 61
 
 
 def test_frequency_band_centroids():

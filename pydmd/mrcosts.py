@@ -176,7 +176,7 @@ class mrCOSTS:
         :return: Cluster centroids from clustering of eigenvalues.
         :rtype: list of float
         """
-        if not hasattr(self, "_cluster_centroids"):
+        if self._cluster_centroids is None:
             raise ValueError("You need to call `cluster_omega()` first.")
         return self._cluster_centroids
 
@@ -188,7 +188,8 @@ class mrCOSTS:
         """
         if self._n_components_global is None:
             raise ValueError(
-                "You need to call `global_cluster_hyperparameter_sweep()` first"
+                "You need to call `global_cluster_hyperparameter_sweep()` "
+                "first or assign a the value directly."
             )
         return self._n_components_global
 
@@ -318,7 +319,7 @@ class mrCOSTS:
 
             if verbose:
                 print("_________________________________________________")
-                print("Fitting window length = {}".format(window))
+                print(f"Fitting window length = {window:}")
             mrd.fit(x_iter, np.atleast_2d(time), window, step, verbose=verbose)
 
             # Cluster the frequency bands
@@ -342,7 +343,7 @@ class mrCOSTS:
                     scale_reconstruction_kwargs=self._costs_recon_kwargs,
                 )
                 re = mrd.relative_error(global_reconstruction.real, x_iter)
-                print("Error in Global Reconstruction = {:.2}".format(re))
+                print(f"Error in Global Reconstruction = {re:.2}")
 
             # Pass the low frequency component to the next level of
             # decomposition.
@@ -465,7 +466,7 @@ class mrCOSTS:
             if os.path.isfile(f):
                 mrd_list.append(xr.load_dataset(f, engine="h5netcdf"))
             else:
-                raise ValueError("{} was not found.".format(f))
+                raise ValueError(f"{f:} was not found.")
         # Sort by window length
         mrd_list = sorted(mrd_list, key=lambda mrd: mrd.window_length)
 
@@ -517,13 +518,41 @@ class mrCOSTS:
                 ".".join(
                     (
                         filename,
-                        "window={}".format(c._window_length),
+                        f"window={c.window_length:}",
                         "nc",
                     )
                 ),
                 engine="h5netcdf",
                 invalid_netcdf=True,
             )
+
+    def _plot_helper_data_check(self, level, data=None):
+        """Checks the input data for plotting.
+
+        :param level: Decomposition level to plot (zero indexed).
+        :type level: int
+        :param data: Original data, only necessary for level=0.
+        :type data: numpy.ndarray
+        :return: Data for plotting
+        :rtype: numpy.ndarray
+        """
+        if data is not None:
+            x_iter = data
+        else:
+            if level == 0:
+                raise ValueError(
+                    (
+                        "Data must be provided when plotting the first "
+                        "decomposition level"
+                    )
+                )
+            if level > 0:
+                x_iter, _ = self.costs_array[level - 1].scale_separation()
+
+        if not x_iter.shape == (self._n_data_vars, self._n_time_steps):
+            raise ValueError("Input data has the wrong shape.")
+
+        return x_iter
 
     def plot_local_reconstructions(
         self,
@@ -555,21 +584,7 @@ class mrCOSTS:
         :return: None
         """
 
-        if data is not None:
-            x_iter = data
-        else:
-            if level == 0:
-                raise ValueError(
-                    (
-                        "Data must be provided when plotting the first "
-                        "decomposition level"
-                    )
-                )
-            elif level > 0:
-                x_iter, _ = self.costs_array[level - 1].scale_separation()
-
-        if not x_iter.shape == (self._n_data_vars, self._n_time_steps):
-            raise ValueError("Input data has the wrong shape.")
+        x_iter = self._plot_helper_data_check(level, data=data)
 
         if kwargs is None:
             kwargs = {}
@@ -577,7 +592,7 @@ class mrCOSTS:
         _ = self.costs_array[level].plot_reconstructions(
             x_iter,
             scale_reconstruction_kwargs=scale_reconstruction_kwargs,
-            **kwargs
+            **kwargs,
         )
 
     def plot_local_error(
@@ -610,21 +625,8 @@ class mrCOSTS:
         :type scale_reconstruction_kwargs: dict
         :return:
         """
-        if data is not None:
-            x_iter = data
-        else:
-            if level == 0:
-                raise ValueError(
-                    (
-                        "Data must be provided when plotting the first "
-                        "decomposition level"
-                    )
-                )
-            elif level > 0:
-                x_iter, _ = self.costs_array[level - 1].scale_separation()
 
-        if not x_iter.shape == (self._n_data_vars, self._n_time_steps):
-            raise ValueError("Input data has the wrong shape.")
+        x_iter = self._plot_helper_data_check(level, data=data)
 
         if plot_kwargs is None:
             plot_kwargs = {}
@@ -660,21 +662,8 @@ class mrCOSTS:
         :return axes: matplotlib subplot instances
         :rtype fig: matplotlib.Axes()
         """
-        if data is not None:
-            x_iter = data
-        else:
-            if level == 0:
-                raise ValueError(
-                    (
-                        "Data must be provided when plotting the first "
-                        "decomposition level"
-                    )
-                )
-            elif level > 0:
-                x_iter, _ = self.costs_array[level - 1].scale_separation()
 
-        if not x_iter.shape == (self._n_data_vars, self._n_time_steps):
-            raise ValueError("Input data has the wrong shape.")
+        x_iter = self._plot_helper_data_check(level, data=data)
 
         if plot_kwargs is None:
             plot_kwargs = {}
@@ -692,7 +681,6 @@ class mrCOSTS:
         space_index,
         level,
         data=None,
-        plot_kwargs=None,
         scale_reconstruction_kwargs=None,
     ):
         """Plots time series for an individual point.
@@ -708,28 +696,13 @@ class mrCOSTS:
         :type level: int
         :param data: Original data, only necessary for level=0.
         :type data: numpy.ndarray
-        :param plot_kwargs: Arguments passed to costs.plot_time_series()
-        :type plot_kwargs: dict
         :param scale_reconstruction_kwargs: Arguments for reconstructing the
             fit.
         :type scale_reconstruction_kwargs: dict
         :return:
         """
-        if data is not None:
-            x_iter = data
-        else:
-            if level == 0:
-                raise ValueError(
-                    (
-                        "Data must be provided when plotting the first "
-                        "decomposition level"
-                    )
-                )
-            elif level > 0:
-                x_iter, _ = self.costs_array[level - 1].scale_separation()
 
-        if plot_kwargs is None:
-            plot_kwargs = {}
+        x_iter = self._plot_helper_data_check(level, data=data)
 
         fig, axes = self.costs_array[level].plot_time_series(
             space_index,
@@ -739,6 +712,76 @@ class mrCOSTS:
 
         return fig, axes
 
+    def _global_cluster(
+        self,
+        n_components=None,
+        method=MiniBatchKMeans,
+        transform_method=None,
+        clustering_kwargs=None,
+    ):
+        """Helper function for clustering global frequency bands.
+
+        :param method: Clustering method following the sklearn pattern (has
+            `fit_predict` and `n_clusters` keywords). Default is
+            MiniBatchKMeans.
+        :type method: method
+        :param n_components: The number of clusters to find.
+        :type n_components: int
+        :param transform_method: How to transform omega.
+        :type transform_method: str or NoneType
+        :param clustering_kwargs: Arguments for clustering method.
+        :type clustering_kwargs: dict
+        :return cluster_centroids: Centroid values for each cluster in
+            transformed omega.
+        :rtype cluster_centroids: numpy.ndarray
+        :return omega_classes: Global frequency band cluster identifiers.
+        :rtype omega_classes: numpy.ndarray
+        :return omega_array: Transformed omega with NaNs removed
+        :rtype omega_array: numpy.ndarray
+        """
+
+        if self._da_omega is None:
+            self.multi_res_interp()
+
+        if transform_method is None:
+            transform_method = self._transform_method
+
+        # This step flattens the array for clustering through the numpy
+        # indexing to remove NaNs. NaNs, which must be exlcuded from
+        # clustering, can appear as a result of the multi-resolution
+        # interpolation.
+        omega_array = self._da_omega.values
+        omega_array = omega_array[~np.isnan(omega_array)]
+        omega_array = self.transform_omega(
+            omega_array, transform_method=transform_method
+        )
+
+        if clustering_kwargs is None:
+            clustering_kwargs = {}
+            random_state = 0
+            clustering_kwargs["random_state"] = clustering_kwargs.get(
+                "random_state", random_state
+            )
+        clustering = method(n_clusters=n_components, **clustering_kwargs)
+        if not hasattr(clustering, "fit_predict") and callable(
+            getattr(clustering, "fit_predict")
+        ):
+            raise ValueError(
+                "Clustering method must have `fit_predict()` method."
+            )
+
+        omega_classes = clustering.fit_predict(np.atleast_2d(omega_array).T)
+        cluster_centroids = clustering.cluster_centers_.flatten()
+
+        # Sort the clusters by the centroid magnitude.
+        idx = np.argsort(cluster_centroids)
+        lut = np.zeros_like(idx)
+        lut[idx] = np.arange(n_components)
+        omega_classes = lut[omega_classes]
+        cluster_centroids = cluster_centroids[idx]
+
+        return omega_classes, cluster_centroids, omega_array
+
     def global_cluster_hyperparameter_sweep(
         self,
         n_components_range,
@@ -746,7 +789,7 @@ class mrCOSTS:
         score_method=None,
         verbose=True,
         method=MiniBatchKMeans,
-        kmeans_kwargs=None,
+        clustering_kwargs=None,
     ):
         """
         Hyperparameter search for n_components for kmeans clustering.
@@ -767,26 +810,23 @@ class mrCOSTS:
             'calinski-harabasz'. Default is the silhouette score, which can
             be slow for large numbers of samples.
         :type score_method: str or None
-        :param kmeans_kwargs: Keywords to pass to the clustering method.
+        :param clustering_kwargs: Keywords to pass to the clustering method.
         :return score: Scores for each n_components in n_components_range
         :rtype score: numpy.ndarray
         :return n_components: Optimal n_components for frequency band separation
         :rtype n_components: int
         """
 
-        if transform_method is None:
-            transform_method = self._transform_method
-
         score = np.zeros_like(n_components_range, float)
 
         for nind, n in enumerate(n_components_range):
             if verbose:
-                print("fitting n_components = {}".format(n))
-            cluster_centroids, omega_classes, omega = self.global_cluster_omega(
+                print(f"fitting n_components = {n:}")
+            omega_classes, _, omega = self._global_cluster(
                 n_components=n,
                 transform_method=transform_method,
                 method=method,
-                kmeans_kwargs=kmeans_kwargs,
+                clustering_kwargs=clustering_kwargs,
             )
 
             if score_method is None or score_method == "silhouette":
@@ -812,7 +852,7 @@ class mrCOSTS:
         self,
         n_components=None,
         transform_method=None,
-        kmeans_kwargs=None,
+        clustering_kwargs=None,
         method=MiniBatchKMeans,
     ):
         """Performs frequency band clustering on the global distribution of
@@ -838,8 +878,8 @@ class mrCOSTS:
         :type n_components: int
         :param transform_method: How to transform omega.
         :type transform_method: str or NoneType
-        :param kmeans_kwargs: Arguments for clustering method.
-        :type kmeans_kwargs: dict
+        :param clustering_kwargs: Arguments for clustering method.
+        :type clustering_kwargs: dict
         :return cluster_centroids: Centroid values for each cluster in
             transformed omega.
         :rtype cluster_centroids: numpy.ndarray
@@ -848,54 +888,23 @@ class mrCOSTS:
         :return omega_array: Transformed omega with NaNs removed
         :rtype omega_array: numpy.ndarray
         """
-        if self._da_omega is None:
-            self._da_omega = self.multi_res_interp()
 
-        if n_components is None:
-            if self._n_components_global is not None:
-                n_components = self._n_components_global
-            else:
-                raise ValueError(
-                    (
-                        "Either perform a cluster hyperparameter sweep or "
-                        "provide `n_components`"
-                    )
+        if n_components is None and self._n_components_global is None:
+            raise ValueError(
+                (
+                    "Either perform a cluster hyperparameter sweep or provide"
+                    " `n_components`"
                 )
-        elif n_components is not None:
+            )
+        if n_components is not None:
             self._n_components_global = n_components
 
-        omega_array = self._da_omega.values
-        # This step flattens the array, which is desirable. We want to
-        # cluster on just on the histogram of omega, which means just one
-        # "sample".
-        omega_array = omega_array[~np.isnan(omega_array)]
-        omega_array = self.transform_omega(
-            omega_array, transform_method=transform_method
+        omega_classes, cluster_centroids, omega_array = self._global_cluster(
+            n_components=self._n_components_global,
+            method=method,
+            transform_method=transform_method,
+            clustering_kwargs=clustering_kwargs,
         )
-
-        if kmeans_kwargs is None:
-            kmeans_kwargs = {}
-            random_state = 0
-            kmeans_kwargs["random_state"] = kmeans_kwargs.get(
-                "random_state", random_state
-            )
-        clustering = method(n_clusters=n_components, **kmeans_kwargs)
-        if not hasattr(clustering, "fit_predict") and callable(
-            getattr(clustering, "fit_predict")
-        ):
-            raise ValueError(
-                "Clustering method must have `fit_predict()` method."
-            )
-
-        omega_classes = clustering.fit_predict(np.atleast_2d(omega_array).T)
-        cluster_centroids = clustering.cluster_centers_.flatten()
-
-        # Sort the clusters by the centroid magnitude.
-        idx = np.argsort(cluster_centroids)
-        lut = np.zeros_like(idx)
-        lut[idx] = np.arange(n_components)
-        omega_classes = lut[omega_classes]
-        cluster_centroids = cluster_centroids[idx]
 
         self._cluster_centroids = cluster_centroids
         self._omega_classes = omega_classes
@@ -936,7 +945,7 @@ class mrCOSTS:
         else:
             # @ToDo: Return accepted methods
             raise ValueError(
-                "Transform method {} not supported.".format(transform_method)
+                f"Transform method {transform_method} not supported."
             )
 
         return omega_array
@@ -952,11 +961,6 @@ class mrCOSTS:
         and end of time series prone to larger errors. A best practice is
         to cut off `window_length` from each end before further analysis.
 
-        :param n_components: Number of frequency bands from the clustering.
-        :type n_components: int
-        :param omega_classes_list: Resulting cluster identifiers from
-            clustering omega.
-        :type omega_classes_list: list of numpy.ndarrays
         :return: Reconstruction with dimensions of:
             n_decompositions x n_components x n_data_vars x n_time_steps
         :rtype: numpy.ndarray
@@ -1006,10 +1010,22 @@ class mrCOSTS:
                 xr_sep_window = np.zeros(
                     (
                         self._n_components_global,
-                        mrd.n_data_vars,
+                        self._n_data_vars,
                         mrd.window_length,
                     )
                 )
+
+                # Get the indices for this window.
+                if k == mrd.n_slides - 1 and mrd._non_integer_n_slide:
+                    # Handle non-integer number of window slides by slightly
+                    # shortening the last window's slide.
+                    window_indices = slice(-mrd.window_length, None)
+                else:
+                    window_indices = slice(
+                        k * mrd.step_size,
+                        k * mrd.step_size + mrd.window_length,
+                    )
+
                 for j in np.arange(0, self._n_components_global):
                     class_ind = classification == j
                     xr_sep_window[j, :, :] = np.linalg.multi_dot(
@@ -1026,16 +1042,6 @@ class mrCOSTS:
                         xr_sep_window[j, :, :] * recon_filter
                     )
 
-                    # Get the indices for this window.
-                    if k == mrd.n_slides - 1 and mrd._non_integer_n_slide:
-                        # Handle non-integer number of window slides by slightly
-                        # shortening the last window's slide.
-                        window_indices = slice(-mrd.window_length, None)
-                    else:
-                        window_indices = slice(
-                            k * mrd.step_size,
-                            k * mrd.step_size + mrd.window_length,
-                        )
                     xr_sep[n_mrd, j, :, window_indices] = (
                         xr_sep[n_mrd, j, :, window_indices]
                         + xr_sep_window[j, :, :]
