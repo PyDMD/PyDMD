@@ -13,6 +13,7 @@ from pydmd.utils import compute_rqb
 
 svd_rank_type = Union[int, float]
 
+
 def randomized_preprocessing(
     dmd: DMDBase,
     svd_rank: svd_rank_type,
@@ -44,6 +45,7 @@ def randomized_preprocessing(
         _post,
     )
 
+
 def _pre(
     state: Dict,
     X: np.ndarray,
@@ -55,7 +57,12 @@ def _pre(
     **kwargs
 ):
     Q = compute_rqb(
-        X, svd_rank, oversampling, power_iters, test_matrix, seed
+        X,
+        svd_rank,
+        oversampling,
+        power_iters,
+        test_matrix,
+        seed,
     )[0]
     state["compression_matrix"] = Q.conj().T
 
