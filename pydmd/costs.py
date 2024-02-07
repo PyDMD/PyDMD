@@ -15,8 +15,8 @@ from sklearn.metrics import silhouette_score
 import matplotlib.pyplot as plt
 import xarray as xr
 
-from .utils import compute_rank, compute_svd
 from pydmd.bopdmd import BOPDMD
+from .utils import compute_rank, compute_svd
 
 
 class COSTS:
@@ -123,6 +123,7 @@ class COSTS:
         self._transform_method = None
         self._window_means_array = None
         self._non_integer_n_slide = None
+        self._svd_rank_pre_allocate = None
 
         # Specify default keywords to hand to BOPDMD.
         if pydmd_kwargs is None:
@@ -143,7 +144,8 @@ class COSTS:
 
     @property
     def svd_rank(self):
-        """
+        """Return the svd_rank used for the BOPDMD fit.
+
         :return: the rank used for the svd truncation.
         :rtype: int or float
         """
@@ -151,7 +153,8 @@ class COSTS:
 
     @property
     def global_svd(self):
-        """
+        """Return if a global svd projection basis was used.
+
         :return: If a global svd was used for the BOP-DMD fit.
         :rtype: int or float
         """
@@ -159,7 +162,8 @@ class COSTS:
 
     @property
     def window_length(self):
-        """
+        """Return the window length used.
+
         :return: the length of the windows used for this decomposition level.
         :rtype: int or float
         """
@@ -167,7 +171,8 @@ class COSTS:
 
     @property
     def step_size(self):
-        """
+        """Return the step size between each window.
+
         :return: the length of the windows used for this decomposition level.
         :rtype: int or float
         """
@@ -175,7 +180,8 @@ class COSTS:
 
     @property
     def n_slides(self):
-        """
+        """Return the number of slides performed for each window.
+
         :return: number of window slides for this decomposition level.
         :rtype: int
         """
@@ -183,7 +189,8 @@ class COSTS:
 
     @property
     def modes_array(self):
-        """
+        """Return the spatial modes of each window's fit.
+
         :return: Modes for each window
         :rtype: numpy.ndarray
         """
@@ -191,7 +198,8 @@ class COSTS:
 
     @property
     def amplitudes_array(self):
-        """
+        """Return the amplitudes of each window's fit.
+
         :return: amplitudes of each window
         :rtype: numpy.ndarray
         """
@@ -199,7 +207,8 @@ class COSTS:
 
     @property
     def omega_array(self):
-        """
+        """Return the frequencies (omega) of each window's fit.
+
         :return: omega (a.k.a eigenvalues or time dynamics) for each window
         :rtype: numpy.ndarray
         """
@@ -207,7 +216,8 @@ class COSTS:
 
     @property
     def time_array(self):
-        """
+        """Return the time values contained by each window.
+
         :return: time values for each fit window
         :rtype: numpy.ndarray
         """
@@ -215,7 +225,8 @@ class COSTS:
 
     @property
     def window_means_array(self):
-        """
+        """Return the array of window time means.
+
         :return: Time mean of the data in each window
         :rtype: numpy.ndarray
         """
@@ -223,7 +234,8 @@ class COSTS:
 
     @property
     def n_components(self):
-        """
+        """Return the number of frequency bands.
+
         :return: Number of frequency bands fit in the kmeans clustering
         :rtype: int
         """
@@ -231,7 +243,8 @@ class COSTS:
 
     @property
     def cluster_centroids(self):
-        """
+        """Return the frequency band centroids.
+
         :return: Centroids of the frequency bands
         :rtype: numpy.ndarray
         """
@@ -239,14 +252,16 @@ class COSTS:
 
     @property
     def omega_classes(self):
-        """
+        """Return the frequency band classifications.
+
         :return: Frequency band classifications, corresponds to omega_array
         :rtype: numpy.ndarray
         """
         return self._omega_classes
 
     def periods(self):
-        """
+        """Convert the omega array into periods.
+
         :return: Time dynamics converted to periods
         :rtype: numpy.ndarray
         """
@@ -259,7 +274,15 @@ class COSTS:
 
     @staticmethod
     def relative_error(x_est, x_true):
-        """Helper function for calculating the relative error."""
+        """Helper function for calculating the relative error.
+
+        :param x_est: Estimated values (i.e. from reconstruction)
+        :type x_est: numpy.ndarray
+        :param x_true: True (or observed) values.
+        :type x_true: numpy.ndarray
+        :return: Relative error between observations and model.
+        :rtype: numpy.ndarray
+        """
         return np.linalg.norm(x_est - x_true) / np.linalg.norm(x_true)
 
     @staticmethod
@@ -346,13 +369,29 @@ class COSTS:
 
     @staticmethod
     def _data_shape(data):
-        """Returns the shape of the data."""
+        """Returns the shape of the data.
+
+        :param data: Data to fit with mrCOSTS.
+        :type data: numpy.ndarray
+        :return n_time_steps: Number of time steps.
+        :rtype n_time_steps: int
+        :return n_data_vars: Number of spatial variables.
+        :rtype n_data_vars: int
+        """
         n_time_steps = np.shape(data)[1]
         n_data_vars = np.shape(data)[0]
         return n_time_steps, n_data_vars
 
     def _build_proj_basis(self, data, svd_rank=None):
-        """Build the projection basis."""
+        """Build the projection basis.
+
+        :param data: Data to fit with mrCOSTS.
+        :type data: numpy.ndarray
+        :param svd_rank: Rank to fit with COSTS.
+        :type svd_rank: int
+        :return: SVD projection basis for COSTS.
+        :rtype: numpy.ndarray
+        """
         self._svd_rank = compute_rank(data, svd_rank=svd_rank)
         # Recover the first r modes of the global svd
         return compute_svd(data, svd_rank=svd_rank)[0]
@@ -388,7 +427,8 @@ class COSTS:
             and self._cluster_centroids is not None
         ):
             raise ValueError(
-                "Only one of `init_alpha` and `cluster_centroids` can be provided"
+                "Only one of `init_alpha` and `cluster_centroids` can be"
+                " provided"
             )
         # If not initial values are provided return None by default.
         else:
@@ -589,8 +629,7 @@ class COSTS:
         sample_start = self._step_size * k
         if k == self._n_slides - 1 and self._non_integer_n_slide:
             return slice(-self._window_length, None)
-        else:
-            return slice(sample_start, sample_start + self._window_length)
+        return slice(sample_start, sample_start + self._window_length)
 
     def cluster_omega(
         self,
@@ -826,10 +865,6 @@ class COSTS:
         :return fig: Figure handle for the plot
         :return ax: Axes handle for the plot
         """
-        # Reshape the omega array into a 1d array
-        omega_array = self.omega_array
-        # n_slides = omega_array.shape[0]
-        # svd_rank = omega_array.shape[1]
 
         # Apply the transformation to omega
         omega_transform = self.transform_omega(
@@ -864,12 +899,6 @@ class COSTS:
         """
         fig, ax = plt.subplots(1, 1)
         colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
-
-        # Reshape the omega array into a 1d array
-        omega_array = self.omega_array
-        # n_slides = omega_array.shape[0]
-        # svd_rank = omega_array.shape[1]
-        # omega_rshp = omega_array.reshape(n_slides * svd_rank)
 
         # Apply the transformation to omega
         omega_transform = self.transform_omega(
@@ -1360,7 +1389,10 @@ class COSTS:
         for n in range(self.n_components):
             ax = axes[n + 1]
             if n == 0:
-                title = "blue = Low-frequency component, black = high frequency residual"
+                title = (
+                    "blue = Low-frequency component, black = high "
+                    "frequency residual"
+                )
                 ax.plot(xr_sep[n, space_index, :] - ground_truth_mean)
             else:
                 title = "Band period = {:.0f} window length".format(
@@ -1386,7 +1418,10 @@ class COSTS:
                 label="Residual",
             )
             ax.set_title(
-                "black=input data, yellow=low-frequency, blue=high-frequency, red=residual"
+                (
+                    "black=input data, yellow=low-frequency, "
+                    "blue=high-frequency, red=residual"
+                )
             )
         else:
             ax.set_title(
