@@ -22,10 +22,6 @@ from .utils import compute_rank, compute_svd
 class COSTS:
     """Coherent Spatio-Temporal Scale Separation with DMD.
 
-    :param window_length: Length of the analysis window in number of time steps.
-    :type window_length: int
-    :param step_size: Number of time steps to slide each CSM-DMD window.
-    :type step_size: int
     :param n_components: Number of independent frequency bands for this
         window length.
     :type n_components: int
@@ -60,10 +56,6 @@ class COSTS:
     :param max_rank: Maximum svd_rank allowed when the svd_rank is found
         through rank truncation (i.e., svd_rank=0).
     :type max_rank: int
-    :param use_kmean_freqs: Flag specifying if the BOPDMD fit should use
-        initial values taken from cluster centroids, e.g., from a previoius
-        iteration.
-    :type use_kmean_freqs: bool
     :param init_alpha: Initial guess for the eigenvalues provided to BOPDMD.
         Must be equal to the `svd_rank`.
     :type init_alpha: numpy array
@@ -286,7 +278,7 @@ class COSTS:
         return np.linalg.norm(x_est - x_true) / np.linalg.norm(x_true)
 
     @staticmethod
-    def build_windows(data, window_length, step_size, integer_windows=False):
+    def _build_windows(data, window_length, step_size, integer_windows=False):
         """How many times integer slides fit the data for a given step and
         window size.
 
@@ -396,7 +388,7 @@ class COSTS:
         # Recover the first r modes of the global svd
         return compute_svd(data, svd_rank=svd_rank)[0]
 
-    def _build_initizialization(self):
+    def _build_initialization(self):
         """Method for making initial guess of DMD eigenvalues.
 
         :return: First guess of eigenvalues
@@ -421,7 +413,7 @@ class COSTS:
             return init_alpha
         # The user accidentally provided both methods of initializing the
         # eigenvalues.
-        elif (
+        if (
             self._initialize_artificially
             and self._init_alpha is not None
             and self._cluster_centroids is not None
@@ -430,9 +422,10 @@ class COSTS:
                 "Only one of `init_alpha` and `cluster_centroids` can be"
                 " provided"
             )
-        # If not initial values are provided return None by default.
-        else:
-            return None
+
+        # In all other cases we return None and let the first iteration of
+        # BOPDMD searches for the initial values.
+        return None
 
     def fit(
         self,
@@ -450,9 +443,11 @@ class COSTS:
         :type data: numpy.ndarray
         :param time: time series labeling the 1D snapshots
         :type time: numpy.ndarray
-        :param window_length: decomposition window length
+        :param window_length: decomposition window length in number of time
+            steps.
         :type window_length: int
-        :param step_size: how far to slide each window from the previous window.
+        :param step_size: Number of time steps to slide forward from the
+            previous window.
         :type step_size: int
         :param verbose: notifies progress for fitting. Default is False.
         :type verbose: bool
@@ -464,7 +459,7 @@ class COSTS:
         self._window_length = window_length
         self._step_size = step_size
         self._n_time_steps, self._n_data_vars = self._data_shape(data)
-        self._n_slides = self.build_windows(
+        self._n_slides = self._build_windows(
             data,
             self._window_length,
             self._step_size,
@@ -473,8 +468,9 @@ class COSTS:
         if self._window_length > self._n_time_steps:
             raise ValueError(
                 (
-                    "Window length ({}) is larger than the time dimension ({})"
-                ).format(self._window_length, self._n_time_steps)
+                    f"Window length ({self._window_length}) is larger than the "
+                    f"time dimension ({self._n_time_steps})"
+                )
             )
 
         # If the window size and step size do not span the data in an integer
@@ -535,7 +531,7 @@ class COSTS:
         self._window_means_array = np.zeros((self._n_slides, self._n_data_vars))
 
         # Get initial values for the eigenvalues.
-        self._init_alpha = self._build_initizialization()
+        self._init_alpha = self._build_initialization()
 
         # Initialize the BOPDMD object.
         optdmd = BOPDMD(
@@ -554,7 +550,7 @@ class COSTS:
         # Perform the sliding window DMD fitting.
         for k in range(self._n_slides):
             if verbose and k % 50 == 0:
-                print("{} of {}".format(k, self._n_slides))
+                print(f"{k:} of {self._n_slides:}")
 
             sample_slice = self.get_window_indices(k)
             data_window = data[:, sample_slice]
@@ -586,7 +582,7 @@ class COSTS:
                     optdmd.svd_rank = min(_svd_rank, self._max_rank)
                 else:
                     optdmd.svd_rank = _svd_rank
-                optdmd._proj_basis = self._pydmd_kwargs["proj_basis"]
+                optdmd.proj_basis = self._pydmd_kwargs["proj_basis"]
 
             # Fit the window using the optDMD.
             optdmd.fit(data_window, time_window)
@@ -681,6 +677,8 @@ class COSTS:
         """Clusters fitted eigenvalues into frequency bands by the imaginary
         component.
 
+        Helper function for clustering. Call `cluster_omega` instead.
+
         :param n_components: Hyperparameter for k-means clustering, number of
             clusters.
         :type n_components: int
@@ -736,10 +734,7 @@ class COSTS:
         omega_classes = lut[omega_classes]
         cluster_centroids = cluster_centroids[idx]
 
-        return (
-            cluster_centroids,
-            omega_classes,
-        )
+        return cluster_centroids, omega_classes
 
     def transform_omega(self, omega_array, transform_method="absolute"):
         """Transform omega, primarily for clustering.
@@ -780,7 +775,7 @@ class COSTS:
             self._hist_kwargs = {"bins": 64}
         else:
             raise ValueError(
-                "Transform method {} not supported.".format(transform_method)
+                f"Transform method {transform_method:} not supported."
             )
 
         return omega_transform
@@ -790,7 +785,7 @@ class COSTS:
         n_components_range=None,
         transform_method=None,
         method=MiniBatchKMeans,
-        kneans_kwargs=None,
+        clustering_kwargs=None,
     ):
         """Hyperparameter search for number of frequency bands.
 
@@ -815,6 +810,8 @@ class COSTS:
         :param method: Clustering method following the sklearn pattern (has
             `fit_predict` and `n_clusters` keywords). Default is
             MiniBatchKMeans.
+        :param clustering_kwargs: keywords to give to the clustering method.
+        :type clustering_kwargs: dict
         :type method: method
         :return: optimal value of `n_components` for clustering.
         """
@@ -837,14 +834,14 @@ class COSTS:
         )
 
         for nind, n in enumerate(n_components_range):
-            self._cluster(
+            _, omega_classes = self._cluster(
                 n_components=n,
                 transform_method=transform_method,
-                kmeans_kwargs=kneans_kwargs,
+                kmeans_kwargs=clustering_kwargs,
                 method=method,
             )
 
-            classes_reshape = self.omega_classes.reshape(
+            classes_reshape = omega_classes.reshape(
                 self._n_slides * self._svd_rank_pre_allocate
             )
 
@@ -1121,8 +1118,9 @@ class COSTS:
         if plot_contours:
             ax.contour(data, colors=["k"])
         ax.set_title(
-            "Input Data at decomposition window length = {}".format(
-                self._window_length
+            (
+                f"Input data at decomposition window length ="
+                f" {self._window_length:}"
             )
         )
         ax.set_ylabel("Space (-)")
@@ -1238,9 +1236,7 @@ class COSTS:
         ax.set_ylabel("Space (-)")
         ax.set_xlabel("Time (-)")
         ax.set_title(
-            "Input Data at decomposition window length = {}".format(
-                self._window_length
-            )
+            f"Input Data at decomposition window length = {self._window_length}"
         )
         for n_cluster, cluster in enumerate(self._cluster_centroids):
             if plot_period:
@@ -1321,7 +1317,7 @@ class COSTS:
         ax_glbl_r.set_xlabel("time (-)")
         ax_glbl_r.set_ylabel("space (-)")
         re = self.relative_error(global_reconstruction.real, data)
-        ax_glbl_r.set_title("Error in Global Reconstruction = {:.2}".format(re))
+        ax_glbl_r.set_title(f"Error in Global Reconstruction = {re:.2}")
 
     def plot_time_series(
         self,
@@ -1373,9 +1369,8 @@ class COSTS:
             lw=0.5,
         )
         ax.set_title(
-            "window={}, black=input data, red=reconstruction".format(
-                self._window_length
-            )
+            f"window={self._window_length}, black=input data, "
+            f"red=reconstruction"
         )
         ax.set_ylabel("Amp.")
         ax.set_xlabel("Time")
@@ -1395,9 +1390,8 @@ class COSTS:
                 )
                 ax.plot(xr_sep[n, space_index, :] - ground_truth_mean)
             else:
-                title = "Band period = {:.0f} window length".format(
-                    2 * np.pi / self.cluster_centroids[n]
-                )
+                period = 2 * np.pi / self.cluster_centroids[n]
+                title = f"Band period = {period:.0f} window length"
                 ax.plot(xr_sep[n, space_index, :])
             ax.set_title(title)
             ax.set_ylabel("Amp.")
@@ -1505,9 +1499,7 @@ class COSTS:
         )
 
         for kw, kw_val in self._pydmd_kwargs.items():
-            ds.attrs["pydmd_kwargs__{}".format(kw)] = self._xarray_sanitize(
-                kw_val
-            )
+            ds.attrs[f"pydmd_kwargs__{kw}"] = self._xarray_sanitize(kw_val)
 
         return ds
 

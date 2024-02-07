@@ -204,8 +204,10 @@ def test_frequency_band_centroids():
 
     # Verify these fields are empty prior to clustering.
     mrc_no_clustering = mrCOSTS()
-    assert mrc_no_clustering.n_components_global is None
-    assert mrc_no_clustering.cluster_centroids is None
+    with raises(ValueError):
+        mrc_no_clustering.n_components_global
+    with raises(ValueError):
+        mrc_no_clustering.cluster_centroids
     assert mrc_no_clustering.transform_method is None
 
 
@@ -224,7 +226,7 @@ def test_reconstructions():
     re_lf = mrd.relative_error(xr_lf, low_frequency)
     re_hf = mrd.relative_error(xr_hf, high_frequency)
 
-    n_time_steps, n_data_vars = mrc._data_shape(data)
+    n_data_vars, n_time_steps = np.shape(data)
 
     error_array = np.zeros(n_data_vars)
     for n in range(n_data_vars):
