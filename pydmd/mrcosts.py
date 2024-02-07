@@ -8,12 +8,12 @@ multiscale nonlinear physics. Physics Review E, 99(6),
 10.1103/PhysRevE.99.063311. https://doi.org/10.1103/PhysRevE.99.063311
 """
 
+import os
 import copy
 import numpy as np
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.metrics import silhouette_score, calinski_harabasz_score
 import xarray as xr
-import os
 from pydmd.costs import COSTS
 
 
@@ -591,10 +591,11 @@ class mrCOSTS:
 
         Plots are a space-time diagram assuming a 1D spatial dimension.
 
-        Determining the error requires the input data for the decomposition as well as
-        reconstructing the fit. Deriving the input data requires providing the actual input
-        data for the first decomposition. Otherwise, the input data is recovered by
-        reconstructing decomposition = level - 1.
+        Determining the error requires the input data for the decomposition
+        as well as reconstructing the fit. Deriving the input data requires
+        providing the actual input data for the first decomposition.
+        Otherwise, the input data is recovered by reconstructing
+        decomposition = level - 1.
 
         Error is expressed as a percent.
 
@@ -602,7 +603,8 @@ class mrCOSTS:
         :type level: int
         :param data: Original data, only necessary for level=0.
         :type data: numpy.ndarray
-        :param scale_reconstruction_kwargs: Arguments for reconstructing the fit.
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the
+            fit.
         :type scale_reconstruction_kwargs: dict
         :param plot_kwargs: Arguments passed to costs.plot_error().
         :type scale_reconstruction_kwargs: dict
@@ -640,17 +642,18 @@ class mrCOSTS:
         plot_kwargs=None,
         scale_reconstruction_kwargs=None,
     ):
-        """Plots local scale separation of the high and low frequency components.
+        """Plot local scale separation of the high and low frequency components.
 
-        Requires the input data for the decomposition as well as reconstructing the fit.
-        Deriving the input data requires providing the actual input data for the first
-        decomposition. Otherwise, the input data is recovered by reconstructing
-        decomposition = level - 1.
+        Requires the input data for the decomposition as well as
+        reconstructing the fit. Deriving the input data requires providing
+        the actual input data for the first decomposition. Otherwise,
+        the input data is recovered by reconstructing decomposition = level - 1.
 
         :param level: Decomposition level for plotting
         :type level: int
         :param data: Original data, only necessary for level=0.
-        :param scale_reconstruction_kwargs: Arguments for reconstructing the fit.
+        :param scale_reconstruction_kwargs: Arguments for reconstructing the
+            fit.
         :param plot_kwargs: Arguments passed to costs.plot_scale_separation()
         :return fig: figure handle for the plot
         :rtype fig: matplotlib.figure()
@@ -977,13 +980,10 @@ class mrCOSTS:
 
             # Convolve each windowed reconstruction with a gaussian filter.
             # Std dev of gaussian filter
-            recon_filter_sd = mrd._window_length / 8
+            recon_filter_sd = mrd.window_length / 8
             recon_filter = np.exp(
                 -(
-                    (
-                        np.arange(mrd._window_length)
-                        - (mrd._window_length + 1) / 2
-                    )
+                    (np.arange(mrd.window_length) - (mrd.window_length + 1) / 2)
                     ** 2
                 )
                 / recon_filter_sd**2
@@ -991,23 +991,23 @@ class mrCOSTS:
             omega_classes = omega_classes_list[n_mrd]
 
             # Iterate over each window slide performed.
-            for k in range(mrd._n_slides):
-                w = mrd._modes_array[k]
-                b = mrd._amplitudes_array[k]
-                omega = np.atleast_2d(mrd._omega_array[k]).T
+            for k in range(mrd.n_slides):
+                w = mrd.modes_array[k]
+                b = mrd.amplitudes_array[k]
+                omega = np.atleast_2d(mrd.omega_array[k]).T
                 classification = omega_classes[k]
 
                 # Compute each segment of xr starting at "t = 0"
-                t = mrd._time_array[k]
-                t_start = mrd._time_array[k, 0]
+                t = mrd.time_array[k]
+                t_start = mrd.time_array[k, 0]
                 t = t - t_start
 
                 # Reconstruct each frequency band separately.
                 xr_sep_window = np.zeros(
                     (
                         self._n_components_global,
-                        mrd._n_data_vars,
-                        mrd._window_length,
+                        mrd.n_data_vars,
+                        mrd.window_length,
                     )
                 )
                 for j in np.arange(0, self._n_components_global):
@@ -1027,14 +1027,14 @@ class mrCOSTS:
                     )
 
                     # Get the indices for this window.
-                    if k == mrd._n_slides - 1 and mrd._non_integer_n_slide:
+                    if k == mrd.n_slides - 1 and mrd._non_integer_n_slide:
                         # Handle non-integer number of window slides by slightly
                         # shortening the last window's slide.
-                        window_indices = slice(-mrd._window_length, None)
+                        window_indices = slice(-mrd.window_length, None)
                     else:
                         window_indices = slice(
-                            k * mrd._step_size,
-                            k * mrd._step_size + mrd._window_length,
+                            k * mrd.step_size,
+                            k * mrd.step_size + mrd.window_length,
                         )
                     xr_sep[n_mrd, j, :, window_indices] = (
                         xr_sep[n_mrd, j, :, window_indices]
@@ -1042,8 +1042,8 @@ class mrCOSTS:
                     )
 
                 # A normalization factor which weights the global reconstruction
-                # by the number of window centers it contains. This accounts for the
-                # convolution above.
+                # by the number of window centers it contains. This accounts
+                # for the convolution above.
                 xn[window_indices] += recon_filter
 
             # Normalize by the reconstruction filter.
@@ -1052,15 +1052,22 @@ class mrCOSTS:
         return xr_sep
 
     def get_background(self):
-        """The low frequency background values not included in the scale separation."""
+        """Build the background values not included in the scale separation.
+
+        :return: The low frequency components of the largest decomposition
+            level which are not included in the scale separation.
+        :rtype: numpy.ndarray
+        """
 
         background = self.costs_array[-1].scale_reconstruction()[0, :, :]
         return background
 
     def global_reconstruction(self):
-        """Global reconstruction across all global frequency bands and decomposition levels.
+        """Reconstruction using all global frequency bands and decomposition
+        levels.
 
         :return: Global reconstruction with background component.
+        :rtype: numpy.ndarray
         """
         xr_sep = self.global_scale_reconstruction()
         xr_sep = xr_sep.sum(axis=(0, 1))

@@ -1,9 +1,9 @@
+import glob
+import os
 import numpy as np
 from scipy.integrate import solve_ivp
 import scipy
 from pytest import raises
-import glob
-import os
 
 from pydmd.mrcosts import mrCOSTS
 
@@ -204,7 +204,7 @@ def test_frequency_band_centroids():
 
     # Verify these fields are empty prior to clustering.
     mrc_no_clustering = mrCOSTS()
-    assert mrc_no_clustering._n_components_global is None
+    assert mrc_no_clustering.n_components_global is None
     assert mrc_no_clustering.cluster_centroids is None
     assert mrc_no_clustering.transform_method is None
 
