@@ -2,13 +2,13 @@ import json
 from argparse import ArgumentParser
 
 testing_matrix_ghact = {
-    "python-version": ["3.7", "3.8", "3.9", "3.10", "3.11"],
+    "python-version": ["3.8", "3.9", "3.10", "3.11", "3.12"],
     "os": ["windows-latest", "macos-latest", "ubuntu-latest"],
     "exclude": [{"os": "windows-latest", "python-version": "3.11"}],
 }
 
 tutorial_testing_matrix_ghact = {
-    "python-version": ["3.7", "3.8", "3.9", "3.10", "3.11"],
+    "python-version": ["3.8", "3.9", "3.10", "3.11", "3.12"],
     "os": ["macos-latest", "ubuntu-latest"],
 }
 
