@@ -2,7 +2,7 @@
 
 import warnings
 from numbers import Number
-from typing import NamedTuple, Union
+from typing import NamedTuple
 from collections import namedtuple
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
@@ -197,7 +197,7 @@ def compute_rqb(
     oversampling: int,
     power_iters: int,
     Omega: np.ndarray = None,
-    seed: Union[None, int] = None,
+    seed: int = None,
 ) -> NamedTuple(
     "RQB", [("Q", np.ndarray), ("B", np.ndarray), ("Omega", np.ndarray)]
 ):
