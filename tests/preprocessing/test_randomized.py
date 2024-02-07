@@ -34,6 +34,7 @@ def test_shape():
 def test_rdmd():
     """
     Test that RDMD and DMD with randomization are essentially the same.
+    Compares snapshots, eigenvalues, and reconstructions.
     """
     rdmd = RDMD(svd_rank=2, oversampling=10, power_iters=2, seed=1234)
     rdmd.fit(sample_data)
@@ -47,5 +48,9 @@ def test_rdmd():
     )
     pdmd.fit(sample_data)
 
-    assert_allclose(pdmd.reconstructed_data, rdmd.reconstructed_data)
+    assert_allclose(
+        pdmd.snapshots,
+        rdmd.compression_matrix.dot(rdmd.snapshots),
+    )
     assert_allclose(np.sort(pdmd.eigs), np.sort(rdmd.eigs))
+    assert_allclose(pdmd.reconstructed_data, rdmd.reconstructed_data)
