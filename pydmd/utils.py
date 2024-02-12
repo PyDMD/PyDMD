@@ -13,7 +13,7 @@ from numpy.lib.stride_tricks import sliding_window_view
 #  compute_rqb uses "RQB".
 SVD = namedtuple("SVD", ["U", "s", "V"])
 TLSQ = namedtuple("TLSQ", ["X_denoised", "Y_denoised"])
-RQB = namedtuple("RQB", ["Q", "B", "Omega"])
+RQB = namedtuple("RQB", ["Q", "B", "test_matrix"])
 
 
 def _svht(sigma_svd: np.ndarray, rows: int, cols: int) -> int:
@@ -196,10 +196,10 @@ def compute_rqb(
     svd_rank: Number,
     oversampling: int,
     power_iters: int,
-    Omega: np.ndarray = None,
+    test_matrix: np.ndarray = None,
     seed: int = None,
 ) -> NamedTuple(
-    "RQB", [("Q", np.ndarray), ("B", np.ndarray), ("Omega", np.ndarray)]
+    "RQB", [("Q", np.ndarray), ("B", np.ndarray), ("test_matrix", np.ndarray)]
 ):
     """
     Randomized QB Decomposition.
@@ -222,10 +222,10 @@ def compute_rqb(
         the Randomized QB Decomposition. Note that as many as 1 to 2 power
         iterations often lead to considerable improvements.
     :type power_iters: int
-    :param Omega: The random test matrix that will be used when executing
+    :param test_matrix: The random test matrix that will be used when executing
         the Randomized QB Decomposition. If not provided, the `svd_rank` and
         `oversampling` parameters will be used to compute the random matrix.
-    :type Omega: numpy.ndarray
+    :type test_matrix: numpy.ndarray
     :param seed: Seed used to initialize the random generator when computing
         random test matrices.
     :type seed: int
@@ -233,7 +233,7 @@ def compute_rqb(
         the random test matrix.
     :rtype: NamedTuple("RQB", [('Q', np.ndarray),
                                ('B', np.ndarray),
-                               ('Omega', np.ndarray)])
+                               ('test_matrix', np.ndarray)])
 
     References:
     N. Benjamin Erichson, Lionel Mathelin, J. Nathan Kutz, Steven L. Brunton.
@@ -244,14 +244,14 @@ def compute_rqb(
         raise ValueError("Please ensure that input data is a 2D array.")
 
     # Define the random test matrix if not provided.
-    if Omega is None:
+    if test_matrix is None:
         m = X.shape[-1]
         r = compute_rank(X, svd_rank)
         rng = np.random.default_rng(seed)
-        Omega = rng.standard_normal((m, r + oversampling))
+        test_matrix = rng.standard_normal((m, r + oversampling))
 
     # Compute sampling matrix.
-    Y = X.dot(Omega)
+    Y = X.dot(test_matrix)
 
     # Perform power iterations.
     for _ in range(power_iters):
@@ -265,7 +265,7 @@ def compute_rqb(
     # Project the snapshot matrix onto the smaller space.
     B = Q.conj().T.dot(X)
 
-    return RQB(Q, B, Omega)
+    return RQB(Q, B, test_matrix)
 
 
 def pseudo_hankel_matrix(X: np.ndarray, d: int) -> np.ndarray:
