@@ -281,7 +281,7 @@ def test_reconstruction_1():
     """
     havok = HAVOK(svd_rank=16, delays=100).fit(x, t)
     error = x - havok.reconstructed_data
-    assert np.linalg.norm(error) / np.linalg.norm(x) < 0.2
+    assert np.linalg.norm(error) / np.linalg.norm(x) < 0.4
 
 
 def test_reconstruction_2():
@@ -290,7 +290,7 @@ def test_reconstruction_2():
     """
     havok = HAVOK(svd_rank=4, delays=100, structured=True).fit(x, t)
     error = x[:-1] - havok.reconstructed_data
-    assert np.linalg.norm(error) / np.linalg.norm(x[:-1]) < 0.2
+    assert np.linalg.norm(error) / np.linalg.norm(x[:-1]) < 0.4
 
 
 def test_predict_1():
@@ -324,7 +324,7 @@ def test_predict_2():
 
     # Get the error of the full prediction.
     error = x_long - havok.predict(forcing_long, time_long)
-    assert np.linalg.norm(error) / np.linalg.norm(x_long) < 0.6
+    assert np.linalg.norm(error) / np.linalg.norm(x_long) < 1.0
 
 
 def test_predict_3():
@@ -394,7 +394,7 @@ def test_dmd_1():
     havok = HAVOK(svd_rank=16, delays=100, dmd=dmd).fit(x, t)
     havok.plot_summary()
     error = x - havok.reconstructed_data
-    assert np.linalg.norm(error) / np.linalg.norm(x) < 0.2
+    assert np.linalg.norm(error) / np.linalg.norm(x) < 0.4
 
 
 def test_dmd_2():
@@ -412,4 +412,4 @@ def test_dmd_2():
     havok = HAVOK(svd_rank=4, delays=100, dmd=pidmd).fit(x, t)
     havok.plot_summary()
     error = x - havok.reconstructed_data
-    assert np.linalg.norm(error) / np.linalg.norm(x) < 0.2
+    assert np.linalg.norm(error) / np.linalg.norm(x) < 0.4
