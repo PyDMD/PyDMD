@@ -72,7 +72,7 @@ class RDMD(CDMD):
         :return: the compressed snapshots
         :rtype: numpy.ndarray
         """
-        Q, B, Omega = compute_rqb(
+        Q, B, test_matrix = compute_rqb(
             self.snapshots,
             self._svd_rank,
             self._oversampling,
@@ -81,6 +81,6 @@ class RDMD(CDMD):
             self._seed,
         )
         self._compression_matrix = Q.conj().T
-        self._test_matrix = Omega
+        self._test_matrix = test_matrix
 
         return B
