@@ -51,7 +51,7 @@ t_long = np.arange(10000) * 0.01
 t_uneven = np.delete(t, np.arange(2000)[1::2])
 Z = simulate_z(t)
 Z_long = simulate_z(t_long)
-Z_uneven = np.delete(Z, np.arange(1000)[1::2], axis=1)
+Z_uneven = np.delete(Z, np.arange(2000)[1::2], axis=1)
 rng = np.random.default_rng(seed=42)
 Z_noisy = Z + 0.2 * rng.standard_normal(Z.shape)
 
