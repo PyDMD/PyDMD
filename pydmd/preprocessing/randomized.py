@@ -3,7 +3,8 @@ Randomized pre-processing.
 """
 
 from functools import partial
-from typing import Dict, Union
+from numbers import Number
+from typing import Dict
 
 import numpy as np
 
@@ -11,12 +12,10 @@ from pydmd.dmdbase import DMDBase
 from pydmd.preprocessing import PrePostProcessingDMD
 from pydmd.utils import compute_rqb
 
-svd_rank_type = Union[int, float]
-
 
 def randomized_preprocessing(
     dmd: DMDBase,
-    svd_rank: svd_rank_type,
+    svd_rank: Number,
     oversampling: int = 10,
     power_iters: int = 2,
     test_matrix: np.ndarray = None,
@@ -49,7 +48,7 @@ def randomized_preprocessing(
 def _pre(
     state: Dict,
     X: np.ndarray,
-    svd_rank: svd_rank_type,
+    svd_rank: Number,
     oversampling: int,
     power_iters: int,
     test_matrix: np.ndarray,
