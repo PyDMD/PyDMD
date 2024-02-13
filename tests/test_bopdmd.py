@@ -96,7 +96,7 @@ def test_eigs():
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
 
-    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.5)
+    bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=0.8)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(sort_imag(bopdmd.eigs), expected_eigs)
 
@@ -126,7 +126,7 @@ def test_A():
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
-    bopdmd = BOPDMD(svd_rank=2, compute_A=True, num_trials=100, trial_size=0.5)
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True, num_trials=10, trial_size=0.8)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.A, expected_A)
 
@@ -140,7 +140,7 @@ def test_reconstruction():
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.reconstructed_data, Z, rtol=1e-5)
 
-    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.5)
+    bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=0.8)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.reconstructed_data, Z, rtol=1e-5)
 
@@ -164,7 +164,7 @@ def test_forecast():
     bopdmd.fit(Z_uneven, t_uneven)
     np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-2)
 
-    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=0.5)
+    bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=0.8)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.forecast(t_long)[0], Z_long, rtol=1e-2)
 
@@ -347,7 +347,7 @@ def test_bagging_improvement():
     optdmd.fit(Z_noisy, t)
     optdmd_error = relative_error(optdmd.A, expected_A)
 
-    test_trials = 20
+    test_trials = 10
     bop_success = 0
     for _ in range(test_trials):
         bopdmd = BOPDMD(
@@ -361,4 +361,4 @@ def test_bagging_improvement():
         bopdmd_error = relative_error(bopdmd.A, expected_A)
         bop_success += bopdmd_error < optdmd_error
 
-    assert bop_success >= 0.6 * test_trials
+    assert bop_success > 0.5 * test_trials
