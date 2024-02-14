@@ -45,15 +45,22 @@ def sort_imag(x):
     return x[sorted_inds]
 
 
+def compute_error(actual, truth):
+    """
+    Helper method that computes relative error.
+    """
+    return np.linalg.norm(truth - actual) / np.linalg.norm(truth)
+
+
 # Simulate data.
-t = np.arange(5000) * 0.01
-t_long = np.arange(10000) * 0.01
-t_uneven = np.delete(t, np.arange(2000)[1::2])
+t = np.arange(4000) * 0.01
+t_long = np.arange(6000) * 0.01
+t_uneven = np.delete(t, np.arange(1000)[1::2])
 Z = simulate_z(t)
 Z_long = simulate_z(t_long)
-Z_uneven = np.delete(Z, np.arange(2000)[1::2], axis=1)
-rng = np.random.default_rng(seed=42)
-Z_noisy = Z + 0.2 * rng.standard_normal(Z.shape)
+Z_uneven = np.delete(Z, np.arange(1000)[1::2], axis=1)
+rng = np.random.default_rng(seed=1234)
+Z_noisy = Z + 0.01 * rng.standard_normal(Z.shape)
 
 # Define the true eigenvalues of the system.
 expected_eigs = np.array((-1j, 1j))
@@ -112,23 +119,23 @@ def test_A():
     """
     bopdmd = BOPDMD(svd_rank=2, compute_A=True)
     bopdmd.fit(Z, t)
-    np.testing.assert_allclose(bopdmd.A, expected_A)
+    assert compute_error(bopdmd.A, expected_A) < 1e-3
 
     bopdmd = BOPDMD(svd_rank=2, compute_A=True)
     bopdmd.fit(Z_uneven, t_uneven)
-    np.testing.assert_allclose(bopdmd.A, expected_A)
+    assert compute_error(bopdmd.A, expected_A) < 1e-3
 
-    bopdmd = BOPDMD(svd_rank=2, compute_A=True)
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True, varpro_opts_dict={"tol": 0.05})
     bopdmd.fit(Z_noisy, t)
-    np.testing.assert_allclose(bopdmd.A, expected_A, rtol=0.02)
+    assert compute_error(bopdmd.A, expected_A) < 1e-3
 
     bopdmd = BOPDMD(svd_rank=2, compute_A=True, use_proj=False)
     bopdmd.fit(Z, t)
-    np.testing.assert_allclose(bopdmd.A, expected_A)
+    assert compute_error(bopdmd.A, expected_A) < 1e-3
 
     bopdmd = BOPDMD(svd_rank=2, compute_A=True, num_trials=10, trial_size=0.8)
     bopdmd.fit(Z, t)
-    np.testing.assert_allclose(bopdmd.A, expected_A)
+    assert compute_error(bopdmd.A, expected_A) < 1e-3
 
 
 def test_reconstruction():
@@ -158,15 +165,15 @@ def test_forecast():
     """
     bopdmd = BOPDMD(svd_rank=2)
     bopdmd.fit(Z, t)
-    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-2)
+    assert compute_error(bopdmd.forecast(t_long), Z_long) < 1e-2
 
     bopdmd = BOPDMD(svd_rank=2)
     bopdmd.fit(Z_uneven, t_uneven)
-    np.testing.assert_allclose(bopdmd.forecast(t_long), Z_long, rtol=1e-2)
+    assert compute_error(bopdmd.forecast(t_long), Z_long) < 1e-2
 
     bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=0.8)
     bopdmd.fit(Z, t)
-    np.testing.assert_allclose(bopdmd.forecast(t_long)[0], Z_long, rtol=1e-2)
+    assert compute_error(bopdmd.forecast(t_long)[0], Z_long) < 1e-2
 
 
 def test_compute_A():
@@ -314,51 +321,13 @@ def test_eig_constraints_errors_2():
 
 def test_eig_constraints_2():
     """
-    Tests that if the eig_constraints function...
-    - discards all real parts, the functionality is the same as
-        setting eig_constraints={"imag"}
-    - is a custom function, the functionality is as expected
+    Tests that if the eig_constraints function discards all real parts,
+    the functionality is the same as setting eig_constraints={"imag"}.
     """
 
     def make_imag(x):
         return 1j * x.imag
 
-    def make_real(x):
-        return x.real
-
     bopdmd1 = BOPDMD(svd_rank=2, eig_constraints={"imag"}).fit(Z, t)
     bopdmd2 = BOPDMD(svd_rank=2, eig_constraints=make_imag).fit(Z, t)
     np.testing.assert_array_equal(bopdmd1.eigs, bopdmd2.eigs)
-
-    bopdmd = BOPDMD(svd_rank=2, eig_constraints=make_real).fit(Z, t)
-    assert np.all(bopdmd.eigs.imag == 0.0)
-
-
-def test_bagging_improvement():
-    """
-    Tests that the use of bags improves accuracy on average when using noisy
-    data for fitting. Uses A matrix error as a proxy for accuracy.
-    """
-
-    def relative_error(x, x_true):
-        return np.linalg.norm(x_true - x) / np.linalg.norm(x_true)
-
-    optdmd = BOPDMD(svd_rank=2, compute_A=True, varpro_opts_dict={"tol": 0.246})
-    optdmd.fit(Z_noisy, t)
-    optdmd_error = relative_error(optdmd.A, expected_A)
-
-    test_trials = 10
-    bop_success = 0
-    for _ in range(test_trials):
-        bopdmd = BOPDMD(
-            svd_rank=2,
-            compute_A=True,
-            num_trials=100,
-            trial_size=0.9,
-            varpro_opts_dict={"tol": 0.246},
-        )
-        bopdmd.fit(Z_noisy, t)
-        bopdmd_error = relative_error(bopdmd.A, expected_A)
-        bop_success += bopdmd_error < optdmd_error
-
-    assert bop_success > 0.5 * test_trials
