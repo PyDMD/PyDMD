@@ -994,6 +994,10 @@ class mrCOSTS:
             )
             omega_classes = omega_classes_list[n_mrd]
 
+            if mrd.svd_rank < np.max(self._svd_rank_array):
+                truncate_slice = slice(None, mrd.svd_rank)
+                omega_classes = omega_classes[:, truncate_slice]
+
             # Iterate over each window slide performed.
             for k in range(mrd.n_slides):
                 w = mrd.modes_array[k]
