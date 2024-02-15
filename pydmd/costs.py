@@ -459,6 +459,10 @@ class COSTS:
         self._window_length = window_length
         self._step_size = step_size
         self._n_time_steps, self._n_data_vars = self._data_shape(data)
+
+        if not self._n_time_steps == time.size:
+            raise ValueError("Data and time dimensions do not align.")
+
         self._n_slides = self._build_windows(
             data,
             self._window_length,
@@ -1560,6 +1564,8 @@ class COSTS:
             value = "None"
         elif isinstance(value, set):
             value = list(value)
+        elif callable(value):
+            value = f"Custom function {value.__name__}"
         return value
 
     @staticmethod
