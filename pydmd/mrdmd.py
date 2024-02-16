@@ -405,7 +405,7 @@ Expected one item per level, got {} out of {} levels.""".format(
         return np.concatenate(
             [self.dmd_tree[level, leaf].amplitudes for leaf in leaves]
         )
-    
+
     def partial_reconstructed_data(self, level, node=None):
         """
         Return the reconstructed data computed using the modes and the time
