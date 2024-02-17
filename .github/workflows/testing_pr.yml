@@ -123,12 +123,12 @@ jobs:
         cache: 'pip'
         cache-dependency-path: setup.py
 
-    - name: Install wget on ubuntu
+    - name: Install required commands on ubuntu
       run: |
         if command -v apt-get &> /dev/null;
         then
           sudo apt-get update -y
-          sudo apt-get install wget
+          sudo apt-get install wget unzip
         fi
         
     - name: Install dependencies
