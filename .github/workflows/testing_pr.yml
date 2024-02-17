@@ -122,6 +122,14 @@ jobs:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
         cache-dependency-path: setup.py
+
+    - name: Install wget on ubuntu
+      run: |
+        if command -v apt-get &> /dev/null;
+        then
+          apt-get update -y
+          apt-get install wget
+        fi
         
     - name: Install dependencies
       run: |
