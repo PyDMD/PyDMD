@@ -127,8 +127,8 @@ jobs:
       run: |
         if command -v apt-get &> /dev/null;
         then
-          apt-get update -y
-          apt-get install wget
+          sudo apt-get update -y
+          sudo apt-get install wget
         fi
         
     - name: Install dependencies
