@@ -6,6 +6,7 @@ References:
 Dynamical Systems, F. Andreuzzi, N. Demo, G. Rozza, 2023, SIAM Journal on 
 Applied Dynamical Systems
 """
+
 import pickle
 
 import numpy as np

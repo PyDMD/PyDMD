@@ -6,6 +6,7 @@ Reference:
 computation of spectral properties of the Koopman operator. SIAM Journal on
 Applied Dynamical Systems, 2017, 16.4: 2096-2126.
 """
+
 from copy import copy
 from numbers import Number
 

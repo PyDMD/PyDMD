@@ -1,6 +1,7 @@
 """
 Module for snapshots normalization.
 """
+
 import logging
 import warnings
 

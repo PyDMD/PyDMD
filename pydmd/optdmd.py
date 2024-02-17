@@ -8,6 +8,7 @@ to dmd.
     solution in polynomial time. arXiv:1610.02962. 2016.
 
 """
+
 import numpy as np
 from scipy.linalg import eig
 

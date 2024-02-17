@@ -5,6 +5,7 @@ Reference:
 - S. L Clainche, J. M. Vega, Higher Order Dynamic Mode Decomposition.
 Journal on Applied Dynamical Systems, 16(2), 882-925, 2017.
 """
+
 import warnings
 
 import numpy as np
