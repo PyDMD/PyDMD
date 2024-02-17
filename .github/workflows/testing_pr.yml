@@ -46,7 +46,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: Install black
       run: |
-        pip install black[jupyter]
+        pip install black[jupyter]==24.2.0
         
     - name: Run black formatter on PyDMD source code
       run: |
