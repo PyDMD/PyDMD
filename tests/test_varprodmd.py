@@ -1,6 +1,7 @@
 """
 Test module for VarProDMD
 """
+
 import numpy as np
 import pytest
 

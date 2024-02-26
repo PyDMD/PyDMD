@@ -6,6 +6,7 @@ References:
 Steven L. Brunton. Physics-informed dynamic mode decomposition (pidmd). 2021.
 arXiv:2112.04307.
 """
+
 import numpy as np
 from numpy.fft import fft, fft2, ifft
 from scipy import sparse
