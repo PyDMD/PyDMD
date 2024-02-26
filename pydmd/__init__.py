@@ -1,6 +1,7 @@
 """
 PyDMD init
 """
+
 __all__ = [
     "dmdbase",
     "dmd",

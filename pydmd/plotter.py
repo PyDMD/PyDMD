@@ -1,6 +1,7 @@
 """
 Module for DMD plotting.
 """
+
 import warnings
 from os.path import splitext
 
