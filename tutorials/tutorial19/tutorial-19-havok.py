@@ -156,6 +156,7 @@ def plot_summary(
     filename=None,
 ):
 """
+
 havok.plot_summary(
     # Number of data points to plot.
     num_plot=15000,
@@ -264,6 +265,7 @@ def compute_threshold(
     plot_kwargs=None,
 ):
 """
+
 # Re-fit the HAVOK model (because model was overwritten in the last block).
 havok = HAVOK(svd_rank=16, delays=100).fit(x, t)
 
