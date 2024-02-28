@@ -87,10 +87,7 @@ jobs:
         docs-folder: "docs/"
     - name: Gather tutorials
       run: |
-        ls .
-        ls -ltrh docs/build
-        ls -ltrh docs/build/html
-        cp docs/source/_tutorials/* -v docs/build/html/
+        sudo cp docs/source/_tutorials/* -v docs/build/html/
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
