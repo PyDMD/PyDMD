@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pydmd.dmdoperator &mdash; PyDMD 1.0.0 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            PyDMD
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code_of_conduct.html">PyDMD Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pydmd.dmdoperator</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pydmd.dmdoperator</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">sqrtm</span>
+
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;[</span><span class="si">%(filename)s</span><span class="s2">:</span><span class="si">%(lineno)s</span><span class="s2"> - </span><span class="si">%(funcName)20s</span><span class="s2">() ] </span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="DMDOperator"><a class="viewcode-back" href="../../dmdoperator.html#pydmd.dmdoperator.DMDOperator">[docs]</a><span class="k">class</span> <span class="nc">DMDOperator</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dynamic Mode Decomposition standard operator class. Non-standard ways of</span>
+<span class="sd">    computing the low-rank Atilde operator should be coded into subclasses of</span>
+<span class="sd">    this class.</span>
+
+<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes the</span>
+<span class="sd">        optimal rank and uses it for truncation; if positive interger, the</span>
+<span class="sd">        method uses the argument for the truncation; if float between 0 and 1,</span>
+<span class="sd">        the rank is the number of the biggest singular values that are needed</span>
+<span class="sd">        to reach the &#39;energy&#39; specified by `svd_rank`; if -1, the method does</span>
+<span class="sd">        not compute truncation.</span>
+<span class="sd">    :type svd_rank: int or float</span>
+<span class="sd">    :param bool exact: flag to compute either exact DMD or projected DMD.</span>
+<span class="sd">        Default is False.</span>
+<span class="sd">    :param rescale_mode: Scale Atilde as shown in</span>
+<span class="sd">        10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its</span>
+<span class="sd">        eigendecomposition. None means no rescaling, &#39;auto&#39; means automatic</span>
+<span class="sd">        rescaling using singular values, otherwise the scaling factors.</span>
+<span class="sd">    :type rescale_mode: {&#39;auto&#39;} or None or numpy.ndarray</span>
+<span class="sd">    :param bool forward_backward: If True, the low-rank operator is computed</span>
+<span class="sd">        like in fbDMD (reference: https://arxiv.org/abs/1507.02264). Default is</span>
+<span class="sd">        False.</span>
+<span class="sd">    :param sorted_eigs: Sort eigenvalues (and modes/dynamics accordingly) by</span>
+<span class="sd">        magnitude if `sorted_eigs=&#39;abs&#39;`, by real part (and then by imaginary</span>
+<span class="sd">        part to break ties) if `sorted_eigs=&#39;real&#39;`. Default: False.</span>
+<span class="sd">    :type sorted_eigs: {&#39;real&#39;, &#39;abs&#39;} or False</span>
+<span class="sd">    :param tikhonov_regularization: Tikhonov parameter for the regularization.</span>
+<span class="sd">        If `None`, no regularization is applied, if `float`, it is used as the</span>
+<span class="sd">        :math:`\lambda` tikhonov parameter.</span>
+<span class="sd">    :type tikhonov_regularization: int or float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">svd_rank</span><span class="p">,</span>
+        <span class="n">exact</span><span class="p">,</span>
+        <span class="n">forward_backward</span><span class="p">,</span>
+        <span class="n">rescale_mode</span><span class="p">,</span>
+        <span class="n">sorted_eigs</span><span class="p">,</span>
+        <span class="n">tikhonov_regularization</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exact</span> <span class="o">=</span> <span class="n">exact</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span> <span class="o">=</span> <span class="n">rescale_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span> <span class="o">=</span> <span class="n">svd_rank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_forward_backward</span> <span class="o">=</span> <span class="n">forward_backward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span> <span class="o">=</span> <span class="n">sorted_eigs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tikhonov_regularization</span> <span class="o">=</span> <span class="n">tikhonov_regularization</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_norm_X</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="DMDOperator.compute_operator"><a class="viewcode-back" href="../../dmdoperator.html#pydmd.dmdoperator.DMDOperator.compute_operator">[docs]</a>    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the low-rank operator.</span>
+
+<span class="sd">        :param numpy.ndarray X: matrix containing the snapshots x0,..x{n-1} by</span>
+<span class="sd">            column.</span>
+<span class="sd">        :param numpy.ndarray Y: matrix containing the snapshots x1,..x{n} by</span>
+<span class="sd">            column.</span>
+<span class="sd">        :return: the (truncated) left-singular vectors matrix, the (truncated)</span>
+<span class="sd">            singular values array, the (truncated) right-singular vectors</span>
+<span class="sd">            matrix of X.</span>
+<span class="sd">        :rtype: numpy.ndarray, numpy.ndarray, numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">compute_svd</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tikhonov_regularization</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_norm_X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">atilde</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_least_square_operator</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_backward</span><span class="p">:</span>
+            <span class="c1"># b stands for &quot;backward&quot;</span>
+            <span class="n">bU</span><span class="p">,</span> <span class="n">bs</span><span class="p">,</span> <span class="n">bV</span> <span class="o">=</span> <span class="n">compute_svd</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">svd_rank</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+            <span class="n">atilde_back</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_least_square_operator</span><span class="p">(</span><span class="n">bU</span><span class="p">,</span> <span class="n">bs</span><span class="p">,</span> <span class="n">bV</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+            <span class="n">atilde</span> <span class="o">=</span> <span class="n">sqrtm</span><span class="p">(</span><span class="n">atilde</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">atilde_back</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">np</span><span class="p">,</span> <span class="s2">&quot;complex256&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">atilde</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">complex256</span><span class="p">:</span>
+                <span class="n">atilde</span> <span class="o">=</span> <span class="n">atilde</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Casting atilde from np.complex256 to np.complex128&quot;</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span> <span class="o">=</span> <span class="n">s</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">atilde</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_eigenquantities</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_modes</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shape of the operator&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_numpy_array</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">snapshot_lowrank_modal_coefficients</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply the low-rank operator to a vector of the modal coefficients of a</span>
+<span class="sd">        snapshot(s).</span>
+
+<span class="sd">        :param numpy.ndarray snapshot_lowrank_modal_coefficients: low-rank</span>
+<span class="sd">            representation (in modal coefficients) of a snapshot x{n}.</span>
+<span class="sd">        :return: low-rank representation (in modal coefficients) of x{n+1}.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">snapshot_lowrank_modal_coefficients</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eigenvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_eigenvalues&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;You need to call fit before&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eigenvectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_eigenvectors&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;You need to call fit before&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvectors</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_modes&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;You need to call fit before&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">Lambda</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_Lambda&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;You need to call fit before&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Lambda</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">as_numpy_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_Atilde&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;You need to call fit before&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span>
+
+<div class="viewcode-block" id="DMDOperator._least_square_operator"><a class="viewcode-back" href="../../dmdoperator.html#pydmd.dmdoperator.DMDOperator._least_square_operator">[docs]</a>    <span class="k">def</span> <span class="nf">_least_square_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Private method that computes the lowrank operator from the singular</span>
+<span class="sd">        value decomposition of matrix X and the matrix Y.</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \\mathbf{\\tilde{A}} =</span>
+<span class="sd">            \\mathbf{U}^* \\mathbf{Y} \\mathbf{X}^\\dagger \\mathbf{U} =</span>
+<span class="sd">            \\mathbf{U}^* \\mathbf{Y} \\mathbf{V} \\mathbf{S}^{-1}</span>
+
+<span class="sd">        :param numpy.ndarray U: 2D matrix that contains the left-singular</span>
+<span class="sd">            vectors of X, stored by column.</span>
+<span class="sd">        :param numpy.ndarray s: 1D array that contains the singular values of</span>
+<span class="sd">            X.</span>
+<span class="sd">        :param numpy.ndarray V: 2D matrix that contains the right-singular</span>
+<span class="sd">            vectors of X, stored by row.</span>
+<span class="sd">        :param numpy.ndarray Y: input matrix Y.</span>
+<span class="sd">        :return: the lowrank operator</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tikhonov_regularization</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">s</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tikhonov_regularization</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_norm_X</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">Y</span><span class="p">,</span> <span class="n">V</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DMDOperator._compute_eigenquantities"><a class="viewcode-back" href="../../dmdoperator.html#pydmd.dmdoperator.DMDOperator._compute_eigenquantities">[docs]</a>    <span class="k">def</span> <span class="nf">_compute_eigenquantities</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Private method that computes eigenvalues and eigenvectors of the</span>
+<span class="sd">        low-dimensional operator, scaled according to self._rescale_mode.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># scaling isn&#39;t required</span>
+            <span class="n">Ahat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_numpy_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sd">&quot;&quot;&quot;Scaling by an invalid number of</span>
+<span class="sd">                        coefficients&quot;&quot;&quot;</span>
+                <span class="p">)</span>
+            <span class="n">scaling_factors_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span>
+
+            <span class="n">factors_inv_sqrt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">scaling_factors_array</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">))</span>
+            <span class="n">factors_sqrt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">scaling_factors_array</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
+
+            <span class="c1"># if an index is 0, we get inf when taking the reciprocal</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scaling_factors_array</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">item</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">factors_inv_sqrt</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">Ahat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">factors_inv_sqrt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_numpy_array</span><span class="p">,</span> <span class="n">factors_sqrt</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid value for rescale_mode: </span><span class="si">{}</span><span class="s2"> of type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">Ahat</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span> <span class="o">==</span> <span class="s2">&quot;abs&quot;</span><span class="p">:</span>
+
+                <span class="k">def</span> <span class="nf">k</span><span class="p">(</span><span class="n">tp</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">tp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span> <span class="o">==</span> <span class="s2">&quot;real&quot;</span><span class="p">:</span>
+
+                <span class="k">def</span> <span class="nf">k</span><span class="p">(</span><span class="n">tp</span><span class="p">):</span>
+                    <span class="n">eig</span> <span class="o">=</span> <span class="n">tp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eig</span><span class="p">,</span> <span class="nb">complex</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="p">(</span><span class="n">eig</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">eig</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="p">(</span><span class="n">eig</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Invalid value for sorted_eigs: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="c1"># each column is an eigenvector, therefore we take the</span>
+            <span class="c1"># transpose to associate each row (former column) to an</span>
+            <span class="c1"># eigenvalue before sorting</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="o">*</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvectors</span><span class="o">.</span><span class="n">T</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">eig</span> <span class="k">for</span> <span class="n">eig</span> <span class="ow">in</span> <span class="n">a</span><span class="p">])</span>
+            <span class="c1"># we restore the original condition (eigenvectors in columns)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">vec</span> <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">b</span><span class="p">])</span><span class="o">.</span><span class="n">T</span></div>
+
+<div class="viewcode-block" id="DMDOperator._compute_modes"><a class="viewcode-back" href="../../dmdoperator.html#pydmd.dmdoperator.DMDOperator._compute_modes">[docs]</a>    <span class="k">def</span> <span class="nf">_compute_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">V</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Private method that computes eigenvalues and eigenvectors of the</span>
+<span class="sd">        high-dimensional operator (stored in self.modes and self.Lambda).</span>
+
+<span class="sd">        :param numpy.ndarray Y: matrix containing the snapshots x1,..x{n} by</span>
+<span class="sd">            column.</span>
+<span class="sd">        :param numpy.ndarray U: (truncated) left singular vectors of X</span>
+<span class="sd">        :param numpy.ndarray Sigma: (truncated) singular values of X</span>
+<span class="sd">        :param numpy.ndarray V: (truncated) right singular vectors of X</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">W</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvectors</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># compute W as shown in arXiv:1409.5496 (section 2.4)</span>
+            <span class="n">factors_sqrt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
+            <span class="n">W</span> <span class="o">=</span> <span class="n">factors_sqrt</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigenvectors</span><span class="p">)</span>
+
+        <span class="c1"># compute the eigenvectors of the high-dimensional operator</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exact</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tikhonov_regularization</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">Sigma</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">Sigma</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tikhonov_regularization</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_norm_X</span>
+                <span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+            <span class="n">high_dimensional_eigenvectors</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">Y</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">high_dimensional_eigenvectors</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+
+        <span class="c1"># eigenvalues are the same of lowrank</span>
+        <span class="n">high_dimensional_eigenvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="n">high_dimensional_eigenvectors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Lambda</span> <span class="o">=</span> <span class="n">high_dimensional_eigenvalues</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2024, PyDMD contributors.
+      <span class="lastupdated">Last updated on Feb 28, 2024.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

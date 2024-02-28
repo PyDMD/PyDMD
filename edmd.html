@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kernelized extended DMD &mdash; PyDMD 1.0.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Forward-backward DMD" href="fbdmd.html" />
+    <link rel="prev" title="DMD with control" href="dmdc.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PyDMD
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdoperator.html">DMD Operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bopdmd.html">BOPDMD: Optimized DMD and Bagging, Optimized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">Compressed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMD with control</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Kernelized extended DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">Forward-backward DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">Hankel DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="havok.html">Havok</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hodmd.html">Higher-order DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">Parametric DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotter.html">Plotter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pidmd.html">Physics-informed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rdmd.html">Randomized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spdmd.html">Sparsity-promoting DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subspacedmd.html">Subspace DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="varprodmd.html">VarProDMD: Variable Projection for DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_of_conduct.html">PyDMD Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="code.html">Code Documentation</a></li>
+      <li class="breadcrumb-item active">Kernelized extended DMD</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/edmd.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-pydmd.edmd">
+<span id="kernelized-extended-dmd"></span><h1>Kernelized extended DMD<a class="headerlink" href="#module-pydmd.edmd" title="Permalink to this headline">¶</a></h1>
+<p>Derived module from dmdbase.py for kernelized extended dmd.</p>
+<p>References:
+- M. O. Williams, C. W. Rowley, and I. G. Kevrekidis,
+A kernel-based method for data-driven koopman spectral analysis,
+J. Comput. Dynam., 2 (2015), pp. 247-265
+- M. O. Williams, I. G. Kevrekidis, and C. W. Rowley,
+A data-driven approximation of the koopman operator: extending
+dynamic mode decomposition, J. Nonlinear Sci., 25 (2015), pp. 1307-1346</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-name descname">EDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=-1</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">kernel_metric='linear'</em>, <em class="sig-param">kernel_params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/edmd.html#EDMD"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmd.DMD</span></code></p>
+<p>Kernelized Extended DMD.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If positive integer, the
+method uses the argument for the truncation; if float between 0 and 1,
+the rank is the number of the biggest singular values that are needed
+to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1, the method does
+not compute truncation.</p></li>
+<li><p><strong>tlsq_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – rank truncation computing Total Least Square. Default
+is 0, meaning no truncation.</p></li>
+<li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – If True, amplitudes are computed like in optimized DMD  (see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">_compute_amplitudes()</span></code> for reference). If
+False, amplitudes are computed following the standard algorithm. If
+<cite>opt</cite> is an integer, it is used as the (temporal) index of the snapshot
+used to compute DMD modes amplitudes (following the standard
+algorithm).
+The reconstruction will generally be better in time instants near the
+chosen snapshot; however increasing <cite>opt</cite> may lead to wrong results
+when the system presents small eigenvalues. For this reason a manual
+selection of the number of eigenvalues considered for the analyisis may
+be needed (check <cite>svd_rank</cite>). Also setting <cite>svd_rank</cite> to a value
+between 0 and 1 may give better results. Default is False.</p></li>
+<li><p><strong>kernel_metric</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – the kernel function to apply. Supported kernel
+metrics include <cite>“additive_chi2”</cite>, <cite>“chi2”</cite>, <cite>“linear”</cite>, <cite>“poly”</cite>,
+<cite>“polynomial”</cite>, <cite>“rbf”</cite>, <cite>“laplacian”</cite>, <cite>“sigmoid”</cite>, and <cite>“cosine”</cite>.</p></li>
+<li><p><strong>kernel_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – additional parameters for the
+<cite>sklearn.metrics.pairwise_kernels</cite> function, including
+kernel-specific function parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<em class="property">static </em><code class="sig-name descname">_test_kernel_inputs</code><span class="sig-paren">(</span><em class="sig-param">kernel_metric</em>, <em class="sig-param">kernel_params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/edmd.html#EDMD._test_kernel_inputs"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Helper function that uses a dummy array of data in order to
+call <cite>sklearn.metrics.pairwise_kernels</cite> using the user-given
+kernel parameters. Ensures that the given kernel parameters
+produce valid kernel matrices.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">eigenfunctions</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/edmd.html#EDMD.eigenfunctions"><span class="viewcode-link">[source]</span></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – array from the original snapshot domain denoting the point
+at which to compute the EDMD eigenfunctions.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>array containing all r EDMD eigenfunctions evaluated at the
+given domain point, where r denotes the rank of the EDMD fit.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-name descname">EDMDOperator</code><span class="sig-paren">(</span><em class="sig-param">svd_rank</em>, <em class="sig-param">kernel_metric</em>, <em class="sig-param">kernel_params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/edmd.html#EDMDOperator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdoperator.DMDOperator</span></code></p>
+<p>DMD operator for kernelized extended DMD.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If positive integer, the
+method uses the argument for the truncation; if float between 0 and 1,
+the rank is the number of the biggest singular values that are needed
+to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1, the method does
+not compute truncation.</p></li>
+<li><p><strong>kernel_metric</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – the kernel function to apply. Supported kernel
+metrics include <cite>“additive_chi2”</cite>, <cite>“chi2”</cite>, <cite>“linear”</cite>, <cite>“poly”</cite>,
+<cite>“polynomial”</cite>, <cite>“rbf”</cite>, <cite>“laplacian”</cite>, <cite>“sigmoid”</cite>, and <cite>“cosine”</cite>.</p></li>
+<li><p><strong>kernel_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – additional parameters for the
+<cite>sklearn.metrics.pairwise_kernels</cite> function, including
+kernel-specific function parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="sig-name descname">_compute_feature_matrix_svd</code><span class="sig-paren">(</span><em class="sig-param">Gramian</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/edmd.html#EDMDOperator._compute_feature_matrix_svd"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Helper function that computes the eigendecomposition of the Gramian in
+order to obtain the singular vectors Q and singular values Sigma of the
+corresponding feature embedding matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Gramian</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – the Gramian matrix.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the (truncated) left-singular vectors matrix of the extended
+feature matrix and the (truncated) singular values matrix of the
+extended feature matrix.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">_compute_rank_from_svals</code><span class="sig-paren">(</span><em class="sig-param">s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/edmd.html#EDMDOperator._compute_rank_from_svals"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Rank computation for the truncated Singular Value Decomposition given
+only singular values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>s</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – the singular values.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the computed rank truncation.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">as_numpy_array</code></dt>
+<dd><p>EDMD does not explicitly compute the forward operator or its reduction.
+Doing so poses risks of prohibitively-large computations…</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">compute_operator</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/edmd.html#EDMDOperator.compute_operator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Compute and store the kernelized EDMD diagnostics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – matrix containing the right-hand side snapshots by column.</p></li>
+<li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – matrix containing the left-hand side snapshots by column.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the (truncated) left-singular vectors matrix of the extended
+feature matrix, the (truncated) singular values matrix of the
+extended feature matrix, and the eigenvectors of the tranformed
+forward operator <cite>K_hat</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">svd_vals</code></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the singular values of the extended feature matrix.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dmdc.html" class="btn btn-neutral float-left" title="DMD with control" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fbdmd.html" class="btn btn-neutral float-right" title="Forward-backward DMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2024, PyDMD contributors.
+      <span class="lastupdated">Last updated on Feb 28, 2024.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

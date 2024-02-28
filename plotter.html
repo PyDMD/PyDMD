@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plotter &mdash; PyDMD 1.0.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Physics-informed DMD" href="pidmd.html" />
+    <link rel="prev" title="Parametric DMD" href="paramdmd.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PyDMD
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdoperator.html">DMD Operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bopdmd.html">BOPDMD: Optimized DMD and Bagging, Optimized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">Compressed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMD with control</a></li>
+<li class="toctree-l2"><a class="reference internal" href="edmd.html">Kernelized extended DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">Forward-backward DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">Hankel DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="havok.html">Havok</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hodmd.html">Higher-order DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">Parametric DMD</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Plotter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pidmd.html">Physics-informed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rdmd.html">Randomized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spdmd.html">Sparsity-promoting DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subspacedmd.html">Subspace DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="varprodmd.html">VarProDMD: Variable Projection for DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_of_conduct.html">PyDMD Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="code.html">Code Documentation</a></li>
+      <li class="breadcrumb-item active">Plotter</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/plotter.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-pydmd.plotter">
+<span id="plotter"></span><h1>Plotter<a class="headerlink" href="#module-pydmd.plotter" title="Permalink to this headline">¶</a></h1>
+<p>Module for DMD plotting.</p>
+<dl class="function">
+<dt id="pydmd.plotter._enforce_ratio">
+<code class="sig-name descname">_enforce_ratio</code><span class="sig-paren">(</span><em class="sig-param">goal_ratio</em>, <em class="sig-param">supx</em>, <em class="sig-param">infx</em>, <em class="sig-param">supy</em>, <em class="sig-param">infy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#_enforce_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter._enforce_ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the right value of <cite>supx,infx,supy,infy</cite> to obtain the desired
+ratio in <a class="reference internal" href="#pydmd.plotter.plot_eigs" title="pydmd.plotter.plot_eigs"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_eigs()</span></code></a>. Ratio is defined as</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dx</span> <span class="o">=</span> <span class="n">supx</span> <span class="o">-</span> <span class="n">infx</span>
+<span class="n">dy</span> <span class="o">=</span> <span class="n">supy</span> <span class="o">-</span> <span class="n">infy</span>
+<span class="nb">max</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span> <span class="o">/</span> <span class="nb">min</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>goal_ratio</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the desired ratio.</p></li>
+<li><p><strong>supx</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the old value of <cite>supx</cite>, to be adjusted.</p></li>
+<li><p><strong>infx</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the old value of <cite>infx</cite>, to be adjusted.</p></li>
+<li><p><strong>supy</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the old value of <cite>supy</cite>, to be adjusted.</p></li>
+<li><p><strong>infy</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the old value of <cite>infy</cite>, to be adjusted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return tuple</dt>
+<dd class="field-even"><p>a tuple which contains the updated values of
+<cite>supx,infx,supy,infy</cite> in this order.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pydmd.plotter._plot_limits">
+<code class="sig-name descname">_plot_limits</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">narrow_view</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#_plot_limits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter._plot_limits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pydmd.plotter.plot_eigs">
+<code class="sig-name descname">plot_eigs</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">show_axes=True</em>, <em class="sig-param">show_unit_circle=True</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em>, <em class="sig-param">title=''</em>, <em class="sig-param">narrow_view=False</em>, <em class="sig-param">dpi=None</em>, <em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_eigs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_eigs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the eigenvalues.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dmd</strong> (<em>pydmd.DMDBase</em>) – DMD instance.</p></li>
+<li><p><strong>show_axes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the axes will be showed in the plot.
+Default is True.</p></li>
+<li><p><strong>show_unit_circle</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the circle with unitary radius
+and center in the origin will be showed. Default is True.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – tuple in inches defining the figure
+size. Default is (8, 8).</p></li>
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – title of the plot.</p></li>
+<li><p><strong>bool</strong> (<em>narrow_view</em>) – if True, the plot will show only the smallest
+rectangular area which contains all the eigenvalues, with a padding
+of 0.05. Not compatible with <cite>show_axes=True</cite>. Default is False.</p></li>
+<li><p><strong>int</strong> (<em>dpi</em>) – If not None, the given value is passed to
+<code class="docutils literal notranslate"><span class="pre">plt.figure</span></code>.</p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pydmd.plotter.plot_eigs_mrdmd">
+<code class="sig-name descname">plot_eigs_mrdmd</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">show_axes=True</em>, <em class="sig-param">show_unit_circle=True</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em>, <em class="sig-param">title=''</em>, <em class="sig-param">level=None</em>, <em class="sig-param">node=None</em>, <em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_eigs_mrdmd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_eigs_mrdmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the eigenvalues.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>show_axes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the axes will be showed in the plot.
+Default is True.</p></li>
+<li><p><strong>show_unit_circle</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the circle with unitary radius
+and center in the origin will be showed. Default is True.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – tuple in inches of the figure.</p></li>
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – title of the plot.</p></li>
+<li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – plot only the eigenvalues of specific level.</p></li>
+<li><p><strong>node</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – plot only the eigenvalues of specific node.</p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pydmd.plotter.plot_modes_2D">
+<code class="sig-name descname">plot_modes_2D</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">snapshots_shape=None</em>, <em class="sig-param">index_mode=None</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em>, <em class="sig-param">order='C'</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_modes_2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_modes_2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the DMD Modes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dmd</strong> (<em>pydmd.DMDBase</em>) – DMD instance.</p></li>
+<li><p><strong>snapshots_shape</strong> – Shape of the snapshots.</p></li>
+<li><p><strong>index_mode</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>sequence</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – the index of the modes to plot. By default, all
+the modes are plotted.</p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
+<li><p><strong>order</strong> (<em>{'C'</em><em>, </em><em>'F'</em><em>, </em><em>'A'}</em><em>, </em><em>default 'C'.</em>) – read the elements of snapshots using this index order,
+and place the elements into the reshaped array using this index
+order.  It has to be the same used to store the snapshot. ‘C’ means
+to read/ write the elements using C-like index order, with the last
+axis index changing fastest, back to the first axis index changing
+slowest.  ‘F’ means to read / write the elements using Fortran-like
+index order, with the first index changing fastest, and the last
+index changing slowest.  Note that the ‘C’ and ‘F’ options take no
+account of the memory layout of the underlying array, and only
+refer to the order of indexing.  ‘A’ means to read / write the
+elements in Fortran-like index order if a is Fortran contiguous in
+memory, C-like order otherwise.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – tuple in inches defining the figure
+size. Default is (8, 8).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pydmd.plotter.plot_snapshots_2D">
+<code class="sig-name descname">plot_snapshots_2D</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">snapshots_shape=None</em>, <em class="sig-param">index_snap=None</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em>, <em class="sig-param">order='C'</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_snapshots_2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_snapshots_2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the snapshots.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dmd</strong> (<em>pydmd.DMDBase</em>) – DMD instance.</p></li>
+<li><p><strong>snapshots_shape</strong> – Shape of the snapshots.</p></li>
+<li><p><strong>index_snap</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>sequence</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – the index of the snapshots to plot. By default, all
+the snapshots are plotted.</p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – if specified, the plot is saved at <cite>filename</cite>.</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – domain abscissa.</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – domain ordinate</p></li>
+<li><p><strong>order</strong> (<em>{'C'</em><em>, </em><em>'F'</em><em>, </em><em>'A'}</em><em>, </em><em>default 'C'.</em>) – read the elements of snapshots using this index order,
+and place the elements into the reshaped array using this index
+order.  It has to be the same used to store the snapshot. ‘C’ means
+to read/ write the elements using C-like index order, with the last
+axis index changing fastest, back to the first axis index changing
+slowest.  ‘F’ means to read / write the elements using Fortran-like
+index order, with the first index changing fastest, and the last
+index changing slowest.  Note that the ‘C’ and ‘F’ options take no
+account of the memory layout of the underlying array, and only
+refer to the order of indexing.  ‘A’ means to read / write the
+elements in Fortran-like index order if a is Fortran contiguous in
+memory, C-like order otherwise.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em><em>(</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>)</em>) – tuple in inches defining the figure
+size. Default is (8, 8).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pydmd.plotter.plot_summary">
+<code class="sig-name descname">plot_summary</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">*</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em>, <em class="sig-param">t=None</em>, <em class="sig-param">d=1</em>, <em class="sig-param">continuous=False</em>, <em class="sig-param">snapshots_shape=None</em>, <em class="sig-param">index_modes=(0</em>, <em class="sig-param">1</em>, <em class="sig-param">2)</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">order='C'</em>, <em class="sig-param">figsize=(12</em>, <em class="sig-param">8)</em>, <em class="sig-param">dpi=200</em>, <em class="sig-param">tight_layout_kwargs=None</em>, <em class="sig-param">main_colors=('r'</em>, <em class="sig-param">'b'</em>, <em class="sig-param">'g')</em>, <em class="sig-param">mode_color='k'</em>, <em class="sig-param">mode_cmap='bwr'</em>, <em class="sig-param">dynamics_color='tab:blue'</em>, <em class="sig-param">rank_color='tab:orange'</em>, <em class="sig-param">circle_color='tab:blue'</em>, <em class="sig-param">sval_ms=8</em>, <em class="sig-param">max_eig_ms=10</em>, <em class="sig-param">max_sval_plot=50</em>, <em class="sig-param">title_fontsize=14</em>, <em class="sig-param">label_fontsize=12</em>, <em class="sig-param">plot_semilogy=False</em>, <em class="sig-param">flip_continuous_axes=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a 3 x 3 summarizing plot that contains the following components:
+- the singular value spectrum of the data
+- the discrete-time and continuous-time DMD eigenvalues
+- the DMD modes specified by the <cite>index_modes</cite> parameter
+- the time dynamics that correspond with each plotted mode
+The number of singular values used for the DMD fit are highlighted.
+All eigenvalues, modes, and dynamics are sorted according to the magnitude
+of their corresponding amplitude value, i.e. their significance in the fit.
+Correspondence between eigenvalues, modes, and dynamics is indicated via
+color coordination.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dmd</strong> (<em>pydmd.DMDBase</em>) – fitted DMD instance.</p></li>
+<li><p><strong>x</strong> (<em>np.ndarray</em><em> or </em><em>iterable</em>) – Points along the 1st spatial dimension where data has been
+collected.</p></li>
+<li><p><strong>y</strong> (<em>np.ndarray</em><em> or </em><em>iterable</em>) – Points along the 2nd spatial dimension where data has been
+collected. Note that this parameter is only applicable when the data
+snapshots are 2-D, which must be indicated with <cite>snapshots_shape</cite>.</p></li>
+<li><p><strong>t</strong> (<em>{numpy.ndarray</em><em>, </em><em>iterable}</em><em> or </em><em>{int</em><em>, </em><em>float}</em>) – The times of data collection, or the time-step between snapshots.
+Note that time information must be accurate in order to accurately
+visualize eigenvalues and times of the dynamics. For non-<cite>BOPDMD</cite>
+models, the entries of t are assumed to be uniformly-spaced, and if
+not provided, TimeDict information is used. This parameter is ignored
+if an instance of <cite>BOPDMD</cite> is provided.</p></li>
+<li><p><strong>d</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Number of delays applied to the data passed to the DMD instance.
+If <cite>d</cite> is greater than 1, then each plotted mode will be the average
+mode taken across all <cite>d</cite> delays.</p></li>
+<li><p><strong>continuous</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Whether or not the eigenvalues of the given DMD instance
+are continuous-time. If <cite>False</cite>, the eigenvalues are assumed to be the
+discrete-time eigenvalues. If <cite>True</cite>, the eigenvalues are taken to be
+the continuous-time eigenvalues. Note that <cite>continuous</cite> is
+automatically assumed to be <cite>True</cite> if a <cite>BOPDMD</cite> model is given.</p></li>
+<li><p><strong>snapshots_shape</strong> (<em>iterable</em>) – Shape of the snapshots. If not provided, the shape
+of the snapshots and modes is assumed to be the flattened space dim of
+the snapshot data. Provide as width, height dimension.</p></li>
+<li><p><strong>index_modes</strong> (<em>iterable</em>) – Indices of the modes to plot after they have been
+sorted based on significance. At most three may be provided.
+By default, the first three leading modes are plotted.</p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – If specified, the plot is saved at <cite>filename</cite>.</p></li>
+<li><p><strong>order</strong> (<em>{&quot;C&quot;</em><em>, </em><em>&quot;F&quot;</em><em>, </em><em>&quot;A&quot;}</em>) – Read the elements of snapshots using this index order,
+and place the elements into the reshaped array using this index order.
+It has to be the same used to store the snapshot. “C” means to
+read/write the elements using C-like index order, with the last axis
+index changing fastest, back to the first axis index changing slowest.
+“F” means to read/write the elements using Fortran-like index order,
+with the first index changing fastest, and the last index changing
+slowest. Note that the “C” and “F” options take no account of the
+memory layout of the underlying array, and only refer to the order of
+indexing. “A” means to read/write the elements in Fortran-like index
+order if a is Fortran contiguous in memory, C-like order otherwise.
+“C” is used by default.</p></li>
+<li><p><strong>figsize</strong> (<em>iterable</em>) – Width, height in inches.</p></li>
+<li><p><strong>dpi</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Figure resolution.</p></li>
+<li><p><strong>tight_layout_kwargs</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of <cite>tight_layout</cite> parameters.</p></li>
+<li><p><strong>main_colors</strong> (<em>iterable</em>) – Colors used to denote eigenvalue, mode, dynamics
+associations.</p></li>
+<li><p><strong>mode_color</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Color used to plot the modes, if modes are 1-D.</p></li>
+<li><p><strong>mode_cmap</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Colormap used to plot the modes, if modes are 2-D.</p></li>
+<li><p><strong>dynamics_color</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Color used to plot the dynamics.</p></li>
+<li><p><strong>rank_color</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Color used to highlight the rank of the DMD fit and
+all DMD eigenvalues aside from those highlighted by <cite>index_modes</cite>.</p></li>
+<li><p><strong>circle_color</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Color used to plot the unit circle.</p></li>
+<li><p><strong>sval_ms</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Marker size of all singular values.</p></li>
+<li><p><strong>max_eig_ms</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Marker size of the most prominent eigenvalue. The marker
+sizes of all other eigenvalues are then scaled according to eigenvalue
+significance.</p></li>
+<li><p><strong>max_sval_plot</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Maximum number of singular values to plot.</p></li>
+<li><p><strong>title_fontsize</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Fontsize used for subplot titles.</p></li>
+<li><p><strong>label_fontsize</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Fontsize used for axis labels.</p></li>
+<li><p><strong>plot_semilogy</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Whether or not to plot the singular values on a
+semilogy plot. If <cite>True</cite>, a semilogy plot is used.</p></li>
+<li><p><strong>flip_continuous_axes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Whether or not to swap the real and imaginary
+axes on the continuous eigenvalues plot. If <cite>True</cite>, the real axis will
+be vertical and the imaginary axis will be horizontal, and vice versa.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="paramdmd.html" class="btn btn-neutral float-left" title="Parametric DMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pidmd.html" class="btn btn-neutral float-right" title="Physics-informed DMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2024, PyDMD contributors.
+      <span class="lastupdated">Last updated on Feb 28, 2024.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

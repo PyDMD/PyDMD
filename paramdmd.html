@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Parametric DMD &mdash; PyDMD 0.4.1 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Parametric DMD &mdash; PyDMD 1.0.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -17,8 +19,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Randomized DMD" href="rdmd.html" />
-    <link rel="prev" title="Sparsity-promoting DMD" href="spdmd.html" /> 
+    <link rel="next" title="Plotter" href="plotter.html" />
+    <link rel="prev" title="OptDMD" href="optdmd.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -33,7 +35,7 @@
             PyDMD
           </a>
               <div class="version">
-                0.4.1
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -46,24 +48,32 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdoperator.html">DMD Operator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">Forward-backward DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bopdmd.html">BOPDMD: Optimized DMD and Bagging, Optimized DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cdmd.html">Compressed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMD with control</a></li>
+<li class="toctree-l2"><a class="reference internal" href="edmd.html">Kernelized extended DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">Forward-backward DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">Hankel DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="havok.html">Havok</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hodmd.html">Higher-order DMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMD with control</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spdmd.html">Sparsity-promoting DMD</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Parametric DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotter.html">Plotter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pidmd.html">Physics-informed DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rdmd.html">Randomized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spdmd.html">Sparsity-promoting DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="subspacedmd.html">Subspace DMD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="varprodmd.html">VarProDMD: Variable Projection for DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utilities</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_of_conduct.html">PyDMD Code of Conduct</a></li>
 <li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
 </ul>
 
@@ -95,9 +105,13 @@
   <div class="section" id="module-pydmd.paramdmd">
 <span id="parametric-dmd"></span><h1>Parametric DMD<a class="headerlink" href="#module-pydmd.paramdmd" title="Permalink to this headline">¶</a></h1>
 <p>Module for the parametric Dynamic Mode Decomposition.</p>
+<p>References:
+- A Dynamic Mode Decomposition Extension for the Forecasting of Parametric 
+Dynamical Systems, F. Andreuzzi, N. Demo, G. Rozza, 2023, SIAM Journal on 
+Applied Dynamical Systems</p>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="sig-name descname">ParametricDMD</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">spatial_pod</em>, <em class="sig-param">approximation</em>, <em class="sig-param">light=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/paramdmd.html#ParametricDMD"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="sig-name descname">ParametricDMD</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">spatial_pod</em>, <em class="sig-param">approximation</em>, <em class="sig-param">light=False</em>, <em class="sig-param">dmd_fit_args=None</em>, <em class="sig-param">dmd_fit_kwargs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/paramdmd.html#ParametricDMD"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Implementation of the parametric Dynamic Mode Decomposition proposed in
 arXiv:2110.09155v1. Both the <em>monolithic</em> and <em>partitioned</em> methods are
@@ -124,6 +138,10 @@ convenient wrappers see those implemented in
 instance uses less memory since it caches a smaller number of resources.
 Setting <cite>light=True</cite> might invalidate several properties (see also
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">training_modal_coefficients()</span></code>).</p></li>
+<li><p><strong>dmd_fit_args</strong> – Positional arguments to be passed to the <cite>fit</cite> method
+of the given DMD instance.</p></li>
+<li><p><strong>dmd_fit_kwargs</strong> – Keyword arguments to be passed to the <cite>fit</cite> method
+of the given DMD instance.</p></li>
 </ul>
 </dd>
 </dl>
@@ -184,9 +202,9 @@ to <cite>X.shape[0]</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – Training snapshots of the parametric system,
+<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – Training snapshots of the parametric system,
 observed for two or more parameters and in multiple time instants.</p></li>
-<li><p><strong>training_parameters</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – Training parameters
+<li><p><strong>training_parameters</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – Training parameters
 corresponding to the snapshots in <cite>X</cite>.</p></li>
 </ul>
 </dd>
@@ -313,7 +331,7 @@ parameters to <cite>ParametricDMD</cite>:</p>
 <dd class="field-even"><p>Change the current parameters.</p>
 </dd>
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -335,7 +353,7 @@ parameters to <cite>ParametricDMD</cite>:</p>
 given method for ROM.</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -381,7 +399,7 @@ as a 2D array (the index of the parameter vary along the first
 dimension).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -394,15 +412,15 @@ dimension).</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="spdmd.html" class="btn btn-neutral float-left" title="Sparsity-promoting DMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="rdmd.html" class="btn btn-neutral float-right" title="Randomized DMD" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="optdmd.html" class="btn btn-neutral float-left" title="OptDMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="plotter.html" class="btn btn-neutral float-right" title="Plotter" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright Copyright 2017-2023, PyDMD contributors.
-      <span class="lastupdated">Last updated on Apr 17, 2023.
+    <p>&#169; Copyright Copyright 2017-2024, PyDMD contributors.
+      <span class="lastupdated">Last updated on Feb 28, 2024.
       </span></p>
   </div>
 

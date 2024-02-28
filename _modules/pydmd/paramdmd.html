@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.paramdmd &mdash; PyDMD 0.4.1 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.paramdmd &mdash; PyDMD 1.0.0 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -31,7 +33,7 @@
             PyDMD
           </a>
               <div class="version">
-                0.4.1
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -45,6 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code_of_conduct.html">PyDMD Code of Conduct</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../LICENSE.html">License</a></li>
 </ul>
 
@@ -75,7 +78,13 @@
   <h1>Source code for pydmd.paramdmd</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Module for the parametric Dynamic Mode Decomposition.</span>
+
+<span class="sd">References:</span>
+<span class="sd">- A Dynamic Mode Decomposition Extension for the Forecasting of Parametric </span>
+<span class="sd">Dynamical Systems, F. Andreuzzi, N. Demo, G. Rozza, 2023, SIAM Journal on </span>
+<span class="sd">Applied Dynamical Systems</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
 <span class="kn">import</span> <span class="nn">pickle</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -124,12 +133,35 @@
 <span class="sd">        instance uses less memory since it caches a smaller number of resources.</span>
 <span class="sd">        Setting `light=True` might invalidate several properties (see also</span>
 <span class="sd">        :meth:`training_modal_coefficients`).</span>
+<span class="sd">    :param dmd_fit_args: Positional arguments to be passed to the `fit` method</span>
+<span class="sd">        of the given DMD instance.</span>
+<span class="sd">    :param dmd_fit_kwargs: Keyword arguments to be passed to the `fit` method</span>
+<span class="sd">        of the given DMD instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dmd</span><span class="p">,</span> <span class="n">spatial_pod</span><span class="p">,</span> <span class="n">approximation</span><span class="p">,</span> <span class="n">light</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dmd</span><span class="p">,</span>
+        <span class="n">spatial_pod</span><span class="p">,</span>
+        <span class="n">approximation</span><span class="p">,</span>
+        <span class="n">light</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">dmd_fit_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dmd_fit_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dmd</span> <span class="o">=</span> <span class="n">dmd</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_spatial_pod</span> <span class="o">=</span> <span class="n">spatial_pod</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_approximation</span> <span class="o">=</span> <span class="n">approximation</span>
+
+        <span class="k">if</span> <span class="n">dmd_fit_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dmd_fit_args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dmd_fit_args</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Expected list, tuple or None for dmd_fit_args&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_fit_args</span> <span class="o">=</span> <span class="n">dmd_fit_args</span>
+        <span class="k">if</span> <span class="n">dmd_fit_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dmd_fit_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dmd_fit_kwargs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Expected dict or None for dmd_fit_kwargs&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_fit_kwargs</span> <span class="o">=</span> <span class="n">dmd_fit_kwargs</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_training_parameters</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="kc">None</span>
@@ -137,7 +169,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_time_instants</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_space_dim</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_light</span> <span class="o">=</span> <span class="n">light</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">_training_modal_coefficients</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
@@ -449,10 +480,12 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_partitioned</span><span class="p">:</span>
             <span class="c1"># partitioned parametric DMD</span>
             <span class="k">for</span> <span class="n">dmd</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dmd</span><span class="p">,</span> <span class="n">training_modal_coefficients</span><span class="p">):</span>
-                <span class="n">dmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">dmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_dmd_fit_args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_dmd_fit_kwargs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">spacemu_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">training_modal_coefficients</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_dmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">spacemu_time</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+                <span class="n">spacemu_time</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_dmd_fit_args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_dmd_fit_kwargs</span>
+            <span class="p">)</span></div>
 
     <span class="c1"># ------------------------------------------------------------</span>
     <span class="c1"># getter properties for intermediate values of the computation</span>
@@ -647,8 +680,8 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright Copyright 2017-2023, PyDMD contributors.
-      <span class="lastupdated">Last updated on Apr 17, 2023.
+    <p>&#169; Copyright Copyright 2017-2024, PyDMD contributors.
+      <span class="lastupdated">Last updated on Feb 28, 2024.
       </span></p>
   </div>
 

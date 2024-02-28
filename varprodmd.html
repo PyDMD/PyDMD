@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VarProDMD: Variable Projection for DMD &mdash; PyDMD 1.0.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Utilities" href="utils.html" />
+    <link rel="prev" title="Subspace DMD" href="subspacedmd.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PyDMD
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="code.html">Code Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dmdbase.html">DMDBase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdoperator.html">DMD Operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd.html">DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bopdmd.html">BOPDMD: Optimized DMD and Bagging, Optimized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdmd.html">Compressed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmd_modes_tuner.html">DMD Modes Tuner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmdc.html">DMD with control</a></li>
+<li class="toctree-l2"><a class="reference internal" href="edmd.html">Kernelized extended DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fbdmd.html">Forward-backward DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hankeldmd.html">Hankel DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="havok.html">Havok</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hodmd.html">Higher-order DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="paramdmd.html">Parametric DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotter.html">Plotter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pidmd.html">Physics-informed DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rdmd.html">Randomized DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spdmd.html">Sparsity-promoting DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subspacedmd.html">Subspace DMD</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">VarProDMD: Variable Projection for DMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_of_conduct.html">PyDMD Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="code.html">Code Documentation</a></li>
+      <li class="breadcrumb-item active">VarProDMD: Variable Projection for DMD</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/varprodmd.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="module-pydmd.varprodmd">
+<span id="varprodmd-variable-projection-for-dmd"></span><h1>VarProDMD: Variable Projection for DMD<a class="headerlink" href="#module-pydmd.varprodmd" title="Permalink to this headline">¶</a></h1>
+<p>Variable Projection for DMD. Reformulation of original paper
+(<a class="reference external" href="https://epubs.siam.org/doi/abs/10.1137/M1124176">https://epubs.siam.org/doi/abs/10.1137/M1124176</a>) s.t. sparse matrix computation
+is substiuted by outer products. Further the optimization is
+reformulated s.t. SciPy’s nonlinear least squares optimizer
+can handle “complex” parameters.</p>
+<dl class="simple">
+<dt>Default optimizer arguments:</dt><dd><dl class="simple">
+<dt>OPT_DEF_ARGS =</dt><dd><p>{“method”: “trf”,
+“tr_solver”: “exact”,
+“loss”: “linear”,
+“x_scale”: “jac”,
+“gtol”: 1e-8,
+“xtol”: 1e-8,
+“ftol”: 1e-8}</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-name descname">VarProDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank: Union[float</em>, <em class="sig-param">int] = 0</em>, <em class="sig-param">exact: bool = False</em>, <em class="sig-param">sorted_eigs: Union[bool</em>, <em class="sig-param">str] = False</em>, <em class="sig-param">compression: float = 0.0</em>, <em class="sig-param">optargs: Dict[str</em>, <em class="sig-param">Any] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/varprodmd.html#VarProDMD"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
+<p>Variable Projection for DMD using SciPy’s
+nonlinear least squares solver. The original problem
+is reformulated s.t. complex residuals and Jacobians, which are used
+by the Levenberg-Marquardt algorithm, are transormed to real numbers.
+Further simplifications (outer products) avoids using sparse matrices.</p>
+<p>VarProDMD constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>svd_rank</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em><em>, </em><em>optional</em>) – Desired SVD rank.
+If rank <span class="math">r = 0</span>, the optimal rank is
+determined automatically. If rank is a float s.t. <span class="math">0 &lt; r &lt; 1</span>,
+the cumulative energy of the singular values is used
+to determine the optimal rank.
+If rank is an integer and <span class="math">r &gt; 0</span>,
+the desired rank is used iff possible. Defaults to 0.</p></li>
+<li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>, </em><em>optional</em>) – Perform variable projection in
+low dimensional space if <cite>exact=False</cite>.
+Else the optimization is performed
+in the original space.
+Defaults to False.</p></li>
+<li><p><strong>sorted_eigs</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – Sort eigenvalues.
+If <cite>sorted_eigs=True</cite>, the variance of the absolute values
+of the complex eigenvalues
+<span class="math">\left(\sqrt{\omega_i \cdot \bar{\omega}_i}\right)</span>,
+the variance absolute values of the real parts
+<span class="math">\left|\Re\{{\omega_i}\}\right|</span>
+and the variance of the absolute values of the imaginary parts
+<span class="math">\left|\Im\{{\omega_i}\}\right|</span> is computed.
+The eigenvalues are then sorted according
+to the highest variance (from highest to lowest).
+If <cite>sorted_eigs=False</cite>, no sorting is performed.
+If the parameter is a string and set to sorted_eigs=’auto’,
+the eigenvalues are sorted accoring to the variances
+of previous mentioned quantities.
+If <cite>sorted_eigs=’real’</cite> the eigenvalues are sorted
+w.r.t. the absolute values of the real parts
+of the eigenvalues (from highest to lowest).
+If <cite>sorted_eigs=’imag’</cite> the eigenvalues are sorted
+w.r.t. the absolute values of the imaginary parts
+of the eigenvalues (from highest to lowest).
+If <cite>sorted_eigs=’abs’</cite> the eigenvalues are sorted
+w.r.t. the magnitude of the eigenvalues
+<span class="math">\left(\sqrt{\omega_i \cdot \bar{\omega}_i}\right)</span>
+(from highest to lowest).
+Defaults to False.</p></li>
+<li><p><strong>compression</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>, </em><em>optional</em>) – If libary compression <span class="math">c = 0</span>,
+all samples are used. If <span class="math">0 &lt; c &lt; 1</span>, the best
+fitting <span class="math">\lfloor \left(1 - c\right)m\rfloor</span> samples
+are selected.</p></li>
+<li><p><strong>optargs</strong> (<em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>, </em><em>Any</em><em>]</em><em>, </em><em>optional</em>) – Arguments for ‘least_squares’ optimizer.
+If set to None, <cite>OPT_DEF_ARGS</cite> are used as default parameters.
+Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">dynamics</code></dt>
+<dd><p>Get the time evolution of each mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>matrix that contains all the time evolution, stored by row.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X: numpy.ndarray</em>, <em class="sig-param">time: numpy.ndarray</em><span class="sig-paren">)</span> &#x2192; object<a class="reference internal" href="_modules/pydmd/varprodmd.html#VarProDMD.fit"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Fit the eigenvalues, modes and eigenfunctions/amplitudes
+to measurements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>np.ndarray</em>) – Measurements
+<span class="math">\boldsymbol{X} \in \mathbb{C}^{n \times m}</span>.</p></li>
+<li><p><strong>time</strong> (<em>np.ndarray</em>) – 1d array of timestamps where measurements were taken.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>VarProDMD instance.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)">object</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<code class="sig-name descname">forecast</code><span class="sig-paren">(</span><em class="sig-param">time: numpy.ndarray</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/pydmd/varprodmd.html#VarProDMD.forecast"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Forecast measurements at given timestamps <cite>time</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>time</strong> (<em>np.ndarray</em>) – Desired times for forcasting as 1d array.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If method <cite>fit(X, time)</cite> was not called.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Predicted measurements <span class="math">\hat{\boldsymbol{X}}</span>.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">frequency</code></dt>
+<dd><p>Get the amplitude spectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the array that contains the frequencies of the eigenvalues.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">growth_rate</code></dt>
+<dd><p>Get the growth rate values relative to the modes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the Floquet values</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">opt_stats</code></dt>
+<dd><p>Return optimization statistics of the Variable Projection
+optimization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – ValueError is raised if method <cite>fit(X, time)</cite>
+was not called.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Optimization results including optimal weights
+(continuous eigenvalues) and number of iterations.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>OptimizeResult</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">selected_samples</code></dt>
+<dd><p>Return indices for creating the library.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – ValueError is raised if method
+<cite>fit(X, time)</cite> was not called.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Indices of the selected samples.
+If no compression was performed <span class="math">\left(c = 0\right)</span>,
+all indices are returned, else indices of the
+library selection scheme using QR-Decomposition
+with column pivoting.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<em class="property">property </em><code class="sig-name descname">ssr</code></dt>
+<dd><p>Compute the square root of sum squared residual (SSR) taken from
+<a class="reference external" href="https://link.springer.com/article/10.1007/s10589-012-9492-9">https://link.springer.com/article/10.1007/s10589-012-9492-9</a>.
+The SSR gives insight w.r.t. signal qualities.
+A low SSR is desired. If SSR is high the model may be inaccurate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – ValueError is raised if method
+<cite>fit(X, time)</cite> was not called.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>SSR.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="sig-name descname">VarProOperator</code><span class="sig-paren">(</span><em class="sig-param">svd_rank: Union[float, int], exact: bool, sorted_eigs: Union[bool, str], compression: float, optargs: Dict[str, Any]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/varprodmd.html#VarProOperator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdoperator.DMDOperator</span></code></p>
+<p>Variable Projection Operator for DMD.</p>
+<p>VarProOperator constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>svd_rank</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em>) – Desired SVD rank.
+If rank <span class="math">r = 0</span>, the optimal rank is
+determined automatically. If rank is a float s.t.
+<span class="math">0 &lt; r &lt; 1</span>, the cumulative energy
+of the singular values is used to determine
+the optimal rank.
+If rank is an integer and <span class="math">r &gt; 0</span>,
+the desired rank is used iff possible.</p></li>
+<li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Perform computations in original state space
+if <cite>exact=True</cite>, else perform optimization
+in projected (low dimensional) space.</p></li>
+<li><p><strong>sorted_eigs</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>]</em>) – Sort eigenvalues.
+If <cite>sorted_eigs=True</cite>, the variance of the absolute values
+of the complex eigenvalues
+<span class="math">\sqrt{\omega_i \cdot \bar{\omega}_i}</span>,
+the variance absolute values of the real parts
+<span class="math">\left|\Re\{{\omega_i}\}\right|</span>
+and the variance of the absolute values
+of the imaginary parts <span class="math">\left|\Im\{{\omega_i}\}\right|</span>
+is computed.
+The eigenvalues are then sorted according
+to the highest variance (from highest to lowest).
+If <cite>sorted_eigs=False</cite>, no sorting is performed.
+If the parameter is a string and set to sorted_eigs=’auto’,
+the eigenvalues are sorted accoring to the variances
+of previous mentioned quantities.
+If <cite>sorted_eigs=’real’</cite> the eigenvalues are sorted
+w.r.t. the absolute values of the real parts
+of the eigenvalues (from highest to lowest).
+If <cite>sorted_eigs=’imag’</cite> the eigenvalues are sorted
+w.r.t. the absolute values of the imaginary parts
+of the eigenvalues (from highest to lowest).
+If <cite>sorted_eigs=’abs’</cite> the eigenvalues are sorted
+w.r.t. the magnitude of the eigenvalues
+<span class="math">\left(\sqrt{\omega_i \cdot \bar{\omega}_i}\right)</span>
+(from highest to lowest).</p></li>
+<li><p><strong>compression</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – If libary compression <span class="math">c = 0</span>,
+all samples are used. If <span class="math">0 &lt; c &lt; 1</span>, the best
+fitting <span class="math">\lfloor \left(1 - c\right)m\rfloor</span> samples
+are selected.</p></li>
+<li><p><strong>optargs</strong> (<em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – Arguments for ‘least_squares’ optimizer.
+Use <cite>OPT_DEF_ARGS</cite> as starting point.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt>
+<code class="sig-name descname">compute_operator</code><span class="sig-paren">(</span><em class="sig-param">X: numpy.ndarray</em>, <em class="sig-param">Y: numpy.ndarray</em><span class="sig-paren">)</span> &#x2192; Tuple[numpy.ndarray, scipy.optimize._optimize.OptimizeResult, numpy.ndarray]<a class="reference internal" href="_modules/pydmd/varprodmd.html#VarProOperator.compute_operator"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Perform Variable Projection for DMD using SciPy’s
+nonlinear least squares optimizer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>np.ndarray</em>) – Measurement <span class="math">\boldsymbol{X} \in \mathbb{C}^{n \times m}</span></p></li>
+<li><p><strong>Y</strong> (<em>np.ndarray</em>) – 1d array of timestamps where individual
+measurements <span class="math">\boldsymbol{x}_i \in \mathbb{C}^n</span>
+where taken.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>sorted_eigs</cite> from constructor
+was set to an invalid string.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Eigenfunctions/amplitudes <span class="math">\boldsymbol{\varphi}^{m-1}</span>,
+OptimizeResult from SciPy’s optimizer
+(optimal parameters and statistics),
+indices of selected measurements. If no compression (<span class="math">c = 0</span>)
+is used, all indices are returned, else the indices of the selected
+samples are used.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Tuple[np.ndarray, OptimizeResult, np.ndarray]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="subspacedmd.html" class="btn btn-neutral float-left" title="Subspace DMD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="utils.html" class="btn btn-neutral float-right" title="Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2024, PyDMD contributors.
+      <span class="lastupdated">Last updated on Feb 28, 2024.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

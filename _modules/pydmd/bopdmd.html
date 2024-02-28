@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.bopdmd &mdash; PyDMD 0.4.1 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.bopdmd &mdash; PyDMD 1.0.0 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -31,7 +33,7 @@
             PyDMD
           </a>
               <div class="version">
-                0.4.1
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -45,6 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code_of_conduct.html">PyDMD Code of Conduct</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../LICENSE.html">License</a></li>
 </ul>
 
@@ -88,18 +91,19 @@
 
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">csr_matrix</span>
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">qr</span>
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">isfunction</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">qr</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">csr_matrix</span>
 
 <span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
 <span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span>
-<span class="kn">from</span> <span class="nn">.rdmd</span> <span class="kn">import</span> <span class="n">compute_rank</span>
 <span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_rank</span><span class="p">,</span> <span class="n">compute_svd</span>
 
 
-<span class="k">class</span> <span class="nc">BOPDMDOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
+<div class="viewcode-block" id="BOPDMDOperator"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator">[docs]</a><span class="k">class</span> <span class="nc">BOPDMDOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    BOP-DMD operator.</span>
 
@@ -135,6 +139,23 @@
 <span class="sd">        previously-mentioned sorting methods is chosen depending on eigenvalue</span>
 <span class="sd">        variance.</span>
 <span class="sd">    :type eig_sort: {&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;, &quot;auto&quot;}</span>
+<span class="sd">    :param eig_constraints: Set containing desired DMD operator eigenvalue</span>
+<span class="sd">        constraints. Currently available constraints are `&quot;stable&quot;`, which</span>
+<span class="sd">        constrains eigenvalues to the left half of the complex plane,</span>
+<span class="sd">        `&quot;imag&quot;`, which constrains eigenvalues to the imaginary axis, and</span>
+<span class="sd">        `&quot;conjugate_pairs&quot;`, which enforces that eigenvalues are always</span>
+<span class="sd">        present with their complex conjugate. Note that constraints may be</span>
+<span class="sd">        combined if valid. May alternatively be a custom eigenvalue constraint</span>
+<span class="sd">        function that will be applied to the computed eigenvalues at each step</span>
+<span class="sd">        of the variable projection routine.</span>
+<span class="sd">    :type eig_constraints: set(str) or function</span>
+<span class="sd">    :param bag_warning: Number of consecutive non-converged trials of BOP-DMD</span>
+<span class="sd">        at which to produce a warning message for the user. Default is 100.</span>
+<span class="sd">        Use arguments less than or equal to zero for no warning condition.</span>
+<span class="sd">    :type bag_warning: int</span>
+<span class="sd">    :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD</span>
+<span class="sd">        at which to terminate the fit. Default is -1, no stopping condition.</span>
+<span class="sd">    :type bag_maxfail: int</span>
 <span class="sd">    :param init_lambda: Initial value used for the regularization parameter in</span>
 <span class="sd">        the Levenberg method. Default is 1.0.</span>
 <span class="sd">        Note: Larger lambda values make the method more like gradient descent.</span>
@@ -183,6 +204,9 @@
         <span class="n">num_trials</span><span class="p">,</span>
         <span class="n">trial_size</span><span class="p">,</span>
         <span class="n">eig_sort</span><span class="p">,</span>
+        <span class="n">eig_constraints</span><span class="p">,</span>
+        <span class="n">bag_warning</span><span class="p">,</span>
+        <span class="n">bag_maxfail</span><span class="p">,</span>
         <span class="n">init_lambda</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
         <span class="n">maxlam</span><span class="o">=</span><span class="mi">52</span><span class="p">,</span>
         <span class="n">lamup</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
@@ -200,7 +224,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_trials</span> <span class="o">=</span> <span class="n">num_trials</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_trial_size</span> <span class="o">=</span> <span class="n">trial_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">=</span> <span class="n">eig_sort</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_opts</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span> <span class="o">=</span> <span class="n">eig_constraints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bag_warning</span> <span class="o">=</span> <span class="n">bag_warning</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bag_maxfail</span> <span class="o">=</span> <span class="n">bag_maxfail</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_opts</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">init_lambda</span><span class="p">,</span>
             <span class="n">maxlam</span><span class="p">,</span>
             <span class="n">lamup</span><span class="p">,</span>
@@ -210,7 +237,7 @@
             <span class="n">eps_stall</span><span class="p">,</span>
             <span class="n">use_fulljac</span><span class="p">,</span>
             <span class="n">verbose</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_opts_warn</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="kc">None</span>
@@ -279,7 +306,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes_std</span>
 
-    <span class="k">def</span> <span class="nf">_varpro_opts_warn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BOPDMDOperator._varpro_opts_warn"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._varpro_opts_warn">[docs]</a>    <span class="k">def</span> <span class="nf">_varpro_opts_warn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks the validity of the parameter values in _varpro_opts.</span>
 <span class="sd">        Throws an error if any parameter value has an invalid type and</span>
@@ -301,7 +328,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_opts</span><span class="p">,</span> <span class="n">rec_ranges</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">opt_value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid variable projection option given.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid variable projection option given.&quot;</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">opt_value</span> <span class="o">&lt;</span> <span class="n">opt_min</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
@@ -314,9 +341,56 @@
                     <span class="s2">&quot;Option </span><span class="si">{}</span><span class="s2"> with value </span><span class="si">{}</span><span class="s2"> is greater than </span><span class="si">{}</span><span class="s2">, &quot;</span>
                     <span class="s2">&quot;which is not recommended.&quot;</span>
                 <span class="p">)</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">opt_name</span><span class="p">,</span> <span class="n">opt_value</span><span class="p">,</span> <span class="n">opt_max</span><span class="p">))</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">opt_name</span><span class="p">,</span> <span class="n">opt_value</span><span class="p">,</span> <span class="n">opt_max</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">_exp_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+<div class="viewcode-block" id="BOPDMDOperator._push_eigenvalues"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._push_eigenvalues">[docs]</a>    <span class="k">def</span> <span class="nf">_push_eigenvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eigenvalues</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper function that constrains the given eigenvalues according to</span>
+<span class="sd">        the arguments found in `self._eig_constraints`. If no constraints were</span>
+<span class="sd">        given, this function simply returns the given eigenvalues. Applies the</span>
+<span class="sd">        provided `eig_constraints` function if a function was provided instead</span>
+<span class="sd">        of a set of constraints.</span>
+
+<span class="sd">        :param eigenvalues: Vector of original eigenvalues.</span>
+<span class="sd">        :type eigenvalues: numpy.ndarray</span>
+<span class="sd">        :return: Vector of constrained eigenvalues.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">isfunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;conjugate_pairs&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span><span class="p">:</span>
+            <span class="n">num_eigs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span>
+            <span class="n">new_eigs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">num_eigs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;complex&quot;</span><span class="p">)</span>
+            <span class="c1"># If given an odd number of eigenvalues, find the eigenvalue with</span>
+            <span class="c1"># the smallest imaginary part and take it to be a real eigenvalue.</span>
+            <span class="k">if</span> <span class="n">num_eigs</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">ind_single</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">imag</span><span class="p">))</span>
+                <span class="n">new_eigs</span><span class="p">[</span><span class="n">ind_single</span><span class="p">]</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">ind_single</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
+                <span class="n">eig_pair_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_eigs</span><span class="p">),</span> <span class="n">ind_single</span><span class="p">)[::</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">eig_pair_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_eigs</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="c1"># Note: a consequence of the OptDMD variable projection process is</span>
+            <span class="c1"># that complex conjugate pairs naturally appear together in the</span>
+            <span class="c1"># computed eigenvalue vectors. We thus take advantage of this...</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">eig_pair_inds</span><span class="p">:</span>
+                <span class="n">eig_pair</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span>
+                <span class="n">real_comp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">eig_pair</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+                <span class="n">imag_comp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eig_pair</span><span class="o">.</span><span class="n">imag</span><span class="p">))</span>
+                <span class="n">new_eigs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">real_comp</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">imag_comp</span>
+                <span class="n">new_eigs</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">real_comp</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">imag_comp</span>
+
+            <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">new_eigs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;stable&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span><span class="p">:</span>
+            <span class="n">right_half</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">real</span> <span class="o">&gt;</span> <span class="mf">0.0</span>
+            <span class="n">eigenvalues</span><span class="p">[</span><span class="n">right_half</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">right_half</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span>
+        <span class="k">elif</span> <span class="s2">&quot;imag&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span><span class="p">:</span>
+            <span class="n">eigenvalues</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">imag</span>
+
+        <span class="k">return</span> <span class="n">eigenvalues</span></div>
+
+<div class="viewcode-block" id="BOPDMDOperator._exp_function"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._exp_function">[docs]</a>    <span class="k">def</span> <span class="nf">_exp_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Matrix of exponentials.</span>
 
@@ -327,9 +401,9 @@
 <span class="sd">        :return: Matrix A such that A[i, j] = exp(t_i * alpha_j).</span>
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">_exp_function_deriv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<div class="viewcode-block" id="BOPDMDOperator._exp_function_deriv"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._exp_function_deriv">[docs]</a>    <span class="k">def</span> <span class="nf">_exp_function_deriv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Derivatives of the matrix of exponentials.</span>
 
@@ -349,9 +423,10 @@
         <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">alpha</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">t</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">csr_matrix</span><span class="p">(</span>
             <span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">m</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">i</span><span class="p">))),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_compute_irank_svd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">tolrank</span><span class="p">):</span>
+<div class="viewcode-block" id="BOPDMDOperator._compute_irank_svd"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._compute_irank_svd">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_compute_irank_svd</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">tolrank</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Helper function that computes and returns the SVD of X with a rank</span>
 <span class="sd">        truncation of irank, which denotes the number of singular values of</span>
@@ -370,9 +445,41 @@
         <span class="n">U</span> <span class="o">=</span> <span class="n">U</span><span class="p">[:,</span> <span class="p">:</span><span class="n">irank</span><span class="p">]</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">s</span><span class="p">[:</span><span class="n">irank</span><span class="p">])</span>
         <span class="n">Vh</span> <span class="o">=</span> <span class="n">Vh</span><span class="p">[:</span><span class="n">irank</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Vh</span>
+        <span class="k">return</span> <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Vh</span></div>
 
-    <span class="k">def</span> <span class="nf">_bag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">trial_size</span><span class="p">):</span>
+<div class="viewcode-block" id="BOPDMDOperator._argsort_eigenvalues"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._argsort_eigenvalues">[docs]</a>    <span class="k">def</span> <span class="nf">_argsort_eigenvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eigs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper function that computes and returns the indices that sort the</span>
+<span class="sd">        given array of eigenvalues according to the operator&#39;s `eig_sort`</span>
+<span class="sd">        attribute. Sets `eig_sort` according to eigs if not already done so.</span>
+
+<span class="sd">        :param eigs: array of eigenvalues to sort</span>
+<span class="sd">        :type eigs: numpy.ndarray</span>
+<span class="sd">        :return: array of indices that sort the given eigenvalues</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Set the sorting style if eig_sort is &quot;auto&quot;.</span>
+        <span class="c1"># Note: the initial call to this function will set the eig_sort</span>
+        <span class="c1"># attribute that will be used for the remainder of all fits!</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+            <span class="n">real_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+            <span class="n">imag_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">eigs</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+            <span class="n">abs_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigs</span><span class="p">))</span>
+            <span class="n">all_var</span> <span class="o">=</span> <span class="p">[</span><span class="n">real_var</span><span class="p">,</span> <span class="n">imag_var</span><span class="p">,</span> <span class="n">abs_var</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;real&quot;</span><span class="p">,</span> <span class="s2">&quot;imag&quot;</span><span class="p">,</span> <span class="s2">&quot;abs&quot;</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">all_var</span><span class="p">)]</span>
+
+        <span class="c1"># Sort the results according to eig_sort.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">==</span> <span class="s2">&quot;real&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">eigs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">==</span> <span class="s2">&quot;imag&quot;</span><span class="p">:</span>
+            <span class="n">eigs_real_imag_swapped</span> <span class="o">=</span> <span class="n">eigs</span><span class="o">.</span><span class="n">imag</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">eigs_real_imag_swapped</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">==</span> <span class="s2">&quot;abs&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigs</span><span class="p">))</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Provided eig_sort method is not supported.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BOPDMDOperator._bag"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._bag">[docs]</a>    <span class="k">def</span> <span class="nf">_bag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">trial_size</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a 2D array of data X, where each row contains a data snapshot,</span>
 <span class="sd">        randomly sub-selects and returns data snapshots while preserving the</span>
@@ -426,9 +533,9 @@
         <span class="n">subset_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">all_inds</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">H</span><span class="p">[</span><span class="n">subset_inds</span><span class="p">],</span> <span class="n">subset_inds</span>
+        <span class="k">return</span> <span class="n">H</span><span class="p">[</span><span class="n">subset_inds</span><span class="p">],</span> <span class="n">subset_inds</span></div>
 
-    <span class="k">def</span> <span class="nf">_variable_projection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">init_alpha</span><span class="p">,</span> <span class="n">Phi</span><span class="p">,</span> <span class="n">dPhi</span><span class="p">):</span>
+<div class="viewcode-block" id="BOPDMDOperator._variable_projection"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._variable_projection">[docs]</a>    <span class="k">def</span> <span class="nf">_variable_projection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">init_alpha</span><span class="p">,</span> <span class="n">Phi</span><span class="p">,</span> <span class="n">dPhi</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Variable projection routine for multivariate data.</span>
 <span class="sd">        Attempts to fit the columns of H as linear combinations of the columns</span>
@@ -448,10 +555,11 @@
 <span class="sd">        :param dPhi: (M, N) matrix-valued function dPhi(alpha,t,i) that</span>
 <span class="sd">            contains the derivatives of Phi wrt the ith component of alpha.</span>
 <span class="sd">        :type dPhi: function</span>
-<span class="sd">        :return: Tuple of two numpy arrays representing...</span>
+<span class="sd">        :return: Tuple of two numpy arrays and a boolean representing:</span>
 <span class="sd">            1. (N, IS) best-fit matrix B.</span>
 <span class="sd">            2. (N,) best-fit vector alpha.</span>
-<span class="sd">        :rtype: Tuple[numpy.ndarray, numpy.ndarray]</span>
+<span class="sd">            3. Flag indicating whether or not convergence was reached.</span>
+<span class="sd">        :rtype: Tuple[numpy.ndarray, numpy.ndarray, bool]</span>
 
 <span class="sd">        References:</span>
 <span class="sd">        - Extensions and Uses of the Variable Projection Algorith for Solving</span>
@@ -469,12 +577,12 @@
 <span class="sd">            passed to the _variable_projection function, computes and returns</span>
 <span class="sd">            the matrix Phi(alpha,t), B from the expression H = Phi(alpha,t)B,</span>
 <span class="sd">            the residual H - Phi(alpha,t)B, and 0.5*norm(residual,&#39;fro&#39;)^2,</span>
-<span class="sd">            which will be used to denote the error.</span>
+<span class="sd">            which is used as an error indicator.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="n">Phi_matrix</span> <span class="o">=</span> <span class="n">Phi</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
             <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">Phi_matrix</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">residual</span> <span class="o">=</span> <span class="n">H</span> <span class="o">-</span> <span class="n">Phi_matrix</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
-            <span class="n">error</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="s2">&quot;fro&quot;</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">residual</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
             <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">error</span>
 
         <span class="c1"># Define M, IS, and IA.</span>
@@ -497,9 +605,14 @@
         <span class="c1"># Initialize values.</span>
         <span class="n">tolrank</span> <span class="o">=</span> <span class="n">M</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
         <span class="n">_lambda</span> <span class="o">=</span> <span class="n">init_lambda</span>
-        <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">init_alpha</span><span class="p">)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_push_eigenvalues</span><span class="p">(</span><span class="n">init_alpha</span><span class="p">)</span>
         <span class="n">B</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">compute_residual</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">relative_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">residual</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
         <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Vh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_irank_svd</span><span class="p">(</span><span class="n">Phi</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">tolrank</span><span class="p">)</span>
+
+        <span class="c1"># Initialize termination flags.</span>
+        <span class="n">converged</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">stalled</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="c1"># Initialize storage.</span>
         <span class="n">all_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">maxiter</span><span class="p">)</span>
@@ -559,6 +672,7 @@
                 <span class="n">delta</span> <span class="o">=</span> <span class="n">delta</span><span class="p">[</span><span class="n">ij_pvt</span><span class="p">]</span>
                 <span class="c1"># Compute the updated alpha vector.</span>
                 <span class="n">alpha_updated</span> <span class="o">=</span> <span class="n">alpha</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="o">+</span> <span class="n">delta</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+                <span class="n">alpha_updated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_push_eigenvalues</span><span class="p">(</span><span class="n">alpha_updated</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">delta</span><span class="p">,</span> <span class="n">alpha_updated</span>
 
             <span class="c1"># Take a step using our initial step size init_lambda.</span>
@@ -571,7 +685,7 @@
                 <span class="mf">0.5</span>
                 <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
                     <span class="p">[</span><span class="n">delta_0</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">djac_matrix</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">rhs_temp</span><span class="p">]</span>
-                <span class="p">)</span><span class="o">.</span><span class="n">real</span>
+                <span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
             <span class="p">)</span>
             <span class="n">improvement_ratio</span> <span class="o">=</span> <span class="n">actual_improvement</span> <span class="o">/</span> <span class="n">pred_improvement</span>
 
@@ -587,46 +701,53 @@
                     <span class="n">B_0</span><span class="p">,</span> <span class="n">residual_0</span><span class="p">,</span> <span class="n">error_0</span> <span class="o">=</span> <span class="n">compute_residual</span><span class="p">(</span><span class="n">alpha_0</span><span class="p">)</span>
 
                     <span class="k">if</span> <span class="n">error_0</span> <span class="o">&lt;</span> <span class="n">error</span><span class="p">:</span>
-                        <span class="n">alpha</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">alpha_0</span><span class="p">,</span> <span class="n">B_0</span>
-                        <span class="n">residual</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">residual_0</span><span class="p">,</span> <span class="n">error_0</span>
                         <span class="k">break</span>
 
-                <span class="c1"># Terminate if no appropriate step length was found.</span>
+                <span class="c1"># Terminate if no appropriate step length was found...</span>
                 <span class="k">if</span> <span class="n">error_0</span> <span class="o">&gt;=</span> <span class="n">error</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
                         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                             <span class="s2">&quot;Failed to find appropriate step length at &quot;</span>
-                            <span class="s2">&quot;iteration </span><span class="si">{}</span><span class="s2">. Current error </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                            <span class="s2">&quot;iteration </span><span class="si">{}</span><span class="s2">. Current error </span><span class="si">{}</span><span class="s2">. &quot;</span>
+                            <span class="s2">&quot;Consider increasing maxlam or lamup.&quot;</span>
                         <span class="p">)</span>
-                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">itr</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
-                    <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="n">alpha</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">itr</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">relative_error</span><span class="p">))</span>
+                    <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">converged</span>
 
-            <span class="c1"># Record the current error.</span>
-            <span class="n">all_error</span><span class="p">[</span><span class="n">itr</span><span class="p">]</span> <span class="o">=</span> <span class="n">error</span>
+                <span class="c1"># ...otherwise, update and proceed.</span>
+                <span class="n">alpha</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">residual</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">alpha_0</span><span class="p">,</span> <span class="n">B_0</span><span class="p">,</span> <span class="n">residual_0</span><span class="p">,</span> <span class="n">error_0</span>
+
+            <span class="c1"># Record the current relative error.</span>
+            <span class="n">relative_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">residual</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+            <span class="n">all_error</span><span class="p">[</span><span class="n">itr</span><span class="p">]</span> <span class="o">=</span> <span class="n">relative_error</span>
 
             <span class="c1"># Print iterative progress if the verbose flag is turned on.</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
                 <span class="n">update_msg</span> <span class="o">=</span> <span class="s2">&quot;Step </span><span class="si">{}</span><span class="s2"> Error </span><span class="si">{}</span><span class="s2"> Lambda </span><span class="si">{}</span><span class="s2">&quot;</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">update_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">itr</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">update_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">itr</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">relative_error</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">))</span>
 
-            <span class="c1"># Terminate if the tolerance is met.</span>
-            <span class="k">if</span> <span class="n">error</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="n">alpha</span>
+            <span class="c1"># Update termination status and terminate if converged or stalled.</span>
+            <span class="n">converged</span> <span class="o">=</span> <span class="n">relative_error</span> <span class="o">&lt;</span> <span class="n">tol</span>
+            <span class="n">error_reduction</span> <span class="o">=</span> <span class="n">all_error</span><span class="p">[</span><span class="n">itr</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">all_error</span><span class="p">[</span><span class="n">itr</span><span class="p">]</span>
+            <span class="n">stalled</span> <span class="o">=</span> <span class="p">(</span><span class="n">itr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+                <span class="n">error_reduction</span> <span class="o">&lt;</span> <span class="n">eps_stall</span> <span class="o">*</span> <span class="n">all_error</span><span class="p">[</span><span class="n">itr</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="p">)</span>
 
-            <span class="c1"># Terminate if a stall is detected.</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">itr</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                <span class="ow">and</span> <span class="n">all_error</span><span class="p">[</span><span class="n">itr</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">all_error</span><span class="p">[</span><span class="n">itr</span><span class="p">]</span>
-                <span class="o">&lt;</span> <span class="n">eps_stall</span> <span class="o">*</span> <span class="n">all_error</span><span class="p">[</span><span class="n">itr</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
-            <span class="p">):</span>
+            <span class="k">if</span> <span class="n">converged</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Convergence reached!&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">converged</span>
+
+            <span class="k">if</span> <span class="n">stalled</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
                     <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                         <span class="s2">&quot;Stall detected: error reduced by less than </span><span class="si">{}</span><span class="s2"> &quot;</span>
                         <span class="s2">&quot;times the error at the previous step. &quot;</span>
-                        <span class="s2">&quot;Iteration </span><span class="si">{}</span><span class="s2">. Current error </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                        <span class="s2">&quot;Iteration </span><span class="si">{}</span><span class="s2">. Current error </span><span class="si">{}</span><span class="s2">. Consider &quot;</span>
+                        <span class="s2">&quot;increasing tol or decreasing eps_stall.&quot;</span>
                     <span class="p">)</span>
-                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">eps_stall</span><span class="p">,</span> <span class="n">itr</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
-                <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="n">alpha</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">eps_stall</span><span class="p">,</span> <span class="n">itr</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">relative_error</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">converged</span>
 
             <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Vh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_irank_svd</span><span class="p">(</span><span class="n">Phi</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">tolrank</span><span class="p">)</span>
 
@@ -636,17 +757,18 @@
                 <span class="s2">&quot;Failed to reach tolerance after maxiter = </span><span class="si">{}</span><span class="s2"> iterations. &quot;</span>
                 <span class="s2">&quot;Current error </span><span class="si">{}</span><span class="s2">.&quot;</span>
             <span class="p">)</span>
-            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">maxiter</span><span class="p">,</span> <span class="n">error</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">maxiter</span><span class="p">,</span> <span class="n">relative_error</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="n">alpha</span>
+        <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">converged</span></div>
 
-    <span class="k">def</span> <span class="nf">_single_trial_compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">init_alpha</span><span class="p">):</span>
+<div class="viewcode-block" id="BOPDMDOperator._single_trial_compute_operator"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._single_trial_compute_operator">[docs]</a>    <span class="k">def</span> <span class="nf">_single_trial_compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">init_alpha</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Helper function that computes the standard optimized dmd operator.</span>
 <span class="sd">        Returns the resulting DMD modes, eigenvalues, amplitudes, reduced</span>
-<span class="sd">        system matrix, and full system matrix respectively.</span>
+<span class="sd">        system matrix, full system matrix, and whether or not convergence</span>
+<span class="sd">        of the variable projection routine was reached.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">B</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable_projection</span><span class="p">(</span>
+        <span class="n">B</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">converged</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable_projection</span><span class="p">(</span>
             <span class="n">H</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">init_alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exp_function</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exp_function_deriv</span>
         <span class="p">)</span>
         <span class="c1"># Save the modes, eigenvalues, and amplitudes respectively.</span>
@@ -678,9 +800,9 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">A</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">Atilde</span><span class="p">,</span> <span class="n">A</span>
+        <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">Atilde</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">converged</span></div>
 
-    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+<div class="viewcode-block" id="BOPDMDOperator.compute_operator"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator.compute_operator">[docs]</a>    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the low-rank and the full BOP-DMD operators.</span>
 
@@ -692,9 +814,19 @@
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Perform an initial optimized dmd solve using init_alpha.</span>
-        <span class="n">w_0</span><span class="p">,</span> <span class="n">e_0</span><span class="p">,</span> <span class="n">b_0</span><span class="p">,</span> <span class="n">Atilde_0</span><span class="p">,</span> <span class="n">A_0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_trial_compute_operator</span><span class="p">(</span>
+        <span class="n">initial_optdmd_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_trial_compute_operator</span><span class="p">(</span>
             <span class="n">H</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_alpha</span>
         <span class="p">)</span>
+        <span class="n">w_0</span><span class="p">,</span> <span class="n">e_0</span><span class="p">,</span> <span class="n">b_0</span><span class="p">,</span> <span class="n">Atilde_0</span><span class="p">,</span> <span class="n">A_0</span><span class="p">,</span> <span class="n">converged</span> <span class="o">=</span> <span class="n">initial_optdmd_results</span>
+
+        <span class="c1"># Generate a warning if convergence wasn&#39;t initially reached.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">converged</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Initial trial of Optimized DMD failed to converge. &quot;</span>
+                <span class="s2">&quot;Consider re-adjusting your variable projection parameters &quot;</span>
+                <span class="s2">&quot;with the varpro_opts_dict and consider setting verbose=True.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="c1"># If num_trials isn&#39;t a positive int, perform standard optimized dmd.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_trials</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_trials</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
@@ -704,7 +836,13 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_A</span> <span class="o">=</span> <span class="n">A_0</span>
             <span class="k">return</span> <span class="n">b_0</span>
 
-        <span class="c1"># Perform BOP-DMD.</span>
+        <span class="c1"># Otherwise, perform BOP-DMD.</span>
+        <span class="n">verbose</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_opts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">num_trial_print</span> <span class="o">=</span> <span class="mi">5</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Displaying the results of the next </span><span class="si">{}</span><span class="s2"> trials...</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_trial_print</span><span class="p">))</span>
+
         <span class="c1"># Initialize storage for values needed for stat computations.</span>
         <span class="n">w_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">w_0</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;complex&quot;</span><span class="p">)</span>
         <span class="n">e_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">e_0</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;complex&quot;</span><span class="p">)</span>
@@ -713,46 +851,63 @@
         <span class="n">e_sum2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">e_0</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;complex&quot;</span><span class="p">)</span>
         <span class="n">b_sum2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">b_0</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;complex&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Perform num_trials many trials of optimized dmd.</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_trials</span><span class="p">):</span>
+        <span class="c1"># Perform num_trials many successful trials of optimized dmd.</span>
+        <span class="n">num_successful_trials</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">num_consecutive_fails</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">runtime_warning_given</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">while</span> <span class="n">num_successful_trials</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_trials</span><span class="p">:</span>
             <span class="n">H_i</span><span class="p">,</span> <span class="n">subset_inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bag</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trial_size</span><span class="p">)</span>
-            <span class="n">w_i</span><span class="p">,</span> <span class="n">e_i</span><span class="p">,</span> <span class="n">b_i</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_trial_compute_operator</span><span class="p">(</span>
+            <span class="n">trial_optdmd_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_trial_compute_operator</span><span class="p">(</span>
                 <span class="n">H_i</span><span class="p">,</span> <span class="n">t</span><span class="p">[</span><span class="n">subset_inds</span><span class="p">],</span> <span class="n">e_0</span>
             <span class="p">)</span>
+            <span class="n">w_i</span><span class="p">,</span> <span class="n">e_i</span><span class="p">,</span> <span class="n">b_i</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">converged</span> <span class="o">=</span> <span class="n">trial_optdmd_results</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">()</span>
+                <span class="n">num_trial_print</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="n">verbose</span> <span class="o">=</span> <span class="n">num_trial_print</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_opts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">verbose</span>
 
-            <span class="c1"># Set the sorting style if _eig_sort is &quot;auto&quot;.</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
-                <span class="n">real_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">e_i</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
-                <span class="n">imag_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">e_i</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
-                <span class="n">abs_var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">e_i</span><span class="p">))</span>
-                <span class="n">all_var</span> <span class="o">=</span> <span class="p">[</span><span class="n">real_var</span><span class="p">,</span> <span class="n">imag_var</span><span class="p">,</span> <span class="n">abs_var</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">all_var</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">=</span> <span class="s2">&quot;real&quot;</span>
-                <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">all_var</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">=</span> <span class="s2">&quot;imag&quot;</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">=</span> <span class="s2">&quot;abs&quot;</span>
+            <span class="c1"># Incorporate results into the running average</span>
+            <span class="c1"># ONLY IF the trial successfully converged.</span>
+            <span class="k">if</span> <span class="n">converged</span><span class="p">:</span>
+                <span class="n">sorted_inds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_argsort_eigenvalues</span><span class="p">(</span><span class="n">e_i</span><span class="p">)</span>
 
-            <span class="c1"># Sort the results according to eigenvalue.</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">==</span> <span class="s2">&quot;real&quot;</span><span class="p">:</span>
-                <span class="n">sorted_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">e_i</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">==</span> <span class="s2">&quot;imag&quot;</span><span class="p">:</span>
-                <span class="n">e_i_real_imag_swapped</span> <span class="o">=</span> <span class="n">e_i</span><span class="o">.</span><span class="n">imag</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">e_i</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
-                <span class="n">sorted_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">e_i_real_imag_swapped</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">==</span> <span class="s2">&quot;abs&quot;</span><span class="p">:</span>
-                <span class="n">sorted_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">e_i</span><span class="p">))</span>
+                <span class="c1"># Add to iterative sums.</span>
+                <span class="n">w_sum</span> <span class="o">+=</span> <span class="n">w_i</span><span class="p">[:,</span> <span class="n">sorted_inds</span><span class="p">]</span>
+                <span class="n">e_sum</span> <span class="o">+=</span> <span class="n">e_i</span><span class="p">[</span><span class="n">sorted_inds</span><span class="p">]</span>
+                <span class="n">b_sum</span> <span class="o">+=</span> <span class="n">b_i</span><span class="p">[</span><span class="n">sorted_inds</span><span class="p">]</span>
+
+                <span class="c1"># Add to iterative sums of squares.</span>
+                <span class="n">w_sum2</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w_i</span><span class="p">[:,</span> <span class="n">sorted_inds</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+                <span class="n">e_sum2</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">e_i</span><span class="p">[</span><span class="n">sorted_inds</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+                <span class="n">b_sum2</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">b_i</span><span class="p">[</span><span class="n">sorted_inds</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+
+                <span class="c1"># Bump up the number of successful trials</span>
+                <span class="c1"># and reset the consecutive fails counter.</span>
+                <span class="n">num_successful_trials</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">num_consecutive_fails</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Provided eig_sort method is not supported.&quot;</span><span class="p">)</span>
+                <span class="n">num_consecutive_fails</span> <span class="o">+=</span> <span class="mi">1</span>
 
-            <span class="c1"># Add to iterative sums.</span>
-            <span class="n">w_sum</span> <span class="o">+=</span> <span class="n">w_i</span><span class="p">[:,</span> <span class="n">sorted_inds</span><span class="p">]</span>
-            <span class="n">e_sum</span> <span class="o">+=</span> <span class="n">e_i</span><span class="p">[</span><span class="n">sorted_inds</span><span class="p">]</span>
-            <span class="n">b_sum</span> <span class="o">+=</span> <span class="n">b_i</span><span class="p">[</span><span class="n">sorted_inds</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="n">runtime_warning_given</span>
+                <span class="ow">and</span> <span class="n">num_consecutive_fails</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bag_warning</span>
+            <span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> many trials without convergence. &quot;</span>
+                    <span class="s2">&quot;Consider loosening the tol requirements &quot;</span>
+                    <span class="s2">&quot;of the variable projection routine.&quot;</span>
+                <span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_consecutive_fails</span><span class="p">))</span>
+                <span class="n">runtime_warning_given</span> <span class="o">=</span> <span class="kc">True</span>
 
-            <span class="c1"># Add to iterative sums of squares.</span>
-            <span class="n">w_sum2</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w_i</span><span class="p">[:,</span> <span class="n">sorted_inds</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
-            <span class="n">e_sum2</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">e_i</span><span class="p">[</span><span class="n">sorted_inds</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
-            <span class="n">b_sum2</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">b_i</span><span class="p">[</span><span class="n">sorted_inds</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+            <span class="k">elif</span> <span class="n">num_consecutive_fails</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bag_maxfail</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;Terminating the bagging routine due to &quot;</span>
+                    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> many trials without convergence.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_consecutive_fails</span><span class="p">))</span>
 
         <span class="c1"># Compute the BOP-DMD statistics.</span>
         <span class="n">w_mu</span> <span class="o">=</span> <span class="n">w_sum</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_trials</span>
@@ -784,7 +939,7 @@
                 <span class="p">]</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">b_mu</span>
+        <span class="k">return</span> <span class="n">b_mu</span></div></div>
 
 
 <div class="viewcode-block" id="BOPDMD"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMD">[docs]</a><span class="k">class</span> <span class="nc">BOPDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
@@ -836,6 +991,23 @@
 <span class="sd">        previously-mentioned sorting methods is chosen depending on eigenvalue</span>
 <span class="sd">        variance. Default is &quot;auto&quot;.</span>
 <span class="sd">    :type eig_sort: {&quot;real&quot;, &quot;imag&quot;, &quot;abs&quot;, &quot;auto&quot;}</span>
+<span class="sd">    :param eig_constraints: Set containing desired DMD operator eigenvalue</span>
+<span class="sd">        constraints. Currently available constraints are `&quot;stable&quot;`, which</span>
+<span class="sd">        constrains eigenvalues to the left half of the complex plane,</span>
+<span class="sd">        `&quot;imag&quot;`, which constrains eigenvalues to the imaginary axis, and</span>
+<span class="sd">        `&quot;conjugate_pairs&quot;`, which enforces that eigenvalues are always</span>
+<span class="sd">        present with their complex conjugate. Note that constraints may be</span>
+<span class="sd">        combined if valid. May alternatively be a custom eigenvalue constraint</span>
+<span class="sd">        function that will be applied to the computed eigenvalues at each step</span>
+<span class="sd">        of the variable projection routine.</span>
+<span class="sd">    :type eig_constraints: set(str) or function</span>
+<span class="sd">    :param bag_warning: Number of consecutive non-converged trials of BOP-DMD</span>
+<span class="sd">        at which to produce a warning message for the user. Default is 100.</span>
+<span class="sd">        Use arguments less than or equal to zero for no warning condition.</span>
+<span class="sd">    :type bag_warning: int</span>
+<span class="sd">    :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD</span>
+<span class="sd">        at which to terminate the fit. Default is -1, no stopping condition.</span>
+<span class="sd">    :type bag_maxfail: int</span>
 <span class="sd">    :param varpro_opts_dict: Dictionary containing the desired parameter values</span>
 <span class="sd">        for variable projection. The following parameters may be specified:</span>
 <span class="sd">        `init_lambda`, `maxlam`, `lamup`, `use_levmarq`, `maxiter`, `tol`,</span>
@@ -854,8 +1026,11 @@
         <span class="n">init_alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">proj_basis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">num_trials</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="n">trial_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+        <span class="n">trial_size</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span>
         <span class="n">eig_sort</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+        <span class="n">eig_constraints</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">bag_warning</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">bag_maxfail</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">varpro_opts_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span> <span class="o">=</span> <span class="n">svd_rank</span>
@@ -867,12 +1042,31 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_trial_size</span> <span class="o">=</span> <span class="n">trial_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span> <span class="o">=</span> <span class="n">eig_sort</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bag_warning</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bag_maxfail</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;bag_warning and bag_maxfail must be integers. &quot;</span>
+                <span class="s2">&quot;Please use a non-positive integer if no warning &quot;</span>
+                <span class="s2">&quot;or stopping condition is desired.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bag_warning</span> <span class="o">=</span> <span class="n">bag_warning</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bag_maxfail</span> <span class="o">=</span> <span class="n">bag_maxfail</span>
+
         <span class="k">if</span> <span class="n">varpro_opts_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_opts_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">varpro_opts_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;varpro_opts_dict must be a dict.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;varpro_opts_dict must be a dict.&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_opts_dict</span> <span class="o">=</span> <span class="n">varpro_opts_dict</span>
+
+        <span class="k">if</span> <span class="n">eig_constraints</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">eig_constraints</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eig_constraints</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">isfunction</span><span class="p">(</span>
+            <span class="n">eig_constraints</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;eig_constraints must be a set or a function.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_eig_constraints</span><span class="p">(</span><span class="n">eig_constraints</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span> <span class="o">=</span> <span class="n">eig_constraints</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1020,6 +1214,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">modes_std</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eig_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the eigenvalue constraints.</span>
+
+<span class="sd">        :return: eigenvalue constraints.</span>
+<span class="sd">        :rtype: set(str)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span>
+
 <div class="viewcode-block" id="BOPDMD.print_varpro_opts"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMD.print_varpro_opts">[docs]</a>    <span class="k">def</span> <span class="nf">print_varpro_opts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prints a formatted information string that displays all chosen</span>
@@ -1046,6 +1250,58 @@
                 <span class="nb">print</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;:</span><span class="se">\t\t</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;:</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="BOPDMD._check_eig_constraints"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMD._check_eig_constraints">[docs]</a>    <span class="k">def</span> <span class="nf">_check_eig_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eig_constraints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function that verifies that...</span>
+<span class="sd">         - if the given eig_constraints is a function, the function is able to</span>
+<span class="sd">         take a (n,) numpy.ndarray and return a (n,) numpy.ndarray</span>
+<span class="sd">         - if the given eig_constraints is a set, it does not contain an</span>
+<span class="sd">         unsupported constraint class, and does not contain an invalid</span>
+<span class="sd">         combination of eigenvalue constraints</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">isfunction</span><span class="p">(</span><span class="n">eig_constraints</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># use a dummy rank of 10</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="mi">10</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Test the eig_constraints function on a (r,) np.ndarray.</span>
+                <span class="n">x_dummy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+                <span class="n">y_dummy</span> <span class="o">=</span> <span class="n">eig_constraints</span><span class="p">(</span><span class="n">x_dummy</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;eigenvalue constraint function must be able &quot;</span>
+                    <span class="s2">&quot;to take a single (n,) numpy.ndarray as input.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_dummy</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;eigenvalue constraint function must &quot;</span>
+                    <span class="s2">&quot;output a single (n,) numpy.ndarray.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">x_dummy</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">y_dummy</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;eigenvalue constraint function must accept a (n,) &quot;</span>
+                    <span class="s2">&quot;numpy.ndarray as input and output a (n,) numpy.ndarray.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">valid_constraints</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;stable&quot;</span><span class="p">,</span> <span class="s2">&quot;imag&quot;</span><span class="p">,</span> <span class="s2">&quot;conjugate_pairs&quot;</span><span class="p">}</span>
+            <span class="n">invalid_combos</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;stable&quot;</span><span class="p">,</span> <span class="s2">&quot;imag&quot;</span><span class="p">}]</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eig_constraints</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">valid_constraints</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid eigenvalue constraint provided.&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">invalid_combo_set</span> <span class="ow">in</span> <span class="n">invalid_combos</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">invalid_combo_set</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">eig_constraints</span><span class="p">):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid eigenvalue constraint combination provided.&quot;</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="BOPDMD._initialize_alpha"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMD._initialize_alpha">[docs]</a>    <span class="k">def</span> <span class="nf">_initialize_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1142,6 +1398,9 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_num_trials</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_trial_size</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_eig_sort</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bag_warning</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bag_maxfail</span><span class="p">,</span>
             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_varpro_opts_dict</span>
         <span class="p">)</span>
 
@@ -1159,7 +1418,7 @@
 <div class="viewcode-block" id="BOPDMD.forecast"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMD.forecast">[docs]</a>    <span class="k">def</span> <span class="nf">forecast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Predict the output X given the input time t using the fitted DMD model.</span>
-<span class="sd">        If model has been fitted using multiple enssembles, an average</span>
+<span class="sd">        If model has been fitted using multiple ensembles, an average</span>
 <span class="sd">        prediction and its variance is returned.</span>
 
 <span class="sd">        :param t: the input time vector.</span>
@@ -1218,8 +1477,8 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright Copyright 2017-2023, PyDMD contributors.
-      <span class="lastupdated">Last updated on Apr 17, 2023.
+    <p>&#169; Copyright Copyright 2017-2024, PyDMD contributors.
+      <span class="lastupdated">Last updated on Feb 28, 2024.
       </span></p>
   </div>
 

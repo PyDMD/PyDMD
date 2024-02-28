@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pydmd.varprodmd &mdash; PyDMD 1.0.0 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            PyDMD
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code_of_conduct.html">PyDMD Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pydmd.varprodmd</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pydmd.varprodmd</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Variable Projection for DMD. Reformulation of original paper</span>
+<span class="sd">(https://epubs.siam.org/doi/abs/10.1137/M1124176) s.t. sparse matrix computation</span>
+<span class="sd">is substiuted by outer products. Further the optimization is</span>
+<span class="sd">reformulated s.t. SciPy&#39;s nonlinear least squares optimizer</span>
+<span class="sd">can handle &quot;complex&quot; parameters.</span>
+
+<span class="sd">Default optimizer arguments:</span>
+<span class="sd">    OPT_DEF_ARGS =</span>
+<span class="sd">        {&quot;method&quot;: &quot;trf&quot;,</span>
+<span class="sd">        &quot;tr_solver&quot;: &quot;exact&quot;,</span>
+<span class="sd">        &quot;loss&quot;: &quot;linear&quot;,</span>
+<span class="sd">        &quot;x_scale&quot;: &quot;jac&quot;,</span>
+<span class="sd">        &quot;gtol&quot;: 1e-8,</span>
+<span class="sd">        &quot;xtol&quot;: 1e-8,</span>
+<span class="sd">        &quot;ftol&quot;: 1e-8}</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">MappingProxyType</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">qr</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">OptimizeResult</span><span class="p">,</span> <span class="n">least_squares</span>
+
+<span class="kn">from</span> <span class="nn">.dmd</span> <span class="kn">import</span> <span class="n">DMDBase</span>
+<span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
+<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span>
+
+<span class="n">OPT_DEF_ARGS</span> <span class="o">=</span> <span class="n">MappingProxyType</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;trf&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tr_solver&quot;</span><span class="p">:</span> <span class="s2">&quot;exact&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;x_scale&quot;</span><span class="p">:</span> <span class="s2">&quot;jac&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;gtol&quot;</span><span class="p">:</span> <span class="mf">1e-8</span><span class="p">,</span>
+        <span class="s2">&quot;xtol&quot;</span><span class="p">:</span> <span class="mf">1e-8</span><span class="p">,</span>
+        <span class="s2">&quot;ftol&quot;</span><span class="p">:</span> <span class="mf">1e-8</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_compute_dmd_ev</span><span class="p">(</span>
+    <span class="n">x_current</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">x_next</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">rank</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute DMD eigenvalues.</span>
+
+<span class="sd">    :param x_current: Observables :math:`\boldsymbol{X}`</span>
+<span class="sd">    :type x_current: np.ndarray</span>
+<span class="sd">    :param x_next: Observables :math:`\boldsymbol{X}&#39;`</span>
+<span class="sd">    :type x_current: np.ndarray</span>
+<span class="sd">    :param rank: Desired rank. If rank :math:`r = 0`, the optimal rank is</span>
+<span class="sd">        determined automatically. If rank is a float s.t. :math: `0 &lt; r &lt; 1`,</span>
+<span class="sd">        the cumulative energy of the singular values is used</span>
+<span class="sd">        to determine the optimal rank. If rank is an integer and :math:`r &gt; 0`,</span>
+<span class="sd">        the desired rank is used iff possible. Defaults to 0.</span>
+<span class="sd">    :type rank: Union[float, int], optional</span>
+<span class="sd">    :return: Diagonal matrix of eigenvalues</span>
+<span class="sd">        :math:`\boldsymbol{\Lambda}` as 1d array.</span>
+<span class="sd">    :rtype: np.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">u_x</span><span class="p">,</span> <span class="n">sigma_x</span><span class="p">,</span> <span class="n">v_x</span> <span class="o">=</span> <span class="n">compute_svd</span><span class="p">(</span><span class="n">x_current</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span>
+
+    <span class="c1"># columns of v need to be multiplicated with inverse sigma</span>
+    <span class="n">sigma_inv_approx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">sigma_x</span><span class="p">)</span>
+
+    <span class="n">a_approx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">u_x</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x_next</span><span class="p">,</span> <span class="n">sigma_inv_approx</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">v_x</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">a_approx</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_OptimizeHelper</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper Class to store intermediate results during the optimization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;phi&quot;</span><span class="p">,</span> <span class="s2">&quot;phi_inv&quot;</span><span class="p">,</span> <span class="s2">&quot;u_svd&quot;</span><span class="p">,</span> <span class="s2">&quot;s_inv&quot;</span><span class="p">,</span> <span class="s2">&quot;v_svd&quot;</span><span class="p">,</span> <span class="s2">&quot;b_matrix&quot;</span><span class="p">,</span> <span class="s2">&quot;rho&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">m_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">m_in</span><span class="p">,</span> <span class="n">l_in</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">u_svd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">m_in</span><span class="p">,</span> <span class="n">l_in</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_inv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">l_in</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_svd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">l_in</span><span class="p">,</span> <span class="n">l_in</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">l_in</span><span class="p">,</span> <span class="n">n_in</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">m_in</span><span class="p">,</span> <span class="n">n_in</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_compute_dmd_rho</span><span class="p">(</span>
+    <span class="n">alphas</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">opthelper</span><span class="p">:</span> <span class="n">_OptimizeHelper</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the real residual vector :math:`\boldsymbol{\rho}` for</span>
+<span class="sd">    Levenberg-Marquardt update.</span>
+
+<span class="sd">    :param alphas: DMD eigenvalues to optimize,</span>
+<span class="sd">        where :math:`\alpha \in \mathbb{C}^l`,</span>
+<span class="sd">        but here :math:`\alpha \in \mathbb{R}^{2l}`,</span>
+<span class="sd">        since optimizer cannot deal with complex numbers.</span>
+<span class="sd">    :type alphas: np.ndarray</span>
+<span class="sd">    :param time: 1D time array.</span>
+<span class="sd">    :type time: np.ndarray</span>
+<span class="sd">    :param data: data :math:`\boldsymbol{Y} \n C^{m \times n}`.</span>
+<span class="sd">        For DMD computation we set :math:`\boldsymbol{Y} = \boldsymbol{X}^T`.</span>
+<span class="sd">    :type data: np.ndarray</span>
+<span class="sd">    :param opthelper: Optimization helper to speed up computations</span>
+<span class="sd">        mainly for Jacobian.</span>
+<span class="sd">    :type opthelper: _OptimizeHelper</span>
+<span class="sd">    :return: 1d residual vector for Levenberg-Marquardt update</span>
+<span class="sd">        :math:`\boldsymbol{\rho} \in \mathbb{R}^{2mn}`.</span>
+<span class="sd">    :rtype: np.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_alphas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">alphas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">_alphas</span><span class="o">.</span><span class="n">real</span> <span class="o">=</span> <span class="n">alphas</span><span class="p">[:</span> <span class="n">alphas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">_alphas</span><span class="o">.</span><span class="n">imag</span> <span class="o">=</span> <span class="n">alphas</span><span class="p">[</span><span class="n">alphas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span> <span class="p">:]</span>
+
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">_alphas</span><span class="p">))</span>
+    <span class="n">u_phi</span><span class="p">,</span> <span class="n">s_phi</span><span class="p">,</span> <span class="n">v_phi_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">s_phi</span><span class="o">.</span><span class="n">real</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">s_phi_inv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">s_phi</span><span class="p">)</span>
+    <span class="n">s_phi_inv</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">s_phi</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">data</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="n">u_phi</span><span class="p">,</span> <span class="n">u_phi</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">data</span><span class="p">])</span>
+    <span class="n">rho_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
+    <span class="n">rho_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">rho_flat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">rho_out</span><span class="p">[:</span> <span class="n">rho_flat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">rho_flat</span><span class="o">.</span><span class="n">real</span>
+    <span class="n">rho_out</span><span class="p">[</span><span class="n">rho_flat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">rho_flat</span><span class="o">.</span><span class="n">imag</span>
+
+    <span class="n">opthelper</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span>
+    <span class="n">opthelper</span><span class="o">.</span><span class="n">u_svd</span> <span class="o">=</span> <span class="n">u_phi</span>
+    <span class="n">opthelper</span><span class="o">.</span><span class="n">s_inv</span> <span class="o">=</span> <span class="n">s_phi_inv</span>
+    <span class="n">opthelper</span><span class="o">.</span><span class="n">v_svd</span> <span class="o">=</span> <span class="n">v_phi_t</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">opthelper</span><span class="o">.</span><span class="n">rho</span> <span class="o">=</span> <span class="n">rho</span>
+    <span class="n">opthelper</span><span class="o">.</span><span class="n">b_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">opthelper</span><span class="o">.</span><span class="n">v_svd</span> <span class="o">*</span> <span class="n">s_phi_inv</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span>
+            <span class="n">opthelper</span><span class="o">.</span><span class="n">u_svd</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="n">data</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">rho_out</span>
+
+
+<span class="k">def</span> <span class="nf">_compute_dmd_jac</span><span class="p">(</span>
+    <span class="n">alphas</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">opthelper</span><span class="p">:</span> <span class="n">_OptimizeHelper</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the real Jacobian.</span>
+<span class="sd">    SciPy&#39;s nonlinear least squares optimizer requires real entities.</span>
+<span class="sd">    Therefore, complex and real parts are split.</span>
+
+<span class="sd">    :param alphas: DMD eigenvalues to optimize,</span>
+<span class="sd">        where :math:`\alpha \in \mathbb{C}^l`,</span>
+<span class="sd">        but here :math:`\alpha \in \mathbb{R}^{2l}` since optimizer cannot</span>
+<span class="sd">        deal with complex numbers.</span>
+<span class="sd">    :type alphas: np.ndarray</span>
+<span class="sd">    :param time: 1D time array.</span>
+<span class="sd">    :type time: np.ndarray</span>
+<span class="sd">    :param data: data :math: `\boldsymbol{Y} \n C^{m \times n}`.</span>
+<span class="sd">        For DMD computation we set :math:`\boldsymbol{Y} = \boldsymbol{X}^T`.</span>
+<span class="sd">    :type data: np.ndarray</span>
+<span class="sd">    :param opthelper: Optimization helper to speed up computations</span>
+<span class="sd">        mainly for Jacobian. The entities are computed in `_compute_dmd_rho`.</span>
+<span class="sd">    :type opthelper: _OptimizeHelper</span>
+<span class="sd">    :return: Jacobian :math:`\boldsymbol{J} \in \mathbb{R}^{mn \times 2l}`.</span>
+<span class="sd">    :rtype: np.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_alphas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">alphas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">_alphas</span><span class="o">.</span><span class="n">real</span> <span class="o">=</span> <span class="n">alphas</span><span class="p">[:</span> <span class="n">alphas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">_alphas</span><span class="o">.</span><span class="n">imag</span> <span class="o">=</span> <span class="n">alphas</span><span class="p">[</span><span class="n">alphas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span> <span class="p">:]</span>
+    <span class="n">jac_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">alphas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_alphas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">d_phi_j</span> <span class="o">=</span> <span class="n">time</span> <span class="o">*</span> <span class="n">opthelper</span><span class="o">.</span><span class="n">phi</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span>
+        <span class="n">outer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">d_phi_j</span><span class="p">,</span> <span class="n">opthelper</span><span class="o">.</span><span class="n">b_matrix</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+        <span class="n">a_j</span> <span class="o">=</span> <span class="n">outer</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">opthelper</span><span class="o">.</span><span class="n">u_svd</span><span class="p">,</span> <span class="n">opthelper</span><span class="o">.</span><span class="n">u_svd</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">outer</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">g_j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">opthelper</span><span class="o">.</span><span class="n">u_svd</span> <span class="o">*</span> <span class="n">opthelper</span><span class="o">.</span><span class="n">s_inv</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span>
+                    <span class="n">opthelper</span><span class="o">.</span><span class="n">v_svd</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">d_phi_j</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span> <span class="o">@</span> <span class="n">opthelper</span><span class="o">.</span><span class="n">rho</span>
+                <span class="p">),</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Compute the jacobian J_mat_j = - (A_j + G_j).</span>
+        <span class="n">jac</span> <span class="o">=</span> <span class="o">-</span><span class="n">a_j</span> <span class="o">-</span> <span class="n">g_j</span>
+        <span class="n">jac_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
+
+        <span class="c1"># construct the overall jacobian for optimized</span>
+        <span class="c1"># J_real = |Re{J} -Im{J}|</span>
+        <span class="c1">#          |Im{J}  Re{J}|</span>
+
+        <span class="c1"># construct real part for optimization</span>
+        <span class="n">jac_out</span><span class="p">[:</span> <span class="n">jac_out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">jac_flat</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">jac_out</span><span class="p">[</span><span class="n">jac_out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span> <span class="p">:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">jac_flat</span><span class="o">.</span><span class="n">imag</span>
+
+        <span class="c1"># construct imaginary part for optimization</span>
+        <span class="n">jac_out</span><span class="p">[:</span> <span class="n">jac_out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">_alphas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">jac_flat</span><span class="o">.</span><span class="n">imag</span>
+        <span class="n">jac_out</span><span class="p">[</span><span class="n">jac_out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span> <span class="p">:,</span> <span class="n">_alphas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">jac_flat</span><span class="o">.</span><span class="n">real</span>
+
+    <span class="k">return</span> <span class="n">jac_out</span>
+
+
+<span class="k">def</span> <span class="nf">_varpro_preprocessing</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">rank</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">use_proj</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Preprocess data for Variable Projection: Calculate</span>
+<span class="sd">    :math:`\boldsymbol{Y}, \boldsymbol{Z}` for trapezoidal derivative</span>
+<span class="sd">    approximation. If desired input data is projected to</span>
+<span class="sd">    low-dimensional space.</span>
+
+<span class="sd">    :param data: data matrix s.t. :math:`X \n C^{n \times m}`.</span>
+<span class="sd">    :type data: np.ndarray</span>
+<span class="sd">    :param time: 1d array of timestamps.</span>
+<span class="sd">    :type time: np.ndarray</span>
+<span class="sd">    :param optargs: Arguments for &#39;least_squares&#39; optimizer.</span>
+<span class="sd">    :type optargs: Dict[str, Any]</span>
+<span class="sd">    :param rank: Desired rank. If rank :math:`r = 0`, the optimal rank is</span>
+<span class="sd">        determined automatically. If rank is a float s.t. :math:`0 &lt; r &lt; 1`,</span>
+<span class="sd">        the cumulative energy of the singular values is used</span>
+<span class="sd">        to determine the optimal rank. If rank is an integer</span>
+<span class="sd">        and :math:`r &gt; 0`, the desired rank is used iff possible.</span>
+<span class="sd">        Defaults to 0.</span>
+<span class="sd">    :type rank: Union[float, int], optional</span>
+<span class="sd">    :param use_proj: Perform variable projection in</span>
+<span class="sd">        low dimensional space if `use_proj=True`, else in the original space.</span>
+<span class="sd">        Defaults to True.</span>
+<span class="sd">    :type use_proj: bool, optional</span>
+<span class="sd">    :return: Derivative :math:`\boldsymbol{Y},\boldsymbol{Z}`, (projected) data,</span>
+<span class="sd">         rank reduced projection matrix :math:`\boldsymbol{U}_r`.</span>
+<span class="sd">    :rtype: Tuple[np.ndarray,</span>
+<span class="sd">                  np.ndarray,</span>
+<span class="sd">                  np.ndarray,</span>
+<span class="sd">                  np.ndarray]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">u_r</span><span class="p">,</span> <span class="n">s_r</span><span class="p">,</span> <span class="n">v_r</span> <span class="o">=</span> <span class="n">compute_svd</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span>
+    <span class="n">data_out</span> <span class="o">=</span> <span class="n">v_r</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">s_r</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="k">if</span> <span class="n">use_proj</span> <span class="k">else</span> <span class="n">data</span>
+
+    <span class="c1"># trapezoidal derivative approximation</span>
+    <span class="n">y_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">data_out</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">data_out</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">dt_in</span> <span class="o">=</span> <span class="n">time</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">time</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">z_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">data_out</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">data_out</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">dt_in</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">z_out</span><span class="p">,</span> <span class="n">y_out</span><span class="p">,</span> <span class="n">data_out</span><span class="p">,</span> <span class="n">u_r</span>
+
+
+<span class="k">def</span> <span class="nf">_compute_dmd_varpro</span><span class="p">(</span>
+    <span class="n">alphas_init</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">opthelper</span><span class="p">:</span> <span class="n">_OptimizeHelper</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">optargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizeResult</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute Variable Projection (VarPro) for DMD using SciPy&#39;s</span>
+<span class="sd">    nonlinear least squares optimizer.</span>
+
+<span class="sd">    :type alphas_init: np.ndarray</span>
+<span class="sd">    :param time: 1d time array.</span>
+<span class="sd">    :type time: np.ndarray</span>
+<span class="sd">    :param data: data :math:`\boldsymbol{Y} \n C^{m \times n}`.</span>
+<span class="sd">        For DMD computation we set :math:`\boldsymbol{Y} = \boldsymbol{X}^T`.</span>
+<span class="sd">    :type data: np.ndarray</span>
+<span class="sd">    :param opthelper: Optimization helper to speed up computations</span>
+<span class="sd">        mainly for Jacobian. The entities are computed in `_compute_dmd_rho`</span>
+<span class="sd">        and are used in `_compute_dmd_jac`.</span>
+<span class="sd">    :type opthelper: _OptimizeHelper</span>
+<span class="sd">    :return: Optimization result.</span>
+<span class="sd">    :rtype: OptimizeResult</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">least_squares</span><span class="p">(</span>
+        <span class="n">_compute_dmd_rho</span><span class="p">,</span>
+        <span class="n">alphas_init</span><span class="p">,</span>
+        <span class="n">_compute_dmd_jac</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">optargs</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">time</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">opthelper</span><span class="p">],</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">select_best_samples_fast</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">comp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Select library samples using QR decomposition with column pivoting.</span>
+
+<span class="sd">    :param data: Data matrix :math:`\boldsymbol{X} \in \mathbb{C}^{n \times m}`.</span>
+<span class="sd">    :type data: np.ndarray</span>
+<span class="sd">    :param comp: Library compression :math:`c`, where :math:`0 &lt; c &lt; 1`.</span>
+<span class="sd">        The best fitting :math:`\lfloor \left(1 - c\right)m\rfloor` samples</span>
+<span class="sd">        are selected. Defaults to 0.9.</span>
+<span class="sd">    :type comp: float, optional</span>
+<span class="sd">    :raises ValueError: ValueError is raised if data matrix is not a</span>
+<span class="sd">        2d array.</span>
+<span class="sd">    :raises ValueError: ValueError is raised of compression is not in required</span>
+<span class="sd">        interval (:math:`0 &lt; r &lt; 1`).</span>
+<span class="sd">    :return: Indices of selected samples as 1d array.</span>
+<span class="sd">    :rtype: np.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected 2D array!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">comp</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Compression must be in (0, 1)]&quot;</span><span class="p">)</span>
+
+    <span class="n">n_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">comp</span><span class="p">))</span>
+    <span class="n">pcolumn</span> <span class="o">=</span> <span class="n">qr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;economic&quot;</span><span class="p">,</span> <span class="n">pivoting</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">pcolumn</span><span class="p">[:</span><span class="n">n_samples</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">compute_varprodmd_any</span><span class="p">(</span>  <span class="c1"># pylint: disable=unused-variable</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">optargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">rank</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">use_proj</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">compression</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">OptimizeResult</span><span class="p">]:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute DMD given arbitary timesteps.</span>
+
+<span class="sd">    :param data: data matrix s.t. :math:`X \n C^{n \times m}`.</span>
+<span class="sd">    :type data: np.ndarray</span>
+<span class="sd">    :param time: 1d array of timestamps.</span>
+<span class="sd">    :type time: np.ndarray</span>
+<span class="sd">    :param optargs: Arguments for &#39;least_squares&#39; optimizer.</span>
+<span class="sd">    :type optargs: Dict[str, Any]</span>
+<span class="sd">    :param rank: Desired rank. If rank :math:`r = 0`, the optimal rank is</span>
+<span class="sd">        determined automatically. If rank is a float s.t. :math:`0 &lt; r &lt; 1`,</span>
+<span class="sd">        the cumulative energy of the singular values is used</span>
+<span class="sd">        to determine the optimal rank. If rank is an integer</span>
+<span class="sd">        and :math:`r &gt; 0`, the desired rank is used iff possible.</span>
+<span class="sd">        Defaults to 0.</span>
+<span class="sd">    :type rank: Union[float, int], optional</span>
+<span class="sd">    :param use_proj: Perform variable projection in</span>
+<span class="sd">        low dimensional space if `use_proj=True`, else in the original space.</span>
+<span class="sd">        Defaults to True.</span>
+<span class="sd">    :type use_proj: bool, optional</span>
+<span class="sd">    :param compression: If libary compression :math:`c = 0`,</span>
+<span class="sd">        all samples are used. If :math:`0 &lt; c &lt; 1`, the best</span>
+<span class="sd">        fitting :math:`\lfloor \left(1 - c\right)m\rfloor` samples</span>
+<span class="sd">        are selected.</span>
+<span class="sd">    :type compression: float, optional</span>
+<span class="sd">    :raises ValueError: ValueError is raised if data matrix is not a</span>
+<span class="sd">        2d array.</span>
+<span class="sd">    :raises ValueError: ValueError is raised if time is not a</span>
+<span class="sd">        1d array.</span>
+<span class="sd">    :return: DMD modes :math:`\boldsymbol{\Phi}`, continuous DMD eigenvalues</span>
+<span class="sd">        :math: `\boldsymbol{\Omega}` as 1d array,</span>
+<span class="sd">        DMD eigenfunctions or amplitudes :math:`\boldsymbol{\varphi}`,</span>
+<span class="sd">        optimization results of SciPy&#39;s nonlinear least squares optimizer.</span>
+<span class="sd">    :rtype: Tuple[np.ndarray,</span>
+<span class="sd">                  np.ndarray,</span>
+<span class="sd">                  np.ndarray,</span>
+<span class="sd">                  np.ndarray,</span>
+<span class="sd">                  OptimizeResult]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;data needs to be 2D array&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;time needs to be a 1D array&quot;</span><span class="p">)</span>
+
+    <span class="c1">#  y_in, z_in, data_in, u_r</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">_varpro_preprocessing</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">use_proj</span><span class="p">)</span>
+    <span class="n">omegas</span> <span class="o">=</span> <span class="n">_compute_dmd_ev</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">res</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">compression</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">select_best_samples_fast</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">compression</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">indices</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">omegas</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;Attempting to solve underdetermined system.&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Decrease desired rank or compression!&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">opthelper</span> <span class="o">=</span> <span class="n">_OptimizeHelper</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="n">_compute_dmd_varpro</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">omegas</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">omegas</span><span class="o">.</span><span class="n">imag</span><span class="p">]),</span>
+        <span class="n">time</span><span class="p">[</span><span class="n">indices</span><span class="p">],</span>
+        <span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">][:,</span> <span class="n">indices</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+        <span class="n">opthelper</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">optargs</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">omegas</span><span class="o">.</span><span class="n">real</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">x</span><span class="p">[:</span> <span class="n">opt</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">omegas</span><span class="o">.</span><span class="n">imag</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">opt</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span> <span class="p">:]</span>
+    <span class="n">xi</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">@</span> <span class="n">opthelper</span><span class="o">.</span><span class="n">b_matrix</span><span class="o">.</span><span class="n">T</span> <span class="k">if</span> <span class="n">use_proj</span> <span class="k">else</span> <span class="n">opthelper</span><span class="o">.</span><span class="n">b_matrix</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">eigenf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xi</span> <span class="o">/</span> <span class="n">eigenf</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span> <span class="n">omegas</span><span class="p">,</span> <span class="n">eigenf</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">opt</span>
+
+
+<span class="k">def</span> <span class="nf">varprodmd_predict</span><span class="p">(</span>
+    <span class="n">phi</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">omegas</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">eigenf</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform DMD prediction using computed modes, continuous eigenvalues</span>
+<span class="sd">    and eigenfunctions/amplitudes.</span>
+
+<span class="sd">    :param phi: DMD modes</span>
+<span class="sd">        :math:`\boldsymbol{\Phi} \in \mathbb{C}^{n \times \left(m-1\right)}`.</span>
+<span class="sd">    :type phi: np.ndarray</span>
+<span class="sd">    :param omegas: Continuous diagonal matrix of eigenvalues</span>
+<span class="sd">        :math:`\boldsymbol{\Omega} \in</span>
+<span class="sd">            \mathbb{C}^{\left(m-1\right) \times \left(m-1\right)}`</span>
+<span class="sd">        as 1d array.</span>
+<span class="sd">    :type omegas: np.ndarray</span>
+<span class="sd">    :param eigenf: Eigenfunctions or amplitudes</span>
+<span class="sd">        :math:`\boldsymbol{\varphi} \in \mathbb{C}^{m - 1}`.</span>
+<span class="sd">    :type eigenf: np.ndarray</span>
+<span class="sd">    :param time: 1d array of timestamps.</span>
+<span class="sd">    :type time: np.ndarray</span>
+<span class="sd">    :return: Reconstructed/predicted state :math:`\hat{\boldsymbol{X}}`.</span>
+<span class="sd">    :rtype: np.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">phi</span> <span class="o">@</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">omegas</span><span class="p">,</span> <span class="n">time</span><span class="p">))</span> <span class="o">*</span> <span class="n">eigenf</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="VarProOperator"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProOperator">[docs]</a><span class="k">class</span> <span class="nc">VarProOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Variable Projection Operator for DMD.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">svd_rank</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+        <span class="n">exact</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">sorted_eigs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">compression</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">optargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        VarProOperator constructor.</span>
+
+<span class="sd">        :param svd_rank: Desired SVD rank.</span>
+<span class="sd">            If rank :math:`r = 0`, the optimal rank is</span>
+<span class="sd">            determined automatically. If rank is a float s.t.</span>
+<span class="sd">            :math:`0 &lt; r &lt; 1`, the cumulative energy</span>
+<span class="sd">            of the singular values is used to determine</span>
+<span class="sd">            the optimal rank.</span>
+<span class="sd">            If rank is an integer and :math:`r &gt; 0`,</span>
+<span class="sd">            the desired rank is used iff possible.</span>
+<span class="sd">        :type svd_rank: Union[float, int]</span>
+<span class="sd">        :param exact: Perform computations in original state space</span>
+<span class="sd">            if `exact=True`, else perform optimization</span>
+<span class="sd">            in projected (low dimensional) space.</span>
+<span class="sd">        :type exact: bool</span>
+<span class="sd">        :param sorted_eigs: Sort eigenvalues.</span>
+<span class="sd">            If `sorted_eigs=True`, the variance of the absolute values</span>
+<span class="sd">            of the complex eigenvalues</span>
+<span class="sd">            :math:`\sqrt{\omega_i \cdot \bar{\omega}_i}`,</span>
+<span class="sd">            the variance absolute values of the real parts</span>
+<span class="sd">            :math:`\left|\Re\{{\omega_i}\}\right|`</span>
+<span class="sd">            and the variance of the absolute values</span>
+<span class="sd">            of the imaginary parts :math:`\left|\Im\{{\omega_i}\}\right|`</span>
+<span class="sd">            is computed.</span>
+<span class="sd">            The eigenvalues are then sorted according</span>
+<span class="sd">            to the highest variance (from highest to lowest).</span>
+<span class="sd">            If `sorted_eigs=False`, no sorting is performed.</span>
+<span class="sd">            If the parameter is a string and set to sorted_eigs=&#39;auto&#39;,</span>
+<span class="sd">            the eigenvalues are sorted accoring to the variances</span>
+<span class="sd">            of previous mentioned quantities.</span>
+<span class="sd">            If `sorted_eigs=&#39;real&#39;` the eigenvalues are sorted</span>
+<span class="sd">            w.r.t. the absolute values of the real parts</span>
+<span class="sd">            of the eigenvalues (from highest to lowest).</span>
+<span class="sd">            If `sorted_eigs=&#39;imag&#39;` the eigenvalues are sorted</span>
+<span class="sd">            w.r.t. the absolute values of the imaginary parts</span>
+<span class="sd">            of the eigenvalues (from highest to lowest).</span>
+<span class="sd">            If `sorted_eigs=&#39;abs&#39;` the eigenvalues are sorted</span>
+<span class="sd">            w.r.t. the magnitude of the eigenvalues</span>
+<span class="sd">            :math:`\left(\sqrt{\omega_i \cdot \bar{\omega}_i}\right)`</span>
+<span class="sd">            (from highest to lowest).</span>
+<span class="sd">        :type sorted_eigs: Union[bool, str]</span>
+<span class="sd">        :param compression: If libary compression :math:`c = 0`,</span>
+<span class="sd">            all samples are used. If :math:`0 &lt; c &lt; 1`, the best</span>
+<span class="sd">            fitting :math:`\lfloor \left(1 - c\right)m\rfloor` samples</span>
+<span class="sd">            are selected.</span>
+<span class="sd">        :type compression: float</span>
+<span class="sd">        :param optargs: Arguments for &#39;least_squares&#39; optimizer.</span>
+<span class="sd">            Use `OPT_DEF_ARGS` as starting point.</span>
+<span class="sd">        :type optargs: Dict[str, Any]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">svd_rank</span><span class="p">,</span> <span class="n">exact</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sorted_eigs</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span> <span class="o">=</span> <span class="n">sorted_eigs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span> <span class="o">=</span> <span class="n">svd_rank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exact</span> <span class="o">=</span> <span class="n">exact</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">optargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compression</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">compression</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="VarProOperator.compute_operator"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProOperator.compute_operator">[docs]</a>    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">OptimizeResult</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform Variable Projection for DMD using SciPy&#39;s</span>
+<span class="sd">        nonlinear least squares optimizer.</span>
+
+<span class="sd">        :param X: Measurement :math:`\boldsymbol{X} \in \mathbb{C}^{n \times m}`</span>
+<span class="sd">        :type X: np.ndarray</span>
+<span class="sd">        :param Y: 1d array of timestamps where individual</span>
+<span class="sd">            measurements :math:`\boldsymbol{x}_i \in \mathbb{C}^n`</span>
+<span class="sd">            where taken.</span>
+<span class="sd">        :type Y: np.ndarray</span>
+<span class="sd">        :raises ValueError: If `sorted_eigs` from constructor</span>
+<span class="sd">            was set to an invalid string.</span>
+<span class="sd">        :return: Eigenfunctions/amplitudes :math:`\boldsymbol{\varphi}^{m-1}`,</span>
+<span class="sd">            OptimizeResult from SciPy&#39;s optimizer</span>
+<span class="sd">            (optimal parameters and statistics),</span>
+<span class="sd">            indices of selected measurements. If no compression (:math:`c = 0`)</span>
+<span class="sd">            is used, all indices are returned, else the indices of the selected</span>
+<span class="sd">            samples are used.</span>
+<span class="sd">        :rtype: Tuple[np.ndarray, OptimizeResult, np.ndarray]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">,</span>
+            <span class="n">eigenf</span><span class="p">,</span>
+            <span class="n">indices</span><span class="p">,</span>
+            <span class="n">opt</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="n">compute_varprodmd_any</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span>
+            <span class="n">Y</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_optargs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span><span class="p">,</span>
+            <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exact</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compression</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># overwrite for lazy sorting</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+                <span class="n">eigs_real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="o">.</span><span class="n">real</span>
+                <span class="n">eigs_imag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="o">.</span><span class="n">imag</span>
+                <span class="n">_eigs_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">)</span>
+                <span class="n">var_real</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">eigs_real</span><span class="p">)</span>
+                <span class="n">var_imag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">eigs_imag</span><span class="p">)</span>
+                <span class="n">var_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">_eigs_abs</span><span class="p">)</span>
+                <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">var_real</span><span class="p">,</span> <span class="n">var_imag</span><span class="p">,</span> <span class="n">var_abs</span><span class="p">])</span>
+                <span class="n">eigs_abs</span> <span class="o">=</span> <span class="p">(</span><span class="n">eigs_real</span><span class="p">,</span> <span class="n">eigs_imag</span><span class="p">,</span> <span class="n">_eigs_abs</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">array</span><span class="p">)]</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span> <span class="o">==</span> <span class="s2">&quot;real&quot;</span><span class="p">:</span>
+                <span class="n">eigs_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span> <span class="o">==</span> <span class="s2">&quot;imag&quot;</span><span class="p">:</span>
+                <span class="n">eigs_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_eigs</span> <span class="o">==</span> <span class="s2">&quot;abs&quot;</span><span class="p">:</span>
+                <span class="n">eigs_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{self._sorted_eigs}</span><span class="s2"> not supported!&quot;</span><span class="p">)</span>
+
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">eigs_abs</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># sort from biggest to smallest</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span>
+            <span class="n">eigenf</span> <span class="o">=</span> <span class="n">eigenf</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">eigenf</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">indices</span></div></div>
+
+
+<div class="viewcode-block" id="VarProDMD"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProDMD">[docs]</a><span class="k">class</span> <span class="nc">VarProDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Variable Projection for DMD using SciPy&#39;s</span>
+<span class="sd">    nonlinear least squares solver. The original problem</span>
+<span class="sd">    is reformulated s.t. complex residuals and Jacobians, which are used</span>
+<span class="sd">    by the Levenberg-Marquardt algorithm, are transormed to real numbers.</span>
+<span class="sd">    Further simplifications (outer products) avoids using sparse matrices.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># pylint: disable=super-init-not-called</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">svd_rank</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">exact</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">sorted_eigs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">compression</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">optargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        VarProDMD constructor.</span>
+
+<span class="sd">        :param svd_rank: Desired SVD rank.</span>
+<span class="sd">            If rank :math:`r = 0`, the optimal rank is</span>
+<span class="sd">            determined automatically. If rank is a float s.t. :math:`0 &lt; r &lt; 1`,</span>
+<span class="sd">            the cumulative energy of the singular values is used</span>
+<span class="sd">            to determine the optimal rank.</span>
+<span class="sd">            If rank is an integer and :math:`r &gt; 0`,</span>
+<span class="sd">            the desired rank is used iff possible. Defaults to 0.</span>
+<span class="sd">        :type svd_rank: Union[float, int], optional</span>
+<span class="sd">        :param exact: Perform variable projection in</span>
+<span class="sd">            low dimensional space if `exact=False`.</span>
+<span class="sd">            Else the optimization is performed</span>
+<span class="sd">            in the original space.</span>
+<span class="sd">            Defaults to False.</span>
+<span class="sd">        :type exact: bool, optional</span>
+<span class="sd">        :param sorted_eigs: Sort eigenvalues.</span>
+<span class="sd">            If `sorted_eigs=True`, the variance of the absolute values</span>
+<span class="sd">            of the complex eigenvalues</span>
+<span class="sd">            :math:`\left(\sqrt{\omega_i \cdot \bar{\omega}_i}\right)`,</span>
+<span class="sd">            the variance absolute values of the real parts</span>
+<span class="sd">            :math:`\left|\Re\{{\omega_i}\}\right|`</span>
+<span class="sd">            and the variance of the absolute values of the imaginary parts</span>
+<span class="sd">            :math:`\left|\Im\{{\omega_i}\}\right|` is computed.</span>
+<span class="sd">            The eigenvalues are then sorted according</span>
+<span class="sd">            to the highest variance (from highest to lowest).</span>
+<span class="sd">            If `sorted_eigs=False`, no sorting is performed.</span>
+<span class="sd">            If the parameter is a string and set to sorted_eigs=&#39;auto&#39;,</span>
+<span class="sd">            the eigenvalues are sorted accoring to the variances</span>
+<span class="sd">            of previous mentioned quantities.</span>
+<span class="sd">            If `sorted_eigs=&#39;real&#39;` the eigenvalues are sorted</span>
+<span class="sd">            w.r.t. the absolute values of the real parts</span>
+<span class="sd">            of the eigenvalues (from highest to lowest).</span>
+<span class="sd">            If `sorted_eigs=&#39;imag&#39;` the eigenvalues are sorted</span>
+<span class="sd">            w.r.t. the absolute values of the imaginary parts</span>
+<span class="sd">            of the eigenvalues (from highest to lowest).</span>
+<span class="sd">            If `sorted_eigs=&#39;abs&#39;` the eigenvalues are sorted</span>
+<span class="sd">            w.r.t. the magnitude of the eigenvalues</span>
+<span class="sd">            :math:`\left(\sqrt{\omega_i \cdot \bar{\omega}_i}\right)`</span>
+<span class="sd">            (from highest to lowest).</span>
+<span class="sd">            Defaults to False.</span>
+<span class="sd">        :type sorted_eigs: Union[bool, str], optional</span>
+<span class="sd">        :param compression: If libary compression :math:`c = 0`,</span>
+<span class="sd">            all samples are used. If :math:`0 &lt; c &lt; 1`, the best</span>
+<span class="sd">            fitting :math:`\lfloor \left(1 - c\right)m\rfloor` samples</span>
+<span class="sd">            are selected.</span>
+<span class="sd">        :type compression: float, optional</span>
+<span class="sd">        :param optargs: Arguments for &#39;least_squares&#39; optimizer.</span>
+<span class="sd">            If set to None, `OPT_DEF_ARGS` are used as default parameters.</span>
+<span class="sd">            Defaults to None.</span>
+<span class="sd">        :type optargs: Dict[str, Any], optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># super constructor not called</span>
+        <span class="c1"># as most of the attributes are</span>
+        <span class="c1"># not used.</span>
+
+        <span class="k">if</span> <span class="n">optargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">optargs</span> <span class="o">=</span> <span class="n">OPT_DEF_ARGS</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="n">VarProOperator</span><span class="p">(</span>
+            <span class="n">svd_rank</span><span class="p">,</span> <span class="n">exact</span><span class="p">,</span> <span class="n">sorted_eigs</span><span class="p">,</span> <span class="n">compression</span><span class="p">,</span> <span class="n">optargs</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optres</span><span class="p">:</span> <span class="n">OptimizeResult</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span><span class="p">:</span> <span class="n">Snapshots</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="VarProDMD.fit"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Fit the eigenvalues, modes and eigenfunctions/amplitudes</span>
+<span class="sd">        to measurements.</span>
+
+<span class="sd">        :param X: Measurements</span>
+<span class="sd">            :math:`\boldsymbol{X} \in \mathbb{C}^{n \times m}`.</span>
+<span class="sd">        :type X: np.ndarray</span>
+<span class="sd">        :param time: 1d array of timestamps where measurements were taken.</span>
+<span class="sd">        :type time: np.ndarray</span>
+<span class="sd">        :return: VarProDMD instance.</span>
+<span class="sd">        :rtype: object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="n">Snapshots</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optres</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indices</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span><span class="o">.</span><span class="n">compute_operator</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">),</span> <span class="n">time</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original_time</span> <span class="o">=</span> <span class="n">time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dmd_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_indices</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="VarProDMD.forecast"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProDMD.forecast">[docs]</a>    <span class="k">def</span> <span class="nf">forecast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Forecast measurements at given timestamps `time`.</span>
+
+<span class="sd">        :param time: Desired times for forcasting as 1d array.</span>
+<span class="sd">        :type time: np.ndarray</span>
+<span class="sd">        :raises ValueError: If method `fit(X, time)` was not called.</span>
+<span class="sd">        :return: Predicted measurements :math:`\hat{\boldsymbol{X}}`.</span>
+<span class="sd">        :rtype: np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Nothing fitted yet. Call fit-method first!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">varprodmd_predict</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span><span class="o">.</span><span class="n">modes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="p">,</span> <span class="n">time</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ssr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the square root of sum squared residual (SSR) taken from</span>
+<span class="sd">        https://link.springer.com/article/10.1007/s10589-012-9492-9.</span>
+<span class="sd">        The SSR gives insight w.r.t. signal qualities.</span>
+<span class="sd">        A low SSR is desired. If SSR is high the model may be inaccurate.</span>
+
+<span class="sd">        :raises ValueError: ValueError is raised if method</span>
+<span class="sd">            `fit(X, time)` was not called.</span>
+<span class="sd">        :return: SSR.</span>
+<span class="sd">        :rtype: float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Nothing fitted yet!&quot;</span><span class="p">)</span>
+
+        <span class="n">rho_flat_real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optres</span><span class="o">.</span><span class="n">fun</span>
+        <span class="n">rho_flat_imag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">rho_flat_real</span><span class="o">.</span><span class="n">size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span>
+        <span class="p">)</span>
+        <span class="n">rho_flat_imag</span><span class="o">.</span><span class="n">real</span> <span class="o">=</span> <span class="n">rho_flat_real</span><span class="p">[:</span> <span class="n">rho_flat_real</span><span class="o">.</span><span class="n">size</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">rho_flat_imag</span><span class="o">.</span><span class="n">imag</span> <span class="o">=</span> <span class="n">rho_flat_real</span><span class="p">[</span><span class="n">rho_flat_real</span><span class="o">.</span><span class="n">size</span> <span class="o">//</span> <span class="mi">2</span> <span class="p">:]</span>
+
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">rho_flat_imag</span><span class="p">)</span>
+        <span class="n">denom</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_original_time</span><span class="o">.</span><span class="n">size</span>
+            <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optres</span><span class="o">.</span><span class="n">jac</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optres</span><span class="o">.</span><span class="n">jac</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ssr</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">denom</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">ssr</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">selected_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return indices for creating the library.</span>
+
+<span class="sd">        :raises ValueError: ValueError is raised if method</span>
+<span class="sd">            `fit(X, time)` was not called.</span>
+<span class="sd">        :return: Indices of the selected samples.</span>
+<span class="sd">            If no compression was performed :math:`\left(c = 0\right)`,</span>
+<span class="sd">            all indices are returned, else indices of the</span>
+<span class="sd">            library selection scheme using QR-Decomposition</span>
+<span class="sd">            with column pivoting.</span>
+<span class="sd">        :rtype: np.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Nothing fitted yet. Call fit-method first!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indices</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">opt_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizeResult</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return optimization statistics of the Variable Projection</span>
+<span class="sd">        optimization.</span>
+
+<span class="sd">        :raises ValueError: ValueError is raised if method `fit(X, time)`</span>
+<span class="sd">            was not called.</span>
+<span class="sd">        :return: Optimization results including optimal weights</span>
+<span class="sd">            (continuous eigenvalues) and number of iterations.</span>
+<span class="sd">        :rtype: OptimizeResult</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitted</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Nothing fitted yet!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optres</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the time evolution of each mode.</span>
+
+<span class="sd">        :return: matrix that contains all the time evolution, stored by row.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">t_omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original_time</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">amplitudes</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">t_omega</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the amplitude spectrum.</span>
+
+<span class="sd">        :return: the array that contains the frequencies of the eigenvalues.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">imag</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">growth_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the growth rate values relative to the modes.</span>
+
+<span class="sd">        :return: the Floquet values</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2024, PyDMD contributors.
+      <span class="lastupdated">Last updated on Feb 28, 2024.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.pidmd &mdash; PyDMD 0.4.1 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>pydmd.pidmd &mdash; PyDMD 1.0.0 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -31,7 +33,7 @@
             PyDMD
           </a>
               <div class="version">
-                0.4.1
+                1.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -45,6 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code_of_conduct.html">PyDMD Code of Conduct</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../LICENSE.html">License</a></li>
 </ul>
 
@@ -81,25 +84,26 @@
 <span class="sd">Steven L. Brunton. Physics-informed dynamic mode decomposition (pidmd). 2021.</span>
 <span class="sd">arXiv:2112.04307.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">.dmd</span> <span class="kn">import</span> <span class="n">DMD</span>
 <span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span>
 <span class="kn">from</span> <span class="nn">.pidmd_utils</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">compute_unitary</span><span class="p">,</span>
-    <span class="n">compute_uppertriangular</span><span class="p">,</span>
+    <span class="n">compute_BC</span><span class="p">,</span>
+    <span class="n">compute_BCCB</span><span class="p">,</span>
+    <span class="n">compute_circulant</span><span class="p">,</span>
     <span class="n">compute_diagonal</span><span class="p">,</span>
     <span class="n">compute_symmetric</span><span class="p">,</span>
-    <span class="n">compute_toeplitz</span><span class="p">,</span>
-    <span class="n">compute_circulant</span><span class="p">,</span>
     <span class="n">compute_symtridiagonal</span><span class="p">,</span>
-    <span class="n">compute_BCCB</span><span class="p">,</span>
-    <span class="n">compute_BC</span><span class="p">,</span>
+    <span class="n">compute_toeplitz</span><span class="p">,</span>
+    <span class="n">compute_unitary</span><span class="p">,</span>
+    <span class="n">compute_uppertriangular</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span>
 
 
-<span class="k">class</span> <span class="nc">PiDMDOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
+<div class="viewcode-block" id="PiDMDOperator"><a class="viewcode-back" href="../../pidmd.html#pydmd.pidmd.PiDMDOperator">[docs]</a><span class="k">class</span> <span class="nc">PiDMDOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    DMD operator for Physics-informed DMD.</span>
 
@@ -158,7 +162,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;You need to call fit before&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_A</span>
 
-    <span class="k">def</span> <span class="nf">_check_compute_A</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PiDMDOperator._check_compute_A"><a class="viewcode-back" href="../../pidmd.html#pydmd.pidmd.PiDMDOperator._check_compute_A">[docs]</a>    <span class="k">def</span> <span class="nf">_check_compute_A</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Helper method that checks that compute_A is True.</span>
 <span class="sd">        Throws an error if compute_A is False.</span>
@@ -167,9 +171,9 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;A must be computed for the chosen manifold.&quot;</span>
                 <span class="s2">&quot;Set compute_A = True to compute A.&quot;</span>
-            <span class="p">)</span>
+            <span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_compute_procrustes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<div class="viewcode-block" id="PiDMDOperator._compute_procrustes"><a class="viewcode-back" href="../../pidmd.html#pydmd.pidmd.PiDMDOperator._compute_procrustes">[docs]</a>    <span class="k">def</span> <span class="nf">_compute_procrustes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Private method that computes the best-fit linear operator A in the</span>
 <span class="sd">        relationship Y = AX such that A is restricted to the family of matrices</span>
@@ -252,9 +256,9 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The selected manifold is not implemented.&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">result_dict</span>
+        <span class="k">return</span> <span class="n">result_dict</span></div>
 
-    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<div class="viewcode-block" id="PiDMDOperator.compute_operator"><a class="viewcode-back" href="../../pidmd.html#pydmd.pidmd.PiDMDOperator.compute_operator">[docs]</a>    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute and store the low-rank operator and the full operator A.</span>
 
@@ -303,7 +307,7 @@
                 <span class="p">]</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span>
+        <span class="k">return</span> <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span></div></div>
 
 
 <div class="viewcode-block" id="PiDMD"><a class="viewcode-back" href="../../pidmd.html#pydmd.pidmd.PiDMD">[docs]</a><span class="k">class</span> <span class="nc">PiDMD</span><span class="p">(</span><span class="n">DMD</span><span class="p">):</span>
@@ -316,7 +320,7 @@
 <span class="sd">        - &quot;uppertriangular&quot;</span>
 <span class="sd">        - &quot;lowertriangular&quot;</span>
 <span class="sd">        - &quot;diagonal&quot;</span>
-<span class="sd">        - &quot;symmetric&quot;,</span>
+<span class="sd">        - &quot;symmetric&quot;</span>
 <span class="sd">        - &quot;skewsymmetric&quot;</span>
 <span class="sd">        - &quot;toeplitz&quot;</span>
 <span class="sd">        - &quot;hankel&quot;</span>
@@ -412,8 +416,8 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright Copyright 2017-2023, PyDMD contributors.
-      <span class="lastupdated">Last updated on Apr 17, 2023.
+    <p>&#169; Copyright Copyright 2017-2024, PyDMD contributors.
+      <span class="lastupdated">Last updated on Feb 28, 2024.
       </span></p>
   </div>
 

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pydmd.utils &mdash; PyDMD 1.0.0 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            PyDMD
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../code.html">Code Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contact.html">Contact</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">How to contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code_of_conduct.html">PyDMD Code of Conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../LICENSE.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyDMD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pydmd.utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pydmd.utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Utilities module.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NamedTuple</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy.lib.stride_tricks</span> <span class="kn">import</span> <span class="n">sliding_window_view</span>
+
+<span class="c1">#  Named tuples used in functions.</span>
+<span class="c1">#  compute_svd uses &quot;SVD&quot;,</span>
+<span class="c1">#  compute_tlsq uses &quot;TLSQ&quot;,</span>
+<span class="c1">#  compute_rqb uses &quot;RQB&quot;.</span>
+<span class="n">SVD</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;SVD&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;U&quot;</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;V&quot;</span><span class="p">])</span>
+<span class="n">TLSQ</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;TLSQ&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;X_denoised&quot;</span><span class="p">,</span> <span class="s2">&quot;Y_denoised&quot;</span><span class="p">])</span>
+<span class="n">RQB</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;RQB&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Q&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;test_matrix&quot;</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">_svht</span><span class="p">(</span><span class="n">sigma_svd</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Singular Value Hard Threshold.</span>
+
+<span class="sd">    :param sigma_svd: Singual values computed by SVD</span>
+<span class="sd">    :type sigma_svd: np.ndarray</span>
+<span class="sd">    :param rows: Number of rows of original data matrix.</span>
+<span class="sd">    :type rows: int</span>
+<span class="sd">    :param cols: Number of columns of original data matrix.</span>
+<span class="sd">    :type cols: int</span>
+<span class="sd">    :return: Computed rank.</span>
+<span class="sd">    :rtype: int</span>
+
+<span class="sd">    References:</span>
+<span class="sd">    Gavish, Matan, and David L. Donoho, The optimal hard threshold for</span>
+<span class="sd">    singular values is, IEEE Transactions on Information Theory 60.8</span>
+<span class="sd">    (2014): 5040-5053.</span>
+<span class="sd">    https://ieeexplore.ieee.org/document/6846297</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)))</span>
+    <span class="n">omega</span> <span class="o">=</span> <span class="mf">0.56</span> <span class="o">*</span> <span class="n">beta</span><span class="o">**</span><span class="mi">3</span> <span class="o">-</span> <span class="mf">0.95</span> <span class="o">*</span> <span class="n">beta</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">1.82</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">+</span> <span class="mf">1.43</span>
+    <span class="n">tau</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">sigma_svd</span><span class="p">)</span> <span class="o">*</span> <span class="n">omega</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">sigma_svd</span> <span class="o">&gt;</span> <span class="n">tau</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;SVD optimal rank is 0. The largest singular values are &quot;</span>
+            <span class="s2">&quot;indistinguishable from noise. Setting rank truncation to 1.&quot;</span><span class="p">,</span>
+            <span class="ne">RuntimeWarning</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">rank</span>
+
+
+<span class="k">def</span> <span class="nf">_compute_rank</span><span class="p">(</span>
+    <span class="n">sigma_svd</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">svd_rank</span><span class="p">:</span> <span class="n">Number</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rank computation for the truncated Singular Value Decomposition.</span>
+
+<span class="sd">    :param sigma_svd: 1D singular values of SVD.</span>
+<span class="sd">    :type sigma_svd: np.ndarray</span>
+<span class="sd">    :param rows: Number of rows of original matrix.</span>
+<span class="sd">    :type rows: int</span>
+<span class="sd">    :param cols: Number of columns of original matrix.</span>
+<span class="sd">    :type cols: int</span>
+<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes</span>
+<span class="sd">        the optimal rank and uses it for truncation; if positive interger,</span>
+<span class="sd">        the method uses the argument for the truncation; if float between 0</span>
+<span class="sd">        and 1, the rank is the number of the biggest singular values that</span>
+<span class="sd">        are needed to reach the &#39;energy&#39; specified by `svd_rank`; if -1,</span>
+<span class="sd">        the method does not compute truncation. Default is 0.</span>
+<span class="sd">    :type svd_rank: int or float</span>
+<span class="sd">    :return: the computed rank truncation.</span>
+<span class="sd">    :rtype: int</span>
+
+<span class="sd">    References:</span>
+<span class="sd">    Gavish, Matan, and David L. Donoho, The optimal hard threshold for</span>
+<span class="sd">    singular values is, IEEE Transactions on Information Theory 60.8</span>
+<span class="sd">    (2014): 5040-5053.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">svd_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="n">_svht</span><span class="p">(</span><span class="n">sigma_svd</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">svd_rank</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">cumulative_energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sigma_svd</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">sigma_svd</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cumulative_energy</span><span class="p">,</span> <span class="n">svd_rank</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">svd_rank</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">svd_rank</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">svd_rank</span><span class="p">,</span> <span class="n">sigma_svd</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">rank</span>
+
+
+<div class="viewcode-block" id="compute_rank"><a class="viewcode-back" href="../../utils.html#pydmd.utils.compute_rank">[docs]</a><span class="k">def</span> <span class="nf">compute_rank</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">svd_rank</span><span class="p">:</span> <span class="n">Number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rank computation for the truncated Singular Value Decomposition.</span>
+
+<span class="sd">    :param X: the matrix to decompose.</span>
+<span class="sd">    :type X: np.ndarray</span>
+<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes</span>
+<span class="sd">        the optimal rank and uses it for truncation; if positive interger,</span>
+<span class="sd">        the method uses the argument for the truncation; if float between 0</span>
+<span class="sd">        and 1, the rank is the number of the biggest singular values that</span>
+<span class="sd">        are needed to reach the &#39;energy&#39; specified by `svd_rank`; if -1,</span>
+<span class="sd">        the method does not compute truncation. Default is 0.</span>
+<span class="sd">    :type svd_rank: int or float</span>
+<span class="sd">    :return: the computed rank truncation.</span>
+<span class="sd">    :rtype: int</span>
+
+<span class="sd">    References:</span>
+<span class="sd">    Gavish, Matan, and David L. Donoho, The optimal hard threshold for</span>
+<span class="sd">    singular values is, IEEE Transactions on Information Theory 60.8</span>
+<span class="sd">    (2014): 5040-5053.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_compute_rank</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">svd_rank</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="compute_tlsq"><a class="viewcode-back" href="../../utils.html#pydmd.utils.compute_tlsq">[docs]</a><span class="k">def</span> <span class="nf">compute_tlsq</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">tlsq_rank</span><span class="p">:</span> <span class="nb">int</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NamedTuple</span><span class="p">(</span>
+    <span class="s2">&quot;TLSQ&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;X_denoised&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;Y_denoised&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)]</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute Total Least Square.</span>
+
+<span class="sd">    :param X: the first matrix;</span>
+<span class="sd">    :type X: np.ndarray</span>
+<span class="sd">    :param Y: the second matrix;</span>
+<span class="sd">    :type Y: np.ndarray</span>
+<span class="sd">    :param tlsq_rank: the rank for the truncation; If 0, the method</span>
+<span class="sd">        does not compute any noise reduction; if positive number, the</span>
+<span class="sd">        method uses the argument for the SVD truncation used in the TLSQ</span>
+<span class="sd">        method.</span>
+<span class="sd">    :type tlsq_rank: int</span>
+<span class="sd">    :return: the denoised matrix X, the denoised matrix Y</span>
+<span class="sd">    :rtype: NamedTuple(&quot;TLSQ&quot;, [(&#39;X_denoised&#39;, np.ndarray),</span>
+<span class="sd">                                (&#39;Y_denoised&#39;, np.ndarray)])</span>
+
+<span class="sd">    References:</span>
+<span class="sd">    https://arxiv.org/pdf/1703.11004.pdf</span>
+<span class="sd">    https://arxiv.org/pdf/1502.03854.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Do not perform tlsq</span>
+    <span class="k">if</span> <span class="n">tlsq_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span>
+
+    <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">tlsq_rank</span><span class="p">,</span> <span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">VV</span> <span class="o">=</span> <span class="n">V</span><span class="p">[:</span><span class="n">rank</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">[:</span><span class="n">rank</span><span class="p">,</span> <span class="p">:])</span>
+
+    <span class="k">return</span> <span class="n">TLSQ</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">VV</span><span class="p">),</span> <span class="n">Y</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">VV</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="compute_svd"><a class="viewcode-back" href="../../utils.html#pydmd.utils.compute_svd">[docs]</a><span class="k">def</span> <span class="nf">compute_svd</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">svd_rank</span><span class="p">:</span> <span class="n">Number</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NamedTuple</span><span class="p">(</span>
+    <span class="s2">&quot;SVD&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;U&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;V&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)]</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Truncated Singular Value Decomposition.</span>
+
+<span class="sd">    :param X: the matrix to decompose.</span>
+<span class="sd">    :type X: np.ndarray</span>
+<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes</span>
+<span class="sd">        the optimal rank and uses it for truncation; if positive interger,</span>
+<span class="sd">        the method uses the argument for the truncation; if float between 0</span>
+<span class="sd">        and 1, the rank is the number of the biggest singular values that</span>
+<span class="sd">        are needed to reach the &#39;energy&#39; specified by `svd_rank`; if -1,</span>
+<span class="sd">        the method does not compute truncation. Default is 0.</span>
+<span class="sd">    :type svd_rank: int or float</span>
+<span class="sd">    :return: the truncated left-singular vectors matrix, the truncated</span>
+<span class="sd">        singular values array, the truncated right-singular vectors matrix.</span>
+<span class="sd">    :rtype: NamedTuple(&quot;SVD&quot;, [(&#39;U&#39;, np.ndarray),</span>
+<span class="sd">                               (&#39;s&#39;, np.ndarray),</span>
+<span class="sd">                               (&#39;V&#39;, np.ndarray)])</span>
+
+<span class="sd">    References:</span>
+<span class="sd">    Gavish, Matan, and David L. Donoho, The optimal hard threshold for</span>
+<span class="sd">    singular values is, IEEE Transactions on Information Theory 60.8</span>
+<span class="sd">    (2014): 5040-5053.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">rank</span> <span class="o">=</span> <span class="n">_compute_rank</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">svd_rank</span><span class="p">)</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">V</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">U</span> <span class="o">=</span> <span class="n">U</span><span class="p">[:,</span> <span class="p">:</span><span class="n">rank</span><span class="p">]</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">V</span><span class="p">[:,</span> <span class="p">:</span><span class="n">rank</span><span class="p">]</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="p">[:</span><span class="n">rank</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">SVD</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">compute_rqb</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">svd_rank</span><span class="p">:</span> <span class="n">Number</span><span class="p">,</span>
+    <span class="n">oversampling</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">power_iters</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">test_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NamedTuple</span><span class="p">(</span>
+    <span class="s2">&quot;RQB&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;Q&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;test_matrix&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)]</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Randomized QB Decomposition.</span>
+
+<span class="sd">    :param X: the matrix to decompose.</span>
+<span class="sd">    :type X: np.ndarray</span>
+<span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes</span>
+<span class="sd">        the optimal rank and uses it for truncation; if positive interger,</span>
+<span class="sd">        the method uses the argument for the truncation; if float between 0</span>
+<span class="sd">        and 1, the rank is the number of the biggest singular values that</span>
+<span class="sd">        are needed to reach the &#39;energy&#39; specified by `svd_rank`; if -1,</span>
+<span class="sd">        the method does not compute truncation. Use this parameter to</span>
+<span class="sd">        define the target rank of the input matrix.</span>
+<span class="sd">    :type svd_rank: int or float</span>
+<span class="sd">    :param oversampling: Number of additional samples (beyond the target rank)</span>
+<span class="sd">        to use when computing the random test matrix. Note that values in the</span>
+<span class="sd">        range [5, 10] tend to be sufficient.</span>
+<span class="sd">    :type oversampling: int</span>
+<span class="sd">    :param power_iters: Number of power iterations to perform when executing</span>
+<span class="sd">        the Randomized QB Decomposition. Note that as many as 1 to 2 power</span>
+<span class="sd">        iterations often lead to considerable improvements.</span>
+<span class="sd">    :type power_iters: int</span>
+<span class="sd">    :param test_matrix: The random test matrix that will be used when executing</span>
+<span class="sd">        the Randomized QB Decomposition. If not provided, the `svd_rank` and</span>
+<span class="sd">        `oversampling` parameters will be used to compute the random matrix.</span>
+<span class="sd">    :type test_matrix: numpy.ndarray</span>
+<span class="sd">    :param seed: Seed used to initialize the random generator when computing</span>
+<span class="sd">        random test matrices.</span>
+<span class="sd">    :type seed: int</span>
+<span class="sd">    :return: the orthonormal basis matrix, the transformed data matrix, and</span>
+<span class="sd">        the random test matrix.</span>
+<span class="sd">    :rtype: NamedTuple(&quot;RQB&quot;, [(&#39;Q&#39;, np.ndarray),</span>
+<span class="sd">                               (&#39;B&#39;, np.ndarray),</span>
+<span class="sd">                               (&#39;test_matrix&#39;, np.ndarray)])</span>
+
+<span class="sd">    References:</span>
+<span class="sd">    N. Benjamin Erichson, Lionel Mathelin, J. Nathan Kutz, Steven L. Brunton.</span>
+<span class="sd">    Randomized dynamic mode decomposition. SIAM Journal on Applied Dynamical</span>
+<span class="sd">    Systems, 18, 2019.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please ensure that input data is a 2D array.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Define the random test matrix if not provided.</span>
+    <span class="k">if</span> <span class="n">test_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">compute_rank</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">svd_rank</span><span class="p">)</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">test_matrix</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="n">r</span> <span class="o">+</span> <span class="n">oversampling</span><span class="p">))</span>
+
+    <span class="c1"># Compute sampling matrix.</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">)</span>
+
+    <span class="c1"># Perform power iterations.</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">power_iters</span><span class="p">):</span>
+        <span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">Y</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+
+    <span class="c1"># Orthonormalize the sampling matrix.</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">Y</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Project the snapshot matrix onto the smaller space.</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">RQB</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">test_matrix</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="pseudo_hankel_matrix"><a class="viewcode-back" href="../../utils.html#pydmd.utils.pseudo_hankel_matrix">[docs]</a><span class="k">def</span> <span class="nf">pseudo_hankel_matrix</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Arrange the snapshot in the matrix `X` into the (pseudo) Hankel</span>
+<span class="sd">    matrix. The attribute `d` controls the number of snapshot from `X` in</span>
+<span class="sd">    each snapshot of the Hankel matrix.</span>
+
+<span class="sd">    :Example:</span>
+
+<span class="sd">        &gt;&gt;&gt; a = np.array([[1, 2, 3, 4, 5]])</span>
+<span class="sd">        &gt;&gt;&gt; _hankel_pre_processing(a, d=2)</span>
+<span class="sd">        array([[1, 2, 3, 4],</span>
+<span class="sd">               [2, 3, 4, 5]])</span>
+<span class="sd">        &gt;&gt;&gt; _hankel_pre_processing(a, d=4)</span>
+<span class="sd">        array([[1, 2],</span>
+<span class="sd">               [2, 3],</span>
+<span class="sd">               [3, 4],</span>
+<span class="sd">               [4, 5]])</span>
+
+<span class="sd">        &gt;&gt;&gt; a = np.array([1,2,3,4,5,6]).reshape(2,3)</span>
+<span class="sd">        array([[1, 2, 3],</span>
+<span class="sd">               [4, 5, 6]])</span>
+<span class="sd">        &gt;&gt;&gt; _hankel_pre_processing(a, d=2)</span>
+<span class="sd">        array([[1, 2],</span>
+<span class="sd">               [4, 5],</span>
+<span class="sd">               [2, 3],</span>
+<span class="sd">               [5, 6]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">sliding_window_view</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">T</span>
+    <span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">differentiate</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method for performing 2nd order finite difference. Assumes that the</span>
+<span class="sd">    input matrix X is 2D, with uniformly-sampled snapshots filling each</span>
+<span class="sd">    column. Requires dt, which is the time step between each snapshot.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="n">X</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Please ensure that input data is a 1D or 2D array.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+    <span class="n">X_prime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">X_prime</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:]</span> <span class="o">-</span> <span class="n">X</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+    <span class="n">X_prime</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">3</span> <span class="o">*</span> <span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">X</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+    <span class="n">X_prime</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">X</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">X</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">X</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">X_prime</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2017-2024, PyDMD contributors.
+      <span class="lastupdated">Last updated on Feb 28, 2024.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
