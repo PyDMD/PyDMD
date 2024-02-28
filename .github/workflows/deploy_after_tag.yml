@@ -83,7 +83,7 @@ jobs:
     - name: Create the new documentation
       uses: ammaraskar/sphinx-action@master
       with:
-        pre-build-command: "python -m -U pip install pip .[docs]"
+        pre-build-command: "python -m pip -U install pip .[docs]"
         docs-folder: "docs/"
     - name: Gather tutorials
       run: |
