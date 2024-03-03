@@ -1460,6 +1460,9 @@ class BOPDMD(DMDBase):
 
         rows = 2 * int(np.ceil(modes.shape[-1] / cols))
         fig, axes = plt.subplots(rows, cols, figsize=figsize, dpi=dpi)
+        print(modes.shape)
+        print(rows)
+        print(cols)
         avg_axes = [ax for axes_list in axes[::2] for ax in axes_list]
         std_axes = [ax for axes_list in axes[1::2] for ax in axes_list]
         avg_axes = avg_axes[:modes.shape[-1]]
