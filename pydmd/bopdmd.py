@@ -1467,7 +1467,7 @@ class BOPDMD(DMDBase):
 
         for i, (mode, mode_std) in enumerate(zip(modes.T, modes_std.T)):
             # Plot the average mode.
-            plt.subplot(rows, cols, avg_inds[i])
+            plt.subplot(rows, cols, avg_inds[i] + 1)
             plt.title(f"Mode {i + 1}")
             if len(modes_shape) == 1:
                 # Plot modes in 1-D.
@@ -1483,7 +1483,7 @@ class BOPDMD(DMDBase):
                 plt.colorbar()
 
             # Plot the mode standard deviation.
-            plt.subplot(rows, cols, std_inds[i])
+            plt.subplot(rows, cols, std_inds[i] + 1)
             plt.title("Mode Standard Deviation")
             if len(modes_shape) == 1:
                 # Plot modes in 1-D.
