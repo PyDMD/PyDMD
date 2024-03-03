@@ -1516,7 +1516,7 @@ class BOPDMD(DMDBase):
         Plot BOP-DMD eigenvalues against 1 and 2 standard deviations.
 
         :param eigs_true: True continuous-time eigenvalues, if known.
-        :type eigs_true: np.ndarray
+        :type eigs_true: np.ndarray or iterable
         :param xlim: Desired limits for the x-axis.
         :type xlim: iterable
         :param ylim: Desired limits for the y-axis.
@@ -1536,12 +1536,15 @@ class BOPDMD(DMDBase):
         if self.eigenvalues_std is None:
             raise ValueError("No UQ metrics to plot.")
 
+        if eigs_true is not None:
+            eigs_true = np.array(eigs_true)
+
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
         plt.title("DMD Eigenvalues")
 
         if draw_axes:
-            ax.axhline(y=0, c="k")
-            ax.axvline(x=0, c="k")
+            ax.axhline(y=0, c="k", lw=1)
+            ax.axvline(x=0, c="k", lw=1)
 
         if flip_axes:
             eigs = self.eigs.imag + 1j * self.eigs.real
