@@ -1458,7 +1458,7 @@ class BOPDMD(DMDBase):
             modes = np.average(modes.reshape(d, nd // d, r), axis=0)
             modes_std = np.average(modes_std.reshape(d, nd // d, r), axis=0)
 
-        rows = int(np.ceil(modes.shape[-1] / cols))
+        rows = 2 * int(np.ceil(modes.shape[-1] / cols))
         fig, axes = plt.subplots(rows, cols, figsize=figsize, dpi=dpi)
         avg_axes = [ax for axes_list in axes[::2] for ax in axes_list]
         std_axes = [ax for axes_list in axes[1::2] for ax in axes_list]
