@@ -1505,15 +1505,22 @@ class BOPDMD(DMDBase):
     def plot_eig_uq(
         self,
         eigs_true=None,
+        xlim=None,
+        ylim=None,
         figsize=None,
         dpi=None,
         flip_axes=False,
+        draw_axes=False,
     ):
         """
         Plot BOP-DMD eigenvalues against 1 and 2 standard deviations.
 
         :param eigs_true: True continuous-time eigenvalues, if known.
         :type eigs_true: np.ndarray
+        :param xlim: Desired limits for the x-axis.
+        :type xlim: iterable
+        :param ylim: Desired limits for the y-axis.
+        :type ylim: iterable
         :param figsize: Width, height in inches.
         :type figsize: iterable
         :param dpi: Figure resolution.
@@ -1522,6 +1529,8 @@ class BOPDMD(DMDBase):
             on the eigenvalue plot. If `True`, the real axis will be vertical
             and the imaginary axis will be horizontal.
         :type flip_axes: bool
+        :param draw_axes: Whether or not to draw the real and imaginary axes.
+        :type draw_axes: bool
         """
 
         if self.eigenvalues_std is None:
@@ -1530,16 +1539,24 @@ class BOPDMD(DMDBase):
         fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
         plt.title("DMD Eigenvalues")
 
+        if draw_axes:
+            ax.axhline(y=0, c="k")
+            ax.axvline(x=0, c="k")
+
         if flip_axes:
             eigs = self.eigs.imag + 1j * self.eigs.real
             plt.xlabel("$Im(\omega)$")
             plt.ylabel("$Re(\omega)$")
+
+            if eigs_true is not None:
+                eigs_true = eigs_true.imag + 1j * eigs_true.real
+
         else:
             eigs = self.eigs
             plt.xlabel("$Re(\omega)$")
             plt.ylabel("$Im(\omega)$")
 
-        for e, std in zip(self.eigs, self.eigenvalues_std):
+        for e, std in zip(eigs, self.eigenvalues_std):
             # Plot 2 standard deviations.
             c_1 = plt.Circle((e.real, e.imag), 2 * std, color="b", alpha=0.2)
             ax.add_patch(c_1)
@@ -1552,14 +1569,12 @@ class BOPDMD(DMDBase):
 
         # Plot the true eigenvalues if given.
         if eigs_true is not None:
-            if flip_axes:
-                ax.plot(
-                    eigs_true.imag, eigs_true.real, "x", c="k", label="Truth"
-                )
-            else:
-                ax.plot(
-                    eigs_true.real, eigs_true.imag, "x", c="k", label="Truth"
-                )
+            ax.plot(eigs_true.real, eigs_true.imag, "x", c="k", label="Truth")
+
+        if xlim is not None:
+            ax.set_xlim(xlim)
+        if ylim is not None:
+            ax.set_ylim(ylim)
 
         plt.legend()
         plt.show()
