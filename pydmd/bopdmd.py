@@ -1458,39 +1458,45 @@ class BOPDMD(DMDBase):
             modes = np.average(modes.reshape(d, nd // d, r), axis=0)
             modes_std = np.average(modes_std.reshape(d, nd // d, r), axis=0)
 
+        # Define the subplot grid.
         rows = 2 * int(np.ceil(modes.shape[-1] / cols))
-        fig, axes = plt.subplots(rows, cols, figsize=figsize, dpi=dpi)
-        avg_axes = [ax for axes_list in axes[::2] for ax in axes_list]
-        std_axes = [ax for axes_list in axes[1::2] for ax in axes_list]
-        avg_axes = avg_axes[:modes.shape[-1]]
-        std_axes = std_axes[:modes.shape[-1]]
+        plt.figure(figsize=figsize, dpi=dpi)
+        all_inds = np.arange(rows * cols).reshape(rows, cols)
+        avg_inds = all_inds[::2].flatten()
+        std_inds = all_inds[1::2].flatten()
 
-        for i, (ax_avg, ax_std, mode, mode_std) in enumerate(
-            zip(avg_axes, std_axes, modes.T, modes_std.T)
-        ):
-            ax_avg.set_title(f"Mode {i + 1}")
-            ax_std.set_title("Mode Standard Deviation")
-
+        for i, (mode, mode_std) in enumerate(zip(modes.T, modes_std.T)):
+            # Plot the average mode.
+            plt.subplot(rows, cols, avg_inds[i])
+            plt.title(f"Mode {i + 1}")
             if len(modes_shape) == 1:
                 # Plot modes in 1-D.
-                ax_avg.plot(x, mode.real, c="tab:blue")
-                ax_std.plot(x, mode_std, c="tab:red")
+                plt.plot(x, mode.real, c="tab:blue")
             else:
                 # Plot modes in 2-D.
-                im_avg = ax_avg.pcolormesh(
+                plt.pcolormesh(
                     xgrid,
                     ygrid,
                     mode.reshape(*modes_shape, order=order).real,
                     cmap="viridis",
                 )
-                im_std = ax_std.pcolormesh(
+                plt.colorbar()
+
+            # Plot the mode standard deviation.
+            plt.subplot(rows, cols, std_inds[i])
+            plt.title("Mode Standard Deviation")
+            if len(modes_shape) == 1:
+                # Plot modes in 1-D.
+                plt.plot(x, mode_std, c="tab:red")
+            else:
+                # Plot modes in 2-D.
+                plt.pcolormesh(
                     xgrid,
                     ygrid,
                     mode_std.reshape(*modes_shape, order=order),
                     cmap="inferno",
                 )
-                fig.colorbar(im_avg, ax=ax_avg)
-                fig.colorbar(im_std, ax=ax_std)
+                plt.colorbar()
 
         plt.suptitle("DMD Modes")
         plt.tight_layout()
