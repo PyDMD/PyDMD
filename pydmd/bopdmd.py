@@ -18,6 +18,7 @@ from inspect import isfunction
 import numpy as np
 from scipy.linalg import qr
 from scipy.sparse import csr_matrix
+import matplotlib.pyplot as plt
 
 from .dmdbase import DMDBase
 from .dmdoperator import DMDOperator
@@ -1323,7 +1324,7 @@ class BOPDMD(DMDBase):
             self._eig_constraints,
             self._bag_warning,
             self._bag_maxfail,
-            **self._varpro_opts_dict
+            **self._varpro_opts_dict,
         )
 
         # Define the snapshots that will be used for fitting.
@@ -1390,3 +1391,167 @@ class BOPDMD(DMDBase):
             ]
         )
         return x
+
+    def plot_mode_uq(
+        self,
+        x=None,
+        y=None,
+        d=1,
+        modes_shape=None,
+        order="C",
+        cols=4,
+        figsize=None,
+        dpi=None,
+    ):
+        """
+        Plot BOP-DMD modes alongside their standard deviations.
+
+        :param x: Points along the 1st spatial dimension where data has
+            been collected.
+        :type x: np.ndarray or iterable
+        :param y: Points along the 2nd spatial dimension where data has
+            been collected. This parameter is only applicable when the data
+            snapshots are 2-D, which must be indicated with `modes_shape`.
+        :type y: np.ndarray or iterable
+        :param d: Number of delays applied to the data. If `d` is greater
+            than 1, then each plotted mode will be the average mode taken
+            across all `d` delays.
+        :type d: int
+        :param modes_shape: Shape of the modes. If not provided, the shape
+            is assumed to be the flattened space dim of the snapshot data.
+            Provide as width, height dimension.
+        :type modes_shape: iterable
+        :param order: Read the elements of snapshots using this index order,
+            and place the elements into the reshaped array using this index
+            order. It has to be the same used to store the snapshots.
+        :type order: {"C", "F", "A"}
+        :param cols: Number of columns to use for the subplot grid.
+        :type cols: int
+        :param figsize: Width, height in inches.
+        :type figsize: iterable
+        :param dpi: Figure resolution.
+        :type dpi: int
+        """
+        if self.modes_std is None:
+            raise ValueError("No UQ metrics to plot.")
+
+        # By default, modes_shape is the flattened space dimension.
+        if modes_shape is None:
+            modes_shape = (len(self.snapshots) // d,)
+
+        # Order the modes and their standard deviations.
+        mode_order = np.argsort(-np.abs(self.amplitudes))
+        modes = self.modes[:, mode_order]
+        modes_std = self.modes_std[:, mode_order]
+
+        # Build the spatial grid for the mode plots.
+        if x is None:
+            x = np.arange(modes_shape[0])
+        if len(modes_shape) == 2:
+            if y is None:
+                y = np.arange(modes_shape[1])
+            ygrid, xgrid = np.meshgrid(y, x)
+
+        # Collapse the results across time-delays.
+        if d > 1:
+            nd, r = modes.shape
+            modes = np.average(modes.reshape(d, nd // d, r), axis=0)
+            modes_std = np.average(modes_std.reshape(d, nd // d, r), axis=0)
+
+        rows = int(np.ceil(modes.shape[-1] / cols))
+        fig, axes = plt.subplots(rows, cols, figsize=figsize, dpi=dpi)
+        avg_axes = [ax for axes_list in axes[::2] for ax in axes_list]
+        std_axes = [ax for axes_list in axes[1::2] for ax in axes_list]
+
+        for i, (ax_avg, ax_std, mode, mode_std) in enumerate(
+            zip(avg_axes, std_axes, modes.T, modes_std.T)
+        ):
+            ax_avg.set_title(f"Mode {i + 1}")
+            ax_std.set_title("Mode Standard Deviation")
+
+            if len(modes_shape) == 1:
+                # Plot modes in 1-D.
+                ax_avg.plot(x, mode.real, c="tab:blue")
+                ax_std.plot(x, mode_std, c="tab:red")
+            else:
+                # Plot modes in 2-D.
+                im_avg = ax_avg.pcolormesh(
+                    xgrid,
+                    ygrid,
+                    mode.reshape(*modes_shape, order=order).real,
+                    cmap="viridis",
+                )
+                im_std = ax_std.pcolormesh(
+                    xgrid,
+                    ygrid,
+                    mode_std.reshape(*modes_shape, order=order),
+                    cmap="inferno",
+                )
+                fig.colorbar(im_avg, ax=ax_avg)
+                fig.colorbar(im_std, ax=ax_std)
+
+        plt.suptitle("DMD Modes")
+        plt.tight_layout()
+        plt.show()
+
+    def plot_eig_uq(
+        self,
+        eigs_true=None,
+        figsize=None,
+        dpi=None,
+        flip_axes=False,
+    ):
+        """
+        Plot BOP-DMD eigenvalues against 1 and 2 standard deviations.
+
+        :param eigs_true: True continuous-time eigenvalues, if known.
+        :type eigs_true: np.ndarray
+        :param figsize: Width, height in inches.
+        :type figsize: iterable
+        :param dpi: Figure resolution.
+        :type dpi: int
+        :param flip_axes: Whether or not to swap the real and imaginary axes
+            on the eigenvalue plot. If `True`, the real axis will be vertical
+            and the imaginary axis will be horizontal.
+        :type flip_axes: bool
+        """
+
+        if self.eigenvalues_std is None:
+            raise ValueError("No UQ metrics to plot.")
+
+        fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+        plt.title("DMD Eigenvalues")
+
+        if flip_axes:
+            eigs = self.eigs.imag + 1j * self.eigs.real
+            plt.xlabel("$Im(\omega)$")
+            plt.ylabel("$Re(\omega)$")
+        else:
+            eigs = self.eigs
+            plt.xlabel("$Re(\omega)$")
+            plt.ylabel("$Im(\omega)$")
+
+        for e, std in zip(self.eigs, self.eigenvalues_std):
+            # Plot 2 standard deviations.
+            c_1 = plt.Circle((e.real, e.imag), 2 * std, color="b", alpha=0.2)
+            ax.add_patch(c_1)
+            # Plot 1 standard deviation.
+            c_2 = plt.Circle((e.real, e.imag), std, color="b", alpha=0.5)
+            ax.add_patch(c_2)
+
+        # Plot the average eigenvalues.
+        ax.plot(eigs.real, eigs.imag, "o", c="b", label="BOP-DMD")
+
+        # Plot the true eigenvalues if given.
+        if eigs_true is not None:
+            if flip_axes:
+                ax.plot(
+                    eigs_true.imag, eigs_true.real, "x", c="k", label="Truth"
+                )
+            else:
+                ax.plot(
+                    eigs_true.real, eigs_true.imag, "x", c="k", label="Truth"
+                )
+
+        plt.legend()
+        plt.show()
