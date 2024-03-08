@@ -357,6 +357,61 @@ class mrCOSTS:
             # Save the fitted costs object.
             self._costs_array.append(copy.copy(mrd))
 
+    @staticmethod
+    def interp_fill(
+        da_interp,
+        da,
+    ):
+        """Extrapolate values to the full data window.
+
+        Since multi_res_interp uses a nearest neighbors interpolation without
+        exraploation and the window_time_means are in the middle of the
+        decomposition window, the first and last windows are incompletely
+        filled. This function fills the NaN entries of these windows.
+
+        :param da_interp: Interpolated eigenvalues following multi_res_interp()
+        :type da_interp: xarray.DataArray
+        :param da: Uninterpolated eigenvalues
+        :type da: xarray.DataArray
+        :return: Interpolated eigenvalues with filled first and last windows.
+        :rtype: xarray.DataArray
+        """
+        window_delta = da.window_time_means.diff(
+            dim="window_time_means"
+        ).values[0]
+
+        # Backwards fill the last non-NaN to the beginning of the first window
+        first_window = da_interp.dropna(
+            dim="window_time_means", how="all"
+        ).isel(window_time_means=0)
+
+        da_interp = xr.where(
+            (
+                da_interp.window_time_means
+                > da.window_time_means[0] - window_delta / 2
+            )
+            & (da_interp.window_time_means < da.window_time_means[0]),
+            first_window,
+            da_interp,
+        )
+
+        # Forward fill the last non-NaN to the end of the last window
+        last_window = da_interp.dropna(dim="window_time_means", how="all").isel(
+            window_time_means=-1
+        )
+
+        da_interp = xr.where(
+            (
+                da_interp.window_time_means
+                < da.window_time_means[-1] + window_delta / 2
+            )
+            & (da_interp.window_time_means > da.window_time_means[-1]),
+            last_window,
+            da_interp,
+        )
+
+        return da_interp
+
     def multi_res_interp(
         self,
     ):
@@ -388,14 +443,16 @@ class mrCOSTS:
             da_real = da_real.interp(
                 window_time_means=ds_list[0].window_time_means,
                 method="nearest",
-                kwargs={"fill_value": (da_real.min(), da_real.max())},
             )
 
             da_imag = da_imag.interp(
                 window_time_means=ds_list[0].window_time_means,
                 method="nearest",
-                kwargs={"fill_value": (da_imag.min(), da_imag.max())},
             )
+
+            # Complete the interpolation of the first and last window
+            da_imag = self.interp_fill(da_imag, da)
+            da_real = self.interp_fill(da_real, da)
 
             da = da_real + 1j * da_imag
             da_to_concat.append(da)
