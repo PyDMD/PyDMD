@@ -7,20 +7,20 @@
     <a href="http://pydmd.github.io/PyDMD" target="_blank">
         <img alt="Docs" src="https://img.shields.io/badge/PyDMD-docs-blue?style=for-the-badge"/>
     </a>
+    <a href="https://pypi.org/project/pydmd/" target="_blank">
+        <img alt="PyPI version" src="https://img.shields.io/pypi/v/pydmd?style=for-the-badge">
+    </a>
     <a href="#dependencies-and-installation" target="_blank">
         <img alt="Python versions" src="https://img.shields.io/pypi/pyversions/PyDMD?style=for-the-badge">
     </a>
-    <a href="https://github.com/PyDMD/PyDMD/blob/master/LICENSE" target="_blank">
-        <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge">
-    </a>
-    <a href="https://pypi.org/project/pydmd/" target="_blank">
-        <img alt="PyPI version" src="https://img.shields.io/pypi/v/pydmd?style=for-the-badge">
+    <a href="https://doi.org/10.21105/joss.00530" target="_blank">
+        <img alt="JOSS DOI" src="https://img.shields.io/badge/JOSS-10.21105/joss.00530-blue?style=for-the-badge">
     </a>
     <br>
     <a href="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml" target="_blank">
         <img alt="CI Status" src="https://img.shields.io/github/actions/workflow/status/PyDMD/PyDMD/deploy_after_push.yml?style=for-the-badge">
     </a>
-    <a href="https://www.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=PyDMD/PyDMD&amp;utm_campaign=Badge_Coverage" target="_blank">
+    <a href="https://app.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage" target="_blank">
       <img src="https://img.shields.io/codacy/coverage/3d8b278a835e402c86cac9625bb4912f/master?style=for-the-badge"/>
     </a>
     <a href="https://app.codacy.com/gh/PyDMD/PyDMD/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade" target="_blank">
@@ -36,8 +36,8 @@
     <a href="#stargazers">
       <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/PyDMD/PyDMD?style=for-the-badge">
     </a>
-    <a href="https://doi.org/10.21105/joss.00530" target="_blank">
-        <img alt="JOSS DOI" src="https://img.shields.io/badge/JOSS-10.21105/joss.00530-blue?style=for-the-badge">
+    <a href="https://github.com/PyDMD/PyDMD/blob/master/LICENSE" target="_blank">
+        <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge">
     </a>
 </p>
 
