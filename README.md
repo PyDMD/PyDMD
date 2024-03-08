@@ -13,8 +13,8 @@
     <a href="#dependencies-and-installation" target="_blank">
         <img alt="Python versions" src="https://img.shields.io/pypi/pyversions/PyDMD?style=for-the-badge">
     </a>
-    <a href="https://doi.org/10.21105/joss.00530" target="_blank">
-        <img alt="JOSS DOI" src="https://img.shields.io/badge/JOSS-10.21105/joss.00530-blue?style=for-the-badge">
+    <a href="https://github.com/PyDMD/PyDMD/blob/master/LICENSE" target="_blank">
+        <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge">
     </a>
     <br>
     <a href="https://github.com/PyDMD/PyDMD/actions/workflows/deploy_after_push.yml" target="_blank">
@@ -36,8 +36,11 @@
     <a href="#stargazers">
       <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/PyDMD/PyDMD?style=for-the-badge">
     </a>
-    <a href="https://github.com/PyDMD/PyDMD/blob/master/LICENSE" target="_blank">
-        <img alt="Software License" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge">
+    <a href="#dependencies-and-installation" target="_blank">
+        <img alt="PyPI downloads per month" src="https://img.shields.io/pypi/dm/PyDMD?label=pypi&logo=python&logoColor=yellow&style=for-the-badge">
+    </a>
+    <a href="https://doi.org/10.21105/joss.00530" target="_blank">
+        <img alt="JOSS DOI" src="https://img.shields.io/badge/JOSS-10.21105/joss.00530-blue?style=for-the-badge">
     </a>
 </p>
 
