@@ -6,6 +6,7 @@ References:
 Steven L. Brunton. Physics-informed dynamic mode decomposition (pidmd). 2021.
 arXiv:2112.04307.
 """
+
 import numpy as np
 
 from .dmd import DMD

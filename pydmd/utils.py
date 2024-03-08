@@ -9,9 +9,11 @@ from numpy.lib.stride_tricks import sliding_window_view
 
 #  Named tuples used in functions.
 #  compute_svd uses "SVD",
-#  compute_tlsq uses "TLSQ".
+#  compute_tlsq uses "TLSQ",
+#  compute_rqb uses "RQB".
 SVD = namedtuple("SVD", ["U", "s", "V"])
 TLSQ = namedtuple("TLSQ", ["X_denoised", "Y_denoised"])
+RQB = namedtuple("RQB", ["Q", "B", "test_matrix"])
 
 
 def _svht(sigma_svd: np.ndarray, rows: int, cols: int) -> int:
@@ -187,6 +189,83 @@ def compute_svd(
     s = s[:rank]
 
     return SVD(U, s, V)
+
+
+def compute_rqb(
+    X: np.ndarray,
+    svd_rank: Number,
+    oversampling: int,
+    power_iters: int,
+    test_matrix: np.ndarray = None,
+    seed: int = None,
+) -> NamedTuple(
+    "RQB", [("Q", np.ndarray), ("B", np.ndarray), ("test_matrix", np.ndarray)]
+):
+    """
+    Randomized QB Decomposition.
+
+    :param X: the matrix to decompose.
+    :type X: np.ndarray
+    :param svd_rank: the rank for the truncation; If 0, the method computes
+        the optimal rank and uses it for truncation; if positive interger,
+        the method uses the argument for the truncation; if float between 0
+        and 1, the rank is the number of the biggest singular values that
+        are needed to reach the 'energy' specified by `svd_rank`; if -1,
+        the method does not compute truncation. Use this parameter to
+        define the target rank of the input matrix.
+    :type svd_rank: int or float
+    :param oversampling: Number of additional samples (beyond the target rank)
+        to use when computing the random test matrix. Note that values in the
+        range [5, 10] tend to be sufficient.
+    :type oversampling: int
+    :param power_iters: Number of power iterations to perform when executing
+        the Randomized QB Decomposition. Note that as many as 1 to 2 power
+        iterations often lead to considerable improvements.
+    :type power_iters: int
+    :param test_matrix: The random test matrix that will be used when executing
+        the Randomized QB Decomposition. If not provided, the `svd_rank` and
+        `oversampling` parameters will be used to compute the random matrix.
+    :type test_matrix: numpy.ndarray
+    :param seed: Seed used to initialize the random generator when computing
+        random test matrices.
+    :type seed: int
+    :return: the orthonormal basis matrix, the transformed data matrix, and
+        the random test matrix.
+    :rtype: NamedTuple("RQB", [('Q', np.ndarray),
+                               ('B', np.ndarray),
+                               ('test_matrix', np.ndarray)])
+
+    References:
+    N. Benjamin Erichson, Lionel Mathelin, J. Nathan Kutz, Steven L. Brunton.
+    Randomized dynamic mode decomposition. SIAM Journal on Applied Dynamical
+    Systems, 18, 2019.
+    """
+    if X.ndim != 2:
+        raise ValueError("Please ensure that input data is a 2D array.")
+
+    # Define the random test matrix if not provided.
+    if test_matrix is None:
+        m = X.shape[-1]
+        r = compute_rank(X, svd_rank)
+        rng = np.random.default_rng(seed)
+        test_matrix = rng.standard_normal((m, r + oversampling))
+
+    # Compute sampling matrix.
+    Y = X.dot(test_matrix)
+
+    # Perform power iterations.
+    for _ in range(power_iters):
+        Q = np.linalg.qr(Y)[0]
+        Z = np.linalg.qr(X.conj().T.dot(Q))[0]
+        Y = X.dot(Z)
+
+    # Orthonormalize the sampling matrix.
+    Q = np.linalg.qr(Y)[0]
+
+    # Project the snapshot matrix onto the smaller space.
+    B = Q.conj().T.dot(X)
+
+    return RQB(Q, B, test_matrix)
 
 
 def pseudo_hankel_matrix(X: np.ndarray, d: int) -> np.ndarray:

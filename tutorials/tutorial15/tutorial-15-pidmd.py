@@ -54,6 +54,7 @@ from pydmd import PiDMD
 """
 Define test data and test data sizes.
 """
+
 nx = 8  # snapshot size
 nt = 1000  # number of samples
 rng = np.random.default_rng(seed=42)  # seed for reproducibility

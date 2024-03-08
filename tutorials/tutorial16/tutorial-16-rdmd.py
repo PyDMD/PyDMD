@@ -12,6 +12,10 @@
 # In[1]:
 
 
+import warnings
+
+warnings.filterwarnings("ignore")
+
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -146,7 +150,7 @@ print(f"DMD Training Time: {dmd_time}")
 
 
 # Define the number of random trials to perform.
-num_trials = 100
+num_trials = 200
 
 # Initialize the error and runtime metrics.
 cdmd_error = 0.0

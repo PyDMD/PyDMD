@@ -8,6 +8,7 @@ References:
 nonlinear disambiguation optimization. Proc. R. Soc. A. 478: 20210830.
 20210830. http://doi.org/10.1098/rspa.2021.0830
 """
+
 import warnings
 from inspect import isfunction
 

@@ -2,6 +2,7 @@
 A module which contains several functions to tune (i.e. improve) DMD instances
 through the "manual" modification of DMD modes.
 """
+
 from copy import deepcopy
 from functools import partial
 

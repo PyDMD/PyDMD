@@ -21,7 +21,7 @@ import os
 print("Downloading data...")
 if not os.path.exists("SegTrackv2"):
     get_ipython().system(
-        "wget https://web.engr.oregonstate.edu/~lif/SegTrack2/SegTrackv2.zip >& /dev/null"
+        "wget --quiet https://web.engr.oregonstate.edu/~lif/SegTrack2/SegTrackv2.zip"
     )
     get_ipython().system("unzip -qq SegTrackv2.zip")
     print("Done!")
@@ -454,6 +454,7 @@ def play_video_removed(
 play the video we will model,
 change interval based on video size
 """
+
 play_video(OBJ, interval=10)
 
 

@@ -3,6 +3,7 @@ Derived module from dmdbase.py for compressed dmd.
 As a reference consult this work by Erichson, Brunton and Kutz:
 https://doi.org/10.1007/s11554-016-0655-2
 """
+
 import numpy as np
 import scipy.sparse
 from scipy.linalg import sqrtm
