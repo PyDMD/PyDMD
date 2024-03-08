@@ -48,6 +48,7 @@
 * [References](#references)
 * [Developers and contributors](#developers-and-contributors)
 * [Funding](#funding)
+* [Affiliations](#affiliations)
 
 ## Description
 
@@ -201,4 +202,11 @@ Beyond this, PyDMD has also been supported by some dedicated projects that have 
 * FSE HEaD project [Bulbous Bow Shape Optimization through Reduced Order Modelling](https://mathlab.sissa.it/project/ottimizzazione-di-forme-prodiere-e-poppiere-di-carena-mediante-luso-di-algoritmi-parametrici), FVG, Italy.
 <p align="center">
     <img src="readme/logos_funding.png" width="800" />
+</p>
+
+## Affiliations
+<p align="center">
+    <a href="https://numfocus.org/sponsored-projects/affiliated-projects">
+        <img src="readme/numfocus-affiliated-project.png" width="300" />
+    </a>
 </p>
