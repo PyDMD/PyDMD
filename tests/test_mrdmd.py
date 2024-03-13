@@ -233,6 +233,28 @@ def test_partial_eigs2():
     assert peigs.shape == (rank,)
 
 
+def test_partial_eigs1():
+    max_level = 5
+    level = 2
+    rank = 2
+    dmd = DMD(svd_rank=rank)
+    mrdmd = MrDMD(dmd, max_level=max_level, max_cycles=2)
+    mrdmd.fit(X=sample_data)
+    pamps = mrdmd.partial_amplitudes(level)
+    assert pamps.shape == (rank * 2**level,)
+
+
+def test_partial_eigs2():
+    max_level = 5
+    level = 2
+    rank = 2
+    dmd = DMD(svd_rank=rank)
+    mrdmd = MrDMD(dmd, max_level=6, max_cycles=2)
+    mrdmd.fit(X=sample_data)
+    pamps = mrdmd.partial_amplitudes(level, 3)
+    assert pamps.shape == (rank,)
+
+
 def test_partial_reconstructed1():
     max_level = 5
     level = 2
