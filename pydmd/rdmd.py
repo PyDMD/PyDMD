@@ -7,7 +7,6 @@ Randomized dynamic mode decomposition. SIAM Journal on Applied Dynamical
 Systems, 18, 2019.
 """
 
-
 from .cdmd import CDMD
 from .utils import compute_rqb
 
