@@ -24,8 +24,8 @@ An additional PDF tutorial ([DSWeb contest winner](https://dsweb.siam.org/The-Ma
 | Tutorial17&#160;[[.ipynb](tutorial17/tutorial-17-edmd.ipynb),&#160;[.py](tutorial17/tutorial-17-edmd.py),&#160;[.html](http://pydmd.github.io/PyDMD/tutorial17-edmd.html)]     | Extended DMD for nonlinear eigenfunction discovery | `pydmd.EDMD`        |
 | Tutorial18&#160;[[.ipynb](tutorial18/tutorial-18-lando.ipynb),&#160;[.py](tutorial18/tutorial-18-lando.py),&#160;[.html](http://pydmd.github.io/PyDMD/tutorial18-lando.html)]     | LANDO for nonlinear system modeling | `pydmd.LANDO`        |
 | Tutorial19&#160;[[.ipynb](tutorial19/tutorial-19-havok.ipynb),&#160;[.py](tutorial19/tutorial-19-havok.py),&#160;[.html](http://pydmd.github.io/PyDMD/tutorial19-havok.html)]     | HAVOK for modeling chaos with partial measurements | `pydmd.HAVOK`        |
-| Tutorial20a&#160;[[.ipynb](tutorial20/costs-tutorial_toy-data.ipynb)]     <br/><br/><br/><br/>                                                                                                          | COSTS for decomposing toy data                                  | `pydmd.COSTS`             |
-| Tutorial20b&#160;[[.ipynb](tutorial20/costs-tutorial_real-data.ipynb)]     <br/><br/><br/>                                                                                                              | mrCOSTS for decomposing multi-scale physics of real, noisy data | `pydmd.mrCOSTS`             |
+| Tutorial20a&#160;[[.ipynb](tutorial20/costs-tutorial_toy-data.ipynb)]                                                                                                               | COSTS for decomposing toy data                                  | `pydmd.COSTS`             |
+| Tutorial20b&#160;[[.ipynb](tutorial20/costs-tutorial_real-data.ipynb)]                                                                                                                  | mrCOSTS for decomposing multi-scale physics of real, noisy data | `pydmd.mrCOSTS`             |
 
 
 
