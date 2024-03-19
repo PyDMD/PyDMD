@@ -277,19 +277,20 @@ def pseudo_hankel_matrix(X: np.ndarray, d: int) -> np.ndarray:
     :Example:
 
         >>> a = np.array([[1, 2, 3, 4, 5]])
-        >>> _hankel_pre_processing(a, d=2)
+        >>> pseudo_hankel_matrix(a, d=2)
         array([[1, 2, 3, 4],
                [2, 3, 4, 5]])
-        >>> _hankel_pre_processing(a, d=4)
+        >>> pseudo_hankel_matrix(a, d=4)
         array([[1, 2],
                [2, 3],
                [3, 4],
                [4, 5]])
-
+    
         >>> a = np.array([1,2,3,4,5,6]).reshape(2,3)
-        array([[1, 2, 3],
-               [4, 5, 6]])
-        >>> _hankel_pre_processing(a, d=2)
+        >>> print(a)
+        [[1 2 3]
+         [4 5 6]]
+        >>> pseudo_hankel_matrix(a, d=2)
         array([[1, 2],
                [4, 5],
                [2, 3],
