@@ -285,7 +285,7 @@ def pseudo_hankel_matrix(X: np.ndarray, d: int) -> np.ndarray:
                [2, 3],
                [3, 4],
                [4, 5]])
-    
+
         >>> a = np.array([1,2,3,4,5,6]).reshape(2,3)
         >>> print(a)
         [[1 2 3]
