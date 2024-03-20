@@ -594,9 +594,9 @@ class COSTS:
             # Assign the results from this window.
             self._modes_array[k, :, : optdmd.modes.shape[-1]] = optdmd.modes
             self._omega_array[k, : optdmd.eigs.shape[0]] = optdmd.eigs
-            self._amplitudes_array[
-                k, : optdmd.eigs.shape[0]
-            ] = optdmd.amplitudes
+            self._amplitudes_array[k, : optdmd.eigs.shape[0]] = (
+                optdmd.amplitudes
+            )
             self._window_means_array[k] = c.flatten()
             self._time_array[k] = original_time_window
 
