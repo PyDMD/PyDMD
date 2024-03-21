@@ -567,7 +567,6 @@ class COSTS:
             # Subtract off the time mean before rounding corners.
             c = np.mean(data_window, 1, keepdims=True)
             data_window = data_window - c
-            data_window -= np.mean(data_window, 1, keepdims=True)
 
             # Round the corners of the window.
             data_window = data_window * lv_kern
