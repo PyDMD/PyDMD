@@ -1394,6 +1394,7 @@ class BOPDMD(DMDBase):
 
     def plot_mode_uq(
         self,
+        *,
         x=None,
         y=None,
         d=1,
@@ -1402,6 +1403,8 @@ class BOPDMD(DMDBase):
         cols=4,
         figsize=None,
         dpi=None,
+        plot_modes=None,
+        plot_complex_pairs=True,
     ):
         """
         Plot BOP-DMD modes alongside their standard deviations.
@@ -1431,9 +1434,32 @@ class BOPDMD(DMDBase):
         :type figsize: iterable
         :param dpi: Figure resolution.
         :type dpi: int
+        :param plot_modes: Number of leading modes to plot, or the indices of
+            the modes to plot. If `None`, then all available modes are plotted.
+            Note that if this parameter is given as a list of indices, it will
+            override the `plot_complex_pair` parameter.
+        :type plot_modes: int or iterable
+        :param plot_complex_pairs: Whether or not to omit one of the modes that
+            correspond with a complex conjugate pair of eigenvalues.
+        :type plot_complex_pairs: bool
         """
         if self.modes_std is None:
             raise ValueError("No UQ metrics to plot.")
+
+        # Get the indices of the modes to plot.
+        nd, r = self.modes.shape
+        if plot_modes is None or isinstance(plot_modes, int):
+            mode_indices = np.arange(r)
+            if plot_complex_pairs:
+                if r % 2 == 0:
+                    mode_indices = mode_indices[::2]
+                else:
+                    mode_indices = np.concatenate([(0,), mode_indices[1::2]])
+            if isinstance(plot_modes, int):
+                mode_indices = mode_indices[:plot_modes]
+        else:
+            mode_indices = plot_modes
+            plot_complex_pairs = True
 
         # By default, modes_shape is the flattened space dimension.
         if modes_shape is None:
@@ -1454,21 +1480,36 @@ class BOPDMD(DMDBase):
 
         # Collapse the results across time-delays.
         if d > 1:
-            nd, r = modes.shape
             modes = np.average(modes.reshape(d, nd // d, r), axis=0)
             modes_std = np.average(modes_std.reshape(d, nd // d, r), axis=0)
 
         # Define the subplot grid.
-        rows = 2 * int(np.ceil(modes.shape[-1] / cols))
-        plt.figure(figsize=figsize, dpi=dpi)
+        # Compute the number of subplot rows given the number of columns.
+        rows = 2 * int(np.ceil(len(mode_indices) / cols))
+
+        # Compute a grid of all subplot indices.
         all_inds = np.arange(rows * cols).reshape(rows, cols)
+
+        # Get the subplot indices at which the mode averages will be plotted.
+        # Mode averages are plotted on the 1st, 3rd, 5th, ... rows of the plot.
         avg_inds = all_inds[::2].flatten()
+
+        # Get the subplot indices at which the mode stds will be plotted.
+        # Mode stds are plotted on the 2nd, 4th, 6th, ... rows of the plot.
         std_inds = all_inds[1::2].flatten()
 
-        for i, (mode, mode_std) in enumerate(zip(modes.T, modes_std.T)):
+        plt.figure(figsize=figsize, dpi=dpi)
+
+        for i, idx in enumerate(mode_indices):
+            mode = modes[:, idx]
+            mode_std = modes_std[:, idx]
+
             # Plot the average mode.
             plt.subplot(rows, cols, avg_inds[i] + 1)
-            plt.title(f"Mode {i + 1}")
+            if plot_complex_pairs:
+                plt.title(f"Mode {idx + 1}")
+            if not plot_complex_pairs:
+                plt.title(f"Mode {idx + 1}, {idx + 2}")
             if len(modes_shape) == 1:
                 # Plot modes in 1-D.
                 plt.plot(x, mode.real, c="tab:blue")
