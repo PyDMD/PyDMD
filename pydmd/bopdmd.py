@@ -1439,8 +1439,8 @@ class BOPDMD(DMDBase):
             Note that if this parameter is given as a list of indices, it will
             override the `plot_complex_pair` parameter.
         :type plot_modes: int or iterable
-        :param plot_conjugate_pairs: Whether or not to omit one of the modes that
-            correspond with a complex conjugate pair of eigenvalues.
+        :param plot_conjugate_pairs: Whether or not to omit one of the modes
+            that correspond with a complex conjugate pair of eigenvalues.
         :type plot_conjugate_pairs: bool
         """
         if self.modes_std is None:
