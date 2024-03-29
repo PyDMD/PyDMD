@@ -1450,7 +1450,7 @@ class BOPDMD(DMDBase):
         nd, r = self.modes.shape
         if plot_modes is None or isinstance(plot_modes, int):
             mode_indices = np.arange(r)
-            if plot_complex_pairs:
+            if not plot_complex_pairs:
                 if r % 2 == 0:
                     mode_indices = mode_indices[::2]
                 else:
