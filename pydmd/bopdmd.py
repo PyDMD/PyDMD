@@ -1404,7 +1404,7 @@ class BOPDMD(DMDBase):
         figsize=None,
         dpi=None,
         plot_modes=None,
-        plot_complex_pairs=True,
+        plot_conjugate_pairs=True,
     ):
         """
         Plot BOP-DMD modes alongside their standard deviations.
@@ -1439,9 +1439,9 @@ class BOPDMD(DMDBase):
             Note that if this parameter is given as a list of indices, it will
             override the `plot_complex_pair` parameter.
         :type plot_modes: int or iterable
-        :param plot_complex_pairs: Whether or not to omit one of the modes that
+        :param plot_conjugate_pairs: Whether or not to omit one of the modes that
             correspond with a complex conjugate pair of eigenvalues.
-        :type plot_complex_pairs: bool
+        :type plot_conjugate_pairs: bool
         """
         if self.modes_std is None:
             raise ValueError("No UQ metrics to plot.")
@@ -1450,7 +1450,7 @@ class BOPDMD(DMDBase):
         nd, r = self.modes.shape
         if plot_modes is None or isinstance(plot_modes, int):
             mode_indices = np.arange(r)
-            if not plot_complex_pairs:
+            if not plot_conjugate_pairs:
                 if r % 2 == 0:
                     mode_indices = mode_indices[::2]
                 else:
@@ -1459,7 +1459,7 @@ class BOPDMD(DMDBase):
                 mode_indices = mode_indices[:plot_modes]
         else:
             mode_indices = plot_modes
-            plot_complex_pairs = True
+            plot_conjugate_pairs = True
 
         # By default, modes_shape is the flattened space dimension.
         if modes_shape is None:
@@ -1506,10 +1506,10 @@ class BOPDMD(DMDBase):
 
             # Plot the average mode.
             plt.subplot(rows, cols, avg_inds[i] + 1)
-            if plot_complex_pairs:
+            if plot_conjugate_pairs or (r % 2 == 1 and i == 0):
                 plt.title(f"Mode {idx + 1}")
-            if not plot_complex_pairs:
-                plt.title(f"Mode {idx + 1}, {idx + 2}")
+            else:
+                plt.title(f"Modes {idx + 1},{idx + 2}")
             if len(modes_shape) == 1:
                 # Plot modes in 1-D.
                 plt.plot(x, mode.real, c="tab:blue")
