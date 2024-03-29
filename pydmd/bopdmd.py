@@ -1004,6 +1004,10 @@ class BOPDMD(DMDBase):
         """
         return self._svd_rank
 
+    @svd_rank.setter
+    def svd_rank(self, value):
+        self._svd_rank = value
+
     @property
     def compute_A(self):
         """
@@ -1034,6 +1038,14 @@ class BOPDMD(DMDBase):
             raise RuntimeError(msg)
         return self._init_alpha
 
+    @init_alpha.setter
+    def init_alpha(self, value):
+        """Set a new initial eigenvalue guess.
+
+        :param value: The new eigenvalue guess.
+        """
+        self._init_alpha = value
+
     @property
     def proj_basis(self):
         """
@@ -1047,6 +1059,14 @@ class BOPDMD(DMDBase):
             )
             raise RuntimeError(msg)
         return self._proj_basis
+
+    @proj_basis.setter
+    def proj_basis(self, new_proj_basis):
+        """Set a new projection basis.
+
+        :param new_proj_basis: The new projection basis to assign.
+        """
+        self._proj_basis = new_proj_basis
 
     @property
     def num_trials(self):
