@@ -193,7 +193,7 @@ class DMDc(DMDBase):
     :type svd_rank_omega: int or float
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1):
+    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1, lag = 1):
         # we're going to initialize Atilde when we know if B is known
         self._Atilde = None
         # remember the arguments for when we'll need them
@@ -203,6 +203,7 @@ class DMDc(DMDBase):
             "tlsq_rank": tlsq_rank,
         }
 
+        self._lag = lag
         self._opt = opt
         self._exact = False
 
@@ -302,9 +303,9 @@ class DMDc(DMDBase):
         self._snapshots_holder = Snapshots(X)
         self._controlin = np.atleast_2d(np.asarray(I))
 
-        n_samples = self.snapshots.shape[1]
-        X = self.snapshots[:, :-1]
-        Y = self.snapshots[:, 1:]
+        X = self.snapshots[:, :-self._lag]
+        Y = self.snapshots[:, self._lag:]
+        n_samples = X.shape[1]+1
 
         self._set_initial_time_dictionary(
             {"t0": 0, "tend": n_samples - 1, "dt": 1}
