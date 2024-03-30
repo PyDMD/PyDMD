@@ -12,15 +12,16 @@ def create_system_with_B():
     return {"snapshots": snapshots, "u": u, "B": B}
 
 
-def create_system_without_B():
+def create_system_without_B(lag = 1):
     n = 5  # dimension snapshots
     m = 15  # number snapshots
     A = scipy.linalg.helmert(n, True)
     B = np.random.rand(n, n) - 0.5
-    x0 = np.array([0.25] * n)
-    u = np.random.rand(n, m - 1) - 0.5
-    snapshots = [x0]
-    for i in range(m - 1):
+    snapshots = []
+    for i in range(lag):
+        snapshots.append(np.array([0.25] * n))
+    u = np.random.rand(n, m - lag) - 0.5
+    for i in range(m - lag):
         snapshots.append(A.dot(snapshots[i]) + B.dot(u[:, i]))
     snapshots = np.array(snapshots).T
     return {"snapshots": snapshots, "u": u, "B": B, "A": A}
