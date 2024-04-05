@@ -121,7 +121,7 @@ def get_video_dmd(
     if noise:
         vid += np.random.normal(0, noise_amt, vid.shape)
         vid = vid.clip(0, 1)
-    return vid, shape
+    return np.vstack(imgs).T, shape
 
 
 def get_video(object: str = "frog") -> np.ndarray:
