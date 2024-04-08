@@ -899,7 +899,7 @@ def plot_summary(
     if len(snapshots_shape) == 2:
         if y is None:
             y = np.arange(snapshots_shape[1])
-        ygrid, xgrid = np.meshgrid(y, x)
+        xgrid, ygrid = np.meshgrid(x, y)
 
     # PLOTS 4-6: Plot the DMD modes.
     for i, (ax, idx) in enumerate(zip(mode_axes, index_modes)):
@@ -913,7 +913,7 @@ def plot_summary(
             ax.plot(x, lead_modes[:, idx].real, c=mode_color)
         else:
             # Plot modes in 2-D.
-            mode = lead_modes[:, idx].reshape(*snapshots_shape, order=order)
+            mode = lead_modes[:, idx].reshape(xgrid.shape, order=order)
             vmax = np.abs(mode.real).max()
             im = ax.pcolormesh(
                 xgrid,
