@@ -12,16 +12,30 @@ def create_system_with_B():
     return {"snapshots": snapshots, "u": u, "B": B}
 
 
-def create_system_without_B(lag = 1):
+def create_system_without_B():
+    n = 5  # dimension snapshots
+    m = 15  # number snapshots
+    A = scipy.linalg.helmert(n, True)
+    B = np.random.rand(n, n) - 0.5
+    x0 = np.array([0.25] * n)
+    u = np.random.rand(n, m - 1) - 0.5
+    snapshots = [x0]
+    for i in range(m - 1):
+        snapshots.append(A.dot(snapshots[i]) + B.dot(u[:, i]))
+    snapshots = np.array(snapshots).T
+    return {"snapshots": snapshots, "u": u, "B": B, "A": A}
+
+
+def create_system_without_B_lag(lag = 1):
     n = 5  # dimension snapshots
     m = 15  # number snapshots
     A = scipy.linalg.helmert(n, True)
     B = np.random.rand(n, n) - 0.5
     snapshots = []
-    for i in range(lag):
+    for _ in range(lag):
         snapshots.append(np.array([0.25] * n))
-    u = np.random.rand(n, m - lag) - 0.5
-    for i in range(m - lag):
+    u = np.random.rand(n, m-lag) - 0.5
+    for i in range(m-lag):
         snapshots.append(A.dot(snapshots[i]) + B.dot(u[:, i]))
     snapshots = np.array(snapshots).T
     return {"snapshots": snapshots, "u": u, "B": B, "A": A}
@@ -42,9 +56,25 @@ def test_eigs_b_unknown():
     assert dmdc.eigs.shape[0] == 3
 
 
+def test_eigs_b_unknown_lag():
+    lag = 3
+    system = create_system_without_B_lag(lag=lag)
+    dmdc = DMDc(svd_rank=3, opt=False, svd_rank_omega=4, lag=lag)
+    dmdc.fit(system["snapshots"], system["u"])
+    assert dmdc.eigs.shape[0] == 3
+
+
 def test_modes_b_unknown():
     system = create_system_without_B()
     dmdc = DMDc(svd_rank=3, opt=False, svd_rank_omega=4)
+    dmdc.fit(system["snapshots"], system["u"])
+    assert dmdc.modes.shape[1] == 3
+
+
+def test_modes_b_unknown_lag():
+    lag = 3
+    system = create_system_without_B_lag(lag=lag)
+    dmdc = DMDc(svd_rank=3, opt=False, svd_rank_omega=4, lag=lag)
     dmdc.fit(system["snapshots"], system["u"])
     assert dmdc.modes.shape[1] == 3
 
@@ -68,6 +98,16 @@ def test_B_b_known():
 def test_reconstruct_b_unknown():
     system = create_system_without_B()
     dmdc = DMDc(svd_rank=-1, opt=True)
+    dmdc.fit(system["snapshots"], system["u"])
+    np.testing.assert_array_almost_equal(
+        dmdc.reconstructed_data(), system["snapshots"], decimal=6
+    )
+
+
+def test_reconstruct_b_unknown_lag():
+    lag = 3
+    system = create_system_without_B_lag(lag = lag)
+    dmdc = DMDc(svd_rank=-1, opt=True, lag=lag)
     dmdc.fit(system["snapshots"], system["u"])
     np.testing.assert_array_almost_equal(
         dmdc.reconstructed_data(), system["snapshots"], decimal=6
