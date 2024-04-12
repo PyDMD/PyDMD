@@ -191,12 +191,14 @@ class DMDc(DMDBase):
         equal than `svd_rank`. For the possible values please refer to the
         `svd_rank` parameter description above.
     :type svd_rank_omega: int or float
-    :param lag: the time lag for the snapshots. Used in fit method to generate 
+    :param lag: the time lag for the snapshots. Used in fit method to generate
         X and Y.
     :type lag: int
     """
 
-    def __init__(self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1, lag=1):
+    def __init__(
+        self, svd_rank=0, tlsq_rank=0, opt=False, svd_rank_omega=-1, lag=1
+    ):
         # we're going to initialize Atilde when we know if B is known
         self._Atilde = None
         # remember the arguments for when we'll need them
@@ -309,12 +311,10 @@ class DMDc(DMDBase):
         n_samples = self.snapshots.shape[-1]
 
         if self._lag < 1:
-            raise ValueError(
-            "Time lag must be positive."
-                )
-        
-        X = self.snapshots[:, :-self._lag]
-        Y = self.snapshots[:, self._lag:]
+            raise ValueError("Time lag must be positive.")
+
+        X = self.snapshots[:, : -self._lag]
+        Y = self.snapshots[:, self._lag :]
 
         self._set_initial_time_dictionary(
             {"t0": 0, "tend": n_samples - 1, "dt": 1}

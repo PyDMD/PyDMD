@@ -34,8 +34,8 @@ def create_system_without_B_lag(lag=1):
     snapshots = []
     for _ in range(lag):
         snapshots.append(np.array([0.25] * n))
-    u = np.random.rand(n, m-lag) - 0.5
-    for i in range(m-lag):
+    u = np.random.rand(n, m - lag) - 0.5
+    for i in range(m - lag):
         snapshots.append(A.dot(snapshots[i]) + B.dot(u[:, i]))
     snapshots = np.array(snapshots).T
     return {"snapshots": snapshots, "u": u, "B": B, "A": A}
@@ -106,7 +106,7 @@ def test_reconstruct_b_unknown():
 
 def test_reconstruct_b_unknown_lag():
     lag = 3
-    system = create_system_without_B_lag(lag = lag)
+    system = create_system_without_B_lag(lag=lag)
     dmdc = DMDc(svd_rank=-1, opt=True, lag=lag)
     dmdc.fit(system["snapshots"], system["u"])
     np.testing.assert_array_almost_equal(
@@ -276,7 +276,7 @@ def test_correct_amplitudes():
 
 
 def test_lag_param_b_unknown_raises():
-    system = create_system_without_B_lag(lag = 3)
+    system = create_system_without_B_lag(lag=3)
     dmdc = DMDc(svd_rank=-1, opt=True, lag=0)
     with raises(ValueError):
         dmdc.fit(system["snapshots"], system["u"])
