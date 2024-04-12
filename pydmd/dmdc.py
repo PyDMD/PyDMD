@@ -272,9 +272,7 @@ class DMDc(DMDBase):
             [self.modes, np.diag(eigs), np.linalg.pinv(self.modes)]
         )
 
-        data = []
-        for i in range(self._lag):
-            data.append(self.snapshots[:, i])
+        data = [self.snapshots[:, i] for i in range(self._lag)]
 
         expected_shape = data[0].shape
 
@@ -312,7 +310,7 @@ class DMDc(DMDBase):
 
         if self._lag < 1:
             raise ValueError(
-            f"Time lag must be positive."
+            "Time lag must be positive."
                 )
         
         X = self.snapshots[:, :-self._lag]

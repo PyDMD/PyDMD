@@ -26,7 +26,7 @@ def create_system_without_B():
     return {"snapshots": snapshots, "u": u, "B": B, "A": A}
 
 
-def create_system_without_B_lag(lag = 1):
+def create_system_without_B_lag(lag=1):
     n = 5  # dimension snapshots
     m = 15  # number snapshots
     A = scipy.linalg.helmert(n, True)
@@ -273,3 +273,10 @@ def test_correct_amplitudes():
     dmd = DMDc(svd_rank=-1)
     dmd.fit(system["snapshots"], system["u"], system["B"])
     np.testing.assert_array_almost_equal(dmd.amplitudes, dmd._b)
+
+
+def test_lag_param_b_unknown_raises():
+    system = create_system_without_B_lag(lag = 3)
+    dmdc = DMDc(svd_rank=-1, opt=True, lag=0)
+    with raises(ValueError):
+        dmdc.fit(system["snapshots"], system["u"])
