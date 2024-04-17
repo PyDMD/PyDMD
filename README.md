@@ -123,6 +123,7 @@ Users may also build highly complex DMD models with PyDMD. Below is an example o
 from pydmd import BOPDMD
 
 # Build a bagging, optimized DMD (BOP-DMD) model.
+# For Optimized DMD (without bagging), use BOPDMD(svd_rank=15, num_trials=0).
 bopdmd = BOPDMD(
     svd_rank=15,                                  # Rank of the DMD fit.
     num_trials=100,                               # Number of bagging trials to perform.
@@ -151,6 +152,11 @@ Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/t
 <p align="center">
 <img src="readme/dmd-example.gif" alt></br>
 <em>The system evolution reconstructed with dynamic mode decomposition</em>
+</p>
+
+Also provided below is an example output of the `plot_summary()` function when given a DMD model fitted to the data above. A rank-2 Optimized DMD model was used to generate the summary below. Note that the eigenvalues, modes, and dynamics are color-coded to indicate associations, and that eigenvalue marker sizes indicate spatiotemporal mode amplitude or importance.
+<p align="center">
+<img src="readme/summary-example.png" alt></br>
 </p>
 
 For users who are unsure of which DMD method is best for them, we provide the following flow chart, which outlines how one might choose an appropriate DMD variant based on specific problem types or data sets.
