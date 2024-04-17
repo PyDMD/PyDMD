@@ -140,10 +140,19 @@ bopdmd.fit(X, t)
 
 Note that modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to our [module documentation](https://pydmd.github.io/PyDMD/code.html), [plotting tool documentation](https://pydmd.github.io/PyDMD/plotter.html), and to our module-specific [tutorials](tutorials/README.md) for more information.
 
+For users who are unsure of which DMD method is best for them, we provide the following flow chart, which outlines how one might choose an appropriate DMD variant based on specific problem types or data sets.
+
+<p align="center">
+    <img src="readme/pydmd_guide.svg" width="1000" />
+</p>
+
 ## Examples and Tutorials
 You can find useful tutorials on how to use the package in the [tutorials](tutorials/README.md) folder.
 
 Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/tutorial-2-adv-dmd.ipynb)): we collect few snapshots from a toy system with some noise and reconstruct the entire system evolution.
+
+Also provided below is an example output of the `plot_summary()` function when given a DMD model fitted to this data set. A rank-2 Optimized DMD model was used to generate the summary below. Note that the eigenvalues, modes, and dynamics are color-coded to indicate associations, and that eigenvalue marker sizes indicate spatiotemporal mode amplitudes or importance.
+
 <p align="center">
 <img src="readme/dmd-example.png" alt>
 <em>The original snapshots used as input for the dynamic mode decomposition</em>
@@ -154,15 +163,9 @@ Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/t
 <em>The system evolution reconstructed with dynamic mode decomposition</em>
 </p>
 
-Also provided below is an example output of the `plot_summary()` function when given a DMD model fitted to the data above. A rank-2 Optimized DMD model was used to generate the summary below. Note that the eigenvalues, modes, and dynamics are color-coded to indicate associations, and that eigenvalue marker sizes indicate spatiotemporal mode amplitude or importance.
 <p align="center">
 <img src="readme/summary-example.png" alt></br>
-</p>
-
-For users who are unsure of which DMD method is best for them, we provide the following flow chart, which outlines how one might choose an appropriate DMD variant based on specific problem types or data sets.
-
-<p align="center">
-    <img src="readme/pydmd_guide.svg" width="1000" />
+<em>Sample output of the plot_summary function.</em>
 </p>
 
 ## Awards
