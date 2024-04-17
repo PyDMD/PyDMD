@@ -47,8 +47,8 @@
 ## Table of contents
 * [Description](#description)
 * [Dependencies and installation](#dependencies-and-installation)
+* [Quickstart guide](#quickstart-guide)
 * [Examples and Tutorials](#examples-and-tutorials)
-* [Using PyDMD](#using-pydmd)
 * [Awards](#awards)
 * [References](#references)
 * [Developers and contributors](#developers-and-contributors)
@@ -91,6 +91,54 @@ and then install the package in [development mode](https://setuptools.pypa.io/en
 ### Dependencies
 The core features of **PyDMD** depend on `numpy` and `scipy`. In order to use the plotting functionalities you will also need `matplotlib`.
 
+## Quickstart Guide
+To perform DMD, simply begin by initializing a PyDMD module that implements your DMD method of choice. Models may then be fitted by calling the `fit()` method and passing in the necessary data. This step performs the DMD algorithm, after which users may use PyDMD plotting tools in order to visualize their results.
+
+```python3
+from pydmd import DMD
+from pydmd.plotter import plot_summary
+
+# Build an exact DMD model with 15 spatiotemporal modes.
+dmd = DMD(svd_rank=15)
+
+# Fit the DMD model.
+# X = (n, m) numpy array of time-varying snapshot data.
+dmd.fit(X)
+
+# Plot a summary of the key spatiotemporal modes.
+plot_summary(dmd)
+```
+
+PyDMD modules can also be wrapped with data preprocessors if desired. These wrappers will preprocess the data and postprocess data reconstructions automatically.
+```python3
+from pydmd.preprocessing import zero_mean_preprocessing
+
+# Build and fit an exact DMD model with data centering.
+centered_dmd = zero_mean_preprocessing(DMD(svd_rank=15))
+centered_dmd.fit(X)
+```
+
+Users may also build highly complex DMD models with PyDMD. Below is an example of how one might build and fit a customized Optimized DMD model with bagging, eigenvalue constraints, and custom variable projection arguments.
+```python3
+from pydmd import BOPDMD
+
+# Build a bagging, optimized DMD (BOP-DMD) model.
+bopdmd = BOPDMD(
+    svd_rank=15,                                  # Rank of the DMD fit.
+    num_trials=100,                               # Number of bagging trials to perform.
+    trial_size=0.5,                               # Use 50% of the total number of snapshots per trial.
+    eig_constraints={"imag", "conjugate_pairs"},  # Eigenvalues must be imaginary and conjugate pairs.
+    varpro_opts_dict={"tol":0.2, "verbose":True}, # Set convergence tolerance and use verbose updates.
+)
+
+# Fit the BOP-DMD model.
+# X = (n, m) numpy array of time-varying snapshot data
+# t = (m,) numpy array of times of data collection
+bopdmd.fit(X, t)
+```
+
+Note that modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to our [module documentation](https://pydmd.github.io/PyDMD/code.html), [plotting tool documentation](https://pydmd.github.io/PyDMD/plotter.html), and to our module-specific [tutorials](tutorials/README.md) for more information.
+
 ## Examples and Tutorials
 You can find useful tutorials on how to use the package in the [tutorials](tutorials/README.md) folder.
 
@@ -104,31 +152,6 @@ Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/t
 <img src="readme/dmd-example.gif" alt></br>
 <em>The system evolution reconstructed with dynamic mode decomposition</em>
 </p>
-
-## Using PyDMD
-To perform DMD, simply begin by initializing a PyDMD module that implements your DMD method of choice. Here, we demonstrate how a user might build a customized BOP-DMD model. Models may then be fitted by calling the `fit()` method and passing in the necessary data. This step performs the DMD algorithm, after which users may use PyDMD plotting tools in order to visualize their results.
-```python3
-from pydmd import BOPDMD
-from pydmd.plotter import plot_summary
-
-# Build a bagging, optimized DMD (BOP-DMD) model.
-dmd = BOPDMD(
-    svd_rank=15,  # rank of the DMD fit
-    num_trials=100,  # number of bagging trials to perform
-    trial_size=0.5,  # use 50% of the total number of snapshots per trial
-    eig_constraints={"imag", "conjugate_pairs"},  # constrain the eigenvalue structure
-    varpro_opts_dict={"tol":0.2, "verbose":True},  # set variable projection parameters
-)
-
-# Fit the DMD model.
-# X = (n, m) numpy array of time-varying snapshot data
-# t = (m,) numpy array of times of data collection
-dmd.fit(X, t)
-
-# Display a summary of the DMD results.
-plot_summary(dmd)
-```
-Note that modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to module documentation, plotting tool documentation, and to our module-specific [tutorials](tutorials/README.md) for more information.
 
 For users who are unsure of which DMD method is best for them, we provide the following flow chart, which outlines how one might choose an appropriate DMD variant based on specific problem types or data sets.
 
