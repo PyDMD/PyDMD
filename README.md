@@ -175,7 +175,7 @@ First prize winner in **DSWeb 2019 Contest** _Tutorials on Dynamical Systems Sof
 
 ## Citing PyDMD
 When citing PyDMD, please cite both of the following references:
-* Demo, Tezzele, Rozza. *PyDMD: Python Dynamic Mode Decomposition*. Journal of Open Source Software, 2018. [[DOI](https://doi.org/10.21105/joss.00530)]
+* Demo, Tezzele, Rozza. *PyDMD: Python Dynamic Mode Decomposition*. Journal of Open Source Software, 2018. [[DOI](https://doi.org/10.21105/joss.00530)][[bibitem](readme/refs/Demo2018)]
 * Ichinaga, Andreuzzi, Demo, Tezzele, Lapo, Rozza, Brunton, Kutz. *PyDMD: A Python package for robust dynamic mode decomposition*. arXiv preprint, 2024. [[arXiv](https://doi.org/10.48550/arXiv.2402.07463)]
 
 ## References
@@ -209,7 +209,7 @@ To implement the various versions of the DMD algorithm we follow these works:
 * **LANDO:** Baddoo, Herrmann, McKeon, Brunton. *Kernel learning for robust dynamic mode decomposition: linear and nonlinear disambiguation optimization*. Proceedings of the Royal Society A, 2022. [[DOI](https://doi.org/10.1098/rspa.2021.0830)] [[bibitem](readme/refs/Baddoo2022.bib)].
 * **DMD with Centering:** Hirsh, Harris, Kutz, Brunton. *Centering data improves the dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2020. [[DOI](https://doi.org/10.1137/19M1289881)] [[bibitem](readme/refs/Hirsh2020.bib)]
 
-### Implementation Tools
+### General Implementation Tools
 * Gavish, Donoho. *The optimal hard threshold for singular values is 4/sqrt(3)*. IEEE Transactions on Information Theory, 2014. [[DOI](https://doi.org/10.1109/TIT.2014.2323359)] [[bibitem](readme/refs/Gavish2014.bib)].
 * Matsumoto, Indinger. *On-the-fly algorithm for dynamic mode decomposition using incremental singular value decomposition and total least squares*. 2017. [[arXiv](https://arxiv.org/abs/1703.11004)] [[bibitem](readme/refs/Matsumoto2017.bib)].
 
