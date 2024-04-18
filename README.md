@@ -50,6 +50,7 @@
 * [Quickstart guide](#quickstart-guide)
 * [Examples and Tutorials](#examples-and-tutorials)
 * [Awards](#awards)
+* [Citing PyDMD](#citing-pydmd)
 * [References](#references)
 * [Developers and contributors](#developers-and-contributors)
 * [Funding](#funding)
@@ -172,12 +173,19 @@ Also provided below is an example output of the `plot_summary()` function when g
 
 First prize winner in **DSWeb 2019 Contest** _Tutorials on Dynamical Systems Software_ (Junior Faculty Category). You can read the winner tutorial (PDF format) in the [tutorials](tutorials/tutorial_dsweb.pdf) folder.
 
+## Citing PyDMD
+When citing PyDMD, please cite both of the following references:
+* Demo, Tezzele, Rozza. *PyDMD: Python Dynamic Mode Decomposition*. Journal of Open Source Software, 2018. [[DOI](https://doi.org/10.21105/joss.00530)]
+* Ichinaga, Andreuzzi, Demo, Tezzele, Lapo, Rozza, Brunton, Kutz. *PyDMD: A Python package for robust dynamic mode decomposition*. arXiv preprint, 2024. [[arXiv](https://doi.org/10.48550/arXiv.2402.07463)]
+
 ## References
 To implement the various versions of the DMD algorithm we follow these works:
 
 ### General DMD References
 * Kutz, Brunton, Brunton, Proctor. *Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems*. SIAM Other Titles in Applied Mathematics, 2016. [[DOI](https://doi.org/10.1137/1.9781611974508)] [[bibitem](readme/refs/Kutz2016_1.bib)].
-* Brunton, Budišić, Kaiser, Kutz. *Modern Koopman Theory for Dynamical Systems*. SIAM Review, 2022. [[DOI](https://doi.org/10.1137/21M1401243)] [[bibitem](readme/refs/Brunton2022.bib)].
+* Schmid. *Dynamic mode decomposition of numerical and experimental data*. Journal of Fluid Mechanics, 2010. [[DOI](https://doi.org/10.1017/S0022112010001217)][[bibitem](readme/refs/Schmid2010)]
+* Tu, Rowley, Luchtenburg, Brunton, Kutz. *On Dynamic Mode Decomposition: Theory and Applications*. Journal of Computational Dynamics, 2014. [[DOI](https://doi.org/10.3934/jcd.2014.1.391)][[bibitem](readme/refs/Tu2014.bib)]
+* Schmid. *Dynamic mode decomposition and its variants*. Annual Review of Fluid Mechanics, 2022. [[DOI](https://doi.org/10.1146/annurev-fluid-030121-015835)][[bibitem](readme/refs/Schmid2022)]
 
 ### DMD Variants: Noise-robust Methods
 * **Forward-backward DMD:** Dawson, Hemati, Williams, Rowley. *Characterizing and correcting for the effect of sensor noise in the dynamic mode decomposition*. Experiments in Fluids, 2016. [[DOI](https://doi.org/10.1007/s00348-016-2127-7)] [[bibitem](readme/refs/Dawson2016.bib)].
@@ -199,11 +207,11 @@ To implement the various versions of the DMD algorithm we follow these works:
 * **Parametric DMD:** Andreuzzi, Demo, Rozza. *A dynamic mode decomposition extension for the forecasting of parametric dynamical systems*. SIAM Journal on Applied Dynamical Systems, 2023.  [[DOI](https://doi.org/10.1137/22M1481658)] [[bibitem](readme/refs/Andreuzzi2021.bib)].
 * **Extended DMD:** Williams, Rowley, Kevrekidis. *A kernel-based method for data-driven koopman spectral analysis*. Journal of Computational Dynamics, 2015. [[DOI](https://doi.org/10.3934/jcd.2015005)] [[bibitem](readme/refs/Williams2015.bib)].
 * **LANDO:** Baddoo, Herrmann, McKeon, Brunton. *Kernel learning for robust dynamic mode decomposition: linear and nonlinear disambiguation optimization*. Proceedings of the Royal Society A, 2022. [[DOI](https://doi.org/10.1098/rspa.2021.0830)] [[bibitem](readme/refs/Baddoo2022.bib)].
+* **DMD with Centering:** Hirsh, Harris, Kutz, Brunton. *Centering data improves the dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2020. [[DOI](https://doi.org/10.1137/19M1289881)] [[bibitem](readme/refs/Hirsh2020.bib)]
 
-### Implementation Tools and Preprocessing
+### Implementation Tools
 * Gavish, Donoho. *The optimal hard threshold for singular values is 4/sqrt(3)*. IEEE Transactions on Information Theory, 2014. [[DOI](https://doi.org/10.1109/TIT.2014.2323359)] [[bibitem](readme/refs/Gavish2014.bib)].
 * Matsumoto, Indinger. *On-the-fly algorithm for dynamic mode decomposition using incremental singular value decomposition and total least squares*. 2017. [[arXiv](https://arxiv.org/abs/1703.11004)] [[bibitem](readme/refs/Matsumoto2017.bib)].
-* Hirsh, Harris, Kutz, Brunton. *Centering data improves the dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2020. [[DOI](https://doi.org/10.1137/19M1289881)] [[bibitem](readme/refs/Hirsh2020.bib)]
 
 ### Recent works using PyDMD
 You can find a list of the scientific works using **PyDMD** [here](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=5544023489671534143).
