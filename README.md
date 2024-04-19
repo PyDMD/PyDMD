@@ -138,7 +138,7 @@ bopdmd = BOPDMD(
 bopdmd.fit(X, t)
 ```
 
-Provided below is an example output of the `plot_summary()` function when given a DMD model fitted to mean-centered flow past a cylinder data available [here](dmdbook.com/DATA.zip). A rank-12 exact DMD model was used to generate this summary. Notice how eigenvalues, modes, and dynamics are color-coded to indicate associations, and that eigenvalue marker sizes indicate spatiotemporal mode amplitudes or importance. Plotter documentation can be found [here](https://pydmd.github.io/PyDMD/plotter.html).
+Provided below is an example output of the `plot_summary()` function when given a DMD model fitted to mean-centered flow past a cylinder data available at dmdbook.com/DATA.zip. A rank-12 exact DMD model was used to generate this summary. Notice how eigenvalues, modes, and dynamics are color-coded to indicate associations, and that eigenvalue marker sizes indicate spatiotemporal mode amplitudes or importance. Plotter documentation can be found [here](https://pydmd.github.io/PyDMD/plotter.html).
 <p align="center">
   <img src="readme/summary-example.png" alt></br>
   <em>Sample output of the plot_summary function.</em>
