@@ -72,6 +72,9 @@ class BOPDMDOperator(DMDOperator):
         function that will be applied to the computed eigenvalues at each step
         of the variable projection routine.
     :type eig_constraints: set(str) or function
+    :param mode_prox: Optional proximal operator function to apply to the DMD
+        modes at every iteration of variable projection routine.
+    :type mode_prox: function
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Default is -1, no stopping condition.
     :type bag_maxfail: int
@@ -124,6 +127,7 @@ class BOPDMDOperator(DMDOperator):
         trial_size,
         eig_sort,
         eig_constraints,
+        mode_prox,
         bag_maxfail,
         init_lambda=1.0,
         maxlam=52,
@@ -143,6 +147,7 @@ class BOPDMDOperator(DMDOperator):
         self._trial_size = trial_size
         self._eig_sort = eig_sort
         self._eig_constraints = eig_constraints
+        self._mode_prox = mode_prox
         self._bag_maxfail = bag_maxfail
         self._varpro_opts = [
             init_lambda,
@@ -497,9 +502,15 @@ class BOPDMDOperator(DMDOperator):
             which is used as an error indicator.
             """
             Phi_matrix = Phi(alpha, t)
+
+            # Update B matrix.
             B = np.linalg.lstsq(Phi_matrix, H, rcond=None)[0]
+            if self._mode_prox is not None:
+                B = self._mode_prox(B)
+
             residual = H - Phi_matrix.dot(B)
             error = 0.5 * np.linalg.norm(residual) ** 2
+
             return B, residual, error
 
         # Define M, IS, and IA.
@@ -918,6 +929,9 @@ class BOPDMD(DMDBase):
         function that will be applied to the computed eigenvalues at each step
         of the variable projection routine.
     :type eig_constraints: set(str) or function
+    :param mode_prox: Optional proximal operator function to apply to the DMD
+        modes at every iteration of variable projection routine.
+    :type mode_prox: function
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Default is -1, no stopping condition.
     :type bag_maxfail: int
@@ -942,6 +956,7 @@ class BOPDMD(DMDBase):
         trial_size=0.6,
         eig_sort="auto",
         eig_constraints=None,
+        mode_prox=None,
         bag_maxfail=-1,
         varpro_opts_dict=None,
     ):
@@ -978,6 +993,7 @@ class BOPDMD(DMDBase):
             raise TypeError("eig_constraints must be a set or a function.")
         self._check_eig_constraints(eig_constraints)
         self._eig_constraints = eig_constraints
+        self._mode_prox = mode_prox
 
         self._snapshots_holder = None
         self._time = None
@@ -1330,6 +1346,7 @@ class BOPDMD(DMDBase):
             self._trial_size,
             self._eig_sort,
             self._eig_constraints,
+            self._mode_prox,
             self._bag_maxfail,
             **self._varpro_opts_dict,
         )
