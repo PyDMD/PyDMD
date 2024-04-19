@@ -72,10 +72,6 @@ class BOPDMDOperator(DMDOperator):
         function that will be applied to the computed eigenvalues at each step
         of the variable projection routine.
     :type eig_constraints: set(str) or function
-    :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
-        at which to produce a warning message for the user. Default is 100.
-        Use arguments less than or equal to zero for no warning condition.
-    :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Default is -1, no stopping condition.
     :type bag_maxfail: int
@@ -128,7 +124,6 @@ class BOPDMDOperator(DMDOperator):
         trial_size,
         eig_sort,
         eig_constraints,
-        bag_warning,
         bag_maxfail,
         init_lambda=1.0,
         maxlam=52,
@@ -148,7 +143,6 @@ class BOPDMDOperator(DMDOperator):
         self._trial_size = trial_size
         self._eig_sort = eig_sort
         self._eig_constraints = eig_constraints
-        self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
         self._varpro_opts = [
             init_lambda,
@@ -815,14 +809,14 @@ class BOPDMDOperator(DMDOperator):
 
             if (
                 not runtime_warning_given
-                and num_consecutive_fails == self._bag_warning
+                and num_consecutive_fails == 100
             ):
                 msg = (
-                    "{} many trials without convergence. "
+                    "100 trials without convergence. "
                     "Consider loosening the tol requirements "
                     "of the variable projection routine."
                 )
-                print(msg.format(num_consecutive_fails))
+                print(msg)
                 runtime_warning_given = True
 
             elif num_consecutive_fails == self._bag_maxfail:
@@ -924,10 +918,6 @@ class BOPDMD(DMDBase):
         function that will be applied to the computed eigenvalues at each step
         of the variable projection routine.
     :type eig_constraints: set(str) or function
-    :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
-        at which to produce a warning message for the user. Default is 100.
-        Use arguments less than or equal to zero for no warning condition.
-    :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Default is -1, no stopping condition.
     :type bag_maxfail: int
@@ -952,7 +942,6 @@ class BOPDMD(DMDBase):
         trial_size=0.6,
         eig_sort="auto",
         eig_constraints=None,
-        bag_warning=100,
         bag_maxfail=-1,
         varpro_opts_dict=None,
     ):
@@ -965,14 +954,13 @@ class BOPDMD(DMDBase):
         self._trial_size = trial_size
         self._eig_sort = eig_sort
 
-        if not isinstance(bag_warning, int) or not isinstance(bag_maxfail, int):
+        if not isinstance(bag_maxfail, int):
             msg = (
-                "bag_warning and bag_maxfail must be integers. "
+                "bag_maxfail must be an integer. "
                 "Please use a non-positive integer if no warning "
                 "or stopping condition is desired."
             )
             raise TypeError(msg)
-        self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
 
         if varpro_opts_dict is None:
@@ -1342,7 +1330,6 @@ class BOPDMD(DMDBase):
             self._trial_size,
             self._eig_sort,
             self._eig_constraints,
-            self._bag_warning,
             self._bag_maxfail,
             **self._varpro_opts_dict,
         )
