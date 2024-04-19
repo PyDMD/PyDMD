@@ -111,6 +111,7 @@ plot_summary(dmd)
 
 PyDMD modules can also be wrapped with data preprocessors if desired. These wrappers will preprocess the data and postprocess data reconstructions automatically.
 ```python3
+from pydmd import DMD
 from pydmd.preprocessing import zero_mean_preprocessing
 
 # Build and fit an exact DMD model with data centering.
@@ -129,7 +130,7 @@ bopdmd = BOPDMD(
     num_trials=100,                               # Number of bagging trials to perform.
     trial_size=0.5,                               # Use 50% of the total number of snapshots per trial.
     eig_constraints={"imag", "conjugate_pairs"},  # Eigenvalues must be imaginary and conjugate pairs.
-    varpro_opts_dict={"verbose":True},            # Use verbose variable projection updates.
+    varpro_opts_dict={"tol":0.2, "verbose":True}, # Set convergence tolerance and use verbose updates.
 )
 
 # Fit the BOP-DMD model.
@@ -138,7 +139,22 @@ bopdmd = BOPDMD(
 bopdmd.fit(X, t)
 ```
 
-Provided below is an example output of the `plot_summary()` function when given a DMD model fitted to mean-centered flow past a cylinder data available at dmdbook.com/DATA.zip. A rank-12 exact DMD model was used to generate this summary. Notice how eigenvalues, modes, and dynamics are color-coded to indicate associations, and that eigenvalue marker sizes indicate spatiotemporal mode amplitudes or importance. Plotter documentation can be found [here](https://pydmd.github.io/PyDMD/plotter.html).
+Provided below is an example output and call of the `plot_summary()` function when given a DMD model fitted to mean-centered flow past a cylinder data available at <ins>dmdbook.com/DATA.zip</ins>. A rank-12 exact DMD model was used to generate this summary. Notice how eigenvalues, modes, and dynamics are color-coded to indicate associations, and that eigenvalue marker sizes indicate spatiotemporal mode amplitudes or importance. Plotter documentation can be found [here](https://pydmd.github.io/PyDMD/plotter.html).
+```python3
+from pydmd.plotter import plot_summary
+
+plot_summary(
+    dmd, # <-- Fitted PyDMD model. Can be DMD, BOPDMD, etc.
+    figsize=(12, 7),
+    index_modes=(0, 2, 4),
+    snapshots_shape=(449, 199),
+    order="F",
+    mode_cmap="seismic",
+    dynamics_color="k",
+    flip_continuous_axes=True,
+    max_sval_plot=30,
+)
+```
 <p align="center">
   <img src="readme/summary-example.png" alt></br>
   <em>Sample output of the plot_summary function.</em>
