@@ -123,7 +123,7 @@ Users may also build highly complex DMD models with PyDMD. Below is an example o
 ```python3
 from pydmd import BOPDMD
 
-# Build a bagging, optimized DMD (BOP-DMD) model.
+# Build a Bagging, Optimized DMD (BOP-DMD) model.
 # For Optimized DMD (without bagging), use BOPDMD(svd_rank=12, num_trials=0).
 bopdmd = BOPDMD(
     svd_rank=12,                                  # Rank of the DMD fit.
