@@ -98,8 +98,8 @@ To perform DMD, simply begin by initializing a PyDMD module that implements your
 from pydmd import DMD
 from pydmd.plotter import plot_summary
 
-# Build an exact DMD model with 15 spatiotemporal modes.
-dmd = DMD(svd_rank=15)
+# Build an exact DMD model with 12 spatiotemporal modes.
+dmd = DMD(svd_rank=12)
 
 # Fit the DMD model.
 # X = (n, m) numpy array of time-varying snapshot data.
@@ -115,7 +115,7 @@ from pydmd import DMD
 from pydmd.preprocessing import zero_mean_preprocessing
 
 # Build and fit an exact DMD model with data centering.
-centered_dmd = zero_mean_preprocessing(DMD(svd_rank=15))
+centered_dmd = zero_mean_preprocessing(DMD(svd_rank=12))
 centered_dmd.fit(X)
 ```
 
@@ -124,9 +124,9 @@ Users may also build highly complex DMD models with PyDMD. Below is an example o
 from pydmd import BOPDMD
 
 # Build a bagging, optimized DMD (BOP-DMD) model.
-# For Optimized DMD (without bagging), use BOPDMD(svd_rank=15, num_trials=0).
+# For Optimized DMD (without bagging), use BOPDMD(svd_rank=12, num_trials=0).
 bopdmd = BOPDMD(
-    svd_rank=15,                                  # Rank of the DMD fit.
+    svd_rank=12,                                  # Rank of the DMD fit.
     num_trials=100,                               # Number of bagging trials to perform.
     trial_size=0.5,                               # Use 50% of the total number of snapshots per trial.
     eig_constraints={"imag", "conjugate_pairs"},  # Eigenvalues must be imaginary and conjugate pairs.
