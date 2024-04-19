@@ -48,7 +48,6 @@
 * [Description](#description)
 * [Dependencies and installation](#dependencies-and-installation)
 * [Quickstart guide](#quickstart-guide)
-* [Examples and Tutorials](#examples-and-tutorials)
 * [Awards](#awards)
 * [Citing PyDMD](#citing-pydmd)
 * [References](#references)
@@ -130,7 +129,7 @@ bopdmd = BOPDMD(
     num_trials=100,                               # Number of bagging trials to perform.
     trial_size=0.5,                               # Use 50% of the total number of snapshots per trial.
     eig_constraints={"imag", "conjugate_pairs"},  # Eigenvalues must be imaginary and conjugate pairs.
-    varpro_opts_dict={"tol":0.2, "verbose":True}, # Set convergence tolerance and use verbose updates.
+    varpro_opts_dict={"verbose":True},            # Use verbose variable projection updates.
 )
 
 # Fit the BOP-DMD model.
@@ -139,34 +138,18 @@ bopdmd = BOPDMD(
 bopdmd.fit(X, t)
 ```
 
-Note that modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to our [module documentation](https://pydmd.github.io/PyDMD/code.html), [plotting tool documentation](https://pydmd.github.io/PyDMD/plotter.html), and to our module-specific [tutorials](tutorials/README.md) for more information.
+Provided below is an example output of the `plot_summary()` function when given a DMD model fitted to mean-centered flow past a cylinder data available [here](dmdbook.com/DATA.zip). A rank-12 exact DMD model was used to generate this summary. Notice how eigenvalues, modes, and dynamics are color-coded to indicate associations, and that eigenvalue marker sizes indicate spatiotemporal mode amplitudes or importance. Plotter documentation can be found [here](https://pydmd.github.io/PyDMD/plotter.html).
+<p align="center">
+  <img src="readme/summary-example.png" alt></br>
+  <em>Sample output of the plot_summary function.</em>
+</p>
+
+PyDMD modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to our [documentation](https://pydmd.github.io/PyDMD/code.html), and to our module-specific [tutorials](tutorials/README.md) for more examples and information.
 
 For users who are unsure of which DMD method is best for them, we provide the following flow chart, which outlines how one might choose an appropriate DMD variant based on specific problem types or data sets.
 
 <p align="center">
     <img src="readme/pydmd_guide.svg" width="1000" />
-</p>
-
-## Examples and Tutorials
-You can find useful tutorials on how to use the package in the [tutorials](tutorials/README.md) folder.
-
-Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/tutorial-2-adv-dmd.ipynb)): we collect few snapshots from a toy system with some noise and reconstruct the entire system evolution.
-
-Also provided below is an example output of the `plot_summary()` function when given a DMD model fitted to this data set. A rank-2 Optimized DMD model was used to generate the summary below. Note that the eigenvalues, modes, and dynamics are color-coded to indicate associations, and that eigenvalue marker sizes indicate spatiotemporal mode amplitudes or importance.
-
-<p align="center">
-<img src="readme/dmd-example.png" alt>
-<em>The original snapshots used as input for the dynamic mode decomposition</em>
-</p>
-
-<p align="center">
-<img src="readme/dmd-example.gif" alt></br>
-<em>The system evolution reconstructed with dynamic mode decomposition</em>
-</p>
-
-<p align="center">
-<img src="readme/summary-example.png" alt></br>
-<em>Sample output of the plot_summary function.</em>
 </p>
 
 ## Awards
