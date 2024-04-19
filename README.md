@@ -139,11 +139,11 @@ bopdmd = BOPDMD(
 bopdmd.fit(X, t)
 ```
 
-PyDMD modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to our [documentation](https://pydmd.github.io/PyDMD/code.html), and to our module-specific [tutorials](tutorials/README.md) for more examples and information.
+PyDMD modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to our [documentation](https://pydmd.github.io/PyDMD/code.html), as well as to our module-specific [tutorials](tutorials/README.md) for more examples and information.
 
 Also provided below is an example call to the `plot_summary()` function when given a DMD model fitted to mean-centered flow past a cylinder data available at <ins>dmdbook.com/DATA.zip</ins>. A rank-12 exact DMD model was used to generate this figure. Eigenvalues, modes, and dynamics are color-coded to indicate associations. Eigenvalue marker sizes also indicate spatiotemporal mode amplitudes or importance.
 
-Plotter documentation can be found [here](https://pydmd.github.io/PyDMD/plotter.html).
+Plotting tool documentation can be found [here](https://pydmd.github.io/PyDMD/plotter.html).
 ```python3
 from pydmd.plotter import plot_summary
 
