@@ -9,11 +9,33 @@
 #
 # In this tutorial we will indeed create from scratch a new version of the original DMD; such extension will be totally useless from a scientific perspective, the only purpose is showing the suggested steps to implement new variants inside **PyDMD**.
 
+# ## The Back-end API
+
 # The necessary bricks for building the new DMD version are:
 #
-# - [`DMDBase`](https://mathlab.github.io/PyDMD/dmdbase.html), the actual backbone of all the different implemented versions;
-# - `DMDTimeDict`, the class that manages the time window;
-# - `DMDOperator`, the class that manages the so-called DMD operator;
+# - [`DMDBase`](https://pydmd.github.io/PyDMD/dmdbase.html), the actual backbone of all the different implemented versions;
+# - [`DMDTimeDict`](https://github.com/PyDMD/PyDMD/blob/7ac9f3fa855e9a5e7008daad9906eaa6e59ba80a/pydmd/dmdbase.py#L759), the class that manages the time window;
+# - [`DMDOperator`](https://pydmd.github.io/PyDMD/dmdoperator.html), the class that manages the so-called DMD operator;
+#
+# The following schematic outlines the general structure of every `DMDBase` module.
+# ![](PyDMD-structure.png)
+# In general, all `PyDMD` modules should be capable of the following tasks:
+# 1) Accepting and storing DMD algorithm parameters.
+# 2) Performing DMD given snapshot data $\mathbf{X}$ via the `fit` method, which often does the following:
+#     - prepares and stores the input data,
+#     - sets the `DMDTimeDict`s,
+#     - computes the DMD operator and its eigendecomposition, and
+#         - (this is done by invoking the `DMDOperator`'s `compute_operator` function)
+#     - computes the DMD amplitudes using the computed operator.
+# 3) Fetching and utilizing DMD results, such as:
+#     - the reduced DMD operator $\tilde{\mathbf{A}}$
+#     - the spatial modes $\mathbf{\Phi}$ (the eigenvectors of $\mathbf{A}$)
+#     - the temporal frequencies $\mathbf{\Lambda}$ (the eigenvalues of $\mathbf{A}$)
+#     - the spatiotemporal mode amplitudes $\mathbf{b}$
+#
+# Hence different modules implement different DMD variants, where any number of these steps may be performed differently.
+
+# ## Building a New PyDMD Module
 #
 # We start the new module by importing all these classes and the usual math environment (`matplotlib`+`numpy`).
 
