@@ -47,9 +47,9 @@
 ## Table of contents
 * [Description](#description)
 * [Dependencies and installation](#dependencies-and-installation)
-* [Examples and Tutorials](#examples-and-tutorials)
-* [Using PyDMD](#using-pydmd)
+* [Quickstart guide](#quickstart-guide)
 * [Awards](#awards)
+* [Citing PyDMD](#citing-pydmd)
 * [References](#references)
 * [Developers and contributors](#developers-and-contributors)
 * [Funding](#funding)
@@ -91,44 +91,78 @@ and then install the package in [development mode](https://setuptools.pypa.io/en
 ### Dependencies
 The core features of **PyDMD** depend on `numpy` and `scipy`. In order to use the plotting functionalities you will also need `matplotlib`.
 
-## Examples and Tutorials
-You can find useful tutorials on how to use the package in the [tutorials](tutorials/README.md) folder.
+## Quickstart Guide
+To perform DMD, simply begin by initializing a PyDMD module that implements your DMD method of choice. Models may then be fitted by calling the `fit()` method and passing in the necessary data. This step performs the DMD algorithm, after which users may use PyDMD plotting tools in order to visualize their results.
 
-Here we show a simple application (taken from [tutorial 2](tutorials/tutorial2/tutorial-2-adv-dmd.ipynb)): we collect few snapshots from a toy system with some noise and reconstruct the entire system evolution.
-<p align="center">
-<img src="readme/dmd-example.png" alt>
-<em>The original snapshots used as input for the dynamic mode decomposition</em>
-</p>
-
-<p align="center">
-<img src="readme/dmd-example.gif" alt></br>
-<em>The system evolution reconstructed with dynamic mode decomposition</em>
-</p>
-
-## Using PyDMD
-To perform DMD, simply begin by initializing a PyDMD module that implements your DMD method of choice. Here, we demonstrate how a user might build a customized BOP-DMD model. Models may then be fitted by calling the `fit()` method and passing in the necessary data. This step performs the DMD algorithm, after which users may use PyDMD plotting tools in order to visualize their results.
 ```python3
-from pydmd import BOPDMD
+from pydmd import DMD
 from pydmd.plotter import plot_summary
 
-# Build a bagging, optimized DMD (BOP-DMD) model.
-dmd = BOPDMD(
-    svd_rank=15,  # rank of the DMD fit
-    num_trials=100,  # number of bagging trials to perform
-    trial_size=0.5,  # use 50% of the total number of snapshots per trial
-    eig_constraints={"imag", "conjugate_pairs"},  # constrain the eigenvalue structure
-    varpro_opts_dict={"tol":0.2, "verbose":True},  # set variable projection parameters
-)
+# Build an exact DMD model with 12 spatiotemporal modes.
+dmd = DMD(svd_rank=12)
 
 # Fit the DMD model.
-# X = (n, m) numpy array of time-varying snapshot data
-# t = (m,) numpy array of times of data collection
-dmd.fit(X, t)
+# X = (n, m) numpy array of time-varying snapshot data.
+dmd.fit(X)
 
-# Display a summary of the DMD results.
+# Plot a summary of the key spatiotemporal modes.
 plot_summary(dmd)
 ```
-Note that modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to module documentation, plotting tool documentation, and to our module-specific [tutorials](tutorials/README.md) for more information.
+
+PyDMD modules can also be wrapped with data preprocessors if desired. These wrappers will preprocess the data and postprocess data reconstructions automatically.
+```python3
+from pydmd import DMD
+from pydmd.preprocessing import zero_mean_preprocessing
+
+# Build and fit an exact DMD model with data centering.
+centered_dmd = zero_mean_preprocessing(DMD(svd_rank=12))
+centered_dmd.fit(X)
+```
+
+Users may also build highly complex DMD models with PyDMD. Below is an example of how one might build and fit a customized Optimized DMD model with bagging, eigenvalue constraints, and custom variable projection arguments.
+```python3
+from pydmd import BOPDMD
+
+# Build a Bagging, Optimized DMD (BOP-DMD) model.
+# For Optimized DMD (without bagging), use BOPDMD(svd_rank=12, num_trials=0).
+bopdmd = BOPDMD(
+    svd_rank=12,                                  # Rank of the DMD fit.
+    num_trials=100,                               # Number of bagging trials to perform.
+    trial_size=0.5,                               # Use 50% of the total number of snapshots per trial.
+    eig_constraints={"imag", "conjugate_pairs"},  # Eigenvalues must be imaginary and conjugate pairs.
+    varpro_opts_dict={"tol":0.2, "verbose":True}, # Set convergence tolerance and use verbose updates.
+)
+
+# Fit the BOP-DMD model.
+# X = (n, m) numpy array of time-varying snapshot data
+# t = (m,) numpy array of times of data collection
+bopdmd.fit(X, t)
+```
+
+PyDMD modules and functions may be parameterized by a variety of inputs for added customization, so we generally recommend that new users refer to our [documentation](https://pydmd.github.io/PyDMD/code.html), as well as to our module-specific [tutorials](tutorials/README.md) for more examples and information.
+
+Also provided below is an example call to the `plot_summary()` function when given a DMD model fitted to mean-centered flow past a cylinder data available at <ins>dmdbook.com/DATA.zip</ins>. A rank-12 exact DMD model was used to generate this figure. Eigenvalues, modes, and dynamics are color-coded to indicate associations. Eigenvalue marker sizes also indicate spatiotemporal mode amplitudes or importance.
+
+Plotting tool documentation can be found [here](https://pydmd.github.io/PyDMD/plotter.html).
+```python3
+from pydmd.plotter import plot_summary
+
+plot_summary(
+    dmd, # <-- Fitted PyDMD model. Can be DMD, BOPDMD, etc.
+    figsize=(12, 7),
+    index_modes=(0, 2, 4),
+    snapshots_shape=(449, 199),
+    order="F",
+    mode_cmap="seismic",
+    dynamics_color="k",
+    flip_continuous_axes=True,
+    max_sval_plot=30,
+)
+```
+<p align="center">
+  <img src="readme/summary-example.png" alt></br>
+  <em>Sample output of the plot_summary function.</em>
+</p>
 
 For users who are unsure of which DMD method is best for them, we provide the following flow chart, which outlines how one might choose an appropriate DMD variant based on specific problem types or data sets.
 
@@ -140,12 +174,19 @@ For users who are unsure of which DMD method is best for them, we provide the fo
 
 First prize winner in **DSWeb 2019 Contest** _Tutorials on Dynamical Systems Software_ (Junior Faculty Category). You can read the winner tutorial (PDF format) in the [tutorials](tutorials/tutorial_dsweb.pdf) folder.
 
+## Citing PyDMD
+When citing PyDMD, please cite both of the following references:
+* Demo, Tezzele, Rozza. *PyDMD: Python Dynamic Mode Decomposition*. Journal of Open Source Software, 2018. [[DOI](https://doi.org/10.21105/joss.00530)][[bibitem](readme/refs/Demo2018)]
+* Ichinaga, Andreuzzi, Demo, Tezzele, Lapo, Rozza, Brunton, Kutz. *PyDMD: A Python package for robust dynamic mode decomposition*. arXiv preprint, 2024. [[arXiv](https://doi.org/10.48550/arXiv.2402.07463)]
+
 ## References
 To implement the various versions of the DMD algorithm we follow these works:
 
 ### General DMD References
 * Kutz, Brunton, Brunton, Proctor. *Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems*. SIAM Other Titles in Applied Mathematics, 2016. [[DOI](https://doi.org/10.1137/1.9781611974508)] [[bibitem](readme/refs/Kutz2016_1.bib)].
-* Brunton, Budišić, Kaiser, Kutz. *Modern Koopman Theory for Dynamical Systems*. SIAM Review, 2022. [[DOI](https://doi.org/10.1137/21M1401243)] [[bibitem](readme/refs/Brunton2022.bib)].
+* Schmid. *Dynamic mode decomposition of numerical and experimental data*. Journal of Fluid Mechanics, 2010. [[DOI](https://doi.org/10.1017/S0022112010001217)][[bibitem](readme/refs/Schmid2010)]
+* Tu, Rowley, Luchtenburg, Brunton, Kutz. *On Dynamic Mode Decomposition: Theory and Applications*. Journal of Computational Dynamics, 2014. [[DOI](https://doi.org/10.3934/jcd.2014.1.391)][[bibitem](readme/refs/Tu2014.bib)]
+* Schmid. *Dynamic mode decomposition and its variants*. Annual Review of Fluid Mechanics, 2022. [[DOI](https://doi.org/10.1146/annurev-fluid-030121-015835)][[bibitem](readme/refs/Schmid2022)]
 
 ### DMD Variants: Noise-robust Methods
 * **Forward-backward DMD:** Dawson, Hemati, Williams, Rowley. *Characterizing and correcting for the effect of sensor noise in the dynamic mode decomposition*. Experiments in Fluids, 2016. [[DOI](https://doi.org/10.1007/s00348-016-2127-7)] [[bibitem](readme/refs/Dawson2016.bib)].
@@ -167,11 +208,11 @@ To implement the various versions of the DMD algorithm we follow these works:
 * **Parametric DMD:** Andreuzzi, Demo, Rozza. *A dynamic mode decomposition extension for the forecasting of parametric dynamical systems*. SIAM Journal on Applied Dynamical Systems, 2023.  [[DOI](https://doi.org/10.1137/22M1481658)] [[bibitem](readme/refs/Andreuzzi2021.bib)].
 * **Extended DMD:** Williams, Rowley, Kevrekidis. *A kernel-based method for data-driven koopman spectral analysis*. Journal of Computational Dynamics, 2015. [[DOI](https://doi.org/10.3934/jcd.2015005)] [[bibitem](readme/refs/Williams2015.bib)].
 * **LANDO:** Baddoo, Herrmann, McKeon, Brunton. *Kernel learning for robust dynamic mode decomposition: linear and nonlinear disambiguation optimization*. Proceedings of the Royal Society A, 2022. [[DOI](https://doi.org/10.1098/rspa.2021.0830)] [[bibitem](readme/refs/Baddoo2022.bib)].
+* **DMD with Centering:** Hirsh, Harris, Kutz, Brunton. *Centering data improves the dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2020. [[DOI](https://doi.org/10.1137/19M1289881)] [[bibitem](readme/refs/Hirsh2020.bib)]
 
-### Implementation Tools and Preprocessing
+### General Implementation Tools
 * Gavish, Donoho. *The optimal hard threshold for singular values is 4/sqrt(3)*. IEEE Transactions on Information Theory, 2014. [[DOI](https://doi.org/10.1109/TIT.2014.2323359)] [[bibitem](readme/refs/Gavish2014.bib)].
 * Matsumoto, Indinger. *On-the-fly algorithm for dynamic mode decomposition using incremental singular value decomposition and total least squares*. 2017. [[arXiv](https://arxiv.org/abs/1703.11004)] [[bibitem](readme/refs/Matsumoto2017.bib)].
-* Hirsh, Harris, Kutz, Brunton. *Centering data improves the dynamic mode decomposition*. SIAM Journal on Applied Dynamical Systems, 2020. [[DOI](https://doi.org/10.1137/19M1289881)] [[bibitem](readme/refs/Hirsh2020.bib)]
 
 ### Recent works using PyDMD
 You can find a list of the scientific works using **PyDMD** [here](https://scholar.google.com/scholar?oi=bibs&hl=en&cites=5544023489671534143).
