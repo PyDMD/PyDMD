@@ -634,7 +634,9 @@ class BOPDMDOperator(DMDOperator):
                     _lambda *= lamup
                     delta_0, alpha_0 = step(_lambda)
                     B_0 = compute_B(alpha_0)
-                    residual_0, objective_0, error_0 = compute_error(B_0, alpha_0)
+                    residual_0, objective_0, error_0 = compute_error(
+                        B_0, alpha_0
+                    )
 
                     if error_0 < error:
                         break
