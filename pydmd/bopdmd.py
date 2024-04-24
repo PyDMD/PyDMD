@@ -73,7 +73,7 @@ class BOPDMDOperator(DMDOperator):
         of the variable projection routine.
     :type eig_constraints: set(str) or function
     :param mode_prox: Optional proximal operator function to apply to the DMD
-        modes at every iteration of variable projection routine.
+        modes at every iteration of the variable projection routine.
     :type mode_prox: function
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Set this parameter to infinity for no
@@ -494,30 +494,10 @@ class BOPDMDOperator(DMDOperator):
         Computational Optimization and Applications 54.3 (2013): 579-593
         by Dianne P. O'Leary and Bert W. Rust.
         """
-
-        def compute_residual(alpha):
-            """
-            Helper function that, given alpha, and using H, t, Phi as they are
-            passed to the _variable_projection function, computes and returns
-            the matrix Phi(alpha,t), B from the expression H = Phi(alpha,t)B,
-            the residual H - Phi(alpha,t)B, and 0.5*norm(residual,'fro')^2,
-            which is used as an error indicator.
-            """
-            Phi_matrix = Phi(alpha, t)
-
-            # Update B matrix.
-            B = np.linalg.lstsq(Phi_matrix, H, rcond=None)[0]
-            if self._mode_prox is not None:
-                B = self._mode_prox(B)
-
-            residual = H - Phi_matrix.dot(B)
-            error = 0.5 * np.linalg.norm(residual) ** 2
-
-            return B, residual, error
-
         # Define M, IS, and IA.
         M, IS = H.shape
         IA = len(init_alpha)
+        tolrank = M * np.finfo(float).eps
 
         # Unpack all variable projection parameters stored in varpro_opts.
         (
@@ -532,12 +512,32 @@ class BOPDMDOperator(DMDOperator):
             verbose,
         ) = self._varpro_opts
 
+        def compute_error(B, alpha):
+            """
+            Compute the current residual and relative error.
+            """
+            residual = H - Phi(alpha, t).dot(B)
+            error = np.linalg.norm(residual, "fro") / np.linalg.norm(H, "fro")
+
+            return residual, error
+
+        def compute_B(alpha):
+            """
+            Update B for the current alpha.
+            """
+            # Compute B using least squares.
+            B = np.linalg.lstsq(Phi(alpha, t), H, rcond=None)[0]
+
+            # Apply proximal operator if given.
+            if self._mode_prox is not None:
+                B = self._mode_prox(B)
+
+            return B
+
         # Initialize values.
-        tolrank = M * np.finfo(float).eps
         _lambda = init_lambda
         alpha = self._push_eigenvalues(init_alpha)
-        B, residual, error = compute_residual(alpha)
-        relative_error = np.linalg.norm(residual) / np.linalg.norm(H)
+        B = compute_B(alpha)
         U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
         # Initialize termination flags.
@@ -549,6 +549,9 @@ class BOPDMDOperator(DMDOperator):
         djac_matrix = np.zeros((M * IS, IA), dtype="complex")
         rjac = np.zeros((2 * IA, IA), dtype="complex")
         scales = np.zeros(IA)
+
+        # Initialize iteration progress indicators.
+        residual, error = compute_error(B, alpha)
 
         for itr in range(maxiter):
             # Build Jacobian matrix, looping over alpha indices.
@@ -588,26 +591,26 @@ class BOPDMDOperator(DMDOperator):
                 (rhs_top[:IA], np.zeros(IA, dtype="complex")), axis=None
             )
 
-            def step(_lambda, rhs, scales_pvt, ij_pvt):
+            def step(_lambda, scales_pvt=scales_pvt, rhs=rhs, ij_pvt=ij_pvt):
                 """
-                Helper function that, given a step size _lambda and the current
-                right-hand side and pivots, computes and returns delta, the
-                amount in which we update alpha, and the updated alpha vector.
-                Note that this function uses rjac and alpha as they are defined
-                outside of this function.
+                Helper function that, when given a step size _lambda,
+                computes and returns the updated step and alpha vectors.
                 """
                 # Compute the step delta.
                 rjac[IA:] = _lambda * np.diag(scales_pvt)
                 delta = np.linalg.lstsq(rjac, rhs, rcond=None)[0]
                 delta = delta[ij_pvt]
+
                 # Compute the updated alpha vector.
                 alpha_updated = alpha.ravel() + delta.ravel()
                 alpha_updated = self._push_eigenvalues(alpha_updated)
+
                 return delta, alpha_updated
 
             # Take a step using our initial step size init_lambda.
-            delta_0, alpha_0 = step(_lambda, rhs, scales_pvt, ij_pvt)
-            B_0, residual_0, error_0 = compute_residual(alpha_0)
+            delta_0, alpha_0 = step(_lambda)
+            B_0 = compute_B(alpha_0)
+            residual_0, error_0 = compute_error(B_0, alpha_0)
 
             # Check actual improvement vs predicted improvement.
             actual_improvement = error - error_0
@@ -627,8 +630,9 @@ class BOPDMDOperator(DMDOperator):
                 # Increase lambda until something works.
                 for _ in range(maxlam):
                     _lambda *= lamup
-                    delta_0, alpha_0 = step(_lambda, rhs, scales_pvt, ij_pvt)
-                    B_0, residual_0, error_0 = compute_residual(alpha_0)
+                    delta_0, alpha_0 = step(_lambda)
+                    B_0 = compute_B(alpha_0)
+                    residual_0, error_0 = compute_error(B_0, alpha_0)
 
                     if error_0 < error:
                         break
@@ -641,23 +645,22 @@ class BOPDMDOperator(DMDOperator):
                             "iteration {}. Current error {}. "
                             "Consider increasing maxlam or lamup."
                         )
-                        print(msg.format(itr + 1, relative_error))
+                        print(msg.format(itr + 1, error))
                     return B, alpha, converged
 
                 # ...otherwise, update and proceed.
                 alpha, B, residual, error = alpha_0, B_0, residual_0, error_0
 
             # Record the current relative error.
-            relative_error = np.linalg.norm(residual) / np.linalg.norm(H)
-            all_error[itr] = relative_error
+            all_error[itr] = error
 
             # Print iterative progress if the verbose flag is turned on.
             if verbose:
                 update_msg = "Step {} Error {} Lambda {}"
-                print(update_msg.format(itr + 1, relative_error, _lambda))
+                print(update_msg.format(itr + 1, error, _lambda))
 
             # Update termination status and terminate if converged or stalled.
-            converged = relative_error < tol
+            converged = error < tol
             error_reduction = all_error[itr - 1] - all_error[itr]
             stalled = (itr > 0) and (
                 error_reduction < eps_stall * all_error[itr - 1]
@@ -676,7 +679,7 @@ class BOPDMDOperator(DMDOperator):
                         "Iteration {}. Current error {}. Consider "
                         "increasing tol or decreasing eps_stall."
                     )
-                    print(msg.format(eps_stall, itr + 1, relative_error))
+                    print(msg.format(eps_stall, itr + 1, error))
                 return B, alpha, converged
 
             U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
@@ -687,7 +690,7 @@ class BOPDMDOperator(DMDOperator):
                 "Failed to reach tolerance after maxiter = {} iterations. "
                 "Current error {}."
             )
-            print(msg.format(maxiter, relative_error))
+            print(msg.format(maxiter, error))
 
         return B, alpha, converged
 
