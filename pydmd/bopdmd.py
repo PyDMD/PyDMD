@@ -73,7 +73,11 @@ class BOPDMDOperator(DMDOperator):
         of the variable projection routine.
     :type eig_constraints: set(str) or function
     :param mode_prox: Optional proximal operator function to apply to the DMD
-        modes at every iteration of the variable projection routine.
+        modes. If `use_proj` is False, this function is applied at every
+        iteration of the variable projection routine. If `use_proj` is True,
+        this function is instead applied at the end of the variable projection
+        routine after the modes have been projected back to the space of the
+        full input data.
     :type mode_prox: function
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Set this parameter to infinity for no
@@ -529,8 +533,8 @@ class BOPDMDOperator(DMDOperator):
             # Compute B using least squares.
             B = np.linalg.lstsq(Phi(alpha, t), H, rcond=None)[0]
 
-            # Apply proximal operator if given.
-            if self._mode_prox is not None:
+            # Apply proximal operator if given, and if data isn't projected.
+            if self._mode_prox is not None and not self._use_proj:
                 B = self._mode_prox(B)
 
             return B
@@ -727,6 +731,9 @@ class BOPDMDOperator(DMDOperator):
             Atilde = np.linalg.multi_dot([w, np.diag(e), np.linalg.pinv(w)])
             # Unproject the dmd modes.
             w = self._proj_basis.dot(w)
+            # Apply mode proximal operator if given.
+            if self._mode_prox is not None:
+                w = self._mode_prox(w)
         else:
             w_proj = self._proj_basis.conj().T.dot(w)
             Atilde = np.linalg.multi_dot(
@@ -949,7 +956,11 @@ class BOPDMD(DMDBase):
         of the variable projection routine.
     :type eig_constraints: set(str) or function
     :param mode_prox: Optional proximal operator function to apply to the DMD
-        modes at every iteration of variable projection routine.
+        modes. If `use_proj` is False, this function is applied at every
+        iteration of the variable projection routine. If `use_proj` is True,
+        this function is instead applied at the end of the variable projection
+        routine after the modes have been projected back to the space of the
+        full input data.
     :type mode_prox: function
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Set this parameter to infinity for no
