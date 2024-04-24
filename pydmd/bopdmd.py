@@ -72,13 +72,14 @@ class BOPDMDOperator(DMDOperator):
         function that will be applied to the computed eigenvalues at each step
         of the variable projection routine.
     :type eig_constraints: set(str) or function
-    :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
-        at which to produce a warning message for the user. Default is 100.
-        Use arguments less than or equal to zero for no warning condition.
-    :type bag_warning: int
+    :param mode_prox: Optional proximal operator function to apply to the DMD
+        modes at every iteration of variable projection routine.
+    :type mode_prox: function
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
-        at which to terminate the fit. Default is -1, no stopping condition.
-    :type bag_maxfail: int
+        at which to terminate the fit. Set this parameter to infinity for no
+        stopping condition. Set to a non-positive value to simply use the
+        results of the non-converged trials. This is the default behavior.
+    :type bag_maxfail: int or float
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
         Note: Larger lambda values make the method more like gradient descent.
@@ -128,7 +129,7 @@ class BOPDMDOperator(DMDOperator):
         trial_size,
         eig_sort,
         eig_constraints,
-        bag_warning,
+        mode_prox,
         bag_maxfail,
         init_lambda=1.0,
         maxlam=52,
@@ -148,7 +149,7 @@ class BOPDMDOperator(DMDOperator):
         self._trial_size = trial_size
         self._eig_sort = eig_sort
         self._eig_constraints = eig_constraints
-        self._bag_warning = bag_warning
+        self._mode_prox = mode_prox
         self._bag_maxfail = bag_maxfail
         self._varpro_opts = [
             init_lambda,
@@ -503,9 +504,15 @@ class BOPDMDOperator(DMDOperator):
             which is used as an error indicator.
             """
             Phi_matrix = Phi(alpha, t)
+
+            # Update B matrix.
             B = np.linalg.lstsq(Phi_matrix, H, rcond=None)[0]
+            if self._mode_prox is not None:
+                B = self._mode_prox(B)
+
             residual = H - Phi_matrix.dot(B)
             error = 0.5 * np.linalg.norm(residual) ** 2
+
             return B, residual, error
 
         # Define M, IS, and IA.
@@ -759,12 +766,21 @@ class BOPDMDOperator(DMDOperator):
             self._A = A_0
             return b_0
 
-        # Otherwise, perform BOP-DMD.
+        # Otherwise, perform BOP-DMD:
         verbose = self._varpro_opts[-1]
         if verbose:
             num_trial_print = 5
             msg = "\nDisplaying the results of the next {} trials...\n"
             print(msg.format(num_trial_print))
+
+        # We'll consider non-converged trials successful if the user didn't
+        # request a positive amount of bagging trials at which to terminate.
+        use_bad_bags = self._bag_maxfail <= 0.0
+        if verbose:
+            if use_bad_bags:
+                print("Using all bag trial results...\n")
+            else:
+                print("Non-converged trial results will be removed...\n")
 
         # Initialize storage for values needed for stat computations.
         w_sum = np.zeros(w_0.shape, dtype="complex")
@@ -791,9 +807,8 @@ class BOPDMDOperator(DMDOperator):
                 verbose = num_trial_print > 0
                 self._varpro_opts[-1] = verbose
 
-            # Incorporate results into the running average
-            # ONLY IF the trial successfully converged.
-            if converged:
+            # Incorporate trial results into the running average if successful.
+            if converged or use_bad_bags:
                 sorted_inds = self._argsort_eigenvalues(e_i)
 
                 # Add to iterative sums.
@@ -810,22 +825,21 @@ class BOPDMDOperator(DMDOperator):
                 # and reset the consecutive fails counter.
                 num_successful_trials += 1
                 num_consecutive_fails = 0
+
+            # Trial did not converge, and we are throwing away bad bags.
             else:
                 num_consecutive_fails += 1
 
-            if (
-                not runtime_warning_given
-                and num_consecutive_fails == self._bag_warning
-            ):
+            if not runtime_warning_given and num_consecutive_fails == 100:
                 msg = (
-                    "{} many trials without convergence. "
+                    "100 trials without convergence. "
                     "Consider loosening the tol requirements "
                     "of the variable projection routine."
                 )
-                print(msg.format(num_consecutive_fails))
+                print(msg)
                 runtime_warning_given = True
 
-            elif num_consecutive_fails == self._bag_maxfail:
+            if num_consecutive_fails >= self._bag_maxfail and not use_bad_bags:
                 msg = (
                     "Terminating the bagging routine due to "
                     "{} many trials without convergence."
@@ -924,13 +938,14 @@ class BOPDMD(DMDBase):
         function that will be applied to the computed eigenvalues at each step
         of the variable projection routine.
     :type eig_constraints: set(str) or function
-    :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
-        at which to produce a warning message for the user. Default is 100.
-        Use arguments less than or equal to zero for no warning condition.
-    :type bag_warning: int
+    :param mode_prox: Optional proximal operator function to apply to the DMD
+        modes at every iteration of variable projection routine.
+    :type mode_prox: function
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
-        at which to terminate the fit. Default is -1, no stopping condition.
-    :type bag_maxfail: int
+        at which to terminate the fit. Set this parameter to infinity for no
+        stopping condition. Set to a non-positive value to simply use the
+        results of the non-converged trials. This is the default behavior.
+    :type bag_maxfail: int or float
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
         `init_lambda`, `maxlam`, `lamup`, `use_levmarq`, `maxiter`, `tol`,
@@ -952,8 +967,8 @@ class BOPDMD(DMDBase):
         trial_size=0.6,
         eig_sort="auto",
         eig_constraints=None,
-        bag_warning=100,
-        bag_maxfail=-1,
+        mode_prox=None,
+        bag_maxfail=0,
         varpro_opts_dict=None,
     ):
         self._svd_rank = svd_rank
@@ -964,16 +979,6 @@ class BOPDMD(DMDBase):
         self._num_trials = num_trials
         self._trial_size = trial_size
         self._eig_sort = eig_sort
-
-        if not isinstance(bag_warning, int) or not isinstance(bag_maxfail, int):
-            msg = (
-                "bag_warning and bag_maxfail must be integers. "
-                "Please use a non-positive integer if no warning "
-                "or stopping condition is desired."
-            )
-            raise TypeError(msg)
-        self._bag_warning = bag_warning
-        self._bag_maxfail = bag_maxfail
 
         if varpro_opts_dict is None:
             self._varpro_opts_dict = {}
@@ -990,6 +995,8 @@ class BOPDMD(DMDBase):
             raise TypeError("eig_constraints must be a set or a function.")
         self._check_eig_constraints(eig_constraints)
         self._eig_constraints = eig_constraints
+        self._mode_prox = mode_prox
+        self._bag_maxfail = bag_maxfail
 
         self._snapshots_holder = None
         self._time = None
@@ -1342,7 +1349,7 @@ class BOPDMD(DMDBase):
             self._trial_size,
             self._eig_sort,
             self._eig_constraints,
-            self._bag_warning,
+            self._mode_prox,
             self._bag_maxfail,
             **self._varpro_opts_dict,
         )
