@@ -514,12 +514,13 @@ class BOPDMDOperator(DMDOperator):
 
         def compute_error(B, alpha):
             """
-            Compute the current residual and relative error.
+            Compute the current residual, objective, and relative error.
             """
             residual = H - Phi(alpha, t).dot(B)
+            objective = 0.5 * np.linalg.norm(residual, "fro") ** 2
             error = np.linalg.norm(residual, "fro") / np.linalg.norm(H, "fro")
 
-            return residual, error
+            return residual, objective, error
 
         def compute_B(alpha):
             """
@@ -551,7 +552,7 @@ class BOPDMDOperator(DMDOperator):
         scales = np.zeros(IA)
 
         # Initialize iteration progress indicators.
-        residual, error = compute_error(B, alpha)
+        residual, objective, error = compute_error(B, alpha)
 
         for itr in range(maxiter):
             # Build Jacobian matrix, looping over alpha indices.
@@ -610,10 +611,10 @@ class BOPDMDOperator(DMDOperator):
             # Take a step using our initial step size init_lambda.
             delta_0, alpha_0 = step(_lambda)
             B_0 = compute_B(alpha_0)
-            residual_0, error_0 = compute_error(B_0, alpha_0)
+            residual_0, objective_0, error_0 = compute_error(B_0, alpha_0)
 
             # Check actual improvement vs predicted improvement.
-            actual_improvement = error - error_0
+            actual_improvement = objective - objective_0
             pred_improvement = (
                 0.5
                 * np.linalg.multi_dot(
@@ -625,14 +626,15 @@ class BOPDMDOperator(DMDOperator):
             if error_0 < error:
                 # Rescale lambda based on the improvement ratio.
                 _lambda *= max(1 / 3, 1 - (2 * improvement_ratio - 1) ** 3)
-                alpha, B, residual, error = alpha_0, B_0, residual_0, error_0
+                alpha, B = alpha_0, B_0
+                residual, objective, error = residual_0, objective_0, error_0
             else:
                 # Increase lambda until something works.
                 for _ in range(maxlam):
                     _lambda *= lamup
                     delta_0, alpha_0 = step(_lambda)
                     B_0 = compute_B(alpha_0)
-                    residual_0, error_0 = compute_error(B_0, alpha_0)
+                    residual_0, objective_0, error_0 = compute_error(B_0, alpha_0)
 
                     if error_0 < error:
                         break
@@ -649,7 +651,11 @@ class BOPDMDOperator(DMDOperator):
                     return B, alpha, converged
 
                 # ...otherwise, update and proceed.
-                alpha, B, residual, error = alpha_0, B_0, residual_0, error_0
+                alpha, B = alpha_0, B_0
+                residual, objective, error = residual_0, objective_0, error_0
+
+            # Update SVD information.
+            U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
             # Record the current relative error.
             all_error[itr] = error
@@ -681,8 +687,6 @@ class BOPDMDOperator(DMDOperator):
                     )
                     print(msg.format(eps_stall, itr + 1, error))
                 return B, alpha, converged
-
-            U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
         # Failed to meet tolerance in maxiter steps.
         if verbose:
@@ -778,9 +782,9 @@ class BOPDMDOperator(DMDOperator):
 
         # We'll consider non-converged trials successful if the user didn't
         # request a positive amount of bagging trials at which to terminate.
-        use_bad_bags = self._bag_maxfail <= 0.0
+        keep_bad_bags = self._bag_maxfail <= 0.0
         if verbose:
-            if use_bad_bags:
+            if keep_bad_bags:
                 print("Using all bag trial results...\n")
             else:
                 print("Non-converged trial results will be removed...\n")
@@ -811,7 +815,7 @@ class BOPDMDOperator(DMDOperator):
                 self._varpro_opts[-1] = verbose
 
             # Incorporate trial results into the running average if successful.
-            if converged or use_bad_bags:
+            if converged or keep_bad_bags:
                 sorted_inds = self._argsort_eigenvalues(e_i)
 
                 # Add to iterative sums.
@@ -839,10 +843,10 @@ class BOPDMDOperator(DMDOperator):
                     "Consider loosening the tol requirements "
                     "of the variable projection routine."
                 )
-                print(msg)
+                warnings.warn(msg)
                 runtime_warning_given = True
 
-            if num_consecutive_fails >= self._bag_maxfail and not use_bad_bags:
+            if not keep_bad_bags and num_consecutive_fails >= self._bag_maxfail:
                 msg = (
                     "Terminating the bagging routine due to "
                     "{} many trials without convergence."
@@ -869,6 +873,7 @@ class BOPDMDOperator(DMDOperator):
         self._Atilde = np.linalg.multi_dot(
             [w_proj, np.diag(self._eigenvalues), np.linalg.pinv(w_proj)]
         )
+
         # Compute A if requested.
         if self._compute_A:
             self._A = np.linalg.multi_dot(
