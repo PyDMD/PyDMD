@@ -290,23 +290,29 @@ class BOPDMDOperator(DMDOperator):
         if "conjugate_pairs" in self._eig_constraints:
             num_eigs = len(eigenvalues)
             new_eigs = np.empty(num_eigs, dtype="complex")
+            unassigned_inds = set(np.arange(num_eigs))
             # If given an odd number of eigenvalues, find the eigenvalue with
             # the smallest imaginary part and take it to be a real eigenvalue.
             if num_eigs % 2 == 1:
-                ind_single = np.argmin(np.abs(eigenvalues.imag))
-                new_eigs[ind_single] = eigenvalues[ind_single].real
-                eig_pair_inds = np.delete(np.arange(num_eigs), ind_single)[::2]
-            else:
-                eig_pair_inds = np.arange(0, num_eigs, 2)
-            # Note: a consequence of the OptDMD variable projection process is
-            # that complex conjugate pairs naturally appear together in the
-            # computed eigenvalue vectors. We thus take advantage of this...
-            for i in eig_pair_inds:
-                eig_pair = eigenvalues[i : i + 2]
-                real_comp = np.mean(eig_pair.real)
-                imag_comp = np.mean(np.abs(eig_pair.imag))
-                new_eigs[i] = real_comp + 1j * imag_comp
-                new_eigs[i + 1] = real_comp - 1j * imag_comp
+                ind_0 = np.argmin(np.abs(eigenvalues.imag))
+                new_eigs[ind_0] = eigenvalues[ind_0].real
+                unassigned_inds.remove(ind_0)
+            # Assign complex conjugate pairs until all eigenvalues are paired.
+            while len(unassigned_inds) != 0:
+                # Randomly grab the next unassigned eigenvalue.
+                ind_1 = unassigned_inds.pop()
+                eig_1 = eigenvalues[ind_1]
+                # Get the index of the eigenvalue that's closest to being the
+                # complex conjugate of the randomly selected eigenvalue.
+                ind_2 = np.argmin(np.abs(eigenvalues - np.conj(eig_1)))
+                eig_2 = eigenvalues[ind_2]
+                unassigned_inds.remove(ind_2)
+                # Average their real and imaginary components together.
+                a = 0.5 * (eig_1.real + eig_2.real)
+                b = 0.5 * (abs(eig_1.imag) + abs(eig_2.imag))
+                new_eigs[ind_1] = a + 1j * (b * np.sign(eig_1.imag))
+                new_eigs[ind_2] = a + 1j * (b * np.sign(eig_2.imag))
+                # ind_1 and ind_2 have now been paired.
 
             eigenvalues = np.copy(new_eigs)
 
