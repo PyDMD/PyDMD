@@ -1524,7 +1524,7 @@ class BOPDMD(DMDBase):
         if len(modes_shape) == 2:
             if y is None:
                 y = np.arange(modes_shape[1])
-            ygrid, xgrid = np.meshgrid(y, x)
+            xgrid, ygrid = np.meshgrid(x, y)
 
         # Collapse the results across time-delays.
         if d > 1:
@@ -1566,7 +1566,7 @@ class BOPDMD(DMDBase):
                 plt.pcolormesh(
                     xgrid,
                     ygrid,
-                    mode.reshape(*modes_shape, order=order).real,
+                    mode.reshape(xgrid.shape, order=order).real,
                     cmap="viridis",
                 )
                 plt.colorbar()
@@ -1582,7 +1582,7 @@ class BOPDMD(DMDBase):
                 plt.pcolormesh(
                     xgrid,
                     ygrid,
-                    mode_std.reshape(*modes_shape, order=order),
+                    mode_std.reshape(xgrid.shape, order=order),
                     cmap="inferno",
                 )
                 plt.colorbar()
