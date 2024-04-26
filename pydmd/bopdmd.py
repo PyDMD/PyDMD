@@ -79,6 +79,10 @@ class BOPDMDOperator(DMDOperator):
         routine after the modes have been projected back to the space of the
         full input data.
     :type mode_prox: function
+    :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
+        at which to produce a warning message for the user. Default is 100.
+        Use arguments less than or equal to zero for no warning condition.
+    :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Set this parameter to infinity for no
         stopping condition. Set to a non-positive value to simply use the
@@ -134,6 +138,7 @@ class BOPDMDOperator(DMDOperator):
         eig_sort,
         eig_constraints,
         mode_prox,
+        bag_warning,
         bag_maxfail,
         init_lambda=1.0,
         maxlam=52,
@@ -154,6 +159,7 @@ class BOPDMDOperator(DMDOperator):
         self._eig_sort = eig_sort
         self._eig_constraints = eig_constraints
         self._mode_prox = mode_prox
+        self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
         self._varpro_opts = [
             init_lambda,
@@ -852,13 +858,13 @@ class BOPDMDOperator(DMDOperator):
             else:
                 num_consecutive_fails += 1
 
-            if not runtime_warning_given and num_consecutive_fails == 100:
+            if not runtime_warning_given and num_consecutive_fails >= self._bag_warning:
                 msg = (
-                    "100 trials without convergence. "
+                    "{} many trials without convergence. "
                     "Consider loosening the tol requirements "
                     "of the variable projection routine."
                 )
-                warnings.warn(msg)
+                print(msg.format(num_consecutive_fails))
                 runtime_warning_given = True
 
             if not keep_bad_bags and num_consecutive_fails >= self._bag_maxfail:
@@ -968,6 +974,10 @@ class BOPDMD(DMDBase):
         routine after the modes have been projected back to the space of the
         full input data.
     :type mode_prox: function
+    :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
+        at which to produce a warning message for the user. Default is 100.
+        Use arguments less than or equal to zero for no warning condition.
+    :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Set this parameter to infinity for no
         stopping condition. Set to a non-positive value to simply use the
@@ -995,6 +1005,7 @@ class BOPDMD(DMDBase):
         eig_sort="auto",
         eig_constraints=None,
         mode_prox=None,
+        bag_warning=100,
         bag_maxfail=0,
         varpro_opts_dict=None,
     ):
@@ -1023,6 +1034,7 @@ class BOPDMD(DMDBase):
         self._check_eig_constraints(eig_constraints)
         self._eig_constraints = eig_constraints
         self._mode_prox = mode_prox
+        self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
 
         self._snapshots_holder = None
@@ -1377,6 +1389,7 @@ class BOPDMD(DMDBase):
             self._eig_sort,
             self._eig_constraints,
             self._mode_prox,
+            self._bag_warning,
             self._bag_maxfail,
             **self._varpro_opts_dict,
         )
