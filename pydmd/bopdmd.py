@@ -858,7 +858,10 @@ class BOPDMDOperator(DMDOperator):
             else:
                 num_consecutive_fails += 1
 
-            if not runtime_warning_given and num_consecutive_fails >= self._bag_warning:
+            if (
+                not runtime_warning_given
+                and num_consecutive_fails >= self._bag_warning
+            ):
                 msg = (
                     "{} many trials without convergence. "
                     "Consider loosening the tol requirements "
