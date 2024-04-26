@@ -5,7 +5,7 @@ Provided below are a line of tutorials and guides that quickly highlight key mod
 
 | Name  | Description   | PyDMD used classes |
 |-------|---------------|--------------------|
-| Manual1&#160;[[.ipynb](user-manual1/user-manual-bopdmd.ipynb);[.py](user-manual1/user-manual-bopdmd.py)]| The Basics of `BOPDMD` | `pydmd.BOPDMD` |
+| Manual1&#160;[[.ipynb](user-manual1/user-manual-bopdmd.ipynb),&#160;[.py](user-manual1/user-manual-bopdmd.py)]| The Basics of `BOPDMD` | `pydmd.BOPDMD` |
 
 
 
