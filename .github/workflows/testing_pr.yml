@@ -147,7 +147,7 @@ jobs:
         mv SegTrackv2 tutorials/tutorial12
         
     - name: Setup FFmpeg
-      uses: FedericoCarboni/setup-ffmpeg@v2
+      uses: FedericoCarboni/setup-ffmpeg@v3.1
       
     - name: Check tutorial references
       run: |
