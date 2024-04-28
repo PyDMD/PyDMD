@@ -1,16 +1,18 @@
 import json
 from argparse import ArgumentParser
 
+# TODO: Monitor https://github.com/federicocarboni/setup-ffmpeg/issues/21
+macos_version = "macos-13"
+
 testing_matrix_ghact = {
     "python-version": ["3.8", "3.9", "3.10", "3.11", "3.12"],
-    # TODO: Monitor https://github.com/federicocarboni/setup-ffmpeg/issues/21
-    "os": ["windows-latest", "macos-13", "ubuntu-latest"],
+    "os": ["windows-latest", macos_version, "ubuntu-latest"],
     "exclude": [{"os": "windows-latest", "python-version": "3.11"}],
 }
 
 tutorial_testing_matrix_ghact = {
     "python-version": ["3.8", "3.9", "3.10", "3.11", "3.12"],
-    "os": ["macos-latest", "ubuntu-latest"],
+    "os": [macos_version, "ubuntu-latest"],
 }
 
 deploy_matrix_ghact = {"python-version": ["3.8"], "os": ["ubuntu-latest"]}
