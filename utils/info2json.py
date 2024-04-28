@@ -3,7 +3,8 @@ from argparse import ArgumentParser
 
 testing_matrix_ghact = {
     "python-version": ["3.8", "3.9", "3.10", "3.11", "3.12"],
-    "os": ["windows-latest", "macos-latest", "ubuntu-latest"],
+    # TODO: Monitor https://github.com/federicocarboni/setup-ffmpeg/issues/21
+    "os": ["windows-latest", "macos-13", "ubuntu-latest"],
     "exclude": [{"os": "windows-latest", "python-version": "3.11"}],
 }
 
