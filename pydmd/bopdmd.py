@@ -304,23 +304,43 @@ class BOPDMDOperator(DMDOperator):
         if "conjugate_pairs" in self._eig_constraints:
             num_eigs = len(eigenvalues)
             new_eigs = np.empty(num_eigs, dtype="complex")
+
+            # Set of indices -- keeps track of indices of eigenvalues that
+            # still need to be paired with their complex conjugate.
             unassigned_inds = set(np.arange(num_eigs))
+
             # If given an odd number of eigenvalues, find the eigenvalue with
             # the smallest imaginary part and take it to be a real eigenvalue.
             if num_eigs % 2 == 1:
                 ind_0 = np.argmin(np.abs(eigenvalues.imag))
                 new_eigs[ind_0] = eigenvalues[ind_0].real
                 unassigned_inds.remove(ind_0)
+
             # Assign complex conjugate pairs until all eigenvalues are paired.
             while unassigned_inds:
                 # Randomly grab the next unassigned eigenvalue.
                 ind_1 = unassigned_inds.pop()
                 eig_1 = eigenvalues[ind_1]
+
                 # Get the index of the eigenvalue that's closest to being the
                 # complex conjugate of the randomly selected eigenvalue.
                 ind_2 = np.argmin(np.abs(eigenvalues - np.conj(eig_1)))
+
+                # Alert the user if an error occurs while pairing.
+                # Complex conjugate pairs should be unique in theory.
+                if ind_2 not in unassigned_inds:
+                    msg = (
+                        "Error occurred while finding conjugate pairs. "
+                        "Please remove the \"conjugate pairs\" constraint and "
+                        "check that your system eigenvalues approximately "
+                        "consist of complex conjugate pairs."
+                    )
+                    raise ValueError(msg)
+
+                # Uniquely pair eig_1 and eig_2.
                 eig_2 = eigenvalues[ind_2]
                 unassigned_inds.remove(ind_2)
+
                 # Average their real and imaginary components together.
                 a = 0.5 * (eig_1.real + eig_2.real)
                 b = 0.5 * (np.abs(eig_1.imag) + np.abs(eig_2.imag))
