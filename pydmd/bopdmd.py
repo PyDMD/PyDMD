@@ -331,7 +331,7 @@ class BOPDMDOperator(DMDOperator):
                 if ind_2 not in unassigned_inds:
                     msg = (
                         "Error occurred while finding conjugate pairs. "
-                        "Please remove the \"conjugate pairs\" constraint and "
+                        'Please remove the "conjugate pairs" constraint and '
                         "check that your system eigenvalues approximately "
                         "consist of complex conjugate pairs."
                     )
