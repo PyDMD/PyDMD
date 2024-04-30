@@ -885,8 +885,9 @@ class BOPDMDOperator(DMDOperator):
                 num_consecutive_fails += 1
 
             if (
-                not runtime_warning_given
+                self._remove_bad_bags
                 and num_consecutive_fails == self._bag_warning
+                and not runtime_warning_given
             ):
                 msg = (
                     "{} many trials without convergence. "
