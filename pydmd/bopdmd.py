@@ -79,13 +79,20 @@ class BOPDMDOperator(DMDOperator):
         routine after the modes have been projected back to the space of the
         full input data.
     :type mode_prox: function
+    :param remove_bad_bags: Whether or not to exclude results from bagging
+        trials that didn't converge according to the tolerance used for
+        variable projection. Default is False, all trial results are kept
+        regardless of convergence.
+    :type remove_bad_bags: bool
     :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
         at which to produce a warning message for the user. Default is 100.
-        Use arguments less than zero for no warning condition.
+        This parameter becomes active only when `remove_bad_bags=True`. Use
+        negative arguments for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
-        at which to terminate the fit. Default is 100. Use arguments less than
-        zero for no stopping condition.
+        at which to terminate the fit. Default is 100. This parameter becomes
+        active only when `remove_bad_bags=True`. Use negative arguments for no
+        stopping condition.
     :type bag_maxfail: int
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
@@ -137,6 +144,7 @@ class BOPDMDOperator(DMDOperator):
         eig_sort,
         eig_constraints,
         mode_prox,
+        remove_bad_bags,
         bag_warning,
         bag_maxfail,
         init_lambda=1.0,
@@ -158,6 +166,7 @@ class BOPDMDOperator(DMDOperator):
         self._eig_sort = eig_sort
         self._eig_constraints = eig_constraints
         self._mode_prox = mode_prox
+        self._remove_bad_bags = remove_bad_bags
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
         self._varpro_opts = [
@@ -314,7 +323,7 @@ class BOPDMDOperator(DMDOperator):
                 unassigned_inds.remove(ind_2)
                 # Average their real and imaginary components together.
                 a = 0.5 * (eig_1.real + eig_2.real)
-                b = 0.5 * (abs(eig_1.imag) + abs(eig_2.imag))
+                b = 0.5 * (np.abs(eig_1.imag) + np.abs(eig_2.imag))
                 new_eigs[ind_1] = a + 1j * (b * np.sign(eig_1.imag))
                 new_eigs[ind_2] = a + 1j * (b * np.sign(eig_2.imag))
 
@@ -800,13 +809,12 @@ class BOPDMDOperator(DMDOperator):
             print(msg.format(num_trial_print))
 
         # We'll consider non-converged trials successful if the user didn't
-        # request a positive amount of bagging trials at which to terminate.
-        keep_bad_bags = self._bag_maxfail <= 0.0
+        # request to remove bad bags.
         if verbose:
-            if keep_bad_bags:
-                print("Using all bag trial results...\n")
-            else:
+            if self._remove_bad_bags:
                 print("Non-converged trial results will be removed...\n")
+            else:
+                print("Using all bag trial results...\n")
 
         # Initialize storage for values needed for stat computations.
         w_sum = np.zeros(w_0.shape, dtype="complex")
@@ -834,7 +842,7 @@ class BOPDMDOperator(DMDOperator):
                 self._varpro_opts[-1] = verbose
 
             # Incorporate trial results into the running average if successful.
-            if converged or keep_bad_bags:
+            if converged or not self._remove_bad_bags:
                 sorted_inds = self._argsort_eigenvalues(e_i)
 
                 # Add to iterative sums.
@@ -868,7 +876,7 @@ class BOPDMDOperator(DMDOperator):
                 print(msg.format(num_consecutive_fails))
                 runtime_warning_given = True
 
-            if not keep_bad_bags and num_consecutive_fails == self._bag_maxfail:
+            if self._remove_bad_bags and num_consecutive_fails == self._bag_maxfail:
                 msg = (
                     "Terminating the bagging routine due to "
                     "{} many trials without convergence."
@@ -975,13 +983,20 @@ class BOPDMD(DMDBase):
         routine after the modes have been projected back to the space of the
         full input data.
     :type mode_prox: function
+    :param remove_bad_bags: Whether or not to exclude results from bagging
+        trials that didn't converge according to the tolerance used for
+        variable projection. Default is False, all trial results are kept
+        regardless of convergence.
+    :type remove_bad_bags: bool
     :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
         at which to produce a warning message for the user. Default is 100.
-        Use arguments less than zero for no warning condition.
+        This parameter becomes active only when `remove_bad_bags=True`. Use
+        negative arguments for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
-        at which to terminate the fit. Default is 100. Use arguments less than
-        zero for no stopping condition.
+        at which to terminate the fit. Default is 100. This parameter becomes
+        active only when `remove_bad_bags=True`. Use negative arguments for no
+        stopping condition.
     :type bag_maxfail: int
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
@@ -1005,6 +1020,7 @@ class BOPDMD(DMDBase):
         eig_sort="auto",
         eig_constraints=None,
         mode_prox=None,
+        remove_bad_bags=False,
         bag_warning=100,
         bag_maxfail=100,
         varpro_opts_dict=None,
@@ -1025,6 +1041,7 @@ class BOPDMD(DMDBase):
                 "or stopping condition is desired."
             )
             raise TypeError(msg)
+        self._remove_bad_bags = remove_bad_bags
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
 
@@ -1397,6 +1414,7 @@ class BOPDMD(DMDBase):
             self._eig_sort,
             self._eig_constraints,
             self._mode_prox,
+            self._remove_bad_bags,
             self._bag_warning,
             self._bag_maxfail,
             **self._varpro_opts_dict,
