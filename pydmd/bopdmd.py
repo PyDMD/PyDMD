@@ -84,10 +84,9 @@ class BOPDMDOperator(DMDOperator):
         Use arguments less than or equal to zero for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
-        at which to terminate the fit. Set this parameter to infinity for no
-        stopping condition. Set to a non-positive value to simply use the
-        results of the non-converged trials. This is the default behavior.
-    :type bag_maxfail: int or float
+        at which to terminate the fit. Default is 100. Use arguments less than
+        or equal to zero for no stopping condition.
+    :type bag_maxfail: int
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
         Note: Larger lambda values make the method more like gradient descent.
@@ -318,7 +317,6 @@ class BOPDMDOperator(DMDOperator):
                 b = 0.5 * (abs(eig_1.imag) + abs(eig_2.imag))
                 new_eigs[ind_1] = a + 1j * (b * np.sign(eig_1.imag))
                 new_eigs[ind_2] = a + 1j * (b * np.sign(eig_2.imag))
-                # ind_1 and ind_2 have now been paired.
 
             eigenvalues = np.copy(new_eigs)
 
@@ -860,7 +858,7 @@ class BOPDMDOperator(DMDOperator):
 
             if (
                 not runtime_warning_given
-                and num_consecutive_fails >= self._bag_warning
+                and num_consecutive_fails == self._bag_warning
             ):
                 msg = (
                     "{} many trials without convergence. "
@@ -870,7 +868,7 @@ class BOPDMDOperator(DMDOperator):
                 print(msg.format(num_consecutive_fails))
                 runtime_warning_given = True
 
-            if not keep_bad_bags and num_consecutive_fails >= self._bag_maxfail:
+            if not keep_bad_bags and num_consecutive_fails == self._bag_maxfail:
                 msg = (
                     "Terminating the bagging routine due to "
                     "{} many trials without convergence."
@@ -982,10 +980,9 @@ class BOPDMD(DMDBase):
         Use arguments less than or equal to zero for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
-        at which to terminate the fit. Set this parameter to infinity for no
-        stopping condition. Set to a non-positive value to simply use the
-        results of the non-converged trials. This is the default behavior.
-    :type bag_maxfail: int or float
+        at which to terminate the fit. Default is 100. Use arguments less than
+        or equal to zero for no stopping condition.
+    :type bag_maxfail: int
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
         `init_lambda`, `maxlam`, `lamup`, `use_levmarq`, `maxiter`, `tol`,
@@ -1009,7 +1006,7 @@ class BOPDMD(DMDBase):
         eig_constraints=None,
         mode_prox=None,
         bag_warning=100,
-        bag_maxfail=0,
+        bag_maxfail=100,
         varpro_opts_dict=None,
     ):
         self._svd_rank = svd_rank
@@ -1020,6 +1017,16 @@ class BOPDMD(DMDBase):
         self._num_trials = num_trials
         self._trial_size = trial_size
         self._eig_sort = eig_sort
+
+        if not isinstance(bag_warning, int) or not isinstance(bag_maxfail, int):
+            msg = (
+                "bag_warning and bag_maxfail must be integers. "
+                "Please use a non-positive integer if no warning "
+                "or stopping condition is desired."
+            )
+            raise TypeError(msg)
+        self._bag_warning = bag_warning
+        self._bag_maxfail = bag_maxfail
 
         if varpro_opts_dict is None:
             self._varpro_opts_dict = {}
@@ -1037,8 +1044,6 @@ class BOPDMD(DMDBase):
         self._check_eig_constraints(eig_constraints)
         self._eig_constraints = eig_constraints
         self._mode_prox = mode_prox
-        self._bag_warning = bag_warning
-        self._bag_maxfail = bag_maxfail
 
         self._snapshots_holder = None
         self._time = None
