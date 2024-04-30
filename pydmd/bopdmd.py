@@ -90,7 +90,7 @@ class BOPDMDOperator(DMDOperator):
         negative arguments for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
-        at which to terminate the fit. Default is 100. This parameter becomes
+        at which to terminate the fit. Default is 200. This parameter becomes
         active only when `remove_bad_bags=True`. Use negative arguments for no
         stopping condition.
     :type bag_maxfail: int
@@ -959,7 +959,7 @@ class BOPDMD(DMDBase):
         trial. If trial_size is a float between 0 and 1, int(trial_size * m)
         many observations will be used per trial, where m denotes the total
         number of data points observed. Note that any other type of input for
-        trial_size will yield an error. Default is 0.2.
+        trial_size will yield an error. Default is 0.6.
     :type trial_size: int or float
     :param eig_sort: Method used to sort eigenvalues (and modes accordingly)
         when performing BOP-DMD. Eigenvalues will be sorted by real part and
@@ -997,7 +997,7 @@ class BOPDMD(DMDBase):
         negative arguments for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
-        at which to terminate the fit. Default is 100. This parameter becomes
+        at which to terminate the fit. Default is 200. This parameter becomes
         active only when `remove_bad_bags=True`. Use negative arguments for no
         stopping condition.
     :type bag_maxfail: int
@@ -1025,7 +1025,7 @@ class BOPDMD(DMDBase):
         mode_prox=None,
         remove_bad_bags=False,
         bag_warning=100,
-        bag_maxfail=100,
+        bag_maxfail=200,
         varpro_opts_dict=None,
     ):
         self._svd_rank = svd_rank
