@@ -885,8 +885,7 @@ class BOPDMDOperator(DMDOperator):
                 num_consecutive_fails += 1
 
             if (
-                self._remove_bad_bags
-                and num_consecutive_fails == self._bag_warning
+                num_consecutive_fails == self._bag_warning
                 and not runtime_warning_given
             ):
                 msg = (
@@ -897,10 +896,7 @@ class BOPDMDOperator(DMDOperator):
                 print(msg.format(num_consecutive_fails))
                 runtime_warning_given = True
 
-            if (
-                self._remove_bad_bags
-                and num_consecutive_fails == self._bag_maxfail
-            ):
+            if num_consecutive_fails == self._bag_maxfail:
                 msg = (
                     "Terminating the bagging routine due to "
                     "{} many trials without convergence."
