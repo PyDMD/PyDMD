@@ -801,7 +801,7 @@ class BOPDMDOperator(DMDOperator):
             self._A = A_0
             return b_0
 
-        # Otherwise, perform BOP-DMD:
+        # Otherwise, perform BOP-DMD.
         verbose = self._varpro_opts[-1]
         if verbose:
             num_trial_print = 5
