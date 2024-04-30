@@ -303,7 +303,7 @@ class BOPDMDOperator(DMDOperator):
                 new_eigs[ind_0] = eigenvalues[ind_0].real
                 unassigned_inds.remove(ind_0)
             # Assign complex conjugate pairs until all eigenvalues are paired.
-            while len(unassigned_inds) != 0:
+            while unassigned_inds:
                 # Randomly grab the next unassigned eigenvalue.
                 ind_1 = unassigned_inds.pop()
                 eig_1 = eigenvalues[ind_1]
