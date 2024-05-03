@@ -72,12 +72,27 @@ class BOPDMDOperator(DMDOperator):
         function that will be applied to the computed eigenvalues at each step
         of the variable projection routine.
     :type eig_constraints: set(str) or function
+    :param mode_prox: Optional proximal operator function to apply to the DMD
+        modes. If `use_proj` is False, this function is applied at every
+        iteration of the variable projection routine. If `use_proj` is True,
+        this function is instead applied at the end of the variable projection
+        routine after the modes have been projected back to the space of the
+        full input data.
+    :type mode_prox: function
+    :param remove_bad_bags: Whether or not to exclude results from bagging
+        trials that didn't converge according to the tolerance used for
+        variable projection. Default is False, all trial results are kept
+        regardless of convergence.
+    :type remove_bad_bags: bool
     :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
         at which to produce a warning message for the user. Default is 100.
-        Use arguments less than or equal to zero for no warning condition.
+        This parameter becomes active only when `remove_bad_bags=True`. Use
+        negative arguments for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
-        at which to terminate the fit. Default is -1, no stopping condition.
+        at which to terminate the fit. Default is 200. This parameter becomes
+        active only when `remove_bad_bags=True`. Use negative arguments for no
+        stopping condition.
     :type bag_maxfail: int
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
@@ -128,6 +143,8 @@ class BOPDMDOperator(DMDOperator):
         trial_size,
         eig_sort,
         eig_constraints,
+        mode_prox,
+        remove_bad_bags,
         bag_warning,
         bag_maxfail,
         init_lambda=1.0,
@@ -148,6 +165,8 @@ class BOPDMDOperator(DMDOperator):
         self._trial_size = trial_size
         self._eig_sort = eig_sort
         self._eig_constraints = eig_constraints
+        self._mode_prox = mode_prox
+        self._remove_bad_bags = remove_bad_bags
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
         self._varpro_opts = [
@@ -285,23 +304,48 @@ class BOPDMDOperator(DMDOperator):
         if "conjugate_pairs" in self._eig_constraints:
             num_eigs = len(eigenvalues)
             new_eigs = np.empty(num_eigs, dtype="complex")
+
+            # Set of indices -- keeps track of indices of eigenvalues that
+            # still need to be paired with their complex conjugate.
+            unassigned_inds = set(np.arange(num_eigs))
+
             # If given an odd number of eigenvalues, find the eigenvalue with
             # the smallest imaginary part and take it to be a real eigenvalue.
             if num_eigs % 2 == 1:
-                ind_single = np.argmin(np.abs(eigenvalues.imag))
-                new_eigs[ind_single] = eigenvalues[ind_single].real
-                eig_pair_inds = np.delete(np.arange(num_eigs), ind_single)[::2]
-            else:
-                eig_pair_inds = np.arange(0, num_eigs, 2)
-            # Note: a consequence of the OptDMD variable projection process is
-            # that complex conjugate pairs naturally appear together in the
-            # computed eigenvalue vectors. We thus take advantage of this...
-            for i in eig_pair_inds:
-                eig_pair = eigenvalues[i : i + 2]
-                real_comp = np.mean(eig_pair.real)
-                imag_comp = np.mean(np.abs(eig_pair.imag))
-                new_eigs[i] = real_comp + 1j * imag_comp
-                new_eigs[i + 1] = real_comp - 1j * imag_comp
+                ind_0 = np.argmin(np.abs(eigenvalues.imag))
+                new_eigs[ind_0] = eigenvalues[ind_0].real
+                unassigned_inds.remove(ind_0)
+
+            # Assign complex conjugate pairs until all eigenvalues are paired.
+            while unassigned_inds:
+                # Randomly grab the next unassigned eigenvalue.
+                ind_1 = unassigned_inds.pop()
+                eig_1 = eigenvalues[ind_1]
+
+                # Get the index of the eigenvalue that's closest to being the
+                # complex conjugate of the randomly selected eigenvalue.
+                ind_2 = np.argmin(np.abs(eigenvalues - np.conj(eig_1)))
+
+                # Alert the user if an error occurs while pairing.
+                # Complex conjugate pairs should be unique in theory.
+                if ind_2 not in unassigned_inds:
+                    msg = (
+                        "Error occurred while finding conjugate pairs. "
+                        'Please remove the "conjugate pairs" constraint and '
+                        "check that your system eigenvalues approximately "
+                        "consist of complex conjugate pairs."
+                    )
+                    raise ValueError(msg)
+
+                # Uniquely pair eig_1 and eig_2.
+                eig_2 = eigenvalues[ind_2]
+                unassigned_inds.remove(ind_2)
+
+                # Average their real and imaginary components together.
+                a = 0.5 * (eig_1.real + eig_2.real)
+                b = 0.5 * (np.abs(eig_1.imag) + np.abs(eig_2.imag))
+                new_eigs[ind_1] = a + 1j * (b * np.sign(eig_1.imag))
+                new_eigs[ind_2] = a + 1j * (b * np.sign(eig_2.imag))
 
             eigenvalues = np.copy(new_eigs)
 
@@ -493,24 +537,10 @@ class BOPDMDOperator(DMDOperator):
         Computational Optimization and Applications 54.3 (2013): 579-593
         by Dianne P. O'Leary and Bert W. Rust.
         """
-
-        def compute_residual(alpha):
-            """
-            Helper function that, given alpha, and using H, t, Phi as they are
-            passed to the _variable_projection function, computes and returns
-            the matrix Phi(alpha,t), B from the expression H = Phi(alpha,t)B,
-            the residual H - Phi(alpha,t)B, and 0.5*norm(residual,'fro')^2,
-            which is used as an error indicator.
-            """
-            Phi_matrix = Phi(alpha, t)
-            B = np.linalg.lstsq(Phi_matrix, H, rcond=None)[0]
-            residual = H - Phi_matrix.dot(B)
-            error = 0.5 * np.linalg.norm(residual) ** 2
-            return B, residual, error
-
         # Define M, IS, and IA.
         M, IS = H.shape
         IA = len(init_alpha)
+        tolrank = M * np.finfo(float).eps
 
         # Unpack all variable projection parameters stored in varpro_opts.
         (
@@ -525,12 +555,33 @@ class BOPDMDOperator(DMDOperator):
             verbose,
         ) = self._varpro_opts
 
+        def compute_error(B, alpha):
+            """
+            Compute the current residual, objective, and relative error.
+            """
+            residual = H - Phi(alpha, t).dot(B)
+            objective = 0.5 * np.linalg.norm(residual, "fro") ** 2
+            error = np.linalg.norm(residual, "fro") / np.linalg.norm(H, "fro")
+
+            return residual, objective, error
+
+        def compute_B(alpha):
+            """
+            Update B for the current alpha.
+            """
+            # Compute B using least squares.
+            B = np.linalg.lstsq(Phi(alpha, t), H, rcond=None)[0]
+
+            # Apply proximal operator if given, and if data isn't projected.
+            if self._mode_prox is not None and not self._use_proj:
+                B = self._mode_prox(B)
+
+            return B
+
         # Initialize values.
-        tolrank = M * np.finfo(float).eps
         _lambda = init_lambda
         alpha = self._push_eigenvalues(init_alpha)
-        B, residual, error = compute_residual(alpha)
-        relative_error = np.linalg.norm(residual) / np.linalg.norm(H)
+        B = compute_B(alpha)
         U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
         # Initialize termination flags.
@@ -542,6 +593,9 @@ class BOPDMDOperator(DMDOperator):
         djac_matrix = np.zeros((M * IS, IA), dtype="complex")
         rjac = np.zeros((2 * IA, IA), dtype="complex")
         scales = np.zeros(IA)
+
+        # Initialize iteration progress indicators.
+        residual, objective, error = compute_error(B, alpha)
 
         for itr in range(maxiter):
             # Build Jacobian matrix, looping over alpha indices.
@@ -581,29 +635,29 @@ class BOPDMDOperator(DMDOperator):
                 (rhs_top[:IA], np.zeros(IA, dtype="complex")), axis=None
             )
 
-            def step(_lambda, rhs, scales_pvt, ij_pvt):
+            def step(_lambda, scales_pvt=scales_pvt, rhs=rhs, ij_pvt=ij_pvt):
                 """
-                Helper function that, given a step size _lambda and the current
-                right-hand side and pivots, computes and returns delta, the
-                amount in which we update alpha, and the updated alpha vector.
-                Note that this function uses rjac and alpha as they are defined
-                outside of this function.
+                Helper function that, when given a step size _lambda,
+                computes and returns the updated step and alpha vectors.
                 """
                 # Compute the step delta.
                 rjac[IA:] = _lambda * np.diag(scales_pvt)
                 delta = np.linalg.lstsq(rjac, rhs, rcond=None)[0]
                 delta = delta[ij_pvt]
+
                 # Compute the updated alpha vector.
                 alpha_updated = alpha.ravel() + delta.ravel()
                 alpha_updated = self._push_eigenvalues(alpha_updated)
+
                 return delta, alpha_updated
 
             # Take a step using our initial step size init_lambda.
-            delta_0, alpha_0 = step(_lambda, rhs, scales_pvt, ij_pvt)
-            B_0, residual_0, error_0 = compute_residual(alpha_0)
+            delta_0, alpha_0 = step(_lambda)
+            B_0 = compute_B(alpha_0)
+            residual_0, objective_0, error_0 = compute_error(B_0, alpha_0)
 
             # Check actual improvement vs predicted improvement.
-            actual_improvement = error - error_0
+            actual_improvement = objective - objective_0
             pred_improvement = (
                 0.5
                 * np.linalg.multi_dot(
@@ -615,13 +669,17 @@ class BOPDMDOperator(DMDOperator):
             if error_0 < error:
                 # Rescale lambda based on the improvement ratio.
                 _lambda *= max(1 / 3, 1 - (2 * improvement_ratio - 1) ** 3)
-                alpha, B, residual, error = alpha_0, B_0, residual_0, error_0
+                alpha, B = alpha_0, B_0
+                residual, objective, error = residual_0, objective_0, error_0
             else:
                 # Increase lambda until something works.
                 for _ in range(maxlam):
                     _lambda *= lamup
-                    delta_0, alpha_0 = step(_lambda, rhs, scales_pvt, ij_pvt)
-                    B_0, residual_0, error_0 = compute_residual(alpha_0)
+                    delta_0, alpha_0 = step(_lambda)
+                    B_0 = compute_B(alpha_0)
+                    residual_0, objective_0, error_0 = compute_error(
+                        B_0, alpha_0
+                    )
 
                     if error_0 < error:
                         break
@@ -634,23 +692,26 @@ class BOPDMDOperator(DMDOperator):
                             "iteration {}. Current error {}. "
                             "Consider increasing maxlam or lamup."
                         )
-                        print(msg.format(itr + 1, relative_error))
+                        print(msg.format(itr + 1, error))
                     return B, alpha, converged
 
                 # ...otherwise, update and proceed.
-                alpha, B, residual, error = alpha_0, B_0, residual_0, error_0
+                alpha, B = alpha_0, B_0
+                residual, objective, error = residual_0, objective_0, error_0
+
+            # Update SVD information.
+            U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
             # Record the current relative error.
-            relative_error = np.linalg.norm(residual) / np.linalg.norm(H)
-            all_error[itr] = relative_error
+            all_error[itr] = error
 
             # Print iterative progress if the verbose flag is turned on.
             if verbose:
                 update_msg = "Step {} Error {} Lambda {}"
-                print(update_msg.format(itr + 1, relative_error, _lambda))
+                print(update_msg.format(itr + 1, error, _lambda))
 
             # Update termination status and terminate if converged or stalled.
-            converged = relative_error < tol
+            converged = error < tol
             error_reduction = all_error[itr - 1] - all_error[itr]
             stalled = (itr > 0) and (
                 error_reduction < eps_stall * all_error[itr - 1]
@@ -669,10 +730,8 @@ class BOPDMDOperator(DMDOperator):
                         "Iteration {}. Current error {}. Consider "
                         "increasing tol or decreasing eps_stall."
                     )
-                    print(msg.format(eps_stall, itr + 1, relative_error))
+                    print(msg.format(eps_stall, itr + 1, error))
                 return B, alpha, converged
-
-            U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
         # Failed to meet tolerance in maxiter steps.
         if verbose:
@@ -680,7 +739,7 @@ class BOPDMDOperator(DMDOperator):
                 "Failed to reach tolerance after maxiter = {} iterations. "
                 "Current error {}."
             )
-            print(msg.format(maxiter, relative_error))
+            print(msg.format(maxiter, error))
 
         return B, alpha, converged
 
@@ -711,6 +770,9 @@ class BOPDMDOperator(DMDOperator):
             Atilde = np.linalg.multi_dot([w, np.diag(e), np.linalg.pinv(w)])
             # Unproject the dmd modes.
             w = self._proj_basis.dot(w)
+            # Apply mode proximal operator if given.
+            if self._mode_prox is not None:
+                w = self._mode_prox(w)
         else:
             w_proj = self._proj_basis.conj().T.dot(w)
             Atilde = np.linalg.multi_dot(
@@ -766,6 +828,14 @@ class BOPDMDOperator(DMDOperator):
             msg = "\nDisplaying the results of the next {} trials...\n"
             print(msg.format(num_trial_print))
 
+        # We'll consider non-converged trials successful if the user didn't
+        # request to remove bad bags.
+        if verbose:
+            if self._remove_bad_bags:
+                print("Non-converged trial results will be removed...\n")
+            else:
+                print("Using all bag trial results...\n")
+
         # Initialize storage for values needed for stat computations.
         w_sum = np.zeros(w_0.shape, dtype="complex")
         e_sum = np.zeros(e_0.shape, dtype="complex")
@@ -791,9 +861,8 @@ class BOPDMDOperator(DMDOperator):
                 verbose = num_trial_print > 0
                 self._varpro_opts[-1] = verbose
 
-            # Incorporate results into the running average
-            # ONLY IF the trial successfully converged.
-            if converged:
+            # Incorporate trial results into the running average if successful.
+            if converged or not self._remove_bad_bags:
                 sorted_inds = self._argsort_eigenvalues(e_i)
 
                 # Add to iterative sums.
@@ -810,12 +879,14 @@ class BOPDMDOperator(DMDOperator):
                 # and reset the consecutive fails counter.
                 num_successful_trials += 1
                 num_consecutive_fails = 0
+
+            # Trial did not converge, and we are throwing away bad bags.
             else:
                 num_consecutive_fails += 1
 
             if (
-                not runtime_warning_given
-                and num_consecutive_fails == self._bag_warning
+                num_consecutive_fails == self._bag_warning
+                and not runtime_warning_given
             ):
                 msg = (
                     "{} many trials without convergence. "
@@ -825,7 +896,7 @@ class BOPDMDOperator(DMDOperator):
                 print(msg.format(num_consecutive_fails))
                 runtime_warning_given = True
 
-            elif num_consecutive_fails == self._bag_maxfail:
+            if num_consecutive_fails == self._bag_maxfail:
                 msg = (
                     "Terminating the bagging routine due to "
                     "{} many trials without convergence."
@@ -852,6 +923,7 @@ class BOPDMDOperator(DMDOperator):
         self._Atilde = np.linalg.multi_dot(
             [w_proj, np.diag(self._eigenvalues), np.linalg.pinv(w_proj)]
         )
+
         # Compute A if requested.
         if self._compute_A:
             self._A = np.linalg.multi_dot(
@@ -904,7 +976,7 @@ class BOPDMD(DMDBase):
         trial. If trial_size is a float between 0 and 1, int(trial_size * m)
         many observations will be used per trial, where m denotes the total
         number of data points observed. Note that any other type of input for
-        trial_size will yield an error. Default is 0.2.
+        trial_size will yield an error. Default is 0.6.
     :type trial_size: int or float
     :param eig_sort: Method used to sort eigenvalues (and modes accordingly)
         when performing BOP-DMD. Eigenvalues will be sorted by real part and
@@ -924,12 +996,27 @@ class BOPDMD(DMDBase):
         function that will be applied to the computed eigenvalues at each step
         of the variable projection routine.
     :type eig_constraints: set(str) or function
+    :param mode_prox: Optional proximal operator function to apply to the DMD
+        modes. If `use_proj` is False, this function is applied at every
+        iteration of the variable projection routine. If `use_proj` is True,
+        this function is instead applied at the end of the variable projection
+        routine after the modes have been projected back to the space of the
+        full input data.
+    :type mode_prox: function
+    :param remove_bad_bags: Whether or not to exclude results from bagging
+        trials that didn't converge according to the tolerance used for
+        variable projection. Default is False, all trial results are kept
+        regardless of convergence.
+    :type remove_bad_bags: bool
     :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
         at which to produce a warning message for the user. Default is 100.
-        Use arguments less than or equal to zero for no warning condition.
+        This parameter becomes active only when `remove_bad_bags=True`. Use
+        negative arguments for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
-        at which to terminate the fit. Default is -1, no stopping condition.
+        at which to terminate the fit. Default is 200. This parameter becomes
+        active only when `remove_bad_bags=True`. Use negative arguments for no
+        stopping condition.
     :type bag_maxfail: int
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
@@ -952,8 +1039,10 @@ class BOPDMD(DMDBase):
         trial_size=0.6,
         eig_sort="auto",
         eig_constraints=None,
+        mode_prox=None,
+        remove_bad_bags=False,
         bag_warning=100,
-        bag_maxfail=-1,
+        bag_maxfail=200,
         varpro_opts_dict=None,
     ):
         self._svd_rank = svd_rank
@@ -968,10 +1057,11 @@ class BOPDMD(DMDBase):
         if not isinstance(bag_warning, int) or not isinstance(bag_maxfail, int):
             msg = (
                 "bag_warning and bag_maxfail must be integers. "
-                "Please use a non-positive integer if no warning "
+                "Please use a negative integer if no warning "
                 "or stopping condition is desired."
             )
             raise TypeError(msg)
+        self._remove_bad_bags = remove_bad_bags
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
 
@@ -990,6 +1080,7 @@ class BOPDMD(DMDBase):
             raise TypeError("eig_constraints must be a set or a function.")
         self._check_eig_constraints(eig_constraints)
         self._eig_constraints = eig_constraints
+        self._mode_prox = mode_prox
 
         self._snapshots_holder = None
         self._time = None
@@ -1342,6 +1433,8 @@ class BOPDMD(DMDBase):
             self._trial_size,
             self._eig_sort,
             self._eig_constraints,
+            self._mode_prox,
+            self._remove_bad_bags,
             self._bag_warning,
             self._bag_maxfail,
             **self._varpro_opts_dict,
@@ -1496,7 +1589,7 @@ class BOPDMD(DMDBase):
         if len(modes_shape) == 2:
             if y is None:
                 y = np.arange(modes_shape[1])
-            ygrid, xgrid = np.meshgrid(y, x)
+            xgrid, ygrid = np.meshgrid(x, y)
 
         # Collapse the results across time-delays.
         if d > 1:
@@ -1538,7 +1631,7 @@ class BOPDMD(DMDBase):
                 plt.pcolormesh(
                     xgrid,
                     ygrid,
-                    mode.reshape(*modes_shape, order=order).real,
+                    mode.reshape(xgrid.shape, order=order).real,
                     cmap="viridis",
                 )
                 plt.colorbar()
@@ -1554,7 +1647,7 @@ class BOPDMD(DMDBase):
                 plt.pcolormesh(
                     xgrid,
                     ygrid,
-                    mode_std.reshape(*modes_shape, order=order),
+                    mode_std.reshape(xgrid.shape, order=order),
                     cmap="inferno",
                 )
                 plt.colorbar()
