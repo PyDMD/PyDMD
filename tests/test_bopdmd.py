@@ -4,6 +4,7 @@ from scipy.integrate import solve_ivp
 
 from pydmd.bopdmd import BOPDMD
 
+
 def simulate_z(t_eval):
     """
     Given a time vector t_eval = t1, t2, ..., evaluates and returns
@@ -472,6 +473,7 @@ def test_mode_prox():
     """
     Test that the mode_prox function is applied as expected.
     """
+
     def dummy_prox(X):
         return X + 1.0
 
