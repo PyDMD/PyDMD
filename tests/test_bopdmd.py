@@ -125,7 +125,7 @@ def test_A():
     bopdmd.fit(Z_uneven, t_uneven)
     assert compute_error(bopdmd.A, expected_A) < 1e-3
 
-    bopdmd = BOPDMD(svd_rank=2, compute_A=True, varpro_opts_dict={"tol": 0.05})
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True)
     bopdmd.fit(Z_noisy, t)
     assert compute_error(bopdmd.A, expected_A) < 1e-3
 
@@ -444,6 +444,19 @@ def test_bag_int():
     bopdmd.fit(Z, t)
 
 
+def test_bag_getters():
+    """
+    Test calls to the num_trials and trial_size parameters.
+    """
+    bopdmd = BOPDMD(svd_rank=2, num_trials=0, trial_size=0.8)
+    assert bopdmd.num_trials == 0
+    assert bopdmd.trial_size == 0.8
+
+    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=3200)
+    assert bopdmd.num_trials == 100
+    assert bopdmd.trial_size == 3200
+
+
 def test_bag_error():
     """
     Test that errors are thrown if invalid bagging parameters are given.
@@ -498,7 +511,7 @@ def test_init_alpha_initializer():
     bopdmd = BOPDMD(svd_rank=2)
 
     # Initial eigs shouldn't be defined yet.
-    with raises(RuntimeError):
+    with raises(ValueError):
         _ = bopdmd.init_alpha
 
     # After fitting, the initial eigs used should be fairly accurate.
@@ -517,7 +530,7 @@ def test_proj_basis_initializer():
     bopdmd = BOPDMD(svd_rank=2)
 
     # Projection basis shouldn't be defined yet.
-    with raises(RuntimeError):
+    with raises(ValueError):
         _ = bopdmd.proj_basis
 
     # After fitting, the projection basis used should be accurate.
@@ -587,3 +600,41 @@ def test_std_shape():
     assert bopdmd.eigenvalues_std.shape == bopdmd.eigs.shape
     assert bopdmd.modes_std.shape == bopdmd.modes.shape
     assert bopdmd.amplitudes_std.shape == bopdmd.amplitudes.shape
+
+
+def test_std_nobags():
+    """
+    Test that std attributes are simply None if no bags were used.
+    """
+    bopdmd = BOPDMD(svd_rank=2, num_trials=0)
+    bopdmd.fit(Z, t)
+
+    assert bopdmd.eigenvalues_std is None
+    assert bopdmd.modes_std is None
+    assert bopdmd.amplitudes_std is None
+
+
+def test_getter_errors():
+    """
+    Test that error occurs if the following properties are called before fit:
+    time, atilde, A, eigenvalues_std, modes_std, amplitudes_std.
+    """
+    bopdmd = BOPDMD(compute_A=True)
+
+    with raises(ValueError):
+        _ = bopdmd.time
+
+    with raises(ValueError):
+        _ = bopdmd.atilde
+
+    with raises(ValueError):
+        _ = bopdmd.A
+
+    with raises(ValueError):
+        _ = bopdmd.eigenvalues_std
+
+    with raises(ValueError):
+        _ = bopdmd.modes_std
+
+    with raises(ValueError):
+        _ = bopdmd.amplitudes_std

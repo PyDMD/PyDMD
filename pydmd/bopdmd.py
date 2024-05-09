@@ -214,8 +214,6 @@ class BOPDMDOperator(DMDOperator):
                 "Set parameter compute_A = True to compute A."
             )
             raise ValueError(msg)
-        if self._A is None:
-            raise ValueError("You need to call fit before")
         return self._A
 
     @property
@@ -1126,7 +1124,7 @@ class BOPDMD(DMDBase):
                 "fit() hasn't been called "
                 "and no initial value for alpha has been given."
             )
-            raise RuntimeError(msg)
+            raise ValueError(msg)
         return self._init_alpha
 
     @init_alpha.setter
@@ -1148,7 +1146,7 @@ class BOPDMD(DMDBase):
                 "fit() hasn't been called "
                 "and no projection basis has been given."
             )
-            raise RuntimeError(msg)
+            raise ValueError(msg)
         return self._proj_basis
 
     @proj_basis.setter
@@ -1183,8 +1181,9 @@ class BOPDMD(DMDBase):
         :return: the vector that contains the original time points.
         :rtype: numpy.ndarray
         """
-        if self._time is None:
-            raise RuntimeError("fit() hasn't been called.")
+        if not self.fitted:
+            raise ValueError("You need to call fit() before.")
+
         return self._time
 
     @property
@@ -1195,6 +1194,9 @@ class BOPDMD(DMDBase):
         :return: the reduced Koopman operator A.
         :rtype: numpy.ndarray
         """
+        if not self.fitted:
+            raise ValueError("You need to call fit() before.")
+
         return self.operator.as_numpy_array
 
     @property
@@ -1205,6 +1207,9 @@ class BOPDMD(DMDBase):
         :return: the full Koopman operator A.
         :rtype: numpy.ndarray
         """
+        if not self.fitted:
+            raise ValueError("You need to call fit() before.")
+
         return self.operator.A
 
     @property
@@ -1215,7 +1220,7 @@ class BOPDMD(DMDBase):
         :return: matrix that contains all the time evolution, stored by row.
         :rtype: numpy.ndarray
         """
-        t_omega = np.exp(np.outer(self.eigs, self._time))
+        t_omega = np.exp(np.outer(self.eigs, self.time))
         return np.diag(self.amplitudes).dot(t_omega)
 
     @property
@@ -1226,6 +1231,9 @@ class BOPDMD(DMDBase):
         :return: amplitudes standard deviation.
         :rtype: numpy.ndarray
         """
+        if not self.fitted:
+            raise ValueError("You need to call fit() before.")
+
         return self.operator.amplitudes_std
 
     @property
@@ -1236,6 +1244,9 @@ class BOPDMD(DMDBase):
         :return: eigenvalues standard deviation.
         :rtype: numpy.ndarray
         """
+        if not self.fitted:
+            raise ValueError("You need to call fit() before.")
+
         return self.operator.eigenvalues_std
 
     @property
@@ -1246,6 +1257,9 @@ class BOPDMD(DMDBase):
         :return: modes standard deviation.
         :rtype: numpy.ndarray
         """
+        if not self.fitted:
+            raise ValueError("You need to call fit() before.")
+
         return self.operator.modes_std
 
     @property
@@ -1263,8 +1277,8 @@ class BOPDMD(DMDBase):
         Prints a formatted information string that displays all chosen
         variable projection parameter values.
         """
-        if self._Atilde is None:
-            raise ValueError("You need to call fit before")
+        if not self.fitted:
+            raise ValueError("You need to call fit() before.")
 
         opt_names = [
             "init_lambda",
