@@ -89,7 +89,7 @@ def dummy_grad(Xk, yk):
     """
     Externally-defined linear kernel function gradient.
     """
-    return Xk.T
+    return Xk.T.dot(np.eye(len(yk)))
 
 
 # Generate Lorenz system data.

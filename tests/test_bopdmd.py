@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from pytest import raises, warns
 from scipy.integrate import solve_ivp
 
@@ -340,6 +341,7 @@ def test_plot_mode_uq():
     bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=0.8)
     bopdmd.fit(Z, t)
     bopdmd.plot_mode_uq()
+    plt.close()
 
 
 def test_plot_eig_uq():
@@ -349,6 +351,7 @@ def test_plot_eig_uq():
     bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=0.8)
     bopdmd.fit(Z, t)
     bopdmd.plot_eig_uq()
+    plt.close()
 
 
 def test_plot_error():
