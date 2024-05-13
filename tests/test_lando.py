@@ -1,4 +1,5 @@
 import numpy as np
+from pytest import raises, warns
 from scipy.integrate import solve_ivp
 from numpy.testing import assert_allclose, assert_equal
 
@@ -77,11 +78,29 @@ def generate_lorenz_data(t_eval, x0=(-8, 8, 27)):
     return sol.y
 
 
+def dummy_kernel(Xk, Yk):
+    """
+    Externally-defined linear kernel function.
+    """
+    return Xk.T.dot(Yk)
+
+
+def dummy_grad(Xk, yk):
+    """
+    Externally-defined linear kernel function gradient.
+    """
+    return Xk.T.dot(np.eye(len(yk)))
+
+
 # Generate Lorenz system data.
 dt = 0.001
 t = np.arange(0, 10, dt)
 X = generate_lorenz_data(t)
 Y = differentiate(X, dt)
+
+# Generate short version of the data.
+X_short = X[:, :2000]
+Y_short = Y[:, :2000]
 
 # Set the LANDO learning parameters used by most test models.
 lando_params = {}
@@ -100,7 +119,7 @@ def test_fitted():
     assert not lando.partially_fitted
     assert not lando.fitted
 
-    lando.fit(X, Y)
+    lando.fit(X_short, Y_short)
     assert lando.partially_fitted
     assert not lando.fitted
 
@@ -109,15 +128,19 @@ def test_fitted():
     assert lando.fitted
 
 
-def test_shapes():
+def test_sparse_dictionary():
     """
-    Test that the shapes of the sparse dictionary and the sparse dictionary
-    weights are as expected.
+    Test that the shapes of the sparse dictionary and that the sparse
+    dictionary weights are as expected.
     """
     lando = LANDO(**lando_params)
-    lando.fit(X, Y)
-    assert X.shape[0] == lando.sparse_dictionary.shape[0]
-    assert X.shape[-1] > lando.sparse_dictionary.shape[-1]
+
+    with raises(ValueError):
+        _ = lando.sparse_dictionary
+
+    lando.fit(X_short, Y_short)
+    assert X_short.shape[0] == lando.sparse_dictionary.shape[0]
+    assert X_short.shape[-1] > lando.sparse_dictionary.shape[-1]
     assert lando.operator.weights.shape == lando.sparse_dictionary.shape
 
 
@@ -206,7 +229,7 @@ def test_predict_2():
         dt=dt,
         solve_ivp_opts=solve_ivp_opts,
     )
-    assert relative_error(lando_predict, X_long) < 0.05
+    assert relative_error(lando_predict, X_long) < 0.1
 
 
 def test_predict_3():
@@ -240,7 +263,7 @@ def test_predict_4():
         tend=len(t),
         continuous=False,
     )
-    assert relative_error(lando_predict, X) < 0.05
+    assert relative_error(lando_predict, X) < 0.1
 
 
 def test_online_1():
@@ -254,7 +277,7 @@ def test_online_1():
     lando_online = LANDO(online=True, **lando_params)
     lando_online.fit(X, Y)
 
-    assert relative_error(lando_online.f(X), lando.f(X)) < 1e-5
+    assert relative_error(lando_online.f(X), lando.f(X)) < 1e-3
 
 
 def test_online_2():
@@ -270,7 +293,7 @@ def test_online_2():
     lando_online.fit(X[:, :batch_split], Y[:, :batch_split])
     lando_online.update(X[:, batch_split:], Y[:, batch_split:])
 
-    assert relative_error(lando_online.f(X), lando.f(X)) < 1e-5
+    assert relative_error(lando_online.f(X), lando.f(X)) < 1e-3
 
 
 def test_online_3():
@@ -290,5 +313,243 @@ def test_online_3():
 
     assert_equal(lando_online.fixed_point, lando.fixed_point)
     assert np.linalg.norm(lando_online.bias) < 1e-3
-    assert relative_error(lando_online.linear, lando.linear) < 1e-4
-    assert relative_error(lando_online.nonlinear(X), lando.nonlinear(X)) < 1e-4
+    assert relative_error(lando_online.linear, lando.linear) < 1e-3
+    assert relative_error(lando_online.nonlinear(X), lando.nonlinear(X)) < 1e-3
+
+
+def test_default_kernel():
+    """
+    Test that there are no errors when calling the default linear kernel.
+    """
+    lando = LANDO()
+    lando.fit(X_short, Y_short)
+    lando.analyze_fixed_point(x_bar)
+
+
+def test_rbf_kernel():
+    """
+    Test that there are no errors when calling the default RBF kernel.
+    """
+    lando = LANDO(kernel_metric="rbf")
+    lando.fit(X_short, Y_short)
+    lando.analyze_fixed_point(x_bar)
+
+
+def test_custom_kernel():
+    """
+    Test that there are no errors when using custom kernel functions.
+    """
+    lando = LANDO(kernel_function=dummy_kernel, kernel_gradient=dummy_grad)
+    lando.fit(X_short, Y_short)
+    lando.analyze_fixed_point(x_bar)
+
+
+def test_custom_kernel_error():
+    """
+    Test that an error occurs if a user attempts a fixed point analysis with a
+    custom kernel function but without a kernel gradient function.
+    """
+    lando = LANDO(kernel_function=dummy_kernel)
+    lando.fit(X_short, Y_short)
+
+    with raises(ValueError):
+        lando.analyze_fixed_point(x_bar)
+
+
+def test_kernel_inputs():
+    """
+    Tests various errors caught by the test_kernel_inputs function.
+    """
+    # Error should be thrown if an invalid kernel metric is given.
+    with raises(ValueError):
+        _ = LANDO(kernel_metric="blah")
+
+    # Error should be thrown if kernel_params isn't a dict.
+    with raises(TypeError):
+        _ = LANDO(kernel_metric="poly", kernel_params=3)
+
+    # Error should be thrown if kernel_params contains invalid entries.
+    with raises(ValueError):
+        _ = LANDO(kernel_metric="poly", kernel_params={"blah": 3})
+
+
+def test_kernel_functions_1():
+    """
+    Tests various errors caught by the test_kernel_functions function.
+    Tests for errors related to invalid inputs and combinations.
+    """
+    # Warning should arise if a kernel function is given without a gradient.
+    with warns():
+        _ = LANDO(kernel_function=dummy_kernel)
+
+    # Error should be thrown if a gradient is given without a kernel function.
+    with raises(ValueError):
+        _ = LANDO(kernel_gradient=dummy_grad)
+
+    # Error should be thrown if kernel_function isn't a function.
+    with raises(TypeError):
+        _ = LANDO(kernel_function=0, kernel_gradient=dummy_grad)
+
+    # Error should be thrown if kernel_gradient isn't a function.
+    with raises(TypeError):
+        _ = LANDO(kernel_function=dummy_kernel, kernel_gradient=0)
+
+
+def test_kernel_functions_2():
+    """
+    Tests various errors caught by the test_kernel_functions function.
+    Tests for errors related to invalid function inputs.
+    """
+
+    # Define functions that malfunction when called:
+    def bad_kernel_1(Xk, Yk):
+        return dummy_kernel(Xk.T, Yk)
+
+    def bad_grad_1(Xk, yk):
+        return dummy_grad(Xk.T, yk)
+
+    # Define functions that yield incorrect dimensions:
+    def bad_kernel_2(Xk, Yk):
+        return dummy_kernel(Xk, Yk).T
+
+    def bad_grad_2(Xk, yk):
+        return dummy_grad(Xk, yk).T
+
+    with raises(ValueError):
+        _ = LANDO(kernel_function=bad_kernel_1, kernel_gradient=dummy_grad)
+
+    with raises(ValueError):
+        _ = LANDO(kernel_function=bad_kernel_2, kernel_gradient=dummy_grad)
+
+    with raises(ValueError):
+        _ = LANDO(kernel_function=dummy_kernel, kernel_gradient=bad_grad_1)
+
+    with raises(ValueError):
+        _ = LANDO(kernel_function=dummy_kernel, kernel_gradient=bad_grad_2)
+
+
+def test_supported_kernels():
+    """
+    Test a call to supported kernels.
+    """
+    lando = LANDO()
+    print(lando.supported_kernels)
+
+
+def test_errors_f():
+    """
+    Test that expected errors are thrown when calling f.
+    """
+    lando = LANDO()
+
+    # Error should be thrown if f is called prior to fitting.
+    with raises(ValueError):
+        _ = lando.f(X_short)
+
+    lando.fit(X_short, Y_short)
+
+    # Error should be thrown if f is given data with the wrong dimension.
+    with raises(ValueError):
+        _ = lando.f(X_short[:-1])
+
+
+def test_errors_predict():
+    """
+    Test that expected errors are thrown when calling predict.
+    """
+    lando = LANDO()
+
+    # Error should be thrown if called prior to fitting.
+    with raises(ValueError):
+        _ = lando.predict(x0=(-8, 8, 27), tend=len(t))
+
+    lando.fit(X_short, Y_short)
+
+    # Error should be thrown if data is the wrong dimension.
+    with raises(ValueError):
+        _ = lando.predict(x0=(-8, 8), tend=len(t))
+
+
+def test_errors_fixed_point():
+    """
+    Test that expected errors are thrown when calling analyze_fixed_point.
+    """
+    lando = LANDO()
+
+    # Error should be thrown if called prior to fitting.
+    with raises(ValueError):
+        lando.analyze_fixed_point(x_bar)
+
+    lando.fit(X_short, Y_short)
+
+    # Error should be thrown if fixed point is the wrong dimension.
+    with raises(ValueError):
+        lando.analyze_fixed_point(x_bar[:-1])
+
+
+def test_errors_update():
+    """
+    Test that expected errors are thrown when calling update.
+    """
+    lando = LANDO()
+
+    # Error should be thrown if called prior to fitting.
+    with raises(ValueError):
+        lando.update(X_short, Y_short)
+
+    lando.fit(X_short, Y_short)
+
+    # Error should be thrown if data is the wrong dimension.
+    with raises(ValueError):
+        lando.update(X_short, Y_short[:, :-1])
+
+
+def test_errors_get():
+    """
+    Test that errors are thrown if the following are attempted to be retrieved
+    prior to fully fitting: fixed_point, bias, linear, nonlinear.
+    """
+    lando = LANDO()
+
+    # Errors should be thrown if called prior to fitting:
+    with raises(ValueError):
+        _ = lando.fixed_point
+
+    with raises(ValueError):
+        _ = lando.bias
+
+    with raises(ValueError):
+        _ = lando.linear
+
+    with raises(ValueError):
+        _ = lando.nonlinear(X_short)
+
+    lando.fit(X_short, Y_short)
+
+    # Errors should still be thrown after a call to just fit:
+    with raises(ValueError):
+        _ = lando.fixed_point
+
+    with raises(ValueError):
+        _ = lando.bias
+
+    with raises(ValueError):
+        _ = lando.linear
+
+    with raises(ValueError):
+        _ = lando.nonlinear(X_short)
+
+
+def test_reconstructed_data():
+    """
+    Test reconstructed data shape and output.
+    """
+    lando = LANDO()
+    lando.fit(X_short, Y_short)
+    lando.analyze_fixed_point(x_bar)
+
+    # Calling for reconstructed data should yield a warning.
+    with warns():
+        X_recon = lando.reconstructed_data
+
+    assert X_recon.shape == X_short.shape

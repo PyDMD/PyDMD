@@ -1,5 +1,6 @@
 import numpy as np
-from pytest import raises
+import matplotlib.pyplot as plt
+from pytest import raises, warns
 from scipy.integrate import solve_ivp
 
 from pydmd.bopdmd import BOPDMD
@@ -125,7 +126,7 @@ def test_A():
     bopdmd.fit(Z_uneven, t_uneven)
     assert compute_error(bopdmd.A, expected_A) < 1e-3
 
-    bopdmd = BOPDMD(svd_rank=2, compute_A=True, varpro_opts_dict={"tol": 0.05})
+    bopdmd = BOPDMD(svd_rank=2, compute_A=True)
     bopdmd.fit(Z_noisy, t)
     assert compute_error(bopdmd.A, expected_A) < 1e-3
 
@@ -331,3 +332,312 @@ def test_eig_constraints_2():
     bopdmd1 = BOPDMD(svd_rank=2, eig_constraints={"imag"}).fit(Z, t)
     bopdmd2 = BOPDMD(svd_rank=2, eig_constraints=make_imag).fit(Z, t)
     np.testing.assert_array_equal(bopdmd1.eigs, bopdmd2.eigs)
+
+
+def test_plot_mode_uq():
+    """
+    Test that a basic call to plot_mode_uq is successful.
+    """
+    bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=0.8)
+    bopdmd.fit(Z, t)
+    bopdmd.plot_mode_uq()
+    plt.close()
+
+
+def test_plot_eig_uq():
+    """
+    Test that a basic call to plot_eig_uq is successful.
+    """
+    bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=0.8)
+    bopdmd.fit(Z, t)
+    bopdmd.plot_eig_uq()
+    plt.close()
+
+
+def test_plot_error():
+    """
+    Test that UQ plotters fail if bagging wasn't used.
+    """
+    bopdmd = BOPDMD(svd_rank=2, num_trials=0)
+    bopdmd.fit(Z, t)
+
+    with raises(ValueError):
+        bopdmd.plot_mode_uq()
+
+    with raises(ValueError):
+        bopdmd.plot_eig_uq()
+
+
+def test_varpro_opts_warn():
+    """
+    Test that errors or warnings are correctly thrown if invalid
+    or poorly-chosen variable projection parameters are given.
+    The `tol` parameter is specifically tested.
+    """
+    with raises(TypeError):
+        bopdmd = BOPDMD(varpro_opts_dict={"tol": None})
+        bopdmd.fit(Z, t)
+
+    with warns():
+        bopdmd = BOPDMD(varpro_opts_dict={"tol": -1.0})
+        bopdmd.fit(Z, t)
+
+    with warns():
+        bopdmd = BOPDMD(varpro_opts_dict={"tol": np.inf})
+        bopdmd.fit(Z, t)
+
+
+def test_varpro_opts_print():
+    """
+    Test that variable projection parameters can be printed after fitting.
+    """
+    bopdmd = BOPDMD(svd_rank=2)
+
+    with raises(ValueError):
+        bopdmd.print_varpro_opts()
+
+    bopdmd.fit(Z, t)
+    bopdmd.print_varpro_opts()
+
+
+def test_verbose_outputs_1():
+    """
+    Test variable projection verbosity for optimized DMD.
+    """
+    bopdmd = BOPDMD(
+        svd_rank=2,
+        num_trials=0,
+        varpro_opts_dict={"verbose": True},
+    )
+    bopdmd.fit(Z, t)
+
+
+def test_verbose_outputs_2():
+    """
+    Test variable projection verbosity for BOP-DMD.
+    """
+    bopdmd = BOPDMD(
+        svd_rank=2,
+        num_trials=10,
+        trial_size=0.8,
+        varpro_opts_dict={"verbose": True},
+    )
+    bopdmd.fit(Z, t)
+
+
+def test_verbose_outputs_3():
+    """
+    Test variable projection verbosity for BOP-DMD without bad bags.
+    """
+    bopdmd = BOPDMD(
+        svd_rank=2,
+        num_trials=10,
+        trial_size=0.8,
+        varpro_opts_dict={"verbose": True, "tol": 1.0},
+        remove_bad_bags=True,
+    )
+    bopdmd.fit(Z, t)
+
+
+def test_bag_int():
+    """
+    Test that trial_size can be a valid integer value.
+    """
+    bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=3200)
+    bopdmd.fit(Z, t)
+
+
+def test_bag_getters():
+    """
+    Test calls to the num_trials and trial_size parameters.
+    """
+    bopdmd = BOPDMD(svd_rank=2, num_trials=0, trial_size=0.8)
+    assert bopdmd.num_trials == 0
+    assert bopdmd.trial_size == 0.8
+
+    bopdmd = BOPDMD(svd_rank=2, num_trials=100, trial_size=3200)
+    assert bopdmd.num_trials == 100
+    assert bopdmd.trial_size == 3200
+
+
+def test_bag_error():
+    """
+    Test that errors are thrown if invalid bagging parameters are given.
+    """
+    # Error should raise if trial_size isn't a positive integer...
+    with raises(ValueError):
+        bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=-1)
+        bopdmd.fit(Z, t)
+
+    # ...or if it isn't a float in the range (0.0, 1.0).
+    with raises(ValueError):
+        bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=2.0)
+        bopdmd.fit(Z, t)
+
+    # Error should raise if the requested trial size is too big...
+    with raises(ValueError):
+        bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=4001)
+        bopdmd.fit(Z, t)
+
+    # ...or if the requested trial size is too small.
+    with raises(ValueError):
+        bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=1e-6)
+        bopdmd.fit(Z, t)
+
+
+def test_mode_prox():
+    """
+    Test that the mode_prox function is applied as expected.
+    """
+
+    def dummy_prox(X):
+        return X + 1.0
+
+    # Test that the function is applied in the use_proj=False case.
+    bopdmd = BOPDMD(svd_rank=2, use_proj=False, mode_prox=dummy_prox)
+    bopdmd.fit(Z, t)
+
+    # Test that the function is applied in the use_proj=True case.
+    bopdmd = BOPDMD(svd_rank=2, use_proj=True, mode_prox=dummy_prox)
+    bopdmd.fit(Z, t)
+
+    # Compare use_proj=True results to the no prox case.
+    bopdmd_noprox = BOPDMD(svd_rank=2, use_proj=True)
+    bopdmd_noprox.fit(Z, t)
+    np.testing.assert_allclose(bopdmd.modes, dummy_prox(bopdmd_noprox.modes))
+
+
+def test_init_alpha_initializer():
+    """
+    Test that the eigenvalues are accurately initialized by default.
+    """
+    bopdmd = BOPDMD(svd_rank=2)
+
+    # Initial eigs shouldn't be defined yet.
+    with raises(ValueError):
+        _ = bopdmd.init_alpha
+
+    # After fitting, the initial eigs used should be fairly accurate.
+    bopdmd.fit(Z, t)
+    np.testing.assert_allclose(
+        sort_imag(bopdmd.init_alpha),
+        expected_eigs,
+        rtol=0.01,
+    )
+
+
+def test_proj_basis_initializer():
+    """
+    Test that the projection basis is accurately initialized by default.
+    """
+    bopdmd = BOPDMD(svd_rank=2)
+
+    # Projection basis shouldn't be defined yet.
+    with raises(ValueError):
+        _ = bopdmd.proj_basis
+
+    # After fitting, the projection basis used should be accurate.
+    bopdmd.fit(Z, t)
+    np.testing.assert_array_equal(bopdmd.proj_basis, np.linalg.svd(Z)[0])
+
+
+def test_svd_rank():
+    """
+    Test svd_rank getter and setter.
+    """
+    bopdmd = BOPDMD(svd_rank=2)
+    assert bopdmd.svd_rank == 2
+
+    bopdmd.svd_rank = 0
+    assert bopdmd.svd_rank == 0
+
+
+def test_init_alpha():
+    """
+    Test init_alpha getter and setter.
+    """
+    dummy_eigs = 2.0 * expected_eigs
+    bopdmd = BOPDMD(init_alpha=dummy_eigs)
+    np.testing.assert_array_equal(bopdmd.init_alpha, dummy_eigs)
+
+    bopdmd.init_alpha = 2.0 * dummy_eigs
+    np.testing.assert_array_equal(bopdmd.init_alpha, 2.0 * dummy_eigs)
+
+
+def test_proj_basis():
+    """
+    Test proj_basis getter and setter.
+    """
+    dummy_basis = 2.0 * np.linalg.svd(Z)[0]
+    bopdmd = BOPDMD(proj_basis=dummy_basis)
+    np.testing.assert_array_equal(bopdmd.proj_basis, dummy_basis)
+
+    bopdmd.proj_basis = 2.0 * dummy_basis
+    np.testing.assert_array_equal(bopdmd.proj_basis, 2.0 * dummy_basis)
+
+
+def test_default_initializers():
+    """
+    Test that default initialization does not impact custom inputs.
+    """
+    # Define the dummy init_alpha and proj_basis to NOT be the defaults.
+    dummy_eigs = 2.0 * expected_eigs
+    dummy_basis = 2.0 * np.linalg.svd(Z)[0]
+    bopdmd = BOPDMD(
+        svd_rank=2,
+        init_alpha=dummy_eigs,
+        proj_basis=dummy_basis,
+    )
+    bopdmd.fit(Z, t)
+    np.testing.assert_array_equal(bopdmd.init_alpha, dummy_eigs)
+    np.testing.assert_array_equal(bopdmd.proj_basis, dummy_basis)
+
+
+def test_std_shape():
+    """
+    Test the shapes of the standard deviation attributes.
+    """
+    bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=0.8)
+    bopdmd.fit(Z, t)
+
+    assert bopdmd.eigenvalues_std.shape == bopdmd.eigs.shape
+    assert bopdmd.modes_std.shape == bopdmd.modes.shape
+    assert bopdmd.amplitudes_std.shape == bopdmd.amplitudes.shape
+
+
+def test_std_nobags():
+    """
+    Test that std attributes are simply None if no bags were used.
+    """
+    bopdmd = BOPDMD(svd_rank=2, num_trials=0)
+    bopdmd.fit(Z, t)
+
+    assert bopdmd.eigenvalues_std is None
+    assert bopdmd.modes_std is None
+    assert bopdmd.amplitudes_std is None
+
+
+def test_getter_errors():
+    """
+    Test that error occurs if the following properties are called before fit:
+    time, atilde, A, eigenvalues_std, modes_std, amplitudes_std.
+    """
+    bopdmd = BOPDMD(compute_A=True)
+
+    with raises(ValueError):
+        _ = bopdmd.time
+
+    with raises(ValueError):
+        _ = bopdmd.atilde
+
+    with raises(ValueError):
+        _ = bopdmd.A
+
+    with raises(ValueError):
+        _ = bopdmd.eigenvalues_std
+
+    with raises(ValueError):
+        _ = bopdmd.modes_std
+
+    with raises(ValueError):
+        _ = bopdmd.amplitudes_std
