@@ -19,10 +19,11 @@ PyDMD offers a seamless integration with the scientific Python ecosystem, levera
 
 PyDMD promotes ease of use and customization, providing a well-documented API with intuitive function names and clear parameter descriptions. The package is actively maintained and updated, ensuring compatibility with the latest Python versions and incorporating user feedback to improve functionality and performance. We provide many tutorials showing the characteristics of the software. 
 
-.. image:: _static/pydmd_capabilities.png
+.. image:: _static/pydmd_capabilities.svg
    :width: 700 px
    :align: center
 
+|
 
 Installation
 --------------------
