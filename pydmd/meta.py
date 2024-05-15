@@ -12,7 +12,7 @@ __all__ = [
 
 __project__ = "PyDMD"
 __title__ = "pydmd"
-__author__ = "Nicola Demo, Marco Tezzele, Francesco Andreuzzi, Sara Ichinaga"
+__author__ = "Nicola Demo, Marco Tezzele, Francesco Andreuzzi, Sara Ichinaga, Karl Lapo"
 __copyright__ = "Copyright 2017-2024, PyDMD contributors"
 __license__ = "MIT"
 __version__ = "1.0.0"
