@@ -149,8 +149,8 @@ expected_n_components = 2
 
 # Define the expected error in the reconstructions.
 expected_global_error = 0.053
-expected_lf_error = 0.12
-expected_hf_error = 0.19
+expected_lf_error = 0.10
+expected_hf_error = 0.17
 expected_transient_error = 0.3
 
 # Fit mrCOSTS for testing
@@ -360,7 +360,7 @@ def test_plot_local_time_series():
         _ = mrc.plot_local_time_series(0, 0, data=data.T)
 
 
-def tear_down():
+def test_tear_down():
     """Remove the files generated in `test_netcdf`"""
     file_list = glob.glob("*tests*.nc")
     for f in file_list:

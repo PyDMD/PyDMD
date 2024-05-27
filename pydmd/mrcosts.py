@@ -1041,14 +1041,8 @@ class mrCOSTS:
 
             # Convolve each windowed reconstruction with a gaussian filter.
             # Std dev of gaussian filter
-            recon_filter_sd = mrd.window_length / 8
-            recon_filter = np.exp(
-                -(
-                    (np.arange(mrd.window_length) - (mrd.window_length + 1) / 2)
-                    ** 2
-                )
-                / recon_filter_sd**2
-            )
+            recon_filter = mrd.build_kern(mrd.window_length)
+
             omega_classes = omega_classes_list[n_mrd]
 
             if mrd.svd_rank < np.max(self._svd_rank_array):
