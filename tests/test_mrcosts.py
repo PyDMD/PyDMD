@@ -286,11 +286,13 @@ def test_omega_transforms():
         )
 
 
-def test_netcdf():
+def test_netcdf(tmp_path):
     """
     Test the round trip conversion of the mrCOSTS object to file in
     netcdf format and back to mrCOSTS.
     """
+    # Move the I/O tests to the temporary test directory.
+    os.chdir(tmp_path)
     mrc.to_netcdf("tests")
     file_list = glob.glob("*tests*.nc")
     mrc_from_file = mrCOSTS()
@@ -358,10 +360,3 @@ def test_plot_local_time_series():
 
     with raises(ValueError):
         _ = mrc.plot_local_time_series(0, 0, data=data.T)
-
-
-def test_tear_down():
-    """Remove the files generated in `test_netcdf`"""
-    file_list = glob.glob("*tests*.nc")
-    for f in file_list:
-        os.remove(f)

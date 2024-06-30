@@ -325,7 +325,8 @@ class COSTS:
 
         lv_kern = (
             np.tanh(
-                corner_sharpness * np.arange(0, window_length) / window_length
+                corner_sharpness
+                * np.linspace(0, 1, window_length, endpoint=False)
             )
             - np.tanh(
                 corner_sharpness
