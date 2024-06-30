@@ -575,14 +575,16 @@ class mrCOSTS:
 
         """
         for c in self._costs_array:
+            fname = ".".join(
+                (
+                    filename,
+                    f"window={c.window_length:}",
+                    "nc",
+                )
+            )
+            fpath = os.path.join(filepath, fname)
             c.to_xarray().to_netcdf(
-                filepath.join(
-                    (
-                        filename,
-                        f"window={c.window_length:}",
-                        "nc",
-                    )
-                ),
+                fpath,
                 engine="h5netcdf",
                 invalid_netcdf=True,
             )
