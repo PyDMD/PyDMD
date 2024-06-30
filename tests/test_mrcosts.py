@@ -292,8 +292,7 @@ def test_netcdf(tmp_path):
     netcdf format and back to mrCOSTS.
     """
     # Move the I/O tests to the temporary test directory.
-    os.chdir(tmp_path)
-    mrc.to_netcdf("tests")
+    mrc.to_netcdf("tests", filepath=tmp_path)
     file_list = glob.glob("*tests*.nc")
     mrc_from_file = mrCOSTS()
     mrc_from_file.from_netcdf(file_list)

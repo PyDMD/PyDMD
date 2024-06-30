@@ -560,7 +560,7 @@ class mrCOSTS:
         self._n_data_vars = n_data_vars
         self._n_time_steps = n_time_steps
 
-    def to_netcdf(self, filename):
+    def to_netcdf(self, filename, filepath="."):
         """
         Save the mrCoSTS fit to file in netcdf format.
 
@@ -569,10 +569,14 @@ class mrCOSTS:
 
         :param filename: Common name shared by each file.
         :type filename: str
+        :param filepath: Path to save the results. Default is the current
+        directory.
+        :type filename: str
+
         """
         for c in self._costs_array:
             c.to_xarray().to_netcdf(
-                ".".join(
+                filepath.join(
                     (
                         filename,
                         f"window={c.window_length:}",
