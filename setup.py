@@ -15,7 +15,7 @@ KEYWORDS = "dynamic-mode-decomposition dmd"
 
 REQUIRED = [
     "numpy<2",
-    "scipy",
+    "scipy>=1.6.0",
     "matplotlib",
     "scikit-learn",
     "xarray",
