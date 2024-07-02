@@ -105,7 +105,7 @@ print("Shape after manipulation: {}".format(dmd.reconstructed_data.shape))
 
 # Now the cool trick: we combine the reconstructed dataset to create an animation that shows the evolution of our system. We underline that you need ffmpeg installed in order to see the video.
 
-# In[ ]:
+# In[7]:
 
 
 fig = plt.figure()
@@ -129,7 +129,7 @@ HTML(ani.to_html5_video())
 # In[8]:
 
 
-compute_integral = scipy.integrate.trapz
+compute_integral = scipy.integrate.trapezoid
 
 original_int = [
     compute_integral(compute_integral(snapshot)).real for snapshot in snapshots
