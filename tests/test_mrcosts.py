@@ -149,8 +149,8 @@ expected_n_components = 2
 
 # Define the expected error in the reconstructions.
 expected_global_error = 0.053
-expected_lf_error = 0.12
-expected_hf_error = 0.19
+expected_lf_error = 0.10
+expected_hf_error = 0.17
 expected_transient_error = 0.3
 
 # Fit mrCOSTS for testing
@@ -286,13 +286,14 @@ def test_omega_transforms():
         )
 
 
-def test_netcdf():
+def test_netcdf(tmp_path):
     """
     Test the round trip conversion of the mrCOSTS object to file in
     netcdf format and back to mrCOSTS.
     """
-    mrc.to_netcdf("tests")
-    file_list = glob.glob("*tests*.nc")
+    # Move the I/O tests to the temporary test directory.
+    mrc.to_netcdf("tests", filepath=tmp_path)
+    file_list = glob.glob(os.path.join(tmp_path, "*tests*.nc"))
     mrc_from_file = mrCOSTS()
     mrc_from_file.from_netcdf(file_list)
 
@@ -358,10 +359,3 @@ def test_plot_local_time_series():
 
     with raises(ValueError):
         _ = mrc.plot_local_time_series(0, 0, data=data.T)
-
-
-def tear_down():
-    """Remove the files generated in `test_netcdf`"""
-    file_list = glob.glob("*tests*.nc")
-    for f in file_list:
-        os.remove(f)

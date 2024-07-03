@@ -560,7 +560,7 @@ class mrCOSTS:
         self._n_data_vars = n_data_vars
         self._n_time_steps = n_time_steps
 
-    def to_netcdf(self, filename):
+    def to_netcdf(self, filename, filepath="."):
         """
         Save the mrCoSTS fit to file in netcdf format.
 
@@ -569,16 +569,22 @@ class mrCOSTS:
 
         :param filename: Common name shared by each file.
         :type filename: str
+        :param filepath: Path to save the results. Default is the current
+        directory.
+        :type filename: str
+
         """
         for c in self._costs_array:
+            fname = ".".join(
+                (
+                    filename,
+                    f"window={c.window_length:}",
+                    "nc",
+                )
+            )
+            fpath = os.path.join(filepath, fname)
             c.to_xarray().to_netcdf(
-                ".".join(
-                    (
-                        filename,
-                        f"window={c.window_length:}",
-                        "nc",
-                    )
-                ),
+                fpath,
                 engine="h5netcdf",
                 invalid_netcdf=True,
             )
@@ -1041,14 +1047,8 @@ class mrCOSTS:
 
             # Convolve each windowed reconstruction with a gaussian filter.
             # Std dev of gaussian filter
-            recon_filter_sd = mrd.window_length / 8
-            recon_filter = np.exp(
-                -(
-                    (np.arange(mrd.window_length) - (mrd.window_length + 1) / 2)
-                    ** 2
-                )
-                / recon_filter_sd**2
-            )
+            recon_filter = mrd.build_kern(mrd.window_length)
+
             omega_classes = omega_classes_list[n_mrd]
 
             if mrd.svd_rank < np.max(self._svd_rank_array):

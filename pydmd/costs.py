@@ -326,12 +326,11 @@ class COSTS:
         lv_kern = (
             np.tanh(
                 corner_sharpness
-                * np.arange(1, window_length + 1)
-                / window_length
+                * np.linspace(0, 1, window_length, endpoint=False)
             )
             - np.tanh(
                 corner_sharpness
-                * (np.arange(1, window_length + 1) - window_length)
+                * (np.arange(0, window_length) - window_length - 1)
                 / window_length
             )
             - 1
@@ -354,7 +353,7 @@ class COSTS:
         """
         recon_filter_sd = window_length / 8
         recon_filter = np.exp(
-            -((np.arange(window_length) - (window_length + 1) / 2) ** 2)
+            -((np.arange(window_length) - (window_length - 1) / 2) ** 2)
             / recon_filter_sd**2
         )
         return recon_filter
