@@ -1,3 +1,71 @@
+[project]
+name = "PyDMD"
+dynamic = ["version"]
+description = "Python Dynamic Mode Decomposition."
+requires-python = ">=3.8"
+dependencies = [
+    "numpy<2",
+    "scipy>=1.6.0",
+    "matplotlib",
+    "scikit-learn",
+    "xarray",
+    "h5netcdf",
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["dynamic-mode-decomposition", "dmd"]
+classifiers=[
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+authors = [
+  {name = "Nicola Demo"},
+  {name = "Marco Tezzele"},
+  {name = "Francesco Andreuzzi"},
+  {name = "Sara Ichinaga"},
+  {name = "Karl Lapo"},
+]
+maintainers = [
+    {email = "pydmd.info@gmail.com"}
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "ezyrb>=v1.2.1.post2205"
+]
+docs = [
+    "sphinx>=1.4",
+    "sphinx_rtd_theme"
+]
+
+[project.urls]
+Homepage = "https://pydmd.github.io/PyDMD"
+Documentation = "https://pydmd.github.io/PyDMD/code.html"
+Issues = "https://github.com/PyDMD/PyDMD/issues"
+Repository = "https://github.com/PyDMD/PyDMD"
+
+[build-system]
+requires = [ "setuptools>=41", "wheel", "setuptools-git-versioning>=2.0,<3", ]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools-git-versioning]
+enabled = true
+template = "{tag}"
+
+[tool.setuptools.packages.find]
+include = ["pydmd*"]
+
 [tool.black]
 line-length = 80
 

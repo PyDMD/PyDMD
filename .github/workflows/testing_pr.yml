@@ -13,10 +13,10 @@ jobs:
        matrix_tutorial_test: ${{ steps.setmatrix.outputs.matrix2 }}
 
     steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4.1.7
 
         - name: Set up Python
-          uses: actions/setup-python@v4.5.0
+          uses: actions/setup-python@v5.1.1
 
         - name: Set Dynamic Matrix
           id: setmatrix
@@ -43,7 +43,7 @@ jobs:
   black: ######################################################################################
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4.1.7
     - name: Install black
       run: |
         pip install black[jupyter]==24.2.0
@@ -67,7 +67,7 @@ jobs:
   sort_dependencies: ##########################################################################
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4.1.7
     - name: Install isort
       run: |
         pip install isort
@@ -89,13 +89,13 @@ jobs:
       fail-fast: false
         
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4.1.7
     - name: Set up Python
-      uses: actions/setup-python@v4.5.0
+      uses: actions/setup-python@v5.1.1
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
-        cache-dependency-path: setup.py
+        cache-dependency-path: pyproject.toml
     - name: Install Python dependencies
       run: |
         pip install --upgrade pip
@@ -114,14 +114,14 @@ jobs:
       TUTORIAL_TIMEOUT: 1200s
         
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4.1.7
     
     - name: Set up Python
-      uses: actions/setup-python@v4.5.0
+      uses: actions/setup-python@v5.1.1
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
-        cache-dependency-path: setup.py
+        cache-dependency-path: pyproject.toml
 
     - name: Install dependencies
       run: |
