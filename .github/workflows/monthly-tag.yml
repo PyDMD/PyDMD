@@ -40,12 +40,11 @@ jobs:
 
       - name: Create and push the tag
         run: |
-          python utils/mathlab_versioning.py set --only-date "dev$(date +%y%m)"
-          cat pydmd/meta.py
-          VERS=$(python utils/mathlab_versioning.py get)
+          # E.g. 1.0.0
+          VERSION_BASE=$(cat VERSION | awk '{$1=$1};1')
+          # E.g. 1.0.0.2407
+          VERS=$VERSION_BASE.$(date +%y%m)
           git config --global user.name 'Monthly Tag bot'
           git config --global user.email 'mtbot@noreply.github.com'
-          git add pydmd/meta.py
-          git commit -m "monthly version $VERS"
-          git tag -a "v$VERS" -m "Monthly version $VERS"
-          git push origin "v$VERS"
+          git tag "$VERS" -a -m "Monthly version $VERS"
+          git push origin "$VERS"
