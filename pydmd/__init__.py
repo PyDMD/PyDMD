@@ -34,7 +34,6 @@ from .hankeldmd import HankelDMD
 from .havok import HAVOK
 from .hodmd import HODMD
 from .lando import LANDO
-from .meta import *
 from .mrdmd import MrDMD
 from .optdmd import OptDMD
 from .paramdmd import ParametricDMD
