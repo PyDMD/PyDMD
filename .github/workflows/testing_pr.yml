@@ -50,7 +50,7 @@ jobs:
         
     - name: Run black formatter on PyDMD source code
       run: |
-        black --check --diff --color pydmd/ utils/ tests/ setup.py
+        black --check --diff --color pydmd/ utils/ tests/
         if [[ $? -ne "0" ]]; then
           echo "Source code needs re-formatting"
           exit 1
