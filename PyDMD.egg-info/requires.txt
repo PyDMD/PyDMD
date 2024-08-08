@@ -1,0 +1,16 @@
+numpy<2
+scipy>=1.6.0
+matplotlib
+scikit-learn
+xarray
+h5netcdf
+
+[docs]
+sphinx>=1.4
+sphinx_rtd_theme
+
+[test]
+pytest
+pytest-cov
+pytest-mock
+ezyrb>=v1.2.1.post2205
