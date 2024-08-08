@@ -30,7 +30,7 @@ def simulate_z(t_eval):
         [t_eval[0], t_eval[-1]],
         [1.0, 0.1],
         t_eval=t_eval,
-        **integrator_keywords
+        **integrator_keywords,
     )
 
     return sol.y

@@ -53,7 +53,7 @@ def _pre(
     power_iters: int,
     test_matrix: np.ndarray,
     seed: int,
-    **kwargs
+    **kwargs,
 ):
     Q = compute_rqb(
         X,

@@ -14,10 +14,10 @@ jobs:
     env:
       TUTORIAL_TIMEOUT: 1200s
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4.1.7
 
     - name: Set up Python
-      uses: actions/setup-python@v4.5.0
+      uses: actions/setup-python@v5.1.1
       with:
         python-version: 3.8
 
