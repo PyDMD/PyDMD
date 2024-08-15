@@ -85,6 +85,8 @@ class COSTS:
         force_even_eigs=True,
         max_rank=None,
         n_components=None,
+        kern_method=None,
+        relative_filter_length=None,
     ):
         self._hist_kwargs = None
         self._omega_label = None
@@ -100,6 +102,8 @@ class COSTS:
         self._force_even_eigs = force_even_eigs
         self._max_rank = max_rank
         self._reset_alpha_init = reset_alpha_init
+        self._kern_method = kern_method
+        self._relative_filter_length = relative_filter_length
 
         # Initialize variables that are defined in fitting.
         self._n_data_vars = None
@@ -307,7 +311,9 @@ class COSTS:
         return n_slides + 1
 
     @staticmethod
-    def calculate_lv_kern(window_length, corner_sharpness=None):
+    def calculate_lv_kern(
+        window_length, corner_sharpness=None, kern_method=None
+    ):
         """Calculate the kerning window for suppressing real eigenvalues.
 
         :param corner_sharpness: Parameter specifying how sharp the kerning
@@ -319,27 +325,35 @@ class COSTS:
         :rtype: np.ndarray
         """
 
-        # Higher = sharper corners
-        if corner_sharpness is None:
-            corner_sharpness = 16
+        if kern_method is None:
+            kern_method = "kern"
+        if kern_method == "kern":
+            # Higher = sharper corners
+            if corner_sharpness is None:
+                corner_sharpness = 16
 
-        lv_kern = (
-            np.tanh(
-                corner_sharpness
-                * np.linspace(0, 1, window_length, endpoint=False)
+            lv_kern = (
+                np.tanh(
+                    corner_sharpness
+                    * np.arange(0, window_length)
+                    / window_length
+                )
+                - np.tanh(
+                    corner_sharpness
+                    # * (np.arange(0, window_length) - window_length - 1)
+                    * (np.arange(0, window_length) - window_length + 1)
+                    / window_length
+                )
+                - 1
             )
-            - np.tanh(
-                corner_sharpness
-                * (np.arange(0, window_length) - window_length - 1)
-                / window_length
-            )
-            - 1
-        )
+
+        elif kern_method == "flat":
+            lv_kern = np.ones(window_length)
 
         return lv_kern
 
     @staticmethod
-    def build_kern(window_length):
+    def build_kern(window_length, relative_filter_length=2):
         """Build the convolution kernel for the window reconstruction.
 
         Each window is convolved with a gaussian filter for the
@@ -351,11 +365,13 @@ class COSTS:
         :return: Gaussian filter of length `window_length`
         :rtype: np.ndarray
         """
-        recon_filter_sd = window_length / 8
+        # recon_filter_sd = window_length / 8
+        recon_filter_sd = window_length / relative_filter_length
         recon_filter = np.exp(
             -((np.arange(window_length) - (window_length - 1) / 2) ** 2)
             / recon_filter_sd**2
         )
+
         return recon_filter
 
     @staticmethod
@@ -547,7 +563,9 @@ class COSTS:
         # the real components of the fitted eigenvalues away from unrealistic
         # exponential growth.
         lv_kern = self.calculate_lv_kern(
-            self._window_length, corner_sharpness=corner_sharpness
+            self._window_length,
+            corner_sharpness=corner_sharpness,
+            kern_method=self._kern_method,
         )
 
         # Perform the sliding window DMD fitting.
@@ -970,7 +988,10 @@ class COSTS:
         # Convolve each windowed reconstruction with a gaussian filter.
         # Weights points in the middle of the window and de-emphasizes the
         # edges of the window.
-        recon_filter = self.build_kern(self._window_length)
+        recon_filter = self.build_kern(
+            self._window_length,
+            relative_filter_length=self._relative_filter_length,
+        )
 
         for k in range(self._n_slides):
             window_indices = self.get_window_indices(k)
@@ -1359,9 +1380,11 @@ class COSTS:
         fig, axes = plt.subplots(
             nrows=self.n_components + 2,
             sharex=True,
-            sharey=True,
             figsize=(8, np.max((8, 1.5 * self.n_components))),
         )
+        # Only share the y axis for the components
+        for target in axes[2:]:
+            target._shared_axes["y"].join(target, axes[2])
 
         ax = axes[0]
         ax.plot(ground_truth, color="k")

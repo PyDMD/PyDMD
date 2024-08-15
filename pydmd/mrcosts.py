@@ -57,6 +57,8 @@ class mrCOSTS:
         n_components_array=None,
         cluster_sweep=False,
         transform_method=None,
+        kern_method=None,
+        relative_filter_length=2,
     ):
         self._n_components_array = n_components_array
         self._step_size_array = step_size_array
@@ -65,6 +67,8 @@ class mrCOSTS:
         self._global_svd_array = global_svd_array
         self._cluster_sweep = cluster_sweep
         self._transform_method = transform_method
+        self._kern_method = kern_method
+        self._relative_filter_length = relative_filter_length
 
         if (self._n_components_array is not None) and (
             self._step_size_array is not None
@@ -315,6 +319,8 @@ class mrCOSTS:
                 svd_rank=rank,
                 global_svd=global_svd,
                 pydmd_kwargs=self._pydmd_kwargs,
+                kern_method=self._kern_method,
+                relative_filter_length=self._relative_filter_length,
             )
 
             if verbose:
@@ -1047,7 +1053,9 @@ class mrCOSTS:
 
             # Convolve each windowed reconstruction with a gaussian filter.
             # Std dev of gaussian filter
-            recon_filter = mrd.build_kern(mrd.window_length)
+            recon_filter = mrd.build_kern(
+                mrd.window_length, mrd._relative_filter_length
+            )
 
             omega_classes = omega_classes_list[n_mrd]
 
@@ -1061,6 +1069,13 @@ class mrCOSTS:
                 b = mrd.amplitudes_array[k]
                 omega = np.atleast_2d(mrd.omega_array[k]).T
                 classification = omega_classes[k]
+
+                if not w.shape[1] == omega_classes.shape[1]:
+                    print(w.shape)
+                    print(omega_classes.shape)
+                    print(n_mrd)
+                    print(mrd.svd_rank)
+                    print(truncate_slice)
 
                 # Compute each segment of xr starting at "t = 0"
                 t = mrd.time_array[k]
