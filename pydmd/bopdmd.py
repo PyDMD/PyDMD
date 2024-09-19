@@ -1365,15 +1365,10 @@ class BOPDMD(DMDBase):
         ux1 = ux[:, :-1]
         ux2 = ux[:, 1:]
 
-        # Define the diagonal matrix T as the following.
-        t1 = self._time[:-1]
-        t2 = self._time[1:]
-        T = np.diag(t2 - t1)
-
         # Define the matrices Y and Z as the following and compute the
         # rank-truncated SVD of Y.
         Y = (ux1 + ux2) / 2
-        Z = (ux2 - ux1).dot(np.linalg.inv(T))
+        Z = (ux2 - ux1) / (self._time[1:] - self._time[:-1])  # Element-wise division by time differences. w/o large T
         U, s, V = compute_svd(Y, self._svd_rank)
         S = np.diag(s)
 
