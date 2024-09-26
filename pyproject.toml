@@ -44,6 +44,13 @@ test = [
     "pytest-mock",
     "ezyrb>=v1.2.1.post2205"
 ]
+tutorial = [
+    "jupyter",
+    "pandas",
+    "ezyrb",
+    "opencv-python",
+    "ffmpeg-python",
+]
 docs = [
     "sphinx>=1.4",
     "sphinx_rtd_theme"
