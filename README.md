@@ -234,9 +234,15 @@ Do you want to join the team? Read the [Contributing guidelines](.github/CONTRIB
 Made with [contrib.rocks](https://contrib.rocks).
 
 ### Testing
-We use `pytest` to run our unit tests. You can run the whole test suite by using the following command in the base directory of the repository:
+We use `pytest` to run our unit tests. Use the following command to install the dependencies required to test a local clone of PyDMD (assuming
+the relative path of the repository to be `./PyDMD/`):
 ```bash
-pytest
+python -m pip install PyDMD/[test]
+```
+
+You can run the whole test suite by using the following command in the base directory of the repository:
+```bash
+python -m pytest
 ```
 
 ## Funding

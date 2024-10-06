@@ -23,11 +23,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install .[test]
-        python3 -m pip install -e .
         # Dependencies for tutorials
-        python3 -m pip install jupyter pandas ezyrb opencv-python ffmpeg-python black[jupyter]
+        python3 -m pip install --upgrade pip .[tutorial] black[jupyter]
 
     - uses: actions/cache@v2
       id: cache-segtrackv2
