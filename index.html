@@ -1,21 +1,19 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to PyDMD’s documentation! &mdash; PyDMD 1.0.0.dev2403 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <title>Welcome to PyDMD’s documentation! &mdash; PyDMD 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
+      <script src="_static/jquery.js"></script>
+      <script src="_static/underscore.js"></script>
+      <script src="_static/doctools.js"></script>
+      <script src="_static/language_data.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -33,9 +31,6 @@
           <a href="#" class="icon icon-home">
             PyDMD
           </a>
-              <div class="version">
-                1.0.0.dev2403
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -76,22 +71,25 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="welcome-to-pydmd-s-documentation">
+  <section id="welcome-to-pydmd-s-documentation">
 <h1>Welcome to PyDMD’s documentation!<a class="headerlink" href="#welcome-to-pydmd-s-documentation" title="Permalink to this headline">¶</a></h1>
 <a class="reference internal image-reference" href="_images/logo_PyDMD.png"><img alt="_images/logo_PyDMD.png" class="align-right" src="_images/logo_PyDMD.png" style="width: 150px; height: 150px;" /></a>
 <p>Python Dynamic Mode Decomposition.</p>
-<div class="section" id="description">
+<section id="description">
 <h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
 <p>PyDMD PyDMD is a Python package designed for Dynamic Mode Decomposition (DMD), a data-driven method used for analyzing and extracting spatiotemporal coherent structures from time-varying datasets. It provides a comprehensive and user-friendly interface for performing DMD analysis, making it a valuable tool for researchers, engineers, and data scientists working in various fields.</p>
 <p>With PyDMD, users can easily decompose complex, high-dimensional datasets into a set of coherent spatial and temporal modes, capturing the underlying dynamics and extracting important features. The package implements both standard DMD algorithms and advanced variations, enabling users to choose the most suitable method for their specific needs. These extensions allow to deal with noisy data, big dataset, control variables, or to impose physical structures.</p>
 <p>PyDMD offers a seamless integration with the scientific Python ecosystem, leveraging popular libraries such as NumPy and SciPy for efficient numerical computations and data manipulation. It also offers a variety of visualization tools, including mode reconstruction, energy spectrum analysis, and time evolution plotting. These capabilities enable users to gain insights into the dominant modes of the system, identify significant features, and understand the temporal evolution of the dynamics.</p>
 <p>PyDMD promotes ease of use and customization, providing a well-documented API with intuitive function names and clear parameter descriptions. The package is actively maintained and updated, ensuring compatibility with the latest Python versions and incorporating user feedback to improve functionality and performance. We provide many tutorials showing the characteristics of the software.</p>
-<a class="reference internal image-reference" href="_images/pydmd_capabilities.png"><img alt="_images/pydmd_capabilities.png" class="align-center" src="_images/pydmd_capabilities.png" style="width: 700px;" /></a>
+<a class="reference internal image-reference" href="_images/pydmd_capabilities.svg"><img alt="_images/pydmd_capabilities.svg" class="align-center" src="_images/pydmd_capabilities.svg" width="700px" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
 </div>
-<div class="section" id="installation">
+</section>
+<section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>PyDMD requires requires numpy, scipy, matplotlib, future, sphinx (for the documentation) and pytest (for local test). The code is tested for Python 3, while compatibility of Python 2 is not guaranteed anymore. It can be installed using pip or directly from the source code.</p>
-<div class="section" id="installing-via-pip">
+<section id="installing-via-pip">
 <h3>Installing via PIP<a class="headerlink" href="#installing-via-pip" title="Permalink to this headline">¶</a></h3>
 <p>PyDMD is available on PyPI, therefore you can install the latest released version with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">pydmd</span>
@@ -101,8 +99,8 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">uninstall</span> <span class="n">pydmd</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="installing-from-source">
+</section>
+<section id="installing-from-source">
 <h3>Installing from source<a class="headerlink" href="#installing-from-source" title="Permalink to this headline">¶</a></h3>
 <p>The official distribution is on GitHub, and you can clone the repository using</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">PyDMD</span><span class="o">/</span><span class="n">PyDMD</span>
@@ -112,9 +110,9 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="developer-s-guide">
+</section>
+</section>
+<section id="developer-s-guide">
 <h2>Developer’s Guide<a class="headerlink" href="#developer-s-guide" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
@@ -125,8 +123,8 @@
 <li class="toctree-l1"><a class="reference internal" href="LICENSE.html">License</a></li>
 </ul>
 </div>
-</div>
-<div class="section" id="tutorials">
+</section>
+<section id="tutorials">
 <h2>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h2>
 <p>We made some tutorial examples. Please refer to the official GitHub repository for the last updates. Here the list of the exported tutorials:</p>
 <ul class="simple">
@@ -142,8 +140,8 @@
 <li><p><a class="reference external" href="tutorial10paramdmd.html">Tutorial 10</a> - Here we apply Parametric DMD (in two possible approaches) to a simple toy problem.</p></li>
 <li><p><a class="reference external" href="dev-tutorial1.html">Developers Tutorial 1</a> - Here we show the procedure to extending PyDMD by adding a new version of DMD.</p></li>
 </ul>
-</div>
-<div class="section" id="references">
+</section>
+<section id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
 <p>To implement the various versions of the DMD algorithm we follow these works:</p>
 <ul class="simple">
@@ -156,21 +154,21 @@
 <li><p>Erichson, Brunton, Kutz. Compressed dynamic mode decomposition for background modeling. Journal of Real-Time Image Processing, 2016.</p></li>
 <li><p>Le Clainche, Vega. Higher Order Dynamic Mode Decomposition. Journal on Applied Dynamical Systems, 2017.</p></li>
 </ul>
-</div>
-<div class="section" id="funding">
+</section>
+<section id="funding">
 <h2>Funding<a class="headerlink" href="#funding" title="Permalink to this headline">¶</a></h2>
 <p>A significant part of PyDMD has been written either as a by-product for other projects people were funded for, or by people on university-funded positions. There are probably many of such projects that have led to some development of PyDMD. We are very grateful for this support!</p>
 <p>Beyond this, PyDMD has also been supported by some dedicated projects that have allowed us to work on extensions, documentation, training and dissemination that would otherwise not have been possible. In particular, we acknowledge the following sources of support with great gratitude: H2020 ERC CoG 2015 AROMA-CFD project 681447 (P.I. Gianluigi Rozza), and the FSE HEaD project Bulbous Bow Shape Optimization through Reduced Order Modelling.</p>
-</div>
-<div class="section" id="indices-and-tables">
+</section>
+<section id="indices-and-tables">
 <h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
@@ -182,8 +180,8 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright Copyright 2017-2024, PyDMD contributors.
-      <span class="lastupdated">Last updated on Mar 01, 2024.
+    <p>&#169; Copyright 2017-2024, PyDMD Contributors.
+      <span class="lastupdated">Last updated on Oct 10, 2024.
       </span></p>
   </div>
 

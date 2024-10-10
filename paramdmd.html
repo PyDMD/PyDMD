@@ -1,21 +1,19 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Parametric DMD &mdash; PyDMD 1.0.0.dev2403 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <title>Parametric DMD &mdash; PyDMD 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
+      <script src="_static/jquery.js"></script>
+      <script src="_static/underscore.js"></script>
+      <script src="_static/doctools.js"></script>
+      <script src="_static/language_data.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -34,9 +32,6 @@
           <a href="index.html" class="icon icon-home">
             PyDMD
           </a>
-              <div class="version">
-                1.0.0.dev2403
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -102,7 +97,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="module-pydmd.paramdmd">
+  <section id="module-pydmd.paramdmd">
 <span id="parametric-dmd"></span><h1>Parametric DMD<a class="headerlink" href="#module-pydmd.paramdmd" title="Permalink to this headline">¶</a></h1>
 <p>Module for the parametric Dynamic Mode Decomposition.</p>
 <p>References:
@@ -117,7 +112,7 @@ Applied Dynamical Systems</p>
 arXiv:2110.09155v1. Both the <em>monolithic</em> and <em>partitioned</em> methods are
 available, see the documentation of the parameter <cite>dmd</cite> for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dmd</strong> (<em>DMDBase</em><em> or </em><em>list</em>) – Instance(s) of <code class="xref py py-class docutils literal notranslate"><span class="pre">dmdbase.DMDBase</span></code>, used by the
 paramtric DMD for the prediction of future spatial modal coefficients.
@@ -154,14 +149,14 @@ value is set only for the reference DMD (see <code class="xref py py-func docuti
 however when <code class="xref py py-func docutils literal notranslate"><span class="pre">_predict_modal_coefficients()</span></code> is called the values
 of all DMDs become consistent.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Getter</dt>
+<dt class="field-odd">Getter<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Return the time dictionary used by the reference DMD instance.</p>
 </dd>
-<dt class="field-even">Setter</dt>
+<dt class="field-even">Setter<span class="colon">:</span></dt>
 <dd class="field-even"><p>Set the given time dictionary in the field <cite>dmd_time</cite> for all
 DMD instances.</p>
 </dd>
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>pydmd.dmdbase.DMDTimeDict</p>
 </dd>
 </dl>
@@ -174,10 +169,10 @@ DMD instances.</p>
 timesteps in the output of the reference of this instance (see
 <code class="xref py py-func docutils literal notranslate"><span class="pre">_reference_dmd()</span></code>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The timesteps in the output of this instance.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>list</p>
 </dd>
 </dl>
@@ -200,11 +195,11 @@ parameters corresponding to the training datasets in <cite>X</cite>. For instanc
 in <cite>X[0]</cite>. For this reason <cite>len(training_parameters)</cite> should be equal
 to <cite>X.shape[0]</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – Training snapshots of the parametric system,
+<li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Training snapshots of the parametric system,
 observed for two or more parameters and in multiple time instants.</p></li>
-<li><p><strong>training_parameters</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – Training parameters
+<li><p><strong>training_parameters</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Training parameters
 corresponding to the snapshots in <cite>X</cite>.</p></li>
 </ul>
 </dd>
@@ -242,7 +237,7 @@ parameters.</p>
 <dd><p>Return <cite>True</cite> if this instance is partitioned, <cite>False</cite> if it is
 monolithic.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
 </dd>
 </dl>
@@ -253,7 +248,7 @@ monolithic.</p>
 <em class="property">static </em><code class="sig-name descname">load</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/paramdmd.html#ParametricDMD.load"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Load the object from <cite>fname</cite> using the pickle module.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The <cite>ReducedOrderModel</cite> loaded</p>
 </dd>
 </dl>
@@ -272,10 +267,10 @@ monolithic.</p>
 with the original dictionary used by the reference of this instance
 (see <code class="xref py py-func docutils literal notranslate"><span class="pre">_reference_dmd()</span></code>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The original time dictionary used by this instance.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)">dict</a></p>
 </dd>
 </dl>
@@ -288,10 +283,10 @@ with the original dictionary used by the reference of this instance
 coincides with the original timesteps in the input fed to the reference
 of this instance (see <code class="xref py py-func docutils literal notranslate"><span class="pre">_reference_dmd()</span></code>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The original timesteps in the input fed to this instance.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>list</p>
 </dd>
 </dl>
@@ -324,14 +319,14 @@ parameters to <cite>ParametricDMD</cite>:</p>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Getter</dt>
+<dt class="field-odd">Getter<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Return the current parameters.</p>
 </dd>
-<dt class="field-even">Setter</dt>
+<dt class="field-even">Setter<span class="colon">:</span></dt>
 <dd class="field-even"><p>Change the current parameters.</p>
 </dd>
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -348,12 +343,12 @@ parameters to <cite>ParametricDMD</cite>:</p>
 <li><p>2: Time.</p></li>
 </ul>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Snapshots predicted/interpolated using parametric DMD and the
 given method for ROM.</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -363,7 +358,7 @@ given method for ROM.</p>
 <code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param">fname</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/paramdmd.html#ParametricDMD.save"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Save the object to <cite>fname</cite> using the pickle module.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>fname</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – the name of file where the reduced order model will
 be saved.</p>
 </dd>
@@ -398,15 +393,15 @@ and <cite>light</cite> should be set to <cite>False</cite> in the constructor of
 as a 2D array (the index of the parameter vary along the first
 dimension).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>
@@ -419,8 +414,8 @@ dimension).</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright Copyright 2017-2024, PyDMD contributors.
-      <span class="lastupdated">Last updated on Mar 01, 2024.
+    <p>&#169; Copyright 2017-2024, PyDMD Contributors.
+      <span class="lastupdated">Last updated on Oct 10, 2024.
       </span></p>
   </div>
 
