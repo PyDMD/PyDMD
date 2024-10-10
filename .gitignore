@@ -3,7 +3,8 @@
 
 # compiled python codes
 *.pyc
-pydmd\.egg-info/**
+*egg-info/**
+dist/**
 
 .idea/**
 
