@@ -12,6 +12,7 @@ dist/**
 **/SegTrackv2.zip
 **/SegTrackv2/**
 build/**
+dist/**
 
 # Vscode
 .vscode/**
