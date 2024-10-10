@@ -14,3 +14,7 @@ build/**
 
 # Vscode
 .vscode/**
+
+
+.venv
+.python-version
