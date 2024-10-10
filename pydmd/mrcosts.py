@@ -558,6 +558,8 @@ class mrCOSTS:
             global_svd_array=global_svd_array,
             pydmd_kwargs=pydmd_kwargs,
             n_components_array=n_components_array,
+            relative_filter_length=mrd_list[0]._relative_filter_length,
+            kern_method=mrd_list[0]._kern_method,
         )
 
         # Initialize variables that are defined in fitting.

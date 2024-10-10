@@ -552,6 +552,10 @@ class COSTS:
         # Get initial values for the eigenvalues.
         self._init_alpha = self._build_initialization()
 
+        # # This line CANNOT go into a public release
+        # if "eig_constraints" in self._pydmd_kwargs:
+        #     f = self._pydmd_kwargs["eig_constraints"]
+
         # Initialize the BOPDMD object.
         optdmd = BOPDMD(
             svd_rank=self._svd_rank,
@@ -1509,6 +1513,7 @@ class COSTS:
             },
             attrs={
                 "svd_rank": self.svd_rank,
+                "svd_rank_pre_allocate": self._svd_rank_pre_allocate,
                 "omega_transformation": self._xarray_sanitize(
                     self._transform_method
                 ),
@@ -1520,6 +1525,8 @@ class COSTS:
                 "step_size": self._step_size,
                 "non_integer_n_slide": self._non_integer_n_slide,
                 "global_svd": self._global_svd,
+                "relative_filter_length": self._relative_filter_length,
+                "kern_method": self._kern_method,
             },
         )
 
@@ -1553,6 +1560,9 @@ class COSTS:
         self._step_size = ds.attrs["step_size"]
         self._window_length = ds.attrs["window_length"]
         self._global_svd = ds.attrs["global_svd"]
+        self._relative_filter_length = ds.attrs["relative_filter_length"]
+        self._kern_method = ds.attrs["kern_method"]
+        self._svd_rank_pre_allocate = ds.attrs["svd_rank_pre_allocate"]
 
         self._pydmd_kwargs = {}
         for attr in ds.attrs:
