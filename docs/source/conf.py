@@ -14,10 +14,13 @@
 
 import sys
 import os
+import datetime
 import shlex
 import sphinx
 from sphinx.errors import VersionRequirementError
 import sphinx_rtd_theme
+import importlib.metadata
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -26,6 +29,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 import pydmd
 
 # -- General configuration ------------------------------------------------
+_DISTRIBUTION_METADATA = importlib.metadata.metadata('PyDMD')
 
 # If your documentation needs a minimal Sphinx version, state it here.
 needs_sphinx = "1.4"
@@ -74,8 +78,9 @@ master_doc = "index"
 
 # General information about the project.
 project = "PyDMD"
-copyright = pydmd.__copyright__
-author = pydmd.__author__
+current_year = datetime.datetime.now().year
+copyright = f"2017-{current_year}, PyDMD Contributors"
+author = _DISTRIBUTION_METADATA['Author']
 
 # autoclass
 autoclass_content = "both"
@@ -85,7 +90,7 @@ autoclass_content = "both"
 # built documents.
 #
 # The short X.Y version.
-version = pydmd.__version__
+version = _DISTRIBUTION_METADATA['Version']
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -311,7 +316,6 @@ texinfo_documents = [
         "pydmd Documentation",
         author,
         "pydmd",
-        "One line description of project.",
         "Miscellaneous",
     ),
 ]

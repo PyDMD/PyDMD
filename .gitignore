@@ -3,7 +3,8 @@
 
 # compiled python codes
 *.pyc
-pydmd\.egg-info/**
+*egg-info/**
+dist/**
 
 .idea/**
 
@@ -11,10 +12,14 @@ pydmd\.egg-info/**
 **/SegTrackv2.zip
 **/SegTrackv2/**
 build/**
+dist/**
 
 # Vscode
 .vscode/**
 
-
+# Virtual environment
+venv*/**
 .venv
+
+# Pyenv
 .python-version
