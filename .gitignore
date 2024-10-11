@@ -19,3 +19,7 @@ dist/**
 
 # Virtual environment
 venv*/**
+.venv
+
+# Pyenv
+.python-version
