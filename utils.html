@@ -3,8 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Utilities &mdash; PyDMD 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
@@ -97,7 +96,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pydmd.utils">
+  <div class="section" id="module-pydmd.utils">
 <span id="utilities"></span><h1>Utilities<a class="headerlink" href="#module-pydmd.utils" title="Permalink to this headline">¶</a></h1>
 <p>Utilities module.</p>
 <dl class="function">
@@ -105,7 +104,7 @@
 <code class="sig-name descname">compute_rank</code><span class="sig-paren">(</span><em class="sig-param">X: numpy.ndarray</em>, <em class="sig-param">svd_rank: numbers.Number = 0</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/pydmd/utils.html#compute_rank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.utils.compute_rank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rank computation for the truncated Singular Value Decomposition.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>np.ndarray</em>) – the matrix to decompose.</p></li>
 <li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If 0, the method computes
@@ -116,10 +115,10 @@ are needed to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1,
 the method does not compute truncation. Default is 0.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the computed rank truncation.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a></p>
 </dd>
 </dl>
@@ -134,7 +133,7 @@ singular values is, IEEE Transactions on Information Theory 60.8
 <code class="sig-name descname">compute_svd</code><span class="sig-paren">(</span><em class="sig-param">X: numpy.ndarray</em>, <em class="sig-param">svd_rank: numbers.Number = 0</em><span class="sig-paren">)</span> &#x2192; pydmd.utils.SVD<a class="reference internal" href="_modules/pydmd/utils.html#compute_svd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.utils.compute_svd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Truncated Singular Value Decomposition.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>np.ndarray</em>) – the matrix to decompose.</p></li>
 <li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If 0, the method computes
@@ -145,11 +144,11 @@ are needed to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1,
 the method does not compute truncation. Default is 0.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the truncated left-singular vectors matrix, the truncated
 singular values array, the truncated right-singular vectors matrix.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>NamedTuple(“SVD”, [(‘U’, np.ndarray),
 (‘s’, np.ndarray),
 (‘V’, np.ndarray)])</p>
@@ -166,7 +165,7 @@ singular values is, IEEE Transactions on Information Theory 60.8
 <code class="sig-name descname">compute_tlsq</code><span class="sig-paren">(</span><em class="sig-param">X: numpy.ndarray</em>, <em class="sig-param">Y: numpy.ndarray</em>, <em class="sig-param">tlsq_rank: int</em><span class="sig-paren">)</span> &#x2192; pydmd.utils.TLSQ<a class="reference internal" href="_modules/pydmd/utils.html#compute_tlsq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.utils.compute_tlsq" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute Total Least Square.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>np.ndarray</em>) – the first matrix;</p></li>
 <li><p><strong>Y</strong> (<em>np.ndarray</em>) – the second matrix;</p></li>
@@ -176,10 +175,10 @@ method uses the argument for the SVD truncation used in the TLSQ
 method.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the denoised matrix X, the denoised matrix Y</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>NamedTuple(“TLSQ”, [(‘X_denoised’, np.ndarray),
 (‘Y_denoised’, np.ndarray)])</p>
 </dd>
@@ -196,7 +195,7 @@ method.</p></li>
 matrix. The attribute <cite>d</cite> controls the number of snapshot from <cite>X</cite> in
 each snapshot of the Hankel matrix.</p>
 <dl class="field-list">
-<dt class="field-odd">Example<span class="colon">:</span></dt>
+<dt class="field-odd">Example</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pseudo_hankel_matrix</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="go">array([[1, 2, 3, 4],</span>
@@ -223,7 +222,7 @@ each snapshot of the Hankel matrix.</p>
 </dl>
 </dd></dl>
 
-</section>
+</div>
 
 
            </div>
@@ -237,7 +236,7 @@ each snapshot of the Hankel matrix.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 10, 2024.
+      <span class="lastupdated">Last updated on Oct 22, 2024.
       </span></p>
   </div>
 

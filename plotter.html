@@ -3,8 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Plotter &mdash; PyDMD 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
@@ -97,7 +96,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pydmd.plotter">
+  <div class="section" id="module-pydmd.plotter">
 <span id="plotter"></span><h1>Plotter<a class="headerlink" href="#module-pydmd.plotter" title="Permalink to this headline">¶</a></h1>
 <p>Module for DMD plotting.</p>
 <dl class="function">
@@ -111,7 +110,7 @@ ratio in <a class="reference internal" href="#pydmd.plotter.plot_eigs" title="py
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>goal_ratio</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the desired ratio.</p></li>
 <li><p><strong>supx</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the old value of <cite>supx</cite>, to be adjusted.</p></li>
@@ -120,7 +119,7 @@ ratio in <a class="reference internal" href="#pydmd.plotter.plot_eigs" title="py
 <li><p><strong>infy</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the old value of <cite>infy</cite>, to be adjusted.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return tuple<span class="colon">:</span></dt>
+<dt class="field-even">Return tuple</dt>
 <dd class="field-even"><p>a tuple which contains the updated values of
 <cite>supx,infx,supy,infy</cite> in this order.</p>
 </dd>
@@ -137,7 +136,7 @@ ratio in <a class="reference internal" href="#pydmd.plotter.plot_eigs" title="py
 <code class="sig-name descname">plot_eigs</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">show_axes=True</em>, <em class="sig-param">show_unit_circle=True</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em>, <em class="sig-param">title=''</em>, <em class="sig-param">narrow_view=False</em>, <em class="sig-param">dpi=None</em>, <em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_eigs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_eigs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the eigenvalues.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dmd</strong> (<em>pydmd.DMDBase</em>) – DMD instance.</p></li>
 <li><p><strong>show_axes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the axes will be showed in the plot.
@@ -163,7 +162,7 @@ of 0.05. Not compatible with <cite>show_axes=True</cite>. Default is False.</p><
 <code class="sig-name descname">plot_eigs_mrdmd</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">show_axes=True</em>, <em class="sig-param">show_unit_circle=True</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em>, <em class="sig-param">title=''</em>, <em class="sig-param">level=None</em>, <em class="sig-param">node=None</em>, <em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_eigs_mrdmd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_eigs_mrdmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the eigenvalues.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>show_axes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the axes will be showed in the plot.
 Default is True.</p></li>
@@ -184,7 +183,7 @@ and center in the origin will be showed. Default is True.</p></li>
 <code class="sig-name descname">plot_modes_2D</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">snapshots_shape=None</em>, <em class="sig-param">index_mode=None</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em>, <em class="sig-param">order='C'</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_modes_2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_modes_2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the DMD Modes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dmd</strong> (<em>pydmd.DMDBase</em>) – DMD instance.</p></li>
 <li><p><strong>snapshots_shape</strong> – Shape of the snapshots.</p></li>
@@ -217,7 +216,7 @@ size. Default is (8, 8).</p></li>
 <code class="sig-name descname">plot_snapshots_2D</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">snapshots_shape=None</em>, <em class="sig-param">index_snap=None</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em>, <em class="sig-param">order='C'</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_snapshots_2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_snapshots_2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the snapshots.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dmd</strong> (<em>pydmd.DMDBase</em>) – DMD instance.</p></li>
 <li><p><strong>snapshots_shape</strong> – Shape of the snapshots.</p></li>
@@ -259,7 +258,7 @@ of their corresponding amplitude value, i.e. their significance in the fit.
 Correspondence between eigenvalues, modes, and dynamics is indicated via
 color coordination.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dmd</strong> (<em>pydmd.DMDBase</em>) – fitted DMD instance.</p></li>
 <li><p><strong>x</strong> (<em>np.ndarray</em><em> or </em><em>iterable</em>) – Points along the 1st spatial dimension where data has been
@@ -328,7 +327,7 @@ be vertical and the imaginary axis will be horizontal, and vice versa.</p></li>
 </dl>
 </dd></dl>
 
-</section>
+</div>
 
 
            </div>
@@ -342,7 +341,7 @@ be vertical and the imaginary axis will be horizontal, and vice versa.</p></li>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 10, 2024.
+      <span class="lastupdated">Last updated on Oct 22, 2024.
       </span></p>
   </div>
 

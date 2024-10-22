@@ -696,8 +696,8 @@
             <span class="n">q_out</span><span class="p">,</span> <span class="n">djac_out</span><span class="p">,</span> <span class="n">j_pvt</span> <span class="o">=</span> <span class="n">qr</span><span class="p">(</span>
                 <span class="n">djac_matrix</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;economic&quot;</span><span class="p">,</span> <span class="n">pivoting</span><span class="o">=</span><span class="kc">True</span>
             <span class="p">)</span>
-            <span class="n">ij_pvt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">IA</span><span class="p">)</span>
-            <span class="n">ij_pvt</span> <span class="o">=</span> <span class="n">ij_pvt</span><span class="p">[</span><span class="n">j_pvt</span><span class="p">]</span>
+            <span class="n">ij_pvt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">IA</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">ij_pvt</span><span class="p">[</span><span class="n">j_pvt</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">IA</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
             <span class="n">rjac</span><span class="p">[:</span><span class="n">IA</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">djac_out</span><span class="p">[:</span><span class="n">IA</span><span class="p">])</span>
             <span class="n">rhs_top</span> <span class="o">=</span> <span class="n">q_out</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rhs_temp</span><span class="p">)</span>
             <span class="n">scales_pvt</span> <span class="o">=</span> <span class="n">scales</span><span class="p">[</span><span class="n">j_pvt</span><span class="p">[:</span><span class="n">IA</span><span class="p">]]</span>
@@ -1827,7 +1827,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 10, 2024.
+      <span class="lastupdated">Last updated on Oct 22, 2024.
       </span></p>
   </div>
 

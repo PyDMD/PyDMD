@@ -3,8 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Compressed DMD &mdash; PyDMD 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
@@ -97,7 +96,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pydmd.cdmd">
+  <div class="section" id="module-pydmd.cdmd">
 <span id="compressed-dmd"></span><h1>Compressed DMD<a class="headerlink" href="#module-pydmd.cdmd" title="Permalink to this headline">¶</a></h1>
 <p>Derived module from dmdbase.py for compressed dmd.
 As a reference consult this work by Erichson, Brunton and Kutz:
@@ -125,7 +124,7 @@ each row contains an element equal to 1 and all the other
 elements are null.</p></li>
 </ul>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If 0, the method computes the
 optimal rank and uses it for truncation; if positive interger, the
@@ -167,10 +166,10 @@ If <cite>None</cite>, no regularization is applied, if <cite>float</cite>, it is
 <dd><p>Private method that compresses the snapshots matrix by pre-multiplying
 it by the chosen <cite>compression_matrix</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the compressed snapshots.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -187,7 +186,7 @@ it by the chosen <cite>compression_matrix</cite>.</p>
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/cdmd.html#CDMD.fit"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the Dynamic Modes Decomposition to the input data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
 </dd>
 </dl>
@@ -195,7 +194,7 @@ it by the chosen <cite>compression_matrix</cite>.</p>
 
 </dd></dl>
 
-</section>
+</div>
 
 
            </div>
@@ -209,7 +208,7 @@ it by the chosen <cite>compression_matrix</cite>.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 10, 2024.
+      <span class="lastupdated">Last updated on Oct 22, 2024.
       </span></p>
   </div>
 

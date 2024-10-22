@@ -3,8 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kernelized extended DMD &mdash; PyDMD 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
@@ -97,7 +96,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pydmd.edmd">
+  <div class="section" id="module-pydmd.edmd">
 <span id="kernelized-extended-dmd"></span><h1>Kernelized extended DMD<a class="headerlink" href="#module-pydmd.edmd" title="Permalink to this headline">¶</a></h1>
 <p>Derived module from dmdbase.py for kernelized extended dmd.</p>
 <p>References:
@@ -113,7 +112,7 @@ dynamic mode decomposition, J. Nonlinear Sci., 25 (2015), pp. 1307-1346</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmd.DMD</span></code></p>
 <p>Kernelized Extended DMD.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If positive integer, the
 method uses the argument for the truncation; if float between 0 and 1,
@@ -156,15 +155,15 @@ produce valid kernel matrices.</p>
 <dt>
 <code class="sig-name descname">eigenfunctions</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/edmd.html#EDMD.eigenfunctions"><span class="viewcode-link">[source]</span></a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>x</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – array from the original snapshot domain denoting the point
 at which to compute the EDMD eigenfunctions.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>array containing all r EDMD eigenfunctions evaluated at the
 given domain point, where r denotes the rank of the EDMD fit.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -178,7 +177,7 @@ given domain point, where r denotes the rank of the EDMD fit.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdoperator.DMDOperator</span></code></p>
 <p>DMD operator for kernelized extended DMD.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If positive integer, the
 method uses the argument for the truncation; if float between 0 and 1,
@@ -201,15 +200,15 @@ kernel-specific function parameters.</p></li>
 order to obtain the singular vectors Q and singular values Sigma of the
 corresponding feature embedding matrix.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>Gramian</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – the Gramian matrix.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the (truncated) left-singular vectors matrix of the extended
 feature matrix and the (truncated) singular values matrix of the
 extended feature matrix.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -221,13 +220,13 @@ extended feature matrix.</p>
 <dd><p>Rank computation for the truncated Singular Value Decomposition given
 only singular values.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>s</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – the singular values.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the computed rank truncation.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a></p>
 </dd>
 </dl>
@@ -245,19 +244,19 @@ Doing so poses risks of prohibitively-large computations…</p>
 <code class="sig-name descname">compute_operator</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/edmd.html#EDMDOperator.compute_operator"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute and store the kernelized EDMD diagnostics.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – matrix containing the right-hand side snapshots by column.</p></li>
 <li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – matrix containing the left-hand side snapshots by column.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the (truncated) left-singular vectors matrix of the extended
 feature matrix, the (truncated) singular values matrix of the
 extended feature matrix, and the eigenvectors of the tranformed
 forward operator <cite>K_hat</cite>.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -267,10 +266,10 @@ forward operator <cite>K_hat</cite>.</p>
 <dt>
 <em class="property">property </em><code class="sig-name descname">svd_vals</code></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the singular values of the extended feature matrix.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -278,7 +277,7 @@ forward operator <cite>K_hat</cite>.</p>
 
 </dd></dl>
 
-</section>
+</div>
 
 
            </div>
@@ -292,7 +291,7 @@ forward operator <cite>K_hat</cite>.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 10, 2024.
+      <span class="lastupdated">Last updated on Oct 22, 2024.
       </span></p>
   </div>
 

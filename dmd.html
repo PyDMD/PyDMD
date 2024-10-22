@@ -3,8 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DMD &mdash; PyDMD 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
@@ -97,7 +96,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pydmd.dmd">
+  <div class="section" id="module-pydmd.dmd">
 <span id="dmd"></span><h1>DMD<a class="headerlink" href="#module-pydmd.dmd" title="Permalink to this headline">¶</a></h1>
 <p>Derived module from dmdbase.py for classic dmd.</p>
 <dl class="class">
@@ -106,7 +105,7 @@
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
 <p>Dynamic Mode Decomposition</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If 0, the method computes the
 optimal rank and uses it for truncation; if positive interger, the
@@ -141,7 +140,7 @@ If <cite>None</cite>, no regularization is applied, if <cite>float</cite>, it is
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">Y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd.html#DMD.fit"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the Dynamic Modes Decomposition to the input data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
 <li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – additional input snapshots such that Y=AX.
@@ -156,13 +155,13 @@ If not provided, snapshots from X are used.</p></li>
 <code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd.html#DMD.predict"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Predict the output Y given the input X using the fitted DMD model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – the input vector.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>one time-step ahead predicted output.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -170,7 +169,7 @@ If not provided, snapshots from X are used.</p></li>
 
 </dd></dl>
 
-</section>
+</div>
 
 
            </div>
@@ -184,7 +183,7 @@ If not provided, snapshots from X are used.</p></li>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 10, 2024.
+      <span class="lastupdated">Last updated on Oct 22, 2024.
       </span></p>
   </div>
 

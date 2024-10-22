@@ -3,8 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BOPDMD: Optimized DMD and Bagging, Optimized DMD &mdash; PyDMD 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
@@ -97,7 +96,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pydmd.bopdmd">
+  <div class="section" id="module-pydmd.bopdmd">
 <span id="bopdmd-optimized-dmd-and-bagging-optimized-dmd"></span><h1>BOPDMD: Optimized DMD and Bagging, Optimized DMD<a class="headerlink" href="#module-pydmd.bopdmd" title="Permalink to this headline">¶</a></h1>
 <p>Derived module from dmdbase.py for Optimized DMD and Bagging, Optimized DMD
 (BOP-DMD).</p>
@@ -114,7 +113,7 @@ temporal uncertainty-quantification. 2021. arXiv:2107.10878.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
 <p>Bagging, Optimized Dynamic Mode Decomposition.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – The rank for the truncation; If 0, the method computes the
 optimal rank and uses it for truncation; if positive integer, the
@@ -195,10 +194,10 @@ for each parameter.</p></li>
 <em class="property">property </em><code class="sig-name descname">A</code></dt>
 <dd><p>Get the full Koopman operator A.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the full Koopman operator A.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -228,10 +227,10 @@ combination of eigenvalue constraints</p>
 </dl>
 <p>The computed eigenvalues will serve as our initial guess for alpha.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Approximated eigenvalues of the matrix A.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -242,10 +241,10 @@ combination of eigenvalue constraints</p>
 <em class="property">property </em><code class="sig-name descname">amplitudes_std</code></dt>
 <dd><p>Get the amplitudes standard deviation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>amplitudes standard deviation.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -256,10 +255,10 @@ combination of eigenvalue constraints</p>
 <em class="property">property </em><code class="sig-name descname">atilde</code></dt>
 <dd><p>Get the reduced Koopman operator A, called Atilde.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the reduced Koopman operator A.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -269,10 +268,10 @@ combination of eigenvalue constraints</p>
 <dt>
 <em class="property">property </em><code class="sig-name descname">compute_A</code></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>flag that determines whether to compute the full operator A.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
 </dd>
 </dl>
@@ -283,10 +282,10 @@ combination of eigenvalue constraints</p>
 <em class="property">property </em><code class="sig-name descname">dynamics</code></dt>
 <dd><p>Get the time evolution of each mode.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>matrix that contains all the time evolution, stored by row.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -297,10 +296,10 @@ combination of eigenvalue constraints</p>
 <em class="property">property </em><code class="sig-name descname">eig_constraints</code></dt>
 <dd><p>Get the eigenvalue constraints.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>eigenvalue constraints.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#set" title="(in Python v2.7)">set</a>(<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)">str</a>)</p>
 </dd>
 </dl>
@@ -311,10 +310,10 @@ combination of eigenvalue constraints</p>
 <em class="property">property </em><code class="sig-name descname">eigenvalues_std</code></dt>
 <dd><p>Get the eigenvalues standard deviation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>eigenvalues standard deviation.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -325,7 +324,7 @@ combination of eigenvalue constraints</p>
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD.fit"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the Optimized Dynamic Mode Decomposition.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
 <li><p><strong>t</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input time vector.</p></li>
@@ -341,13 +340,13 @@ combination of eigenvalue constraints</p>
 If model has been fitted using multiple ensembles, an average
 prediction and its variance is returned.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>t</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input time vector.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>system prediction at times given by vector t.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -357,10 +356,10 @@ prediction and its variance is returned.</p>
 <dt>
 <em class="property">property </em><code class="sig-name descname">init_alpha</code></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>initial guess used for the continuous-time DMD eigenvalues.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -371,10 +370,10 @@ prediction and its variance is returned.</p>
 <em class="property">property </em><code class="sig-name descname">modes_std</code></dt>
 <dd><p>Get the modes standard deviation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>modes standard deviation.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -384,10 +383,10 @@ prediction and its variance is returned.</p>
 <dt>
 <em class="property">property </em><code class="sig-name descname">num_trials</code></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the number of BOP-DMD trials to perform.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a></p>
 </dd>
 </dl>
@@ -398,7 +397,7 @@ prediction and its variance is returned.</p>
 <code class="sig-name descname">plot_eig_uq</code><span class="sig-paren">(</span><em class="sig-param">eigs_true=None</em>, <em class="sig-param">xlim=None</em>, <em class="sig-param">ylim=None</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">dpi=None</em>, <em class="sig-param">flip_axes=False</em>, <em class="sig-param">draw_axes=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD.plot_eig_uq"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Plot BOP-DMD eigenvalues against 1 and 2 standard deviations.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>eigs_true</strong> (<em>np.ndarray</em><em> or </em><em>iterable</em>) – True continuous-time eigenvalues, if known.</p></li>
 <li><p><strong>xlim</strong> (<em>iterable</em>) – Desired limits for the x-axis.</p></li>
@@ -419,7 +418,7 @@ and the imaginary axis will be horizontal.</p></li>
 <code class="sig-name descname">plot_mode_uq</code><span class="sig-paren">(</span><em class="sig-param">*</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em>, <em class="sig-param">d=1</em>, <em class="sig-param">modes_shape=None</em>, <em class="sig-param">order='C'</em>, <em class="sig-param">cols=4</em>, <em class="sig-param">figsize=None</em>, <em class="sig-param">dpi=None</em>, <em class="sig-param">plot_modes=None</em>, <em class="sig-param">plot_conjugate_pairs=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD.plot_mode_uq"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Plot BOP-DMD modes alongside their standard deviations.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x</strong> (<em>np.ndarray</em><em> or </em><em>iterable</em>) – Points along the 1st spatial dimension where data has
 been collected.</p></li>
@@ -460,10 +459,10 @@ variable projection parameter values.</p>
 <dt>
 <em class="property">property </em><code class="sig-name descname">proj_basis</code></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the projection basis used, with modes stored by column.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -473,10 +472,10 @@ variable projection parameter values.</p>
 <dt>
 <em class="property">property </em><code class="sig-name descname">svd_rank</code></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the rank used for the svd truncation.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a> or <a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></p>
 </dd>
 </dl>
@@ -487,10 +486,10 @@ variable projection parameter values.</p>
 <em class="property">property </em><code class="sig-name descname">time</code></dt>
 <dd><p>Get the vector that contains the time points of the fitted snapshots.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the vector that contains the original time points.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -500,10 +499,10 @@ variable projection parameter values.</p>
 <dt>
 <em class="property">property </em><code class="sig-name descname">trial_size</code></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>size of the data subsets used during each BOP-DMD trial.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a> or <a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></p>
 </dd>
 </dl>
@@ -513,10 +512,10 @@ variable projection parameter values.</p>
 <dt>
 <em class="property">property </em><code class="sig-name descname">use_proj</code></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>flag that determines whether to fit projected or full data.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
 </dd>
 </dl>
@@ -530,7 +529,7 @@ variable projection parameter values.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdoperator.DMDOperator</span></code></p>
 <p>BOP-DMD operator.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>compute_A</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – Flag that determines whether or not to compute the full
 Koopman operator A.</p></li>
@@ -626,10 +625,10 @@ Default is False, don’t print information.</p></li>
 <em class="property">property </em><code class="sig-name descname">A</code></dt>
 <dd><p>Get the full Koopman operator A.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the full Koopman operator A.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -642,13 +641,13 @@ Default is False, don’t print information.</p></li>
 given array of eigenvalues according to the operator’s <cite>eig_sort</cite>
 attribute. Sets <cite>eig_sort</cite> according to eigs if not already done so.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>eigs</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – array of eigenvalues to sort</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>array of indices that sort the given eigenvalues</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -665,17 +664,17 @@ float between 0 and 1, int(trial_size * m) many observations will be
 used per trial, where m denotes the total number of snapshots in X.
 The indices of the sub-selected snapshots are also returned.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>H</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Full data matrix to be sub-selected from.</p></li>
 <li><p><strong>trial_size</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Size of the sub-selection from H.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Matrix of sub-selected data snapshots, stored in each row,
 and a vector of each snapshots’s row index location in H.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -689,16 +688,16 @@ truncation of irank, which denotes the number of singular values of
 X greater than tolrank * s1, where s1 is the largest singular value
 of the matrix X.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Matrix to decompose.</p></li>
 <li><p><strong>tolrank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Determines the rank of the returned SVD.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>irank truncated SVD of X.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -709,16 +708,16 @@ of the matrix X.</p>
 <code class="sig-name descname">_exp_function</code><span class="sig-paren">(</span><em class="sig-param">alpha</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMDOperator._exp_function"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Matrix of exponentials.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>alpha</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Vector of time scalings in the exponent.</p></li>
 <li><p><strong>t</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Vector of time values.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Matrix A such that A[i, j] = exp(t_i * alpha_j).</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -729,17 +728,17 @@ of the matrix X.</p>
 <code class="sig-name descname">_exp_function_deriv</code><span class="sig-paren">(</span><em class="sig-param">alpha</em>, <em class="sig-param">t</em>, <em class="sig-param">i</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMDOperator._exp_function_deriv"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Derivatives of the matrix of exponentials.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>alpha</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Vector of time scalings in the exponent.</p></li>
 <li><p><strong>t</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Vector of time values.</p></li>
 <li><p><strong>i</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Index in alpha of the derivative variable.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Derivatives of Phi(alpha, t) with respect to alpha[i].</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html#scipy.sparse.csr_matrix" title="(in SciPy v1.14.1)">scipy.sparse.csr_matrix</a></p>
 </dd>
 </dl>
@@ -754,13 +753,13 @@ given, this function simply returns the given eigenvalues. Applies the
 provided <cite>eig_constraints</cite> function if a function was provided instead
 of a set of constraints.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>eigenvalues</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Vector of original eigenvalues.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Vector of constrained eigenvalues.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -785,7 +784,7 @@ number of data samples, N denotes the number of columns of Phi, IS
 denotes the number of functions to fit, and IA denotes the length
 of the alpha vector.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>H</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – (M, IS) matrix of data.</p></li>
 <li><p><strong>t</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – (M,) vector of sample times.</p></li>
@@ -795,13 +794,13 @@ of the alpha vector.</p>
 contains the derivatives of Phi wrt the ith component of alpha.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Tuple of two numpy arrays and a boolean representing:
 1. (N, IS) best-fit matrix B.
 2. (N,) best-fit vector alpha.
 3. Flag indicating whether or not convergence was reached.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>Tuple[<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a>, <a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a>]</p>
 </dd>
 </dl>
@@ -828,10 +827,10 @@ generates a warning if any value lies outside of the recommended range.</p>
 <em class="property">property </em><code class="sig-name descname">amplitudes_std</code></dt>
 <dd><p>Get the amplitudes standard deviation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>amplitudes standard deviation.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -842,16 +841,16 @@ generates a warning if any value lies outside of the recommended range.</p>
 <code class="sig-name descname">compute_operator</code><span class="sig-paren">(</span><em class="sig-param">H</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMDOperator.compute_operator"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the low-rank and the full BOP-DMD operators.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>H</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Matrix of data to fit.</p></li>
 <li><p><strong>t</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Vector of sample times.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The BOP-DMD amplitudes.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -862,10 +861,10 @@ generates a warning if any value lies outside of the recommended range.</p>
 <em class="property">property </em><code class="sig-name descname">eigenvalues_std</code></dt>
 <dd><p>Get the eigenvalues standard deviation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>eigenvalues standard deviation.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -876,10 +875,10 @@ generates a warning if any value lies outside of the recommended range.</p>
 <em class="property">property </em><code class="sig-name descname">modes_std</code></dt>
 <dd><p>Get the modes standard deviation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>modes standard deviation.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -890,10 +889,10 @@ generates a warning if any value lies outside of the recommended range.</p>
 <em class="property">property </em><code class="sig-name descname">varpro_opts</code></dt>
 <dd><p>Get the variable projection options.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the variable projection options.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p>tuple</p>
 </dd>
 </dl>
@@ -901,7 +900,7 @@ generates a warning if any value lies outside of the recommended range.</p>
 
 </dd></dl>
 
-</section>
+</div>
 
 
            </div>
@@ -915,7 +914,7 @@ generates a warning if any value lies outside of the recommended range.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 10, 2024.
+      <span class="lastupdated">Last updated on Oct 22, 2024.
       </span></p>
   </div>
 

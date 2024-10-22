@@ -3,8 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VarProDMD: Variable Projection for DMD &mdash; PyDMD 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
@@ -97,7 +96,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pydmd.varprodmd">
+  <div class="section" id="module-pydmd.varprodmd">
 <span id="varprodmd-variable-projection-for-dmd"></span><h1>VarProDMD: Variable Projection for DMD<a class="headerlink" href="#module-pydmd.varprodmd" title="Permalink to this headline">¶</a></h1>
 <p>Variable Projection for DMD. Reformulation of original paper
 (<a class="reference external" href="https://epubs.siam.org/doi/abs/10.1137/M1124176">https://epubs.siam.org/doi/abs/10.1137/M1124176</a>) s.t. sparse matrix computation
@@ -128,7 +127,7 @@ by the Levenberg-Marquardt algorithm, are transormed to real numbers.
 Further simplifications (outer products) avoids using sparse matrices.</p>
 <p>VarProDMD constructor.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>svd_rank</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em><em>, </em><em>optional</em>) – Desired SVD rank.
 If rank <span class="math">r = 0</span>, the optimal rank is
@@ -182,10 +181,10 @@ Defaults to None.</p></li>
 <em class="property">property </em><code class="sig-name descname">dynamics</code></dt>
 <dd><p>Get the time evolution of each mode.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>matrix that contains all the time evolution, stored by row.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -197,17 +196,17 @@ Defaults to None.</p></li>
 <dd><p>Fit the eigenvalues, modes and eigenfunctions/amplitudes
 to measurements.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>np.ndarray</em>) – Measurements
 <span class="math">\boldsymbol{X} \in \mathbb{C}^{n \times m}</span>.</p></li>
 <li><p><strong>time</strong> (<em>np.ndarray</em>) – 1d array of timestamps where measurements were taken.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>VarProDMD instance.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)">object</a></p>
 </dd>
 </dl>
@@ -218,16 +217,16 @@ to measurements.</p>
 <code class="sig-name descname">forecast</code><span class="sig-paren">(</span><em class="sig-param">time: numpy.ndarray</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/pydmd/varprodmd.html#VarProDMD.forecast"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Forecast measurements at given timestamps <cite>time</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>time</strong> (<em>np.ndarray</em>) – Desired times for forcasting as 1d array.</p>
 </dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If method <cite>fit(X, time)</cite> was not called.</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Predicted measurements <span class="math">\hat{\boldsymbol{X}}</span>.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p>np.ndarray</p>
 </dd>
 </dl>
@@ -238,10 +237,10 @@ to measurements.</p>
 <em class="property">property </em><code class="sig-name descname">frequency</code></dt>
 <dd><p>Get the amplitude spectrum.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the array that contains the frequencies of the eigenvalues.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -252,10 +251,10 @@ to measurements.</p>
 <em class="property">property </em><code class="sig-name descname">growth_rate</code></dt>
 <dd><p>Get the growth rate values relative to the modes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the Floquet values</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -267,15 +266,15 @@ to measurements.</p>
 <dd><p>Return optimization statistics of the Variable Projection
 optimization.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – ValueError is raised if method <cite>fit(X, time)</cite>
 was not called.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Optimization results including optimal weights
 (continuous eigenvalues) and number of iterations.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>OptimizeResult</p>
 </dd>
 </dl>
@@ -286,18 +285,18 @@ was not called.</p>
 <em class="property">property </em><code class="sig-name descname">selected_samples</code></dt>
 <dd><p>Return indices for creating the library.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – ValueError is raised if method
 <cite>fit(X, time)</cite> was not called.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Indices of the selected samples.
 If no compression was performed <span class="math">\left(c = 0\right)</span>,
 all indices are returned, else indices of the
 library selection scheme using QR-Decomposition
 with column pivoting.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
@@ -311,14 +310,14 @@ with column pivoting.</p>
 The SSR gives insight w.r.t. signal qualities.
 A low SSR is desired. If SSR is high the model may be inaccurate.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – ValueError is raised if method
 <cite>fit(X, time)</cite> was not called.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>SSR.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></p>
 </dd>
 </dl>
@@ -333,7 +332,7 @@ A low SSR is desired. If SSR is high the model may be inaccurate.</p>
 <p>Variable Projection Operator for DMD.</p>
 <p>VarProOperator constructor.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>svd_rank</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>]</em>) – Desired SVD rank.
 If rank <span class="math">r = 0</span>, the optimal rank is
@@ -386,7 +385,7 @@ Use <cite>OPT_DEF_ARGS</cite> as starting point.</p></li>
 <dd><p>Perform Variable Projection for DMD using SciPy’s
 nonlinear least squares optimizer.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<em>np.ndarray</em>) – Measurement <span class="math">\boldsymbol{X} \in \mathbb{C}^{n \times m}</span></p></li>
 <li><p><strong>Y</strong> (<em>np.ndarray</em>) – 1d array of timestamps where individual
@@ -394,11 +393,11 @@ measurements <span class="math">\boldsymbol{x}_i \in \mathbb{C}^n</span>
 where taken.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If <cite>sorted_eigs</cite> from constructor
 was set to an invalid string.</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Eigenfunctions/amplitudes <span class="math">\boldsymbol{\varphi}^{m-1}</span>,
 OptimizeResult from SciPy’s optimizer
 (optimal parameters and statistics),
@@ -406,7 +405,7 @@ indices of selected measurements. If no compression (<span class="math">c = 0</s
 is used, all indices are returned, else the indices of the selected
 samples are used.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p>Tuple[np.ndarray, OptimizeResult, np.ndarray]</p>
 </dd>
 </dl>
@@ -414,7 +413,7 @@ samples are used.</p>
 
 </dd></dl>
 
-</section>
+</div>
 
 
            </div>
@@ -428,7 +427,7 @@ samples are used.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 10, 2024.
+      <span class="lastupdated">Last updated on Oct 22, 2024.
       </span></p>
   </div>
 

@@ -3,8 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Subspace DMD &mdash; PyDMD 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
@@ -97,7 +96,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pydmd.subspacedmd">
+  <div class="section" id="module-pydmd.subspacedmd">
 <span id="subspace-dmd"></span><h1>Subspace DMD<a class="headerlink" href="#module-pydmd.subspacedmd" title="Permalink to this headline">¶</a></h1>
 <p>Derived module from dmdbase.py for Subspace DMD.</p>
 <p>Reference:
@@ -111,7 +110,7 @@ decomposition for stochastic Koopman analysis.” Physical Review E 96.3 (2017):
 <p>Subspace Dynamic Mode Decomposition</p>
 <blockquote>
 <div><dl class="field-list simple">
-<dt class="field-odd">param svd_rank<span class="colon">:</span></dt>
+<dt class="field-odd">param svd_rank</dt>
 <dd class="field-odd"><p>the rank for the truncation; if -1 all the columns of
 <span class="math">U_q</span> are used, if <cite>svd_rank</cite> is an integer grater than zero
 it is used as the number of columns retained from  <span class="math">U_q</span>.
@@ -120,7 +119,7 @@ it is used as the number of columns retained from  <span class="math">U_q</span>
 </dl>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes.
 See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
@@ -139,7 +138,7 @@ part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p><
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/subspacedmd.html#SubspaceDMD.fit"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the Subspace Dynamic Modes Decomposition to the input data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
 </dd>
 </dl>
@@ -147,7 +146,7 @@ part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p><
 
 </dd></dl>
 
-</section>
+</div>
 
 
            </div>
@@ -161,7 +160,7 @@ part to break ties) if <cite>sorted_eigs=’real’</cite>. Default: False.</p><
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 10, 2024.
+      <span class="lastupdated">Last updated on Oct 22, 2024.
       </span></p>
   </div>
 

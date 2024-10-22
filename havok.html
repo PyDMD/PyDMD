@@ -3,8 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Havok &mdash; PyDMD 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
@@ -97,7 +96,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pydmd.havok">
+  <div class="section" id="module-pydmd.havok">
 <span id="havok"></span><h1>Havok<a class="headerlink" href="#module-pydmd.havok" title="Permalink to this headline">¶</a></h1>
 <p>Module for the Hankel alternative view of Koopman (HAVOK) analysis.</p>
 <p>References:
@@ -114,7 +113,7 @@ frenet-serret frame, Proceedings of the Royal Society A, 477
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Hankel alternative view of Koopman (HAVOK) analysis.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; if 0, the method computes the
 optimal rank and uses it for the truncation; if positive integer, the
@@ -147,10 +146,10 @@ least-squares or the pseudo-inverse is used depending on <cite>lstsq</cite>.</p>
 <dd><p>Get the matrix A in the HAVOK relationship dv/dt = Av + Bu, where v
 denotes the linear HAVOK embeddings and u denotes the forcing terms.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>linear dynamics matrix A.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -162,10 +161,10 @@ denotes the linear HAVOK embeddings and u denotes the forcing terms.</p>
 <dd><p>Get the matrix B in the HAVOK relationship dv/dt = Av + Bu, where v
 denotes the linear HAVOK embeddings and u denotes the forcing terms.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>forcing dynamics matrix B.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -194,7 +193,7 @@ to the space of the original input data.</p>
 computes and returns the beginning and ending index for each
 consecutive set of indices.</p>
 <dl class="field-list">
-<dt class="field-odd">Example<span class="colon">:</span></dt>
+<dt class="field-odd">Example</dt>
 <dd class="field-odd"><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">26</span><span class="p">,</span> <span class="mi">28</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">_get_index_slices</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">min_jump_dist</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 <span class="go">[(2, 5), (10, 12), (25, 28)]</span>
@@ -212,7 +211,7 @@ the absolute value of the forcing is large enough to be considered
 “active”. This method uses a histogram of the forcing signal values
 and a forcing event probability in order to estimate this threshold.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forcing</strong> (<em>{numpy.ndarray</em><em>, </em><em>iterable}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – (m,) array of forcing inputs to be thresholded.
 Alternatively, users may provide an integer, which will be used to
@@ -233,10 +232,10 @@ one may set the figure size, the y-axis limits, and whether or not
 to use a semilogy scale.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>active threshold for the absolute value of the forcing terms.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></p>
 </dd>
 </dl>
@@ -248,13 +247,13 @@ to use a semilogy scale.</p></li>
 <dd><p>Given a Hankel matrix H as a 2-D numpy.ndarray, uses the <cite>delays</cite>
 and <cite>lag</cite> attributes to unravel the data in the Hankel matrix.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>H</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – 2-D Hankel matrix of data.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>de-Hankeled (m,) or (n, m) array of data.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -267,10 +266,10 @@ and <cite>lag</cite> attributes to unravel the data in the Hankel matrix.</p>
 Coordinates are stored as columns of the returned matrix.
 Note that this is the V matrix from the SVD of the Hankel matrix.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>matrix containing all of the HAVOK embeddings.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -281,10 +280,10 @@ Note that this is the V matrix from the SVD of the Hankel matrix.</p>
 <em class="property">property </em><code class="sig-name descname">delays</code></dt>
 <dd><p>Get the number of delays used when building Hankel matrices.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the number of Hankel matrix delays.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a></p>
 </dd>
 </dl>
@@ -295,10 +294,10 @@ Note that this is the V matrix from the SVD of the Hankel matrix.</p>
 <em class="property">property </em><code class="sig-name descname">eigs</code></dt>
 <dd><p>Get the eigenvalues of the linear HAVOK operator A.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the eigenvalues of the operator A.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -309,7 +308,7 @@ Note that this is the V matrix from the SVD of the Hankel matrix.</p>
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/havok.html#HAVOK.fit"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Perform the HAVOK analysis.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
 <li><p><strong>t</strong> (<em>{numpy.ndarray</em><em>, </em><em>iterable}</em><em> or </em><em>{int</em><em>, </em><em>float}</em>) – the input time vector or uniform time-step between snapshots.</p></li>
@@ -324,10 +323,10 @@ Note that this is the V matrix from the SVD of the Hankel matrix.</p>
 <dd><p>Get the HAVOK embeddings that force the linear dynamics.
 Coordinates are stored as columns of the returned matrix.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>matrix containing the chaotic forcing terms.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -339,13 +338,13 @@ Coordinates are stored as columns of the returned matrix.</p>
 <dd><p>Given a data matrix X as a 1-D or 2-D numpy.ndarray, uses the <cite>delays</cite>
 and <cite>lag</cite> attributes to return the data as a 2-D Hankel matrix.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – (m,) or (n, m) array of data.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Hankel matrix of data.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -356,10 +355,10 @@ and <cite>lag</cite> attributes to return the data as a 2-D Hankel matrix.</p>
 <em class="property">property </em><code class="sig-name descname">ho_snapshots</code></dt>
 <dd><p>Get the time-delay data matrix (i.e. the Hankel matrix).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the matrix that contains the time-delayed data.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -370,10 +369,10 @@ and <cite>lag</cite> attributes to return the data as a 2-D Hankel matrix.</p>
 <em class="property">property </em><code class="sig-name descname">lag</code></dt>
 <dd><p>Get the lag used when building Hankel matrices.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the number of time-steps used for Hankel matrix lag.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a></p>
 </dd>
 </dl>
@@ -385,10 +384,10 @@ and <cite>lag</cite> attributes to return the data as a 2-D Hankel matrix.</p>
 <dd><p>Get the HAVOK embeddings that are governed by linear dynamics.
 Coordinates are stored as columns of the returned matrix.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>matrix containing the linear HAVOK embeddings.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -400,10 +399,10 @@ Coordinates are stored as columns of the returned matrix.</p>
 <dd><p>Get the U matrix from the SVD of the Hankel matrix. Note that the
 columns of this matrix are referred to as the eigen-time-delay modes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>matrix containing the eigen-time-delay modes.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -415,10 +414,10 @@ columns of this matrix are referred to as the eigen-time-delay modes.</p>
 <dd><p>Get the full HAVOK regression model,
 which contains A, B, and the bad fit.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the full HAVOK regression model.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -434,7 +433,7 @@ which contains A, B, and the bad fit.</p>
 - the HAVOK embeddings, along with active forcing times
 - the HAVOK reconstruction of the embeddings.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>num_plot</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – The number of time points to plot across all subplots.
 By default, all available data points are plotted.</p></li>
@@ -468,7 +467,7 @@ times are plotted on top of the forcing term.</p></li>
 <code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">forcing</em>, <em class="sig-param">time</em>, <em class="sig-param">V0=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/havok.html#HAVOK.predict"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Use a custom forcing input to make system predictions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>forcing</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – (m, <cite>num_chaos</cite>) array of forcing inputs.</p></li>
 <li><p><strong>time</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – (m,) array that contains the times that correspond with
@@ -483,10 +482,10 @@ is an int, <cite>V0</cite> is assumed to be the index of the stored linear
 dynamics to use as an initial condition.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>system predictions evaluated at the times in <cite>time</cite>.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -498,10 +497,10 @@ dynamics to use as an initial condition.</p></li>
 <dd><p>Get the number of HAVOK embeddings utilized by the HAVOK model.
 Note that this is essentially the integer rank truncation used.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>rank of the HAVOK model.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)">int</a></p>
 </dd>
 </dl>
@@ -512,10 +511,10 @@ Note that this is essentially the integer rank truncation used.</p>
 <em class="property">property </em><code class="sig-name descname">reconstructed_data</code></dt>
 <dd><p>Get the reconstructed data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the matrix that contains the reconstructed snapshots.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -526,10 +525,10 @@ Note that this is essentially the integer rank truncation used.</p>
 <em class="property">property </em><code class="sig-name descname">reconstructed_embeddings</code></dt>
 <dd><p>Get the reconstructed time-delay embeddings.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the matrix that contains the reconstructed embeddings.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -540,10 +539,10 @@ Note that this is essentially the integer rank truncation used.</p>
 <em class="property">property </em><code class="sig-name descname">singular_vals</code></dt>
 <dd><p>Get the singular value spectrum of the Hankel matrix.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the singular values of the Hankel matrix.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -554,10 +553,10 @@ Note that this is essentially the integer rank truncation used.</p>
 <em class="property">property </em><code class="sig-name descname">snapshots</code></dt>
 <dd><p>Get the input data (time-series or space-flattened).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the matrix that contains the original input data.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -568,10 +567,10 @@ Note that this is essentially the integer rank truncation used.</p>
 <em class="property">property </em><code class="sig-name descname">time</code></dt>
 <dd><p>Get the times of the input data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the vector that contains the times of the input data.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -579,7 +578,7 @@ Note that this is essentially the integer rank truncation used.</p>
 
 </dd></dl>
 
-</section>
+</div>
 
 
            </div>
@@ -593,7 +592,7 @@ Note that this is essentially the integer rank truncation used.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 10, 2024.
+      <span class="lastupdated">Last updated on Oct 22, 2024.
       </span></p>
   </div>
 

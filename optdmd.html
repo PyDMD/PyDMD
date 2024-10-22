@@ -3,8 +3,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OptDMD &mdash; PyDMD 0.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
@@ -97,7 +96,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pydmd.optdmd">
+  <div class="section" id="module-pydmd.optdmd">
 <span id="optdmd"></span><h1>OptDMD<a class="headerlink" href="#module-pydmd.optdmd" title="Permalink to this headline">¶</a></h1>
 <p>Derived module from <a class="reference internal" href="dmdbase.html#module-pydmd.dmdbase" title="pydmd.dmdbase"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pydmd.dmdbase()</span></code></a> for the optimal closed-form solution
 to dmd.</p>
@@ -105,23 +104,22 @@ to dmd.</p>
 <p class="admonition-title">Note</p>
 <p>P. Heas &amp; C. Herzet. Low-rank dynamic mode decomposition: optimal
 solution in polynomial time. arXiv:1610.02962. 2016.</p>
-</aside>
+</div>
 <dl class="class">
 <dt>
 <em class="property">class </em><code class="sig-name descname">OptDMD</code><span class="sig-paren">(</span><em class="sig-param">factorization='evd'</em>, <em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">opt=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/optdmd.html#OptDMD"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
 <p>Dynamic Mode Decomposition</p>
 <p>This class implements the closed-form solution to the DMD minimization
-problem. It relies on the optimal solution given by <a class="reference internal" href="#heasherzet16" id="citation-reference-1"><span>[HeasHerzet16]</span></a>.</p>
-<div role="list" class="citation-list">
-<div class="citation" id="heasherzet16" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#citation-reference-1">HeasHerzet16</a><span class="fn-bracket">]</span></span>
-<p>P. Heas &amp; C. Herzet. Low-rank dynamic mode decomposition:
+problem. It relies on the optimal solution given by <a class="reference internal" href="#heasherzet16" id="id1"><span>[HeasHerzet16]</span></a>.</p>
+<dl class="citation">
+<dt class="label" id="heasherzet16"><span class="brackets"><a class="fn-backref" href="#id1">HeasHerzet16</a></span></dt>
+<dd><p>P. Heas &amp; C. Herzet. Low-rank dynamic mode decomposition:
 optimal solution in polynomial time. arXiv:1610.02962. 2016.</p>
-</div>
-</div>
+</dd>
+</dl>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>factorization</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – compute either the eigenvalue decomposition of
 the unknown high-dimensional DMD operator (factorization=”evd”) or
@@ -151,10 +149,10 @@ expense of bigger computational cost.</p>
 <p>This method uses the class variables self.snapshots (for the
 snapshots), self.modes and self.eigs.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the amplitudes array</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -170,10 +168,10 @@ Jovanovic et al. 2014, Sparsity-promoting dynamic mode decomposition,
 system and the reconstructed one. For futher information, see
 <cite>dmdbase._compute_amplitudes</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the array that contains the amplitudes coefficient.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -189,11 +187,11 @@ system and the reconstructed one. For futher information, see
 \right) b_{k} = \sum_{k=1}^{r} \boldsymbol{\phi}_{k} \left(
 \lambda_{k} \right)^{\left( t / \Delta t \right)} b_{k}</span></p>
 </div><dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the matrix that contains all the time evolution, stored by
 row.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -204,10 +202,10 @@ row.</p>
 <em class="property">property </em><code class="sig-name descname">eigs</code></dt>
 <dd><p>Get the eigenvalues of A tilde.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the eigenvalues from the eigendecomposition of <cite>atilde</cite>.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -223,7 +221,7 @@ row.</p>
 <code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">Y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/optdmd.html#OptDMD.fit"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Compute the Dynamic Modes Decomposition to the input data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
 <li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots at sequential timestep, if passed. Default
@@ -238,10 +236,10 @@ is None.</p></li>
 <em class="property">property </em><code class="sig-name descname">fitted</code></dt>
 <dd><p>Check whether this DMD instance has been fitted.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><cite>True</cite> is the instance has been fitted, <cite>False</cite> otherwise.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
 </dd>
 </dl>
@@ -252,10 +250,10 @@ is None.</p></li>
 <em class="property">property </em><code class="sig-name descname">modes</code></dt>
 <dd><p>Get the matrix containing the DMD modes, stored by column.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the matrix containing the DMD modes.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -283,10 +281,10 @@ set the field to a brand-new value (see example below).</p>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>The DMD modes activation bitmask.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dt class="field-even">Return type</dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -297,13 +295,13 @@ set the field to a brand-new value (see example below).</p>
 <code class="sig-name descname">predict</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/optdmd.html#OptDMD.predict"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Predict the output Y given the input X using the fitted DMD model.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – the input vector.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>one time-step ahead predicted output.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -311,7 +309,7 @@ set the field to a brand-new value (see example below).</p>
 
 </dd></dl>
 
-</section>
+</div>
 
 
            </div>
@@ -325,7 +323,7 @@ set the field to a brand-new value (see example below).</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 10, 2024.
+      <span class="lastupdated">Last updated on Oct 22, 2024.
       </span></p>
   </div>
 
