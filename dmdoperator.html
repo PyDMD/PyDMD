@@ -3,16 +3,18 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DMD Operator &mdash; PyDMD 0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+  <title>DMD Operator &mdash; PyDMD 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script src="_static/jquery.js"></script>
-      <script src="_static/underscore.js"></script>
-      <script src="_static/doctools.js"></script>
-      <script src="_static/language_data.js"></script>
+      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=0b546569"></script>
+      <script src="_static/doctools.js?v=888ff710"></script>
+      <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -96,17 +98,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="module-pydmd.dmdoperator">
-<span id="dmd-operator"></span><h1>DMD Operator<a class="headerlink" href="#module-pydmd.dmdoperator" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt>
-<em class="property">class </em><code class="sig-name descname">DMDOperator</code><span class="sig-paren">(</span><em class="sig-param">svd_rank</em>, <em class="sig-param">exact</em>, <em class="sig-param">forward_backward</em>, <em class="sig-param">rescale_mode</em>, <em class="sig-param">sorted_eigs</em>, <em class="sig-param">tikhonov_regularization</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdoperator.html#DMDOperator"><span class="viewcode-link">[source]</span></a></dt>
+  <section id="module-pydmd.dmdoperator">
+<span id="dmd-operator"></span><h1>DMD Operator<a class="headerlink" href="#module-pydmd.dmdoperator" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DMDOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">svd_rank</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exact</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward_backward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sorted_eigs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tikhonov_regularization</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdoperator.html#DMDOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Dynamic Mode Decomposition standard operator class. Non-standard ways of
 computing the low-rank Atilde operator should be coded into subclasses of
 this class.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If 0, the method computes the
 optimal rank and uses it for truncation; if positive interger, the
@@ -116,7 +118,7 @@ to reach the ‘energy’ specified by <cite>svd_rank</cite>; if -1, the method 
 not compute truncation.</p></li>
 <li><p><strong>exact</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – flag to compute either exact DMD or projected DMD.
 Default is False.</p></li>
-<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><em>None</em><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
 10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
 eigendecomposition. None means no rescaling, ‘auto’ means automatic
 rescaling using singular values, otherwise the scaling factors.</p></li>
@@ -132,25 +134,25 @@ If <cite>None</cite>, no regularization is applied, if <cite>float</cite>, it is
 </ul>
 </dd>
 </dl>
-<dl class="method">
-<dt>
-<em class="property">property </em><code class="sig-name descname">Lambda</code></dt>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Lambda</span></span></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">_compute_eigenquantities</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdoperator.html#DMDOperator._compute_eigenquantities"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_compute_eigenquantities</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdoperator.html#DMDOperator._compute_eigenquantities"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Private method that computes eigenvalues and eigenvectors of the
 low-dimensional operator, scaled according to self._rescale_mode.</p>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">_compute_modes</code><span class="sig-paren">(</span><em class="sig-param">Y</em>, <em class="sig-param">U</em>, <em class="sig-param">Sigma</em>, <em class="sig-param">V</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdoperator.html#DMDOperator._compute_modes"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_compute_modes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdoperator.html#DMDOperator._compute_modes"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Private method that computes eigenvalues and eigenvectors of the
 high-dimensional operator (stored in self.modes and self.Lambda).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – matrix containing the snapshots x1,..x{n} by
 column.</p></li>
@@ -162,9 +164,9 @@ column.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">_least_square_operator</code><span class="sig-paren">(</span><em class="sig-param">U</em>, <em class="sig-param">s</em>, <em class="sig-param">V</em>, <em class="sig-param">Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdoperator.html#DMDOperator._least_square_operator"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_least_square_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdoperator.html#DMDOperator._least_square_operator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Private method that computes the lowrank operator from the singular
 value decomposition of matrix X and the matrix Y.</p>
 <div class="math">
@@ -172,7 +174,7 @@ value decomposition of matrix X and the matrix Y.</p>
 \mathbf{U}^* \mathbf{Y} \mathbf{X}^\dagger \mathbf{U} =
 \mathbf{U}^* \mathbf{Y} \mathbf{V} \mathbf{S}^{-1}</span></p>
 </div><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – 2D matrix that contains the left-singular
 vectors of X, stored by column.</p></li>
@@ -183,26 +185,26 @@ vectors of X, stored by row.</p></li>
 <li><p><strong>Y</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – input matrix Y.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the lowrank operator</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<em class="property">property </em><code class="sig-name descname">as_numpy_array</code></dt>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">as_numpy_array</span></span></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">compute_operator</code><span class="sig-paren">(</span><em class="sig-param">X</em>, <em class="sig-param">Y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdoperator.html#DMDOperator.compute_operator"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">compute_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmdoperator.html#DMDOperator.compute_operator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Compute the low-rank operator.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – matrix containing the snapshots x0,..x{n-1} by
 column.</p></li>
@@ -210,41 +212,41 @@ column.</p></li>
 column.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the (truncated) left-singular vectors matrix, the (truncated)
 singular values array, the (truncated) right-singular vectors
 matrix of X.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<em class="property">property </em><code class="sig-name descname">eigenvalues</code></dt>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">eigenvalues</span></span></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt>
-<em class="property">property </em><code class="sig-name descname">eigenvectors</code></dt>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">eigenvectors</span></span></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt>
-<em class="property">property </em><code class="sig-name descname">modes</code></dt>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modes</span></span></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt>
-<em class="property">property </em><code class="sig-name descname">shape</code></dt>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span></dt>
 <dd><p>Shape of the operator</p>
 </dd></dl>
 
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>
@@ -258,7 +260,7 @@ matrix of X.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 22, 2024.
+      <span class="lastupdated">Last updated on Oct 24, 2024.
       </span></p>
   </div>
 

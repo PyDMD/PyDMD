@@ -5,14 +5,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.dmdc &mdash; PyDMD 0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+  <title>pydmd.dmdc &mdash; PyDMD 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script src="../../_static/jquery.js"></script>
-      <script src="../../_static/underscore.js"></script>
-      <script src="../../_static/doctools.js"></script>
-      <script src="../../_static/language_data.js"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=0b546569"></script>
+      <script src="../../_static/doctools.js?v=888ff710"></script>
+      <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -87,7 +88,7 @@
 
 
 <span class="k">class</span> <span class="nc">DMDControlOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    DMD with control base operator. This should be subclassed in order to</span>
 <span class="sd">    implement the appropriate features.</span>
 
@@ -122,7 +123,7 @@
 
 
 <span class="k">class</span> <span class="nc">DMDBKnownOperator</span><span class="p">(</span><span class="n">DMDControlOperator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    DMD with control base operator when B is given.</span>
 
 <span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes the</span>
@@ -143,7 +144,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">controlin</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the low-rank operator. This is the standard version of the DMD</span>
 <span class="sd">        operator, with a correction which depends on B.</span>
 
@@ -164,7 +165,7 @@
 
 
 <span class="k">class</span> <span class="nc">DMDBUnknownOperator</span><span class="p">(</span><span class="n">DMDControlOperator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    DMD with control base operator when B is unknown.</span>
 
 <span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes the</span>
@@ -185,7 +186,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">controlin</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the low-rank operator.</span>
 
 <span class="sd">        :param numpy.ndarray X: matrix containing the snapshots x0,..x{n-1} by</span>
@@ -221,7 +222,7 @@
         <span class="k">return</span> <span class="n">Ur</span><span class="p">,</span> <span class="n">Ur</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Btilde</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_compute_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">sp</span><span class="p">,</span> <span class="n">Vp</span><span class="p">,</span> <span class="n">Up1</span><span class="p">,</span> <span class="n">Ur</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Private method that computes eigenvalues and eigenvectors of the</span>
 <span class="sd">        high-dimensional operator (stored in self.modes and self.Lambda).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -240,7 +241,7 @@
 
 
 <div class="viewcode-block" id="DMDc"><a class="viewcode-back" href="../../dmdc.html#pydmd.dmdc.DMDc">[docs]</a><span class="k">class</span> <span class="nc">DMDc</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dynamic Mode Decomposition with control.</span>
 <span class="sd">    This version does not allow to manipulate the temporal window within the</span>
 <span class="sd">    system is reconstructed.</span>
@@ -297,7 +298,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">B</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the operator B.</span>
 
 <span class="sd">        :return: the operator B.</span>
@@ -307,7 +308,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">basis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the basis used to reduce the linear operator to the low dimensional</span>
 <span class="sd">        space.</span>
 
@@ -317,7 +318,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basis</span>
 
 <div class="viewcode-block" id="DMDc.reconstructed_data"><a class="viewcode-back" href="../../dmdc.html#pydmd.dmdc.DMDc.reconstructed_data">[docs]</a>    <span class="k">def</span> <span class="nf">reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">control_input</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the reconstructed data, computed using the `control_input`</span>
 <span class="sd">        argument. If the `control_input` is not passed, the original input (in</span>
 <span class="sd">        the `fit` method) is used. The input dimension has to be consistent</span>
@@ -354,7 +355,7 @@
             <span class="n">arr</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_B</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">expected_shape</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Invalid shape: expected </span><span class="si">{expected_shape}</span><span class="s2">, got </span><span class="si">{arr.shape}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Invalid shape: expected </span><span class="si">{</span><span class="n">expected_shape</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
             <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
 
@@ -362,7 +363,7 @@
         <span class="k">return</span> <span class="n">data</span></div>
 
 <div class="viewcode-block" id="DMDc.fit"><a class="viewcode-back" href="../../dmdc.html#pydmd.dmdc.DMDc.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the Dynamic Modes Decomposition with control given the original</span>
 <span class="sd">        snapshots and the control input data. The matrix `B` that controls how</span>
 <span class="sd">        the control input influences the system evolution can be provided by</span>
@@ -417,7 +418,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 22, 2024.
+      <span class="lastupdated">Last updated on Oct 24, 2024.
       </span></p>
   </div>
 

@@ -3,16 +3,18 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sparsity-promoting DMD &mdash; PyDMD 0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+  <title>Sparsity-promoting DMD &mdash; PyDMD 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script src="_static/jquery.js"></script>
-      <script src="_static/underscore.js"></script>
-      <script src="_static/doctools.js"></script>
-      <script src="_static/language_data.js"></script>
+      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=0b546569"></script>
+      <script src="_static/doctools.js?v=888ff710"></script>
+      <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -96,18 +98,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="module-pydmd.spdmd">
-<span id="sparsity-promoting-dmd"></span><h1>Sparsity-promoting DMD<a class="headerlink" href="#module-pydmd.spdmd" title="Permalink to this headline">¶</a></h1>
+  <section id="module-pydmd.spdmd">
+<span id="sparsity-promoting-dmd"></span><h1>Sparsity-promoting DMD<a class="headerlink" href="#module-pydmd.spdmd" title="Permalink to this heading">¶</a></h1>
 <p>Derived module from dmdbase.py for sparsity-promoting DMD.</p>
-<dl class="class">
-<dt>
-<em class="property">class </em><code class="sig-name descname">SpDMD</code><span class="sig-paren">(</span><em class="sig-param">svd_rank=0</em>, <em class="sig-param">tlsq_rank=0</em>, <em class="sig-param">exact=True</em>, <em class="sig-param">opt=False</em>, <em class="sig-param">rescale_mode=None</em>, <em class="sig-param">forward_backward=False</em>, <em class="sig-param">sorted_eigs=False</em>, <em class="sig-param">abs_tolerance=1e-06</em>, <em class="sig-param">rel_tolerance=0.0001</em>, <em class="sig-param">max_iterations=10000</em>, <em class="sig-param">rho=1</em>, <em class="sig-param">gamma=10</em>, <em class="sig-param">verbose=True</em>, <em class="sig-param">enforce_zero=True</em>, <em class="sig-param">release_memory=True</em>, <em class="sig-param">zero_absolute_tolerance=1e-12</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmd.DMD</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SpDMD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">svd_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tlsq_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exact</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rescale_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward_backward</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sorted_eigs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enforce_zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">release_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_absolute_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-12</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DMD</span></code></p>
 <p>Sparsity-Promoting Dynamic Mode Decomposition. Promotes solutions having an
 high number of amplitudes set to zero (i.e. <em>sparse solutions</em>).
 Reference: 10.1063/1.4863670</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>svd_rank</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the rank for the truncation; If 0, the method computes the
 optimal rank and uses it for truncation; if positive interger, the
@@ -121,7 +123,7 @@ is 0, that means TLSQ is not applied.</p></li>
 Default is True.</p></li>
 <li><p><strong>opt</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – argument to control the computation of DMD modes amplitudes.
 See <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code>. Default is False.</p></li>
-<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
+<li><p><strong>rescale_mode</strong> (<em>{'auto'}</em><em> or </em><em>None</em><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a>) – Scale Atilde as shown in
 10.1016/j.jneumeth.2015.10.010 (section 2.4) before computing its
 eigendecomposition. None means no rescaling, ‘auto’ means automatic
 rescaling using singular values, otherwise the scaling factors.</p></li>
@@ -154,9 +156,9 @@ algorithm are deleted after the termination of a call to <code class="xref py py
 </ul>
 </dd>
 </dl>
-<dl class="method">
-<dt>
-<code class="sig-name descname">_find_zero_amplitudes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._find_zero_amplitudes"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_find_zero_amplitudes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._find_zero_amplitudes"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Use ADMM to find which amplitudes (i.e. their position in the
 DMD amplitudes array) which can be set to zero according to the given
 parameters. Note that this method does not compute amplitudes, but
@@ -169,16 +171,16 @@ computed separately afterwards
 </div></blockquote>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">_loop_condition</code><span class="sig-paren">(</span><em class="sig-param">alpha</em>, <em class="sig-param">beta</em>, <em class="sig-param">lmbd</em>, <em class="sig-param">old_beta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._loop_condition"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_loop_condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lmbd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">old_beta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._loop_condition"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Check whether ADMM can stop now, or should perform another iteration.
 :param np.ndarray alpha: Current value of <span class="math">\alpha_k</span> (vector</p>
 <blockquote>
 <div><p>of DMD amplitudes).</p>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>np.ndarray</em>) – Current value of <span class="math">\beta_k</span> (vector of
 non-zero amplitudes).</p></li>
@@ -188,15 +190,15 @@ of Lagrange multipliers).</p></li>
 of non-zero amplitudes).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return bool</dt>
+<dt class="field-even">Return bool<span class="colon">:</span></dt>
 <dd class="field-even"><p><cite>True</cite> if ADMM can stop now, <cite>False</cite> otherwise.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">_optimal_amplitudes</code><span class="sig-paren">(</span><em class="sig-param">zero_amplitudes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._optimal_amplitudes"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_optimal_amplitudes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zero_amplitudes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._optimal_amplitudes"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Find the optimal DMD amplitudes with the constraint that the given
 indexes should be set to 0.
 :param np.ndarray zero_amplitudes: Boolean vector.
@@ -207,83 +209,83 @@ set to 0.</p>
 </div></blockquote>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">_update</code><span class="sig-paren">(</span><em class="sig-param">beta</em>, <em class="sig-param">lmbd</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._update"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lmbd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._update"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Operate an entire step of ADMM.
 :param np.ndarray beta: Current value of <span class="math">\beta_k</span> (vector of</p>
 <blockquote>
 <div><p>non-zero amplitudes).</p>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>lmbd</strong> (<em>np.ndarray</em>) – Current value of <span class="math">\lambda_k</span> (vector of
 Lagrande multipliers).</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A tuple containing the updated values
 <span class="math">\alpha_{k+1},\beta_{k+1},\lambda_{k+1}</span> (in this order).</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>tuple</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">_update_alpha</code><span class="sig-paren">(</span><em class="sig-param">beta</em>, <em class="sig-param">lmbd</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._update_alpha"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_update_alpha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lmbd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._update_alpha"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Update the vector <span class="math">\alpha_k</span> of DMD amplitudes.
 :param np.ndarray beta: Current value of <span class="math">\beta_k</span> (vector of</p>
 <blockquote>
 <div><p>non-zero amplitudes).</p>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>lmbd</strong> (<em>np.ndarray</em>) – Current value of <span class="math">\lambda_k</span> (vector of
 Lagrande multipliers).</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The updated value <span class="math">\alpha_{k+1}</span>.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">_update_beta</code><span class="sig-paren">(</span><em class="sig-param">alpha</em>, <em class="sig-param">lmbd</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._update_beta"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_update_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lmbd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._update_beta"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Update the vector <span class="math">\beta</span> of non-zero amplitudes.
 :param np.ndarray alpha: Updated value of <span class="math">\alpha_{k+1}</span> (vector</p>
 <blockquote>
 <div><p>of DMD amplitudes).</p>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>lmbd</strong> (<em>np.ndarray</em>) – Current value of <span class="math">\lambda_k</span> (vector
 of Lagrange multipliers).</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The updated value <span class="math">\beta_{k+1}</span>.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">_update_lagrangian</code><span class="sig-paren">(</span><em class="sig-param">alpha</em>, <em class="sig-param">beta</em>, <em class="sig-param">lmbd</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._update_lagrangian"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_update_lagrangian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lmbd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD._update_lagrangian"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Update the vector <span class="math">\lambda</span> of Lagrange multipliers.
 :param np.ndarray alpha: Updated value of <span class="math">\alpha_{k+1}</span> (vector</p>
 <blockquote>
 <div><p>of DMD amplitudes).</p>
 </div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>beta</strong> (<em>np.ndarray</em>) – Updated value of <span class="math">\beta_{k+1}</span> (vector
 of non-zero amplitudes).</p></li>
@@ -291,18 +293,18 @@ of non-zero amplitudes).</p></li>
 of Lagrange multipliers).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The updated value <span class="math">\lambda_{k+1}</span>.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD.fit"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/spdmd.html#SpDMD.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Compute the Dynamic Modes Decomposition of the input data.
 :param X: the input snapshots.
 :type X: numpy.ndarray or iterable</p>
@@ -310,7 +312,7 @@ of Lagrange multipliers).</p></li>
 
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>
@@ -324,7 +326,7 @@ of Lagrange multipliers).</p></li>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 22, 2024.
+      <span class="lastupdated">Last updated on Oct 24, 2024.
       </span></p>
   </div>
 

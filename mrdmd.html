@@ -3,16 +3,18 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Multi-resolution DMD &mdash; PyDMD 0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+  <title>Multi-resolution DMD &mdash; PyDMD 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script src="_static/jquery.js"></script>
-      <script src="_static/underscore.js"></script>
-      <script src="_static/doctools.js"></script>
-      <script src="_static/language_data.js"></script>
+      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=0b546569"></script>
+      <script src="_static/doctools.js?v=888ff710"></script>
+      <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -96,19 +98,19 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="module-pydmd.mrdmd">
-<span id="multi-resolution-dmd"></span><h1>Multi-resolution DMD<a class="headerlink" href="#module-pydmd.mrdmd" title="Permalink to this headline">¶</a></h1>
+  <section id="module-pydmd.mrdmd">
+<span id="multi-resolution-dmd"></span><h1>Multi-resolution DMD<a class="headerlink" href="#module-pydmd.mrdmd" title="Permalink to this heading">¶</a></h1>
 <p>Derived module from dmdbase.py for multi-resolution dmd.</p>
 <p>Reference:
 - Kutz, J. Nathan, Xing Fu, and Steven L. Brunton. Multiresolution Dynamic Mode
 Decomposition. SIAM Journal on Applied Dynamical Systems 15.2 (2016): 713-735.</p>
-<dl class="class">
-<dt>
-<em class="property">class </em><code class="sig-name descname">MrDMD</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">max_level=2</em>, <em class="sig-param">max_cycles=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydmd.dmdbase.DMDBase</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MrDMD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_cycles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code></p>
 <p>Multi-resolution Dynamic Mode Decomposition</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dmd</strong> (<em>DMDBase</em><em> or </em><em>list</em><em> or </em><em>tuple</em><em> or </em><em>function</em>) – DMD instance(s) used to analyze the snapshots provided. See also
 the documentation for <code class="xref py py-meth docutils literal notranslate"><span class="pre">_dmd_builder()</span></code>.</p></li>
@@ -120,15 +122,15 @@ and <cite>4</cite>. Default is 2.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
-<dt>
-<code class="sig-name descname">_build_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD._build_tree"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_build_tree</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD._build_tree"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Build the internal binary tree that contain the DMD subclasses.</p>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">_dmd_builder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD._dmd_builder"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_dmd_builder</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD._dmd_builder"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Builds a function which takes in input a level and a leaf count
 (i.e. coordinates inside the binary tree) and produces an appropriate
 DMD instance according to the criteria specified in <cite>self.dmd</cite>.</p>
@@ -172,48 +174,48 @@ of the time window):</p>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A function which can be used to spawn DMD instances according
 to the level and leaf.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>func</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<em class="property">property </em><code class="sig-name descname">dynamics</code></dt>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dynamics</span></span></dt>
 <dd><p>Get the time evolution of each mode.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the matrix that contains all the time evolution, stored by
 row.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<em class="property">property </em><code class="sig-name descname">eigs</code></dt>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">eigs</span></span></dt>
 <dd><p>Get the eigenvalues of A tilde.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the eigenvalues from the eigendecomposition of <cite>atilde</cite>.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">enumerate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.enumerate"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">enumerate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.enumerate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Example:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mrdmd</span> <span class="o">=</span> <span class="n">MrDMD</span><span class="p">(</span><span class="n">DMD</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mrdmd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
@@ -223,34 +225,34 @@ row.</p>
 </div>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.fit"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Compute the Dynamic Modes Decomposition to the input data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<em class="property">property </em><code class="sig-name descname">modes</code></dt>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modes</span></span></dt>
 <dd><p>Get the matrix containing the DMD modes, stored by column.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the matrix containing the DMD modes.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<em class="property">property </em><code class="sig-name descname">modes_activation_bitmask</code></dt>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modes_activation_bitmask</span></span></dt>
 <dd><p>Get the bitmask which controls which DMD modes are enabled at the
 moment in this DMD instance.</p>
 <p>The DMD instance must be fitted before this property becomes valid.
@@ -270,23 +272,23 @@ set the field to a brand-new value (see example below).</p>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The DMD modes activation bitmask.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">partial_amplitudes</code><span class="sig-paren">(</span><em class="sig-param">level</em>, <em class="sig-param">node=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.partial_amplitudes"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">partial_amplitudes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.partial_amplitudes"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return the amplitudes of the specific <cite>level</cite> and of the specific
 <cite>node</cite>; if <cite>node</cite> is not specified, the method returns the amplitudes
 of the given <cite>level</cite> (all the nodes).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the index of the level from where the amplitudes are
 extracted.</p></li>
@@ -295,24 +297,24 @@ extracted; if None, the amplitudes are extracted from all the
 nodes of the given level. Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the selected eigs</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">partial_dynamics</code><span class="sig-paren">(</span><em class="sig-param">level</em>, <em class="sig-param">node=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.partial_dynamics"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">partial_dynamics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.partial_dynamics"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return the time evolution of the specific <cite>level</cite> and of the specific
 <cite>node</cite>; if <cite>node</cite> is not specified, the method returns the time
 evolution of the given <cite>level</cite> (all the nodes). The dynamics are always
 reported to the original time window.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the index of the level from where the time evolution
 is extracted.</p></li>
@@ -321,23 +323,23 @@ extracted; if None, the time evolution is extracted from all the
 nodes of the given level. Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the selected dynamics stored by row</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">partial_eigs</code><span class="sig-paren">(</span><em class="sig-param">level</em>, <em class="sig-param">node=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.partial_eigs"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">partial_eigs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.partial_eigs"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return the eigenvalues of the specific <cite>level</cite> and of the specific
 <cite>node</cite>; if <cite>node</cite> is not specified, the method returns the eigenvalues
 of the given <cite>level</cite> (all the nodes).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the index of the level from where the eigenvalues is
 extracted.</p></li>
@@ -346,23 +348,23 @@ extracted; if None, the time evolution is extracted from all the
 nodes of the given level. Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the selected eigs</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">partial_modes</code><span class="sig-paren">(</span><em class="sig-param">level</em>, <em class="sig-param">node=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.partial_modes"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">partial_modes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.partial_modes"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return the modes at the specific <cite>level</cite> and at the specific <cite>node</cite>; if
 <cite>node</cite> is not specified, the method returns all the modes of the given
 <cite>level</cite> (all the nodes).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the index of the level from where the modes are
 extracted.</p></li>
@@ -371,24 +373,24 @@ extracted; if None, the modes are extracted from all the nodes of
 the given level. Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the selected modes stored by columns</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">partial_reconstructed_data</code><span class="sig-paren">(</span><em class="sig-param">level</em>, <em class="sig-param">node=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.partial_reconstructed_data"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">partial_reconstructed_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.partial_reconstructed_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Return the reconstructed data computed using the modes and the time
 evolution at the specific <cite>level</cite> and at the specific <cite>node</cite>; if <cite>node</cite>
 is not specified, the method returns the reconstructed data
 of the given <cite>level</cite> (all the nodes).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the index of the level.</p></li>
 <li><p><strong>node</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the index of the node from where the time evolution is
@@ -396,149 +398,149 @@ extracted; if None, the time evolution is extracted from all the
 nodes of the given level. Default is None.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the selected reconstruction from dmd operators</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">partial_time_interval</code><span class="sig-paren">(</span><em class="sig-param">level</em>, <em class="sig-param">leaf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.partial_time_interval"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">partial_time_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.partial_time_interval"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Evaluate the start and end time and the period of a given bin.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>level</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the level in the binary tree.</p></li>
 <li><p><strong>node</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – the node id.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the start and end time and the period of the bin</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dictionary</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<em class="property">property </em><code class="sig-name descname">reconstructed_data</code></dt>
+<dl class="py property">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reconstructed_data</span></span></dt>
 <dd><p>Get the reconstructed data.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the matrix that contains the reconstructed snapshots.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">time_window_amplitudes</code><span class="sig-paren">(</span><em class="sig-param">t0</em>, <em class="sig-param">tend</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.time_window_amplitudes"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">time_window_amplitudes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.time_window_amplitudes"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Get the amplitudes relative to the modes of the bins embedded
 (partially or totally) in a given time window.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – start time of the window.</p></li>
 <li><p><strong>tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – end time of the window.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the amplitude of the modes for that time window.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">time_window_bins</code><span class="sig-paren">(</span><em class="sig-param">t0</em>, <em class="sig-param">tend</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.time_window_bins"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">time_window_bins</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.time_window_bins"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Find which bins are embedded (partially or totally) in a given
 time window.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – start time of the window.</p></li>
 <li><p><strong>tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – end time of the window.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>indexes of the bins seen by the time window.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">time_window_eigs</code><span class="sig-paren">(</span><em class="sig-param">t0</em>, <em class="sig-param">tend</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.time_window_eigs"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">time_window_eigs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.time_window_eigs"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Get the eigenvalues relative to the modes of the bins embedded
 (partially or totally) in a given time window.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – start time of the window.</p></li>
 <li><p><strong>tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – end time of the window.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the eigenvalues for that time window.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">time_window_frequency</code><span class="sig-paren">(</span><em class="sig-param">t0</em>, <em class="sig-param">tend</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.time_window_frequency"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">time_window_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.time_window_frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Get the frequencies relative to the modes of the bins embedded
 (partially or totally) in a given time window.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – start time of the window.</p></li>
 <li><p><strong>tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – end time of the window.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the frequencies for that time window.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">time_window_growth_rate</code><span class="sig-paren">(</span><em class="sig-param">t0</em>, <em class="sig-param">tend</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.time_window_growth_rate"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">time_window_growth_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/mrdmd.html#MrDMD.time_window_growth_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Get the growth rate values relative to the modes of the bins embedded
 (partially or totally) in a given time window.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>t0</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – start time of the window.</p></li>
 <li><p><strong>tend</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – end time of the window.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>the Floquet values for that time window.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.1)">numpy.ndarray</a></p>
 </dd>
 </dl>
@@ -546,7 +548,7 @@ time window.</p>
 
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>
@@ -560,7 +562,7 @@ time window.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 22, 2024.
+      <span class="lastupdated">Last updated on Oct 24, 2024.
       </span></p>
   </div>
 

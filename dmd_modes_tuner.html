@@ -3,16 +3,18 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DMD Modes Tuner &mdash; PyDMD 0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+  <title>DMD Modes Tuner &mdash; PyDMD 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script src="_static/jquery.js"></script>
-      <script src="_static/underscore.js"></script>
-      <script src="_static/doctools.js"></script>
-      <script src="_static/language_data.js"></script>
+      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=0b546569"></script>
+      <script src="_static/doctools.js?v=888ff710"></script>
+      <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -96,13 +98,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="module-pydmd.dmd_modes_tuner">
-<span id="dmd-modes-tuner"></span><h1>DMD Modes Tuner<a class="headerlink" href="#module-pydmd.dmd_modes_tuner" title="Permalink to this headline">¶</a></h1>
+  <section id="module-pydmd.dmd_modes_tuner">
+<span id="dmd-modes-tuner"></span><h1>DMD Modes Tuner<a class="headerlink" href="#module-pydmd.dmd_modes_tuner" title="Permalink to this heading">¶</a></h1>
 <p>A module which contains several functions to tune (i.e. improve) DMD instances
 through the “manual” modification of DMD modes.</p>
-<dl class="class">
-<dt>
-<em class="property">class </em><code class="sig-name descname">ModesTuner</code><span class="sig-paren">(</span><em class="sig-param">dmds</em>, <em class="sig-param">in_place=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ModesTuner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dmds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_place</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Class for semi-automatic tuning of DMD modes.</p>
 <p>This class generates a new instance from the instance passed to the
@@ -115,7 +117,7 @@ have more control on what is happening (i.e. when to use in-place
 tuning, or to check which modes have been changed) you may prefer to
 use them instead.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dmds</strong> – One or more instances of DMD.</p></li>
 <li><p><strong>in_place</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – If <cite>True</cite>, this tuner works directly on the given
@@ -123,46 +125,46 @@ DMD instance.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
-<dt>
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner.copy"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Returns a deep copy of the private DMD instance(s) that <cite>ModesTuner</cite>
 is working on. They are not going to be modified by subsequent calls to
 tuning methods, and therefore provide a secure “snapshot” to the DMD(s).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A copy of the private DMD instance owned by <cite>ModesTuner</cite>, or a
 list of copies depending on the parameter received by the
 constructor of this instance.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>list or pydmd.DMDBase</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner.get"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Returns the private DMD instance(s) that <cite>ModesTuner</cite> is working on.
 Be aware that those instances are the internal instances owned by
 <cite>ModesTuner</cite>, therefore they are going going to be modified by
 subsequent calls to tuning methods.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>The private DMD instance owned by <cite>ModesTuner</cite>, or a list of
 DMD instances depending on the parameter received by the
 constructor of this instance.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>list or pydmd.DMDBase</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">select</code><span class="sig-paren">(</span><em class="sig-param">criteria</em>, <em class="sig-param">nullify_amplitudes=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner.select"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">criteria</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nullify_amplitudes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner.select"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Select the DMD modes by using the given <cite>criteria</cite>, which can be either
 a string or a function. You can choose pre-packed criteria by passing
 one of the allowed string values for criteria. In this case you need to
@@ -185,7 +187,7 @@ behavior of each argument.</p>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>criteria</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em> or </em><em>callable</em>) – Criteria used to select DMD modes. The allowed strings
 are <cite>module_threshold</cite>, <cite>stable_modes</cite> and <cite>integral_contribution</cite>.
@@ -200,16 +202,16 @@ decreases.</p></li>
 <cite>criteria</cite> is a string).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return ModesTuner</dt>
+<dt class="field-even">Return ModesTuner<span class="colon">:</span></dt>
 <dd class="field-even"><p>This instance of <cite>ModesTuner</cite> in order to allow
 chaining multiple operations.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">stabilize</code><span class="sig-paren">(</span><em class="sig-param">inner_radius</em>, <em class="sig-param">outer_radius=inf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner.stabilize"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">stabilize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inner_radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outer_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner.stabilize"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Stabilize modes in a circular sector of radius [<cite>inner_radius</cite>,
 <cite>outer_radius</cite>].</p>
 <p>Stabilizing a mode means that the corresponding eigenvalue is divided
@@ -225,7 +227,7 @@ more eigenvalues are strongly unstable (i.e. the corresponding DMD mode
 <p>In order to stabilize an unbounded (above) circular sector, the
 parameter <cite>outer_radius</cite> should be set to <cite>np.inf</cite> (default).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>inner_radius</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – The inner radius of the circular sector to
 be stabilized.</p></li>
@@ -233,24 +235,24 @@ be stabilized.</p></li>
 be stabilized.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return ModesTuner</dt>
+<dt class="field-even">Return ModesTuner<span class="colon">:</span></dt>
 <dd class="field-even"><p>This instance of <cite>ModesTuner</cite> in order to allow
 chaining multiple operations.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt>
-<code class="sig-name descname">subset</code><span class="sig-paren">(</span><em class="sig-param">indexes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner.subset"><span class="viewcode-link">[source]</span></a></dt>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">subset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indexes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/dmd_modes_tuner.html#ModesTuner.subset"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Generate a temporary instance of <cite>ModesTuner</cite> which operates on a
 subset of the DMD instances held by this <cite>ModesTuner</cite>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>indexes</strong> (<em>list</em>) – List of indexes of the DMD instances to be put
 into the subset.</p>
 </dd>
-<dt class="field-even">Return ModesTuner</dt>
+<dt class="field-even">Return ModesTuner<span class="colon">:</span></dt>
 <dd class="field-even"><p>A <cite>ModesTuner</cite> which operates “in place” on the
 DMD instances held by the caller <cite>ModesTuner</cite>.</p>
 </dd>
@@ -259,7 +261,7 @@ DMD instances held by the caller <cite>ModesTuner</cite>.</p>
 
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>
@@ -273,7 +275,7 @@ DMD instances held by the caller <cite>ModesTuner</cite>.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 22, 2024.
+      <span class="lastupdated">Last updated on Oct 24, 2024.
       </span></p>
   </div>
 

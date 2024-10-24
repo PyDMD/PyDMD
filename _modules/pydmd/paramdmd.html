@@ -5,14 +5,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.paramdmd &mdash; PyDMD 0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+  <title>pydmd.paramdmd &mdash; PyDMD 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script src="../../_static/jquery.js"></script>
-      <script src="../../_static/underscore.js"></script>
-      <script src="../../_static/doctools.js"></script>
-      <script src="../../_static/language_data.js"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=0b546569"></script>
+      <script src="../../_static/doctools.js?v=888ff710"></script>
+      <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -87,7 +88,7 @@
 <span class="c1"># roll by one position the shape of X. if X.shape == (a,b,c), the returned</span>
 <span class="c1"># NumPy array&#39;s shape is (b,c,a)</span>
 <span class="k">def</span> <span class="nf">back_roll_shape</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Roll by one position the shape of `X`. if `X.shape == (a,b,c)`, the returned</span>
 <span class="sd">    NumPy array&#39;s shape is `(b,c,a)`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -95,7 +96,7 @@
 
 
 <span class="k">def</span> <span class="nf">roll_shape</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Roll by one position the shape of `X`. if `X.shape == (a,b,c)`, the returned</span>
 <span class="sd">    NumPy array&#39;s shape is `(c,a,b)`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -103,7 +104,7 @@
 
 
 <div class="viewcode-block" id="ParametricDMD"><a class="viewcode-back" href="../../paramdmd.html#pydmd.paramdmd.ParametricDMD">[docs]</a><span class="k">class</span> <span class="nc">ParametricDMD</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Implementation of the parametric Dynamic Mode Decomposition proposed in</span>
 <span class="sd">    arXiv:2110.09155v1. Both the *monolithic* and *partitioned* methods are</span>
 <span class="sd">    available, see the documentation of the parameter `dmd` for more details.</span>
@@ -167,7 +168,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_partitioned</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return `True` if this instance is partitioned, `False` if it is</span>
 <span class="sd">        monolithic.</span>
 
@@ -177,7 +178,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_reference_dmd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        An object used as a reference for several properties like</span>
 <span class="sd">        :func:`dmd_time` and :func:`dmd_timesteps`. If this instance is</span>
 <span class="sd">        monolithic the returned value is `self._dmd`, otherwise it is the first</span>
@@ -192,7 +193,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">dmd_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The time dictionary used by the reference DMD instance (see also</span>
 <span class="sd">        :func:`_reference_dmd`). Note that when you set this attribute the</span>
 <span class="sd">        value is set only for the reference DMD (see :func:`_reference_dmd`),</span>
@@ -212,7 +213,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">dmd_timesteps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The timesteps in the output of this instance, which coincides with the</span>
 <span class="sd">        timesteps in the output of the reference of this instance (see</span>
 <span class="sd">        :func:`_reference_dmd`).</span>
@@ -224,7 +225,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">original_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The original time dictionary used by this instance, which coincides</span>
 <span class="sd">        with the original dictionary used by the reference of this instance</span>
 <span class="sd">        (see :func:`_reference_dmd`).</span>
@@ -236,7 +237,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">original_timesteps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The original timesteps in the input fed to this instance, which</span>
 <span class="sd">        coincides with the original timesteps in the input fed to the reference</span>
 <span class="sd">        of this instance (see :func:`_reference_dmd`).</span>
@@ -248,7 +249,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">training_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The original parameters passed when `self.fit` was called, represented</span>
 <span class="sd">        as a 2D array (the index of the parameter vary along the first</span>
 <span class="sd">        dimension).</span>
@@ -258,7 +259,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_training_parameters</span>
 
     <span class="k">def</span> <span class="nf">_set_training_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the value of `self._original_parameters`, while checking that the</span>
 <span class="sd">        value provided is a 2D array.</span>
 
@@ -276,7 +277,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The new parameters to be used in `reconstructed_data`, represented</span>
 <span class="sd">        as a 2D array (the index of the parameter vary along the first</span>
 <span class="sd">        dimension). For, instance, the following feeds a set of four 3D</span>
@@ -318,7 +319,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="k">def</span> <span class="nf">_arrange_parametric_snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Arrange the given parametric snapshots (see :func:`fit` for an overview</span>
 <span class="sd">        of the shape of `X`) into a 2D matrix such that the shape is distributed</span>
 <span class="sd">        as follows:</span>
@@ -356,7 +357,7 @@
         <span class="k">return</span> <span class="n">X</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_compute_training_modal_coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space_timemu</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the POD modal coefficient from the given matrix, and put</span>
 <span class="sd">        the resulting coefficients (along with their time evolution in matrix</span>
 <span class="sd">        form) into a list.</span>
@@ -414,7 +415,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">spatial_modal_coefficients</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ntrain</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ParametricDMD.fit"><a class="viewcode-back" href="../../paramdmd.html#pydmd.paramdmd.ParametricDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">training_parameters</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the parametric Dynamic Modes Decomposition from the input data</span>
 <span class="sd">        stored in the array `X`. The shape of the parameter `X` must be</span>
 <span class="sd">        used as follows:</span>
@@ -486,7 +487,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">training_modal_coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Modal coefficients of the input dataset. Since this is cached after</span>
 <span class="sd">        calls to :func:`fit` this property needs to be called after :func:`fit`,</span>
 <span class="sd">        and `light` should be set to `False` in the constructor of the class.</span>
@@ -499,13 +500,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_light</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sd">&quot;&quot;&quot;Light instances do not cache the property</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Light instances do not cache the property</span>
 <span class="sd">`training_modal_coefficients`.&quot;&quot;&quot;</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_training_modal_coefficients</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Property not available now, did you call `fit()`?&quot;&quot;&quot;</span>
             <span class="p">)</span>
 
@@ -513,7 +514,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">forecasted_modal_coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Modal coefficients forecasted for the input parameters.</span>
 
 <span class="sd">        The tensor returned has the following shape:</span>
@@ -527,7 +528,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">interpolated_modal_coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Modal coefficients forecasted and then interpolated for the untested</span>
 <span class="sd">        parameters.</span>
 
@@ -543,7 +544,7 @@
     <span class="c1"># ------------------------------------------------------------</span>
 
     <span class="k">def</span> <span class="nf">_predict_modal_coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Predict future spatial modal coefficients in the time instants in</span>
 <span class="sd">        `dmd_time`.</span>
 
@@ -564,7 +565,7 @@
     <span class="k">def</span> <span class="nf">_interpolate_missing_modal_coefficients</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">forecasted_modal_coefficients</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Interpolate spatial modal coefficients for the (untested) parameters</span>
 <span class="sd">        stored in `parameters`. The interpolation uses the interpolator</span>
 <span class="sd">        provided in the constructor of this instance.</span>
@@ -585,7 +586,7 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Unknown parameters not found. Did you set `ParametricDMD.parameters`?&quot;&quot;&quot;</span>
             <span class="p">)</span>
 
@@ -608,7 +609,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the reconstructed data, for the time instants specified in</span>
 <span class="sd">        `dmd_time`, and the parameters stored in `parameters`.</span>
 
@@ -634,7 +635,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="ParametricDMD.save"><a class="viewcode-back" href="../../paramdmd.html#pydmd.paramdmd.ParametricDMD.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save the object to `fname` using the pickle module.</span>
 
 <span class="sd">        :param str fname: the name of file where the reduced order model will</span>
@@ -652,7 +653,7 @@
 
 <div class="viewcode-block" id="ParametricDMD.load"><a class="viewcode-back" href="../../paramdmd.html#pydmd.paramdmd.ParametricDMD.load">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load the object from `fname` using the pickle module.</span>
 
 <span class="sd">        :return: The `ReducedOrderModel` loaded</span>
@@ -675,7 +676,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 22, 2024.
+      <span class="lastupdated">Last updated on Oct 24, 2024.
       </span></p>
   </div>
 

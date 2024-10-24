@@ -5,14 +5,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.edmd &mdash; PyDMD 0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+  <title>pydmd.edmd &mdash; PyDMD 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script src="../../_static/jquery.js"></script>
-      <script src="../../_static/underscore.js"></script>
-      <script src="../../_static/doctools.js"></script>
-      <script src="../../_static/language_data.js"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=0b546569"></script>
+      <script src="../../_static/doctools.js?v=888ff710"></script>
+      <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -90,7 +91,7 @@
 
 
 <div class="viewcode-block" id="EDMDOperator"><a class="viewcode-back" href="../../edmd.html#pydmd.edmd.EDMDOperator">[docs]</a><span class="k">class</span> <span class="nc">EDMDOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    DMD operator for kernelized extended DMD.</span>
 
 <span class="sd">    :param svd_rank: the rank for the truncation; If positive integer, the</span>
@@ -128,7 +129,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">svd_vals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :return: the singular values of the extended feature matrix.</span>
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -136,14 +137,14 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">as_numpy_array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        EDMD does not explicitly compute the forward operator or its reduction.</span>
 <span class="sd">        Doing so poses risks of prohibitively-large computations...</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Atilde is not computed explicitly during EDMD.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="EDMDOperator.compute_operator"><a class="viewcode-back" href="../../edmd.html#pydmd.edmd.EDMDOperator.compute_operator">[docs]</a>    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute and store the kernelized EDMD diagnostics.</span>
 
 <span class="sd">        :param X: matrix containing the right-hand side snapshots by column.</span>
@@ -198,7 +199,7 @@
         <span class="k">return</span> <span class="n">Q</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">V_hat</span></div>
 
 <div class="viewcode-block" id="EDMDOperator._compute_feature_matrix_svd"><a class="viewcode-back" href="../../edmd.html#pydmd.edmd.EDMDOperator._compute_feature_matrix_svd">[docs]</a>    <span class="k">def</span> <span class="nf">_compute_feature_matrix_svd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Gramian</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Helper function that computes the eigendecomposition of the Gramian in</span>
 <span class="sd">        order to obtain the singular vectors Q and singular values Sigma of the</span>
 <span class="sd">        corresponding feature embedding matrix.</span>
@@ -233,7 +234,7 @@
         <span class="k">return</span> <span class="n">Q</span><span class="p">,</span> <span class="n">Sigma</span></div>
 
 <div class="viewcode-block" id="EDMDOperator._compute_rank_from_svals"><a class="viewcode-back" href="../../edmd.html#pydmd.edmd.EDMDOperator._compute_rank_from_svals">[docs]</a>    <span class="k">def</span> <span class="nf">_compute_rank_from_svals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Rank computation for the truncated Singular Value Decomposition given</span>
 <span class="sd">        only singular values.</span>
 
@@ -251,7 +252,7 @@
 
 
 <div class="viewcode-block" id="EDMD"><a class="viewcode-back" href="../../edmd.html#pydmd.edmd.EDMD">[docs]</a><span class="k">class</span> <span class="nc">EDMD</span><span class="p">(</span><span class="n">DMD</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Kernelized Extended DMD.</span>
 
 <span class="sd">    :param svd_rank: the rank for the truncation; If positive integer, the</span>
@@ -317,7 +318,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_svd_modes</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="EDMD.eigenfunctions"><a class="viewcode-back" href="../../edmd.html#pydmd.edmd.EDMD.eigenfunctions">[docs]</a>    <span class="k">def</span> <span class="nf">eigenfunctions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param x: array from the original snapshot domain denoting the point</span>
 <span class="sd">            at which to compute the EDMD eigenfunctions.</span>
 <span class="sd">        :type x: numpy.ndarray</span>
@@ -349,7 +350,7 @@
 
 <div class="viewcode-block" id="EDMD._test_kernel_inputs"><a class="viewcode-back" href="../../edmd.html#pydmd.edmd.EDMD._test_kernel_inputs">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_test_kernel_inputs</span><span class="p">(</span><span class="n">kernel_metric</span><span class="p">,</span> <span class="n">kernel_params</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Helper function that uses a dummy array of data in order to</span>
 <span class="sd">        call `sklearn.metrics.pairwise_kernels` using the user-given</span>
 <span class="sd">        kernel parameters. Ensures that the given kernel parameters</span>
@@ -377,7 +378,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 22, 2024.
+      <span class="lastupdated">Last updated on Oct 24, 2024.
       </span></p>
   </div>
 

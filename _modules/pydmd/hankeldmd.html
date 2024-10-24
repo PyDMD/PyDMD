@@ -5,14 +5,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.hankeldmd &mdash; PyDMD 0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+  <title>pydmd.hankeldmd &mdash; PyDMD 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script src="../../_static/jquery.js"></script>
-      <script src="../../_static/underscore.js"></script>
-      <script src="../../_static/doctools.js"></script>
-      <script src="../../_static/language_data.js"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=0b546569"></script>
+      <script src="../../_static/doctools.js?v=888ff710"></script>
+      <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -91,7 +92,7 @@
 
 
 <div class="viewcode-block" id="HankelDMD"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD">[docs]</a><span class="k">class</span> <span class="nc">HankelDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Hankel Dynamic Mode Decomposition</span>
 
 <span class="sd">    :param svd_rank: the rank for the truncation; If 0, the method computes the</span>
@@ -187,7 +188,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="HankelDMD._hankel_first_occurrence"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._hankel_first_occurrence">[docs]</a>    <span class="k">def</span> <span class="nf">_hankel_first_occurrence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For a given `t` such that there is :math:`k \in \mathbb{N}` such that</span>
 <span class="sd">        :math:`t = t_0 + k dt`, return the index of the first column in Hankel</span>
 <span class="sd">        pseudo matrix (see also :func:`_pseudo_hankel_matrix`) which contains</span>
@@ -206,7 +207,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="HankelDMD._update_sub_dmd_time"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._update_sub_dmd_time">[docs]</a>    <span class="k">def</span> <span class="nf">_update_sub_dmd_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the time dictionaries (`dmd_time` and `original_time`) of</span>
 <span class="sd">        the auxiliary DMD instance `HankelDMD._sub_dmd` after an update of the</span>
 <span class="sd">        time dictionaries of the time dictionaries of this instance of the</span>
@@ -257,7 +258,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">ho_snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the time-delay data matrix.</span>
 
 <span class="sd">        :return: the matrix that contains the time-delayed data.</span>
@@ -278,7 +279,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;This operation is not allowed for HankelDMD&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="HankelDMD.fit"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the Dynamic Modes Decomposition to the input data.</span>
 
 <span class="sd">        :param X: the input snapshots.</span>
@@ -312,7 +313,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 22, 2024.
+      <span class="lastupdated">Last updated on Oct 24, 2024.
       </span></p>
   </div>
 

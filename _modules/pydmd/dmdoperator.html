@@ -5,14 +5,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.dmdoperator &mdash; PyDMD 0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+  <title>pydmd.dmdoperator &mdash; PyDMD 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script src="../../_static/jquery.js"></script>
-      <script src="../../_static/underscore.js"></script>
-      <script src="../../_static/doctools.js"></script>
-      <script src="../../_static/language_data.js"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=0b546569"></script>
+      <script src="../../_static/doctools.js?v=888ff710"></script>
+      <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -83,7 +84,7 @@
 
 
 <div class="viewcode-block" id="DMDOperator"><a class="viewcode-back" href="../../dmdoperator.html#pydmd.dmdoperator.DMDOperator">[docs]</a><span class="k">class</span> <span class="nc">DMDOperator</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dynamic Mode Decomposition standard operator class. Non-standard ways of</span>
 <span class="sd">    computing the low-rank Atilde operator should be coded into subclasses of</span>
 <span class="sd">    this class.</span>
@@ -133,7 +134,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_norm_X</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="DMDOperator.compute_operator"><a class="viewcode-back" href="../../dmdoperator.html#pydmd.dmdoperator.DMDOperator.compute_operator">[docs]</a>    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the low-rank operator.</span>
 
 <span class="sd">        :param numpy.ndarray X: matrix containing the snapshots x0,..x{n-1} by</span>
@@ -173,11 +174,11 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Shape of the operator&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shape of the operator&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_numpy_array</span><span class="o">.</span><span class="n">shape</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">snapshot_lowrank_modal_coefficients</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply the low-rank operator to a vector of the modal coefficients of a</span>
 <span class="sd">        snapshot(s).</span>
 
@@ -221,7 +222,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span>
 
 <div class="viewcode-block" id="DMDOperator._least_square_operator"><a class="viewcode-back" href="../../dmdoperator.html#pydmd.dmdoperator.DMDOperator._least_square_operator">[docs]</a>    <span class="k">def</span> <span class="nf">_least_square_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Private method that computes the lowrank operator from the singular</span>
 <span class="sd">        value decomposition of matrix X and the matrix Y.</span>
 
@@ -248,7 +249,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">multi_dot</span><span class="p">([</span><span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">Y</span><span class="p">,</span> <span class="n">V</span><span class="p">])</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="DMDOperator._compute_eigenquantities"><a class="viewcode-back" href="../../dmdoperator.html#pydmd.dmdoperator.DMDOperator._compute_eigenquantities">[docs]</a>    <span class="k">def</span> <span class="nf">_compute_eigenquantities</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Private method that computes eigenvalues and eigenvectors of the</span>
 <span class="sd">        low-dimensional operator, scaled according to self._rescale_mode.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -259,7 +260,7 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_numpy_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sd">&quot;&quot;&quot;Scaling by an invalid number of</span>
+<span class="w">                    </span><span class="sd">&quot;&quot;&quot;Scaling by an invalid number of</span>
 <span class="sd">                        coefficients&quot;&quot;&quot;</span>
                 <span class="p">)</span>
             <span class="n">scaling_factors_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rescale_mode</span>
@@ -316,7 +317,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">vec</span> <span class="k">for</span> <span class="n">vec</span> <span class="ow">in</span> <span class="n">b</span><span class="p">])</span><span class="o">.</span><span class="n">T</span></div>
 
 <div class="viewcode-block" id="DMDOperator._compute_modes"><a class="viewcode-back" href="../../dmdoperator.html#pydmd.dmdoperator.DMDOperator._compute_modes">[docs]</a>    <span class="k">def</span> <span class="nf">_compute_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">V</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Private method that computes eigenvalues and eigenvectors of the</span>
 <span class="sd">        high-dimensional operator (stored in self.modes and self.Lambda).</span>
 
@@ -361,7 +362,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 22, 2024.
+      <span class="lastupdated">Last updated on Oct 24, 2024.
       </span></p>
   </div>
 

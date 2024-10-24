@@ -3,16 +3,18 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Plotter &mdash; PyDMD 0.0.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+  <title>Plotter &mdash; PyDMD 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script src="_static/jquery.js"></script>
-      <script src="_static/underscore.js"></script>
-      <script src="_static/doctools.js"></script>
-      <script src="_static/language_data.js"></script>
+      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=0b546569"></script>
+      <script src="_static/doctools.js?v=888ff710"></script>
+      <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -56,7 +58,16 @@
 <li class="toctree-l2"><a class="reference internal" href="mrdmd.html">Multi-resolution DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optdmd.html">OptDMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="paramdmd.html">Parametric DMD</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Plotter</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Plotter</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pydmd.plotter._enforce_ratio"><code class="docutils literal notranslate"><span class="pre">_enforce_ratio()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pydmd.plotter._plot_limits"><code class="docutils literal notranslate"><span class="pre">_plot_limits()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pydmd.plotter.plot_eigs"><code class="docutils literal notranslate"><span class="pre">plot_eigs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pydmd.plotter.plot_eigs_mrdmd"><code class="docutils literal notranslate"><span class="pre">plot_eigs_mrdmd()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pydmd.plotter.plot_modes_2D"><code class="docutils literal notranslate"><span class="pre">plot_modes_2D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pydmd.plotter.plot_snapshots_2D"><code class="docutils literal notranslate"><span class="pre">plot_snapshots_2D()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pydmd.plotter.plot_summary"><code class="docutils literal notranslate"><span class="pre">plot_summary()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="pidmd.html">Physics-informed DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rdmd.html">Randomized DMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="spdmd.html">Sparsity-promoting DMD</a></li>
@@ -96,12 +107,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="module-pydmd.plotter">
-<span id="plotter"></span><h1>Plotter<a class="headerlink" href="#module-pydmd.plotter" title="Permalink to this headline">¶</a></h1>
+  <section id="module-pydmd.plotter">
+<span id="plotter"></span><h1>Plotter<a class="headerlink" href="#module-pydmd.plotter" title="Permalink to this heading">¶</a></h1>
 <p>Module for DMD plotting.</p>
-<dl class="function">
-<dt id="pydmd.plotter._enforce_ratio">
-<code class="sig-name descname">_enforce_ratio</code><span class="sig-paren">(</span><em class="sig-param">goal_ratio</em>, <em class="sig-param">supx</em>, <em class="sig-param">infx</em>, <em class="sig-param">supy</em>, <em class="sig-param">infy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#_enforce_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter._enforce_ratio" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="pydmd.plotter._enforce_ratio">
+<span class="sig-name descname"><span class="pre">_enforce_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">goal_ratio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#_enforce_ratio"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydmd.plotter._enforce_ratio" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the right value of <cite>supx,infx,supy,infy</cite> to obtain the desired
 ratio in <a class="reference internal" href="#pydmd.plotter.plot_eigs" title="pydmd.plotter.plot_eigs"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_eigs()</span></code></a>. Ratio is defined as</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dx</span> <span class="o">=</span> <span class="n">supx</span> <span class="o">-</span> <span class="n">infx</span>
@@ -110,7 +121,7 @@ ratio in <a class="reference internal" href="#pydmd.plotter.plot_eigs" title="py
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>goal_ratio</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the desired ratio.</p></li>
 <li><p><strong>supx</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the old value of <cite>supx</cite>, to be adjusted.</p></li>
@@ -119,24 +130,24 @@ ratio in <a class="reference internal" href="#pydmd.plotter.plot_eigs" title="py
 <li><p><strong>infy</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – the old value of <cite>infy</cite>, to be adjusted.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return tuple</dt>
+<dt class="field-even">Return tuple<span class="colon">:</span></dt>
 <dd class="field-even"><p>a tuple which contains the updated values of
 <cite>supx,infx,supy,infy</cite> in this order.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="pydmd.plotter._plot_limits">
-<code class="sig-name descname">_plot_limits</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">narrow_view</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#_plot_limits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter._plot_limits" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="pydmd.plotter._plot_limits">
+<span class="sig-name descname"><span class="pre">_plot_limits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">narrow_view</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#_plot_limits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydmd.plotter._plot_limits" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
-<dt id="pydmd.plotter.plot_eigs">
-<code class="sig-name descname">plot_eigs</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">show_axes=True</em>, <em class="sig-param">show_unit_circle=True</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em>, <em class="sig-param">title=''</em>, <em class="sig-param">narrow_view=False</em>, <em class="sig-param">dpi=None</em>, <em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_eigs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_eigs" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="pydmd.plotter.plot_eigs">
+<span class="sig-name descname"><span class="pre">plot_eigs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_unit_circle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">8)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">narrow_view</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_eigs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydmd.plotter.plot_eigs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the eigenvalues.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dmd</strong> (<em>pydmd.DMDBase</em>) – DMD instance.</p></li>
 <li><p><strong>show_axes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the axes will be showed in the plot.
@@ -157,12 +168,12 @@ of 0.05. Not compatible with <cite>show_axes=True</cite>. Default is False.</p><
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="pydmd.plotter.plot_eigs_mrdmd">
-<code class="sig-name descname">plot_eigs_mrdmd</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">show_axes=True</em>, <em class="sig-param">show_unit_circle=True</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em>, <em class="sig-param">title=''</em>, <em class="sig-param">level=None</em>, <em class="sig-param">node=None</em>, <em class="sig-param">filename=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_eigs_mrdmd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_eigs_mrdmd" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="pydmd.plotter.plot_eigs_mrdmd">
+<span class="sig-name descname"><span class="pre">plot_eigs_mrdmd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_unit_circle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">8)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_eigs_mrdmd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydmd.plotter.plot_eigs_mrdmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the eigenvalues.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>show_axes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) – if True, the axes will be showed in the plot.
 Default is True.</p></li>
@@ -178,12 +189,12 @@ and center in the origin will be showed. Default is True.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="pydmd.plotter.plot_modes_2D">
-<code class="sig-name descname">plot_modes_2D</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">snapshots_shape=None</em>, <em class="sig-param">index_mode=None</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em>, <em class="sig-param">order='C'</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_modes_2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_modes_2D" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="pydmd.plotter.plot_modes_2D">
+<span class="sig-name descname"><span class="pre">plot_modes_2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snapshots_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'C'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">8)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_modes_2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydmd.plotter.plot_modes_2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the DMD Modes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dmd</strong> (<em>pydmd.DMDBase</em>) – DMD instance.</p></li>
 <li><p><strong>snapshots_shape</strong> – Shape of the snapshots.</p></li>
@@ -211,12 +222,12 @@ size. Default is (8, 8).</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="pydmd.plotter.plot_snapshots_2D">
-<code class="sig-name descname">plot_snapshots_2D</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">snapshots_shape=None</em>, <em class="sig-param">index_snap=None</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em>, <em class="sig-param">order='C'</em>, <em class="sig-param">figsize=(8</em>, <em class="sig-param">8)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_snapshots_2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_snapshots_2D" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="pydmd.plotter.plot_snapshots_2D">
+<span class="sig-name descname"><span class="pre">plot_snapshots_2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snapshots_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_snap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'C'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(8,</span> <span class="pre">8)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_snapshots_2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydmd.plotter.plot_snapshots_2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the snapshots.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dmd</strong> (<em>pydmd.DMDBase</em>) – DMD instance.</p></li>
 <li><p><strong>snapshots_shape</strong> – Shape of the snapshots.</p></li>
@@ -244,9 +255,9 @@ size. Default is (8, 8).</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="pydmd.plotter.plot_summary">
-<code class="sig-name descname">plot_summary</code><span class="sig-paren">(</span><em class="sig-param">dmd</em>, <em class="sig-param">*</em>, <em class="sig-param">x=None</em>, <em class="sig-param">y=None</em>, <em class="sig-param">t=None</em>, <em class="sig-param">d=1</em>, <em class="sig-param">continuous=False</em>, <em class="sig-param">snapshots_shape=None</em>, <em class="sig-param">index_modes=(0</em>, <em class="sig-param">1</em>, <em class="sig-param">2)</em>, <em class="sig-param">filename=None</em>, <em class="sig-param">order='C'</em>, <em class="sig-param">figsize=(12</em>, <em class="sig-param">8)</em>, <em class="sig-param">dpi=200</em>, <em class="sig-param">tight_layout_kwargs=None</em>, <em class="sig-param">main_colors=('r'</em>, <em class="sig-param">'b'</em>, <em class="sig-param">'g')</em>, <em class="sig-param">mode_color='k'</em>, <em class="sig-param">mode_cmap='bwr'</em>, <em class="sig-param">dynamics_color='tab:blue'</em>, <em class="sig-param">rank_color='tab:orange'</em>, <em class="sig-param">circle_color='tab:blue'</em>, <em class="sig-param">sval_ms=8</em>, <em class="sig-param">max_eig_ms=10</em>, <em class="sig-param">max_sval_plot=50</em>, <em class="sig-param">title_fontsize=14</em>, <em class="sig-param">label_fontsize=12</em>, <em class="sig-param">plot_semilogy=False</em>, <em class="sig-param">flip_continuous_axes=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pydmd.plotter.plot_summary" title="Permalink to this definition">¶</a></dt>
+<dl class="py function">
+<dt class="sig sig-object py" id="pydmd.plotter.plot_summary">
+<span class="sig-name descname"><span class="pre">plot_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dmd</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">continuous</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snapshots_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_modes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">1,</span> <span class="pre">2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'C'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(12,</span> <span class="pre">8)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tight_layout_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">main_colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('r',</span> <span class="pre">'b',</span> <span class="pre">'g')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'k'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode_cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bwr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamics_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tab:blue'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tab:orange'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">circle_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tab:blue'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sval_ms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_eig_ms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sval_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_semilogy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flip_continuous_axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/plotter.html#plot_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pydmd.plotter.plot_summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a 3 x 3 summarizing plot that contains the following components:
 - the singular value spectrum of the data
 - the discrete-time and continuous-time DMD eigenvalues
@@ -258,7 +269,7 @@ of their corresponding amplitude value, i.e. their significance in the fit.
 Correspondence between eigenvalues, modes, and dynamics is indicated via
 color coordination.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dmd</strong> (<em>pydmd.DMDBase</em>) – fitted DMD instance.</p></li>
 <li><p><strong>x</strong> (<em>np.ndarray</em><em> or </em><em>iterable</em>) – Points along the 1st spatial dimension where data has been
@@ -327,7 +338,7 @@ be vertical and the imaginary axis will be horizontal, and vice versa.</p></li>
 </dl>
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>
@@ -341,7 +352,7 @@ be vertical and the imaginary axis will be horizontal, and vice versa.</p></li>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2024, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Oct 22, 2024.
+      <span class="lastupdated">Last updated on Oct 24, 2024.
       </span></p>
   </div>
 
