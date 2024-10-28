@@ -1369,7 +1369,7 @@ class BOPDMD(DMDBase):
         # rank-truncated SVD of Y.
         Y = (ux1 + ux2) / 2
         # Element-wise division by time differences. w/o large T
-        Z = (ux2 - ux1) / (self._time[1:] - self._time[:-1])  
+        Z = (ux2 - ux1) / (self._time[1:] - self._time[:-1])
         U, s, V = compute_svd(Y, self._svd_rank)
         S = np.diag(s)
 
