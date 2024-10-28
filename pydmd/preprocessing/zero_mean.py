@@ -2,34 +2,51 @@
 Zero-mean pre-processing.
 """
 
-from functools import partial
-from typing import Dict, Iterable
+from __future__ import annotations
+
+import sys
 
 import numpy as np
 
 from pydmd.dmdbase import DMDBase
-from pydmd.preprocessing import PrePostProcessingDMD
+from pydmd.preprocessing.pre_post_processing import (
+    PrePostProcessing,
+    PrePostProcessingDMD,
+)
+
+if sys.version_info >= (3, 12):
+    from typing import override
+else:
+    from typing_extensions import override
 
 
-def zero_mean_preprocessing(dmd: DMDBase, axis=1, weights=None):
+def zero_mean_preprocessing(dmd: DMDBase, *args, **kwargs):
     """
-    Zero-mean pre-processing.
+    Zero-mean pre-processing. All exceeding arguments are passed to
+    `np.average`.
 
     :param dmd: DMD instance to be wrapped.
     """
+
     return PrePostProcessingDMD(
-        dmd, partial(_pre, axis=axis, weights=weights), _post
+        dmd, _ZeroMeanPrePostProcessing(*args, **kwargs)
     )
 
 
-def _pre(
-    state: Dict, X: np.ndarray, axis: int, weights: Iterable[float], **kwargs
-):
-    state["mean"] = np.average(X, axis=axis, weights=weights)
-    if axis:
-        state["mean"] = np.expand_dims(state["mean"], axis=axis)
-    return (X - state["mean"],) + tuple(kwargs.values())
+class _ZeroMeanPrePostProcessing(PrePostProcessing):
+    def __init__(self, *args, **kwargs):
+        self._average_args = args
+        self._average_kwargs = kwargs
 
+    @override
+    def pre_processing(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        if "keepdims" not in self._average_kwargs:
+            self._average_kwargs["keepdims"] = True
+        mean = np.average(X, *self._average_args, **self._average_kwargs)
+        return mean, X - mean
 
-def _post(state: Dict, X: np.ndarray) -> np.ndarray:
-    return X + state["mean"]
+    @override
+    def post_processing(
+        self, pre_processing_output: np.ndarray, Y: np.ndarray
+    ) -> np.ndarray:
+        return Y + pre_processing_output

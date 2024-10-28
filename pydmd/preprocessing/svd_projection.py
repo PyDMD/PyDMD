@@ -2,20 +2,26 @@
 SVD projection pre-processing.
 """
 
+import sys
 import warnings
-from functools import partial
-from typing import Dict, Union
+from numbers import Number
 
 import numpy as np
 
 from pydmd.dmdbase import DMDBase
-from pydmd.preprocessing import PrePostProcessingDMD
+from pydmd.preprocessing.pre_post_processing import (
+    PrePostProcessing,
+    PrePostProcessingDMD,
+)
 from pydmd.utils import compute_svd
 
-svd_rank_type = Union[int, float]
+if sys.version_info >= (3, 12):
+    from typing import override
+else:
+    from typing_extensions import override
 
 
-def svd_projection_preprocessing(dmd: DMDBase, svd_rank: svd_rank_type):
+def svd_projection_preprocessing(dmd: DMDBase, svd_rank: Number):
     """
     SVD projection pre-processing.
 
@@ -23,23 +29,32 @@ def svd_projection_preprocessing(dmd: DMDBase, svd_rank: svd_rank_type):
     :param svd_rank: SVD rank argument passed to :func:`pydmd.utils.compute_svd`
         to compute the projection matrix.
     """
-    return PrePostProcessingDMD(dmd, partial(_pre, svd_rank=svd_rank), _post)
+    return PrePostProcessingDMD(dmd, _SvdProjectionPrePostProcessing(svd_rank))
 
 
-def _pre(state: Dict, X: np.ndarray, svd_rank: svd_rank_type, **kwargs):
-    space_dim = X.shape[0]
-    if space_dim == 1:
-        svd_rank = -1
-        warnings.warn(
-            (
-                f"The parameter 'svd_rank_extra={svd_rank}' has "
-                "been ignored because the given system is a scalar function"
+class _SvdProjectionPrePostProcessing(PrePostProcessing):
+    def __init__(self, svd_rank: Number):
+        self._svd_rank = svd_rank
+
+    @override
+    def pre_processing(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        space_dim = X.shape[0]
+        if space_dim == 1:
+            svd_rank = -1
+            warnings.warn(
+                (
+                    f"The parameter {svd_rank=} has "
+                    "been ignored because the given system is a scalar function"
+                )
             )
-        )
-    state["projection_matrix"], _, _ = compute_svd(X, svd_rank)
+        else:
+            svd_rank = self._svd_rank
+        projection_matrix, _, _ = compute_svd(X, svd_rank)
 
-    return (state["projection_matrix"].T.dot(X),) + tuple(kwargs.values())
+        return projection_matrix, projection_matrix.T.dot(X)
 
-
-def _post(state: Dict, X: np.ndarray) -> np.ndarray:
-    return state["projection_matrix"].dot(X)
+    @override
+    def post_processing(
+        self, pre_processing_output: np.ndarray, Y: np.ndarray
+    ) -> np.ndarray:
+        return pre_processing_output.dot(Y)
