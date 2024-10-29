@@ -2,9 +2,8 @@
 Zero-mean pre-processing.
 """
 
-from __future__ import annotations
-
 import sys
+from typing import Tuple
 
 import numpy as np
 
@@ -39,7 +38,7 @@ class _ZeroMeanPrePostProcessing(PrePostProcessing):
         self._average_kwargs = kwargs
 
     @override
-    def pre_processing(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def pre_processing(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         if "keepdims" not in self._average_kwargs:
             self._average_kwargs["keepdims"] = True
         mean = np.average(X, *self._average_args, **self._average_kwargs)

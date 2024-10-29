@@ -5,7 +5,7 @@ Pre/post-processing capability for DMD instances.
 from __future__ import annotations
 
 from inspect import isroutine
-from typing import Any, Generic, TypeVar
+from typing import Any, Dict, Generic, Tuple, TypeVar
 
 import numpy as np
 
@@ -16,7 +16,7 @@ S = TypeVar("S")
 
 
 class PrePostProcessing(Generic[S]):
-    def pre_processing(self, X: np.ndarray) -> tuple[S, np.ndarray]:
+    def pre_processing(self, X: np.ndarray) -> Tuple[S, np.ndarray]:
         return None, X
 
     def post_processing(
@@ -131,7 +131,7 @@ class PrePostProcessingDMD(Generic[S]):
     @staticmethod
     def _replace_training_data(
         new_training_data: Any, *args, **kwargs
-    ) -> [tuple[Any, ...], dict[str, Any]]:
+    ) -> [Tuple[Any, ...], Dict[str, Any]]:
         if len(args) >= 1:
             return (new_training_data,) + args[1:], kwargs
         elif "X" in kwargs:

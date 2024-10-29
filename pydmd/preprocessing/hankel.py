@@ -5,7 +5,7 @@ Hankel pre-processing.
 from __future__ import annotations
 
 import sys
-from typing import Union
+from typing import Tuple, Union
 
 import numpy as np
 
@@ -21,13 +21,13 @@ if sys.version_info >= (3, 12):
 else:
     from typing_extensions import override
 
-_reconstruction_method_type = Union[str, np.ndarray, list, tuple]
+_ReconstructionMethodType = Union[str, np.ndarray, list, tuple]
 
 
 def hankel_preprocessing(
     dmd: DMDBase,
     d: int,
-    reconstruction_method: _reconstruction_method_type = "first",
+    reconstruction_method: _ReconstructionMethodType = "first",
 ):
     """
     Hankel pre-processing.
@@ -98,13 +98,13 @@ def _first_reconstructions(reconstructions: np.ndarray, d: int) -> np.ndarray:
 
 class _HankelPrePostProcessing(PrePostProcessing):
     def __init__(
-        self, *, d: int, reconstruction_method: _reconstruction_method_type
+        self, *, d: int, reconstruction_method: _ReconstructionMethodType
     ):
         self._d = d
         self._reconstruction_method = reconstruction_method
 
     @override
-    def pre_processing(self, X: np.ndarray) -> tuple[None, np.ndarray]:
+    def pre_processing(self, X: np.ndarray) -> Tuple[None, np.ndarray]:
         return None, pseudo_hankel_matrix(X, self._d)
 
     @override

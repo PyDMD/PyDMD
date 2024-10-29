@@ -5,6 +5,7 @@ SVD projection pre-processing.
 import sys
 import warnings
 from numbers import Number
+from typing import Tuple
 
 import numpy as np
 
@@ -37,7 +38,7 @@ class _SvdProjectionPrePostProcessing(PrePostProcessing):
         self._svd_rank = svd_rank
 
     @override
-    def pre_processing(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def pre_processing(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         space_dim = X.shape[0]
         if space_dim == 1:
             svd_rank = -1
