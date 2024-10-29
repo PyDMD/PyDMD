@@ -4,6 +4,7 @@ from pytest import raises, warns
 from scipy.integrate import solve_ivp
 
 from pydmd.bopdmd import BOPDMD
+from pydmd.bopdmd import BOPDMDOperator
 
 
 def simulate_z(t_eval):
@@ -332,6 +333,125 @@ def test_eig_constraints_2():
     bopdmd1 = BOPDMD(svd_rank=2, eig_constraints={"imag"}).fit(Z, t)
     bopdmd2 = BOPDMD(svd_rank=2, eig_constraints=make_imag).fit(Z, t)
     np.testing.assert_array_equal(bopdmd1.eigs, bopdmd2.eigs)
+
+
+def test_eig_constraints_conjugate():
+    """
+    Tests if the "conjugate_pairs" constraint is able to pair eigenvalues that do not
+    exactly adhere to well-separated conjugate pairs. All the tested arrays are real
+    states that the BOPDMD solver arrived at even though the system was describable by
+    conjugate pairs.
+    """
+
+    # This example has an ambiguous pairing.
+    eigs_1 = np.array(
+        [
+            0.00658707 + 1.06858631j,
+            0.00362803 - 1.10256819j,
+            -0.00633559 + 0.32695117j,
+            -0.00062934 - 0.31402938j,
+            0.0040683 + 0.70560261j,
+            -0.00163795 - 0.7185244j,
+            0.00393976 + 0.6847774j,
+            -0.00098072 - 0.65079552j,
+        ]
+    )
+
+    # This example lacks a conjugate pair but clearly has two eigenvalues with the
+    # same imaginary component magnitude.
+    eigs_2 = np.array(
+        [
+            1j * 0.84244753,
+            1j * 0.08135547,
+            1j * 0.10386969,
+            1j * -1.02767269,
+        ]
+    )
+
+    # This example has the imaginary component of a pair equal to exactly zero.
+    eigs_3 = np.array(
+        [
+            0.01060103 + 2.37774049j,
+            0.01060103 - 2.37774049j,
+            0.2533088 + 0.0j,
+            -0.3247746 + 0.0j,
+        ]
+    )
+
+    # An odd svd rank example.
+    eigs_4 = np.array(
+        [
+            7.17854760e-05 + 1.14433634j,
+            7.17854760e-05 - 1.14433634j,
+            3.46250187e-06 + 0.88297678j,
+            3.46250187e-06 - 0.88297678j,
+            -1.89823212e-06 + 0.64454973j,
+            -1.89823212e-06 - 0.64454973j,
+            0.03e-06 + 0j,
+            7.09378586e-08 + 0.20859477j,
+            7.09378586e-08 - 0.20859477j,
+            -3.40460840e-06 + 0.42177977j,
+            -3.40460840e-06 - 0.42177977j,
+        ]
+    )
+
+    # This example has nearly degenerate conjugate pairs.
+    eigs_5 = np.array(
+        [
+            0.01054178 - 0.19798906j,
+            0.01053877 + 0.19798656j,
+            0.00768596 + -0.41628322j,
+            0.00765037 + 0.41628555j,
+            0.23208416 + 0.41926024j,
+            0.23389110 - 0.41705963j,
+        ]
+    )
+
+    # This example comes from the solver going into a local minima, far away from
+    # conjugate pairs, requiring a strong nudge back towards conjugate pairs.
+    eigs_6 = np.array(
+        [
+            -0.01767645 + 0.21779537j,
+            -0.01767645 - 0.21779537j,
+            0.00961734 + 0.41684479j,
+            -0.00961734 - 0.41684479j,
+            -0.13112859 - 0.04273738j,
+            -0.15072534 - 0.17359778j,
+            0.31147709 - 0.59712213j,
+            0.29188035 + 0.81345729j,
+        ]
+    )
+
+    eig_constraints = {"conjugate_pairs"}
+    BDO = BOPDMDOperator(
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        eig_constraints,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+
+    eig_list = [eigs_1, eigs_2, eigs_3, eigs_4, eigs_5, eigs_6]
+
+    for eigs in eig_list:
+        # We have to make a copy because the function changes the contents of the
+        # input vector.
+        new_eigs = BDO._push_eigenvalues(np.copy(eigs))
+
+        # We should have only n // 2 unique imaginary eigenvalues or n // 2 + 1 for the
+        # case of the odd rank with a DC mode.
+        np.testing.assert_array_equal(
+            len(np.unique(np.abs(new_eigs.imag))),
+            np.ceil(len(eigs) / 2).astype(int),
+        )
 
 
 def test_plot_mode_uq():

@@ -147,6 +147,7 @@ class BOPDMDOperator(DMDOperator):
         remove_bad_bags,
         bag_warning,
         bag_maxfail,
+        real_eig_limit,
         init_lambda=1.0,
         maxlam=52,
         lamup=2.0,
@@ -169,6 +170,7 @@ class BOPDMDOperator(DMDOperator):
         self._remove_bad_bags = remove_bad_bags
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
+        self._real_eig_limit = real_eig_limit
         self._varpro_opts = [
             init_lambda,
             maxlam,
@@ -283,6 +285,48 @@ class BOPDMDOperator(DMDOperator):
                 )
                 warnings.warn(msg.format(opt_name, opt_value, opt_max))
 
+    @staticmethod
+    def _diff_func(eigenvalues, omega, ind, absolute_diff):
+        """Create an array of differences for the imaginary component.
+
+        Used to find the eigenvalue pairs that most closely approximate conjugate
+        pairs. There are two modes of operation for this function given by the
+        `absolute_diff` variable.
+
+        If `absolute_diff == True` should be used when there is not an equal number of
+        eigenvalues with positive and negative imaginary components. The difference
+        array is simply found by looking at the absolute difference between imaginary
+        components.
+
+        If `absolute_diff == False` should be used when there is an equal number of
+        eigenvalues with positive and negative imaginary components. Here we can
+        restrict ourselves to only looking at the differences between the input
+        eigenvalue (`omega`) and the eigenvalues with an oppositely signed imaginary
+        component. Also used to catch an edge case for `omega.imag == 0`.
+
+        :param eigenvalues: Vector of eigenvalues to calculate the difference from.
+        :param omega: Currently considered eigenvalue
+        :param ind: Index of omega inside of eigenvalues vector
+        :param absolute_diff: Flag dictating difference matrix calculation.
+        :return: Difference vector between omega and other eigenvalues.
+        """
+        if absolute_diff:
+            diff = np.abs(np.abs(eigenvalues.imag) - np.abs(omega.imag))
+            diff[ind] = np.nan
+        else:
+            sign = np.sign(omega.imag)
+            # Catch the edge case of the eigenvalues being exactly 0.
+            if sign == 0.0:
+                diff = np.abs(np.abs(eigenvalues.imag) - omega.imag)
+                diff[ind] = np.nan
+            else:
+                same_sign_index = np.sign(eigenvalues.imag) == sign
+                opp_sign_eigs = np.copy(eigenvalues.imag)
+                opp_sign_eigs[same_sign_index] = np.nan
+                diff = np.abs(np.abs(opp_sign_eigs) - np.abs(omega.imag))
+
+        return diff
+
     def _push_eigenvalues(self, eigenvalues):
         """
         Helper function that constrains the given eigenvalues according to
@@ -303,47 +347,86 @@ class BOPDMDOperator(DMDOperator):
             num_eigs = len(eigenvalues)
             new_eigs = np.empty(num_eigs, dtype="complex")
 
-            # Set of indices -- keeps track of indices of eigenvalues that
-            # still need to be paired with their complex conjugate.
             unassigned_inds = set(np.arange(num_eigs))
+            pair_indices = np.zeros((num_eigs // 2, 2))
+            pair_counter = 0
+            num_expected_pairs = num_eigs
+
+            diff_array = np.zeros((num_eigs, num_eigs))
 
             # If given an odd number of eigenvalues, find the eigenvalue with
-            # the smallest imaginary part and take it to be a real eigenvalue.
+            # the smallest imaginary part and take it to be a DC mode eigenvalue.
             if num_eigs % 2 == 1:
                 ind_0 = np.argmin(np.abs(eigenvalues.imag))
-                new_eigs[ind_0] = eigenvalues[ind_0].real
+                new_eigs[ind_0] = eigenvalues[ind_0].real + 0j
                 unassigned_inds.remove(ind_0)
+                eigenvalues[ind_0] = np.nan + 1j * np.nan
+                num_expected_pairs -= 1
+                num_eigs_adj = num_eigs - 1
+            else:
+                num_eigs_adj = num_eigs
 
-            # Assign complex conjugate pairs until all eigenvalues are paired.
+            # Determine if we have eigenvalues with opposite signs or if we are
+            # in a weird state where we might not be able to match eigenvalues.
+            if np.count_nonzero(eigenvalues.imag > 0) == np.count_nonzero(
+                eigenvalues.imag < 0
+            ):
+                absolute_diff = False
+            else:
+                absolute_diff = True
+
+            for nomega, omega in enumerate(eigenvalues):
+                # Comparing just the imaginary components allows the conjugate pair
+                # identification to be insensitive to the real part.
+                diff_array[nomega, :] = self._diff_func(
+                    eigenvalues, omega, nomega, absolute_diff
+                )
+
             while unassigned_inds:
-                # Randomly grab the next unassigned eigenvalue.
-                ind_1 = unassigned_inds.pop()
+                # Choose the pair that are closest together
+                ind_1, ind_2 = np.nonzero(diff_array == np.nanmin(diff_array))
+                ind_1 = ind_1[0]
+                ind_2 = ind_2[0]
+
                 eig_1 = eigenvalues[ind_1]
-
-                # Get the index of the eigenvalue that's closest to being the
-                # complex conjugate of the randomly selected eigenvalue.
-                ind_2 = np.argmin(np.abs(eigenvalues - np.conj(eig_1)))
-
-                # Alert the user if an error occurs while pairing.
-                # Complex conjugate pairs should be unique in theory.
-                if ind_2 not in unassigned_inds:
-                    msg = (
-                        "Error occurred while finding conjugate pairs. "
-                        'Please remove the "conjugate pairs" constraint and '
-                        "check that your system eigenvalues approximately "
-                        "consist of complex conjugate pairs."
-                    )
-                    raise ValueError(msg)
-
-                # Uniquely pair eig_1 and eig_2.
                 eig_2 = eigenvalues[ind_2]
-                unassigned_inds.remove(ind_2)
 
-                # Average their real and imaginary components together.
+                unassigned_inds.remove(ind_2)
+                unassigned_inds.remove(ind_1)
+                diff_array[ind_1, :] = np.nan
+                diff_array[:, ind_1] = np.nan
+                diff_array[:, ind_2] = np.nan
+                diff_array[ind_2, :] = np.nan
+                pair_indices[pair_counter, 0] = ind_1
+                pair_indices[pair_counter, 1] = ind_2
+                pair_counter += 1
+
                 a = 0.5 * (eig_1.real + eig_2.real)
                 b = 0.5 * (np.abs(eig_1.imag) + np.abs(eig_2.imag))
-                new_eigs[ind_1] = a + 1j * (b * np.sign(eig_1.imag))
-                new_eigs[ind_2] = a + 1j * (b * np.sign(eig_2.imag))
+
+                # If a conjugate pair is not a conjugate pair because of sign
+                # issues, we can force the solution back to conjugate pairs
+                # by giving them opposite signs.
+                sign_1 = np.sign(eig_1)
+                sign_2 = np.sign(eig_2)
+                if sign_1 == sign_2:
+                    # We arbitrarily select one of the pairs to take the opposite
+                    # sign
+                    sign_1 = -1 * sign_1
+
+                new_eigs[ind_1] = a + 1j * (b * sign_1)
+                new_eigs[ind_2] = a + 1j * (b * sign_2)
+
+            if not len(np.unique(pair_indices)) == num_eigs_adj:
+                # In this case the number of found pairs does not equal the expected
+                # number. Raise an error and let the user know the current state of
+                # the solver eigenvalues.
+                msg = (
+                    "Trouble pairing conjugate pairs. \n"
+                    f"Pair indices = {pair_indices}"
+                    f"eigenvalues = {eigenvalues}"
+                )
+                raise ValueError(msg)
 
             eigenvalues = np.copy(new_eigs)
 
@@ -352,6 +435,11 @@ class BOPDMDOperator(DMDOperator):
             eigenvalues[right_half] = 1j * eigenvalues[right_half].imag
         elif "imag" in self._eig_constraints:
             eigenvalues = 1j * eigenvalues.imag
+        elif "limited" in self._eig_constraints:
+            # For eigenvalues with the real part over the limit, reset the real
+            # part to 0 to make the solver try again.
+            too_big = np.abs(eigenvalues.real) > self._real_eig_limit
+            eigenvalues[too_big] = 1j * eigenvalues[too_big].imag
 
         return eigenvalues
 
@@ -1042,6 +1130,7 @@ class BOPDMD(DMDBase):
         bag_warning=100,
         bag_maxfail=200,
         varpro_opts_dict=None,
+        real_eig_limit=None,
     ):
         self._svd_rank = svd_rank
         self._compute_A = compute_A
@@ -1079,6 +1168,7 @@ class BOPDMD(DMDBase):
         self._check_eig_constraints(eig_constraints)
         self._eig_constraints = eig_constraints
         self._mode_prox = mode_prox
+        self._real_eig_limit = real_eig_limit
 
         self._snapshots_holder = None
         self._time = None
@@ -1340,7 +1430,12 @@ class BOPDMD(DMDBase):
                 raise ValueError(msg)
 
         else:
-            valid_constraints = {"stable", "imag", "conjugate_pairs"}
+            valid_constraints = {
+                "limited",
+                "stable",
+                "imag",
+                "conjugate_pairs",
+            }
             invalid_combos = [{"stable", "imag"}]
 
             if len(eig_constraints.difference(valid_constraints)) != 0:
@@ -1447,6 +1542,7 @@ class BOPDMD(DMDBase):
             self._remove_bad_bags,
             self._bag_warning,
             self._bag_maxfail,
+            self._real_eig_limit,
             **self._varpro_opts_dict,
         )
 
