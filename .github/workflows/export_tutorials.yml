@@ -14,20 +14,17 @@ jobs:
     env:
       TUTORIAL_TIMEOUT: 1200s
     steps:
-    - uses: actions/checkout@v4.1.7
+    - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v5.1.1
+      uses: actions/setup-python@v5
       with:
         python-version: 3.8
 
     - name: Install dependencies
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install .[test]
-        python3 -m pip install -e .
         # Dependencies for tutorials
-        python3 -m pip install jupyter pandas ezyrb opencv-python ffmpeg-python black[jupyter]
+        python3 -m pip install --upgrade pip .[tutorial] black[jupyter]
 
     - uses: actions/cache@v2
       id: cache-segtrackv2

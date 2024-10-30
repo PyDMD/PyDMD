@@ -1,16 +1,50 @@
 # mac file systems
 .DS_Store
 
-# compiled python codes
-*.pyc
-pydmd\.egg-info/**
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
 .idea/**
 
+# Tutorial
 **/\.ipynb_checkpoints/**
 **/SegTrackv2.zip
 **/SegTrackv2/**
-build/**
 
 # Vscode
 .vscode/**
+
+# Virtual environment
+venv*/**
+.venv
+
+# Pyenv
+.python-version
+
+# Sphinx
+docs/build
