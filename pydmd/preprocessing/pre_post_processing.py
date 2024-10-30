@@ -2,27 +2,30 @@
 Pre/post-processing capability for DMD instances.
 """
 
-from typing import Callable, Dict
+from __future__ import annotations
+
+from inspect import isroutine
+from typing import Any, Dict, Generic, Tuple, TypeVar
+
+import numpy as np
 
 from pydmd.dmdbase import DMDBase
 
-
-def _shallow_preprocessing(_: Dict, *args, **kwargs):
-    return args + tuple(kwargs.values())
-
-
-def _shallow_postprocessing(_: Dict, *args):
-    # The first item of args is always the output of dmd.reconstructed_data
-    return args[0]
+# Pre-processing output type
+S = TypeVar("S")
 
 
-def _tuplify(value):
-    if isinstance(value, tuple):
-        return value
-    return (value,)
+class PrePostProcessing(Generic[S]):
+    def pre_processing(self, X: np.ndarray) -> Tuple[S, np.ndarray]:
+        return None, X
+
+    def post_processing(
+        self, pre_processing_output: S, Y: np.ndarray
+    ) -> np.ndarray:
+        return Y
 
 
-class PrePostProcessingDMD:
+class PrePostProcessingDMD(Generic[S]):
     """
     Pre/post-processing decorator. This class is not thread-safe in case of
     stateful transformations.
@@ -40,20 +43,14 @@ class PrePostProcessingDMD:
     def __init__(
         self,
         dmd: DMDBase,
-        pre_processing: Callable = _shallow_preprocessing,
-        post_processing: Callable = _shallow_postprocessing,
+        pre_post_processing: PrePostProcessing[S] = PrePostProcessing(),
     ):
         if dmd is None:
             raise ValueError("DMD instance cannot be None")
-        if pre_processing is None:
-            pre_processing = _shallow_preprocessing
-        if post_processing is None:
-            post_processing = _shallow_postprocessing
+        self._pre_post_processing = pre_post_processing
 
-        self._pre_post_processed_dmd = dmd
-        self._pre_processing = pre_processing
-        self._post_processing = post_processing
-        self._state_holder = None
+        self._dmd = dmd
+        self._pre_processing_output: S | None = None
 
     def __getattribute__(self, name):
         try:
@@ -65,18 +62,14 @@ class PrePostProcessingDMD:
             return self._pre_processing_fit
 
         if "reconstructed_data" == name:
-            output = self._post_processing(
-                self._state_holder,
-                self._pre_post_processed_dmd.reconstructed_data,
-            )
-            return output
+            return self._reconstructed_data_with_post_processing()
 
         # This check is needed to allow copy/deepcopy
-        if name != "_pre_post_processed_dmd":
-            sub_dmd = self._pre_post_processed_dmd
+        if name != "_dmd":
+            sub_dmd = self._dmd
             if isinstance(sub_dmd, PrePostProcessingDMD):
                 return PrePostProcessingDMD.__getattribute__(sub_dmd, name)
-            return object.__getattribute__(self._pre_post_processed_dmd, name)
+            return object.__getattribute__(self._dmd, name)
         return None
 
     @property
@@ -87,19 +80,61 @@ class PrePostProcessingDMD:
         :return: decorated DMD instance.
         :rtype: pydmd.DMDBase
         """
-        return self._pre_post_processed_dmd
+        return self._dmd
 
     @property
     def modes_activation_bitmask(self):
-        return self._pre_post_processed_dmd.modes_activation_bitmask
+        return self._dmd.modes_activation_bitmask
 
     @modes_activation_bitmask.setter
     def modes_activation_bitmask(self, value):
-        self._pre_post_processed_dmd.modes_activation_bitmask = value
+        self._dmd.modes_activation_bitmask = value
 
     def _pre_processing_fit(self, *args, **kwargs):
-        self._state_holder = dict()
-        pre_processing_output = _tuplify(
-            self._pre_processing(self._state_holder, *args, **kwargs)
+        X = PrePostProcessingDMD._extract_training_data(*args, **kwargs)
+        self._pre_processing_output, pre_processed_training_data = (
+            self._pre_post_processing.pre_processing(X)
         )
-        return self._pre_post_processed_dmd.fit(*pre_processing_output)
+        new_args, new_kwargs = PrePostProcessingDMD._replace_training_data(
+            pre_processed_training_data, *args, **kwargs
+        )
+        return self._dmd.fit(*new_args, **new_kwargs)
+
+    def _reconstructed_data_with_post_processing(self) -> np.ndarray:
+        data = self._dmd.reconstructed_data
+
+        if not isroutine(data):
+            return self._pre_post_processing.post_processing(
+                self._pre_processing_output,
+                data,
+            )
+
+        # e.g. DMDc
+        def output(*args, **kwargs) -> np.ndarray:
+            return self._pre_post_processing.post_processing(
+                self._pre_processing_output,
+                data(*args, **kwargs),
+            )
+
+        return output
+
+    @staticmethod
+    def _extract_training_data(*args, **kwargs):
+        if len(args) >= 1:
+            return args[0]
+        elif "X" in kwargs:
+            return kwargs["X"]
+        raise ValueError(
+            f"Could not extract training data from {args=}, {kwargs=}"
+        )
+
+    @staticmethod
+    def _replace_training_data(
+        new_training_data: Any, *args, **kwargs
+    ) -> [Tuple[Any, ...], Dict[str, Any]]:
+        if len(args) >= 1:
+            return (new_training_data,) + args[1:], kwargs
+        elif "X" in kwargs:
+            new_kwargs = dict(kwargs)
+            new_kwargs["X"] = new_training_data
+            return args, new_kwargs
