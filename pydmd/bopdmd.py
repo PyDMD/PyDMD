@@ -1810,16 +1810,16 @@ class BOPDMD(DMDBase):
 
         if flip_axes:
             eigs = self.eigs.imag + 1j * self.eigs.real
-            plt.xlabel("$Im(\omega)$")
-            plt.ylabel("$Re(\omega)$")
+            plt.xlabel(r"$Im(\omega)$")
+            plt.ylabel(r"$Re(\omega)$")
 
             if eigs_true is not None:
                 eigs_true = eigs_true.imag + 1j * eigs_true.real
 
         else:
             eigs = self.eigs
-            plt.xlabel("$Re(\omega)$")
-            plt.ylabel("$Im(\omega)$")
+            plt.xlabel(r"$Re(\omega)$")
+            plt.ylabel(r"$Im(\omega)$")
 
         for e, std in zip(eigs, self.eigenvalues_std):
             # Plot 2 standard deviations.

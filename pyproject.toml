@@ -10,6 +10,7 @@ dependencies = [
     "scikit-learn",
     "xarray",
     "h5netcdf",
+    "typing_extensions>=4.7.0;python_version<'3.12'"
 ]
 readme = "README.md"
 license = {file = "LICENSE"}
