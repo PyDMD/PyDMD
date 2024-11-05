@@ -150,7 +150,7 @@ expected_n_components = 2
 # Define the expected error in the reconstructions.
 expected_global_error = 0.053
 expected_lf_error = 0.10
-expected_hf_error = 0.17
+expected_hf_error = 0.16
 expected_transient_error = 0.3
 
 # Fit mrCOSTS for testing
