@@ -712,8 +712,10 @@ class BOPDMDOperator(DMDOperator):
             q_out, djac_out, j_pvt = qr(
                 djac_matrix, mode="economic", pivoting=True
             )
-            ij_pvt = np.zeros(IA, dtype=int)
-            ij_pvt[j_pvt] = np.arange(IA, dtype=int)
+            ij_pvt = np.arange(IA)
+            ij_pvt = ij_pvt[j_pvt]
+            # ij_pvt = np.zeros(IA, dtype=int)
+            # ij_pvt[j_pvt] = np.arange(IA, dtype=int)
             rjac[:IA] = np.triu(djac_out[:IA])
             rhs_top = q_out.conj().T.dot(rhs_temp)
             scales_pvt = scales[j_pvt[:IA]]
@@ -1464,7 +1466,7 @@ class BOPDMD(DMDBase):
         # rank-truncated SVD of Y.
         Y = (ux1 + ux2) / 2
         # Element-wise division by time differences. w/o large T
-        Z = (ux2 - ux1) / (self._time[1:] - self._time[:-1])  
+        Z = (ux2 - ux1) / (self._time[1:] - self._time[:-1])
         U, s, V = compute_svd(Y, self._svd_rank)
         S = np.diag(s)
 
