@@ -59,6 +59,7 @@ class mrCOSTS:
         transform_method=None,
         kern_method=None,
         relative_filter_length=2,
+        costs_kwargs=None,
     ):
         self._n_components_array = n_components_array
         self._step_size_array = step_size_array
@@ -112,6 +113,11 @@ class mrCOSTS:
             self._costs_recon_kwargs = {}
         else:
             self._costs_recon_kwargs = costs_recon_kwargs
+
+        if costs_kwargs is None:
+            self._costs_kwargs = {}
+        else:
+            self._costs_kwargs = costs_kwargs
 
     @property
     def costs_array(self):
@@ -321,6 +327,7 @@ class mrCOSTS:
                 pydmd_kwargs=self._pydmd_kwargs,
                 kern_method=self._kern_method,
                 relative_filter_length=self._relative_filter_length,
+                **self._costs_kwargs,
             )
 
             if verbose:
