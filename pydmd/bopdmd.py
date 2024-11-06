@@ -712,8 +712,11 @@ class BOPDMDOperator(DMDOperator):
             q_out, djac_out, j_pvt = qr(
                 djac_matrix, mode="economic", pivoting=True
             )
+            # The below is the original python, which is a "mistake" that makes
+            # bopdmd behave more like exact DMD, apparently.
             ij_pvt = np.arange(IA)
             ij_pvt = ij_pvt[j_pvt]
+            # This is the fix, but if fails to work with eigenvalue constraints.
             # ij_pvt = np.zeros(IA, dtype=int)
             # ij_pvt[j_pvt] = np.arange(IA, dtype=int)
             rjac[:IA] = np.triu(djac_out[:IA])
