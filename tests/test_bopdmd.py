@@ -221,6 +221,12 @@ def test_eig_constraints_errors():
         BOPDMD(eig_constraints={"stable", "imag"})
 
     with raises(ValueError):
+        BOPDMD(eig_constraints={"stable", "limited"})
+
+    with raises(ValueError):
+        BOPDMD(eig_constraints={"imag", "limited"})
+
+    with raises(ValueError):
         BOPDMD(eig_constraints={"stable", "imag", "conjugate_pairs"})
 
 
@@ -255,6 +261,15 @@ def test_eig_constraints():
     bopdmd = BOPDMD(svd_rank=2, eig_constraints={"imag", "conjugate_pairs"})
     bopdmd.fit(Z, t)
     assert np.all(bopdmd.eigs.real == 0.0)
+    assert bopdmd.eigs[0].imag == -bopdmd.eigs[1].imag
+
+    bopdmd = BOPDMD(
+        svd_rank=2,
+        eig_constraints={"limited", "conjugate_pairs"},
+        real_eig_limit=0.001,
+    )
+    bopdmd.fit(Z, t)
+    assert np.all(np.abs(bopdmd.eigs.real) < 0.001)
     assert bopdmd.eigs[0].imag == -bopdmd.eigs[1].imag
 
 
