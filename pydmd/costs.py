@@ -86,7 +86,7 @@ class COSTS:
         max_rank=None,
         n_components=None,
         kern_method=None,
-        relative_filter_length=None,
+        relative_filter_length=2,
     ):
         self._hist_kwargs = None
         self._omega_label = None
@@ -353,7 +353,7 @@ class COSTS:
         return lv_kern
 
     @staticmethod
-    def build_kern(window_length, relative_filter_length=2):
+    def build_kern(window_length, relative_filter_length):
         """Build the convolution kernel for the window reconstruction.
 
         Each window is convolved with a gaussian filter for the
@@ -365,7 +365,6 @@ class COSTS:
         :return: Gaussian filter of length `window_length`
         :rtype: np.ndarray
         """
-        # recon_filter_sd = window_length / 8
         recon_filter_sd = window_length / relative_filter_length
         recon_filter = np.exp(
             -((np.arange(window_length) - (window_length - 1) / 2) ** 2)
