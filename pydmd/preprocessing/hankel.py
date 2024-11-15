@@ -2,22 +2,32 @@
 Hankel pre-processing.
 """
 
-from functools import partial
-from typing import Dict, List, Tuple, Union
+from __future__ import annotations
+
+import sys
+from typing import Tuple, Union
 
 import numpy as np
 
 from pydmd.dmdbase import DMDBase
-from pydmd.preprocessing.pre_post_processing import PrePostProcessingDMD
+from pydmd.preprocessing.pre_post_processing import (
+    PrePostProcessing,
+    PrePostProcessingDMD,
+)
 from pydmd.utils import pseudo_hankel_matrix
 
-_reconstruction_method_type = Union[str, np.ndarray, List, Tuple]
+if sys.version_info >= (3, 12):
+    from typing import override
+else:
+    from typing_extensions import override
+
+_ReconstructionMethodType = Union[str, np.ndarray, list, tuple]
 
 
 def hankel_preprocessing(
     dmd: DMDBase,
     d: int,
-    reconstruction_method: _reconstruction_method_type = "first",
+    reconstruction_method: _ReconstructionMethodType = "first",
 ):
     """
     Hankel pre-processing.
@@ -26,19 +36,13 @@ def hankel_preprocessing(
     :param d: Hankel matrix rank
     :param reconstruction_method: Reconstruction method.
     """
-    return PrePostProcessingDMD(
-        dmd,
-        partial(_preprocessing, d=d),
-        partial(
-            _hankel_post_processing,
-            d=d,
-            reconstruction_method=reconstruction_method,
-        ),
+    if isinstance(reconstruction_method, (tuple, list)):
+        reconstruction_method = np.asarray(reconstruction_method)
+
+    pre_post_processing = _HankelPrePostProcessing(
+        d=d, reconstruction_method=reconstruction_method
     )
-
-
-def _preprocessing(_: Dict, X: np.ndarray, d: int, **kwargs):
-    return (pseudo_hankel_matrix(X, d),) + tuple(kwargs.values())
+    return PrePostProcessingDMD(dmd, pre_post_processing)
 
 
 def _reconstructions(rec: np.ndarray, d: int):
@@ -92,24 +96,34 @@ def _first_reconstructions(reconstructions: np.ndarray, d: int) -> np.ndarray:
     return reconstructions[..., time_idxes, d_idxes, :].swapaxes(-1, -2)
 
 
-def _hankel_post_processing(
-    _: Dict,  # No state
-    X: np.ndarray,
-    d: int,
-    reconstruction_method: _reconstruction_method_type,
-) -> np.ndarray:
-    rec = _reconstructions(X, d=d)
-    rec = np.ma.array(rec, mask=np.isnan(rec))
+class _HankelPrePostProcessing(PrePostProcessing):
+    def __init__(
+        self, *, d: int, reconstruction_method: _ReconstructionMethodType
+    ):
+        self._d = d
+        self._reconstruction_method = reconstruction_method
 
-    if reconstruction_method == "first":
-        result = _first_reconstructions(rec, d=d)
-    elif reconstruction_method == "mean":
-        result = np.nanmean(rec, axis=1).T
-    elif isinstance(reconstruction_method, (np.ndarray, list, tuple)):
-        result = np.ma.average(rec, axis=1, weights=reconstruction_method).T
-    else:
-        raise ValueError(
-            f"The reconstruction method wasn't recognized: {reconstruction_method}"
-        )
+    @override
+    def pre_processing(self, X: np.ndarray) -> Tuple[None, np.ndarray]:
+        return None, pseudo_hankel_matrix(X, self._d)
 
-    return result.filled(fill_value=0)
+    @override
+    def post_processing(
+        self, pre_processing_output: None, Y: np.ndarray
+    ) -> np.ndarray:
+        rec = _reconstructions(Y, d=self._d)
+        rec = np.ma.array(rec, mask=np.isnan(rec))
+
+        if isinstance(self._reconstruction_method, str):
+            if self._reconstruction_method == "first":
+                result = _first_reconstructions(rec, d=self._d)
+            elif self._reconstruction_method == "mean":
+                result = np.nanmean(rec, axis=1).T
+        elif isinstance(self._reconstruction_method, np.ndarray):
+            result = np.ma.average(
+                rec, axis=1, weights=self._reconstruction_method
+            ).T
+        else:
+            raise ValueError(f"{self._reconstruction_method=} not recognized")
+
+        return result.filled(fill_value=0)
