@@ -14,6 +14,7 @@ temporal uncertainty-quantification. 2021. arXiv:2107.10878.
 import warnings
 from collections import OrderedDict
 from inspect import isfunction
+import copy
 
 import numpy as np
 from scipy.linalg import qr
@@ -328,7 +329,7 @@ class BOPDMDOperator(DMDOperator):
 
         return diff
 
-    def _push_eigenvalues(self, eigenvalues):
+    def _push_eigenvalues(self, eigenvalues, constraints):
         """
         Helper function that constrains the given eigenvalues according to
         the arguments found in `self._eig_constraints`. If no constraints were
@@ -341,10 +342,10 @@ class BOPDMDOperator(DMDOperator):
         :return: Vector of constrained eigenvalues.
         :rtype: numpy.ndarray
         """
-        if isfunction(self._eig_constraints):
-            return self._eig_constraints(eigenvalues)
+        if isfunction(constraints):
+            return constraints(eigenvalues)
 
-        if "conjugate_pairs" in self._eig_constraints:
+        if "conjugate_pairs" in constraints:
             num_eigs = len(eigenvalues)
             new_eigs = np.empty(num_eigs, dtype="complex")
 
@@ -433,12 +434,12 @@ class BOPDMDOperator(DMDOperator):
 
             eigenvalues = np.copy(new_eigs)
 
-        if "stable" in self._eig_constraints:
+        if "stable" in constraints:
             right_half = eigenvalues.real > 0.0
             eigenvalues[right_half] = 1j * eigenvalues[right_half].imag
-        elif "imag" in self._eig_constraints:
+        elif "imag" in constraints:
             eigenvalues = 1j * eigenvalues.imag
-        elif "limited" in self._eig_constraints:
+        elif "limited" in constraints:
             # For eigenvalues with the real part over the limit, reset the real
             # part to 0 to make the solver try again.
             too_big = np.abs(eigenvalues.real) > self._real_eig_limit
@@ -592,7 +593,14 @@ class BOPDMDOperator(DMDOperator):
         return H[subset_inds], subset_inds
 
     def _variable_projection(
-        self, H, t, init_alpha, Phi, dPhi, apply_eig_constraints=True
+        self,
+        H,
+        t,
+        init_alpha,
+        Phi,
+        dPhi,
+        eigenvalue_constraints,
+        var_pro_list,
     ):
         """
         Variable projection routine for multivariate data.
@@ -644,7 +652,7 @@ class BOPDMDOperator(DMDOperator):
             eps_stall,
             use_fulljac,
             verbose,
-        ) = self._varpro_opts
+        ) = var_pro_list
 
         def compute_error(B, alpha):
             """
@@ -671,10 +679,7 @@ class BOPDMDOperator(DMDOperator):
 
         # Initialize values.
         _lambda = init_lambda
-        if apply_eig_constraints:
-            alpha = self._push_eigenvalues(init_alpha)
-        else:
-            alpha = init_alpha
+        alpha = self._push_eigenvalues(init_alpha, eigenvalue_constraints)
         B = compute_B(alpha)
         U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
@@ -736,10 +741,10 @@ class BOPDMDOperator(DMDOperator):
 
             def step(
                 _lambda,
+                eigenvalue_constraints,
                 scales_pvt=scales_pvt,
                 rhs=rhs,
                 ij_pvt=ij_pvt,
-                apply_eig_constraints=apply_eig_constraints,
             ):
                 """
                 Helper function that, when given a step size _lambda,
@@ -752,15 +757,16 @@ class BOPDMDOperator(DMDOperator):
 
                 # Compute the updated alpha vector.
                 alpha_updated = alpha.ravel() + delta.ravel()
-                if apply_eig_constraints:
-                    alpha_updated = self._push_eigenvalues(alpha_updated)
+                alpha_updated = self._push_eigenvalues(
+                    alpha_updated, eigenvalue_constraints
+                )
                 return delta, alpha_updated
 
             # Take a step using our initial step size init_lambda.
             if verbose:
                 print("alpha before step")
                 print(alpha)
-            delta_0, alpha_0 = step(_lambda)
+            delta_0, alpha_0 = step(_lambda, eigenvalue_constraints)
             B_0 = compute_B(alpha_0)
             residual_0, objective_0, error_0 = compute_error(B_0, alpha_0)
 
@@ -783,7 +789,7 @@ class BOPDMDOperator(DMDOperator):
                 # Increase lambda until something works.
                 for _ in range(maxlam):
                     _lambda *= lamup
-                    delta_0, alpha_0 = step(_lambda)
+                    delta_0, alpha_0 = step(_lambda, eigenvalue_constraints)
                     B_0 = compute_B(alpha_0)
                     residual_0, objective_0, error_0 = compute_error(
                         B_0, alpha_0
@@ -862,19 +868,33 @@ class BOPDMDOperator(DMDOperator):
         system matrix, full system matrix, and whether or not convergence
         of the variable projection routine was reached.
         """
-
-        # These adjust the real component and need to be applied after an initial
-        # solution attempt.
         adjust_real_eigs = {"stable", "imag", "limited"}
-        if not self._eig_constraints.isdisjoint(adjust_real_eigs):
+        if (not isfunction(self._eig_constraints)) and not (
+            self._eig_constraints.isdisjoint(adjust_real_eigs)
+        ):
+            # First attempt at variable projection does not include constraints
+            # adjust the real part of eigenvalues.
             B, alpha, converged = self._variable_projection(
                 H,
                 t,
                 init_alpha,
                 self._exp_function,
                 self._exp_function_deriv,
-                False,
+                self._eig_constraints.difference(adjust_real_eigs),
+                self._varpro_opts,
             )
+
+            # Second attempt at variable projection includes the constraints
+            # on the real part of the eigenvalues.
+
+            # Unpack all variable projection parameters stored in varpro_opts.
+            varpro_opt_list = copy.copy(self._varpro_opts)
+
+            # Overwrite the stall and tol options as we should be near a good
+            # solution.
+            varpro_opt_list[4] = 10
+            varpro_opt_list[5] = 1e-6
+            varpro_opt_list[6] = 1e-6
 
             B, alpha, converged = self._variable_projection(
                 H,
@@ -882,11 +902,13 @@ class BOPDMDOperator(DMDOperator):
                 alpha,
                 self._exp_function,
                 self._exp_function_deriv,
-                True,
+                self._eig_constraints,
+                varpro_opt_list,
             )
 
-        # Otherwise we didn't apply eigenvalue constraints or used conjugate pair
-        # constraints, which we can apply in the first attempt at a solution.
+        # Otherwise we didn't apply eigenvalue constraints or used conjugate
+        # pair constraints, which we can apply in the first attempt at a
+        # solution.
         else:
             B, alpha, converged = self._variable_projection(
                 H,
@@ -894,7 +916,8 @@ class BOPDMDOperator(DMDOperator):
                 init_alpha,
                 self._exp_function,
                 self._exp_function_deriv,
-                True,
+                self._eig_constraints,
+                self._varpro_opts,
             )
         # Save the modes, eigenvalues, and amplitudes respectively.
         w = B.T
