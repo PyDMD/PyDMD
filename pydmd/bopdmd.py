@@ -712,8 +712,11 @@ class BOPDMDOperator(DMDOperator):
             q_out, djac_out, j_pvt = qr(
                 djac_matrix, mode="economic", pivoting=True
             )
+            # The below is the original python, which is a "mistake" that makes
+            # bopdmd behave more like exact DMD, apparently.
             ij_pvt = np.arange(IA)
             ij_pvt = ij_pvt[j_pvt]
+            # This is the fix, but if fails to work with eigenvalue constraints.
             # ij_pvt = np.zeros(IA, dtype=int)
             # ij_pvt[j_pvt] = np.arange(IA, dtype=int)
             rjac[:IA] = np.triu(djac_out[:IA])
@@ -1810,16 +1813,16 @@ class BOPDMD(DMDBase):
 
         if flip_axes:
             eigs = self.eigs.imag + 1j * self.eigs.real
-            plt.xlabel(r"$Im(\omega)$")
-            plt.ylabel(r"$Re(\omega)$")
+            plt.xlabel("$Im(\omega)$")
+            plt.ylabel("$Re(\omega)$")
 
             if eigs_true is not None:
                 eigs_true = eigs_true.imag + 1j * eigs_true.real
 
         else:
             eigs = self.eigs
-            plt.xlabel(r"$Re(\omega)$")
-            plt.ylabel(r"$Im(\omega)$")
+            plt.xlabel("$Re(\omega)$")
+            plt.ylabel("$Im(\omega)$")
 
         for e, std in zip(eigs, self.eigenvalues_std):
             # Plot 2 standard deviations.
