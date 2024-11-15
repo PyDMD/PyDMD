@@ -327,11 +327,11 @@ class COSTS:
 
         if kern_method is None:
             kern_method = "kern"
+        if corner_sharpness is None:
+            corner_sharpness = 16
+
         if kern_method == "kern":
             # Higher = sharper corners
-            if corner_sharpness is None:
-                corner_sharpness = 16
-
             lv_kern = (
                 np.tanh(
                     corner_sharpness
@@ -340,13 +340,21 @@ class COSTS:
                 )
                 - np.tanh(
                     corner_sharpness
-                    # * (np.arange(0, window_length) - window_length - 1)
                     * (np.arange(0, window_length) - window_length + 1)
                     / window_length
                 )
                 - 1
             )
-
+        elif kern_method == "forward":
+            lv_kern = np.tanh(
+                corner_sharpness * np.arange(0, window_length) / window_length
+            )
+        elif kern_method == "backward":
+            lv_kern = -np.tanh(
+                corner_sharpness
+                * (np.arange(0, window_length) - window_length + 1)
+                / window_length
+            )
         elif kern_method == "flat":
             lv_kern = np.ones(window_length)
 
@@ -550,10 +558,6 @@ class COSTS:
 
         # Get initial values for the eigenvalues.
         self._init_alpha = self._build_initialization()
-
-        # # This line CANNOT go into a public release
-        # if "eig_constraints" in self._pydmd_kwargs:
-        #     f = self._pydmd_kwargs["eig_constraints"]
 
         # Initialize the BOPDMD object.
         optdmd = BOPDMD(
@@ -991,12 +995,23 @@ class COSTS:
         # Convolve each windowed reconstruction with a gaussian filter.
         # Weights points in the middle of the window and de-emphasizes the
         # edges of the window.
-        recon_filter = self.build_kern(
-            self._window_length,
-            relative_filter_length=self._relative_filter_length,
-        )
+        # recon_filter = self.build_kern(
+        #     self._window_length,
+        #     relative_filter_length=self._relative_filter_length,
+        # )
 
         for k in range(self._n_slides):
+
+            if k == 0:
+                kern = "backward"
+            elif k == self._n_slides - 1:
+                kern = "forward"
+            else:
+                kern = "kern"
+            recon_filter = self.calculate_lv_kern(
+                self.window_length, kern_method=kern
+            )
+
             window_indices = self.get_window_indices(k)
 
             w = self._modes_array[k]
