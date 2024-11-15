@@ -345,17 +345,20 @@ def test_eig_constraints_2():
     def make_imag(x):
         return 1j * x.imag
 
+    # Providing a custom function performs a slightly different branch of the
+    # variable projection solution, so we must test to be almost equal not
+    # exactly equal.
     bopdmd1 = BOPDMD(svd_rank=2, eig_constraints={"imag"}).fit(Z, t)
     bopdmd2 = BOPDMD(svd_rank=2, eig_constraints=make_imag).fit(Z, t)
-    np.testing.assert_array_equal(bopdmd1.eigs, bopdmd2.eigs)
+    np.testing.assert_almost_equal(bopdmd1.eigs, bopdmd2.eigs, decimal=10)
 
 
 def test_eig_constraints_conjugate():
     """
-    Tests if the "conjugate_pairs" constraint is able to pair eigenvalues that do not
-    exactly adhere to well-separated conjugate pairs. All the tested arrays are real
-    states that the BOPDMD solver arrived at even though the system was describable by
-    conjugate pairs.
+    Tests if the "conjugate_pairs" constraint is able to pair eigenvalues
+    that do not exactly adhere to well-separated conjugate pairs. All the
+    tested arrays are real states that the BOPDMD solver arrived at even
+    though the system was describable by conjugate pairs.
     """
 
     # This example has an ambiguous pairing.
@@ -372,8 +375,8 @@ def test_eig_constraints_conjugate():
         ]
     )
 
-    # This example lacks a conjugate pair but clearly has two eigenvalues with the
-    # same imaginary component magnitude.
+    # This example lacks a conjugate pair but clearly has two eigenvalues
+    # with the same imaginary component magnitude.
     eigs_2 = np.array(
         [
             1j * 0.84244753,
@@ -422,8 +425,9 @@ def test_eig_constraints_conjugate():
         ]
     )
 
-    # This example comes from the solver going into a local minima, far away from
-    # conjugate pairs, requiring a strong nudge back towards conjugate pairs.
+    # This example comes from the solver going into a local minima, far away
+    # from conjugate pairs, requiring a strong nudge back towards conjugate
+    # pairs.
     eigs_6 = np.array(
         [
             -0.01767645 + 0.21779537j,
@@ -457,12 +461,12 @@ def test_eig_constraints_conjugate():
     eig_list = [eigs_1, eigs_2, eigs_3, eigs_4, eigs_5, eigs_6]
 
     for eigs in eig_list:
-        # We have to make a copy because the function changes the contents of the
-        # input vector.
-        new_eigs = BDO._push_eigenvalues(np.copy(eigs))
+        # We have to make a copy because the function changes the contents of
+        # the input vector.
+        new_eigs = BDO._push_eigenvalues(np.copy(eigs), eig_constraints)
 
-        # We should have only n // 2 unique imaginary eigenvalues or n // 2 + 1 for the
-        # case of the odd rank with a DC mode.
+        # We should have only n // 2 unique imaginary eigenvalues or n // 2 +
+        # 1 for the case of the odd rank with a DC mode.
         np.testing.assert_array_equal(
             len(np.unique(np.abs(new_eigs.imag))),
             np.ceil(len(eigs) / 2).astype(int),
