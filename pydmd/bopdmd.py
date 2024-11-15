@@ -591,7 +591,9 @@ class BOPDMDOperator(DMDOperator):
         )
         return H[subset_inds], subset_inds
 
-    def _variable_projection(self, H, t, init_alpha, Phi, dPhi):
+    def _variable_projection(
+        self, H, t, init_alpha, Phi, dPhi, apply_eig_constraints=True
+    ):
         """
         Variable projection routine for multivariate data.
         Attempts to fit the columns of H as linear combinations of the columns
@@ -669,7 +671,10 @@ class BOPDMDOperator(DMDOperator):
 
         # Initialize values.
         _lambda = init_lambda
-        alpha = self._push_eigenvalues(init_alpha)
+        if apply_eig_constraints:
+            alpha = self._push_eigenvalues(init_alpha)
+        else:
+            alpha = init_alpha
         B = compute_B(alpha)
         U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
@@ -715,8 +720,11 @@ class BOPDMDOperator(DMDOperator):
             q_out, djac_out, j_pvt = qr(
                 djac_matrix, mode="economic", pivoting=True
             )
+            # The below is the original python, which is a "mistake" that makes
+            # bopdmd behave more like exact DMD, apparently.
             # ij_pvt = np.arange(IA)
             # ij_pvt = ij_pvt[j_pvt]
+            # This is the fix, but if fails to work with eigenvalue constraints.
             ij_pvt = np.zeros(IA, dtype=int)
             ij_pvt[j_pvt] = np.arange(IA, dtype=int)
             rjac[:IA] = np.triu(djac_out[:IA])
@@ -726,7 +734,13 @@ class BOPDMDOperator(DMDOperator):
                 (rhs_top[:IA], np.zeros(IA, dtype="complex")), axis=None
             )
 
-            def step(_lambda, scales_pvt=scales_pvt, rhs=rhs, ij_pvt=ij_pvt):
+            def step(
+                _lambda,
+                scales_pvt=scales_pvt,
+                rhs=rhs,
+                ij_pvt=ij_pvt,
+                apply_eig_constraints=apply_eig_constraints,
+            ):
                 """
                 Helper function that, when given a step size _lambda,
                 computes and returns the updated step and alpha vectors.
@@ -738,12 +752,14 @@ class BOPDMDOperator(DMDOperator):
 
                 # Compute the updated alpha vector.
                 alpha_updated = alpha.ravel() + delta.ravel()
-                alpha_updated = self._push_eigenvalues(alpha_updated)
-
+                if apply_eig_constraints:
+                    alpha_updated = self._push_eigenvalues(alpha_updated)
                 return delta, alpha_updated
 
             # Take a step using our initial step size init_lambda.
-            print(alpha)
+            if verbose:
+                print("alpha before step")
+                print(alpha)
             delta_0, alpha_0 = step(_lambda)
             B_0 = compute_B(alpha_0)
             residual_0, objective_0, error_0 = compute_error(B_0, alpha_0)
@@ -791,6 +807,10 @@ class BOPDMDOperator(DMDOperator):
                 alpha, B = alpha_0, B_0
                 residual, objective, error = residual_0, objective_0, error_0
 
+            if verbose:
+                print("alpha after step")
+                print(alpha)
+
             # Update SVD information.
             U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
@@ -801,7 +821,6 @@ class BOPDMDOperator(DMDOperator):
             if verbose:
                 update_msg = "Step {} Error {} Lambda {}"
                 print(update_msg.format(itr + 1, error, _lambda))
-            print(alpha)
 
             # Update termination status and terminate if converged or stalled.
             converged = error < tol
@@ -843,9 +862,40 @@ class BOPDMDOperator(DMDOperator):
         system matrix, full system matrix, and whether or not convergence
         of the variable projection routine was reached.
         """
-        B, alpha, converged = self._variable_projection(
-            H, t, init_alpha, self._exp_function, self._exp_function_deriv
-        )
+
+        # These adjust the real component and need to be applied after an initial
+        # solution attempt.
+        adjust_real_eigs = {"stable", "imag", "limited"}
+        if not self._eig_constraints.isdisjoint(adjust_real_eigs):
+            B, alpha, converged = self._variable_projection(
+                H,
+                t,
+                init_alpha,
+                self._exp_function,
+                self._exp_function_deriv,
+                False,
+            )
+
+            B, alpha, converged = self._variable_projection(
+                H,
+                t,
+                alpha,
+                self._exp_function,
+                self._exp_function_deriv,
+                True,
+            )
+
+        # Otherwise we didn't apply eigenvalue constraints or used conjugate pair
+        # constraints, which we can apply in the first attempt at a solution.
+        else:
+            B, alpha, converged = self._variable_projection(
+                H,
+                t,
+                init_alpha,
+                self._exp_function,
+                self._exp_function_deriv,
+                True,
+            )
         # Save the modes, eigenvalues, and amplitudes respectively.
         w = B.T
         e = alpha
@@ -1443,7 +1493,11 @@ class BOPDMD(DMDBase):
                 "imag",
                 "conjugate_pairs",
             }
-            invalid_combos = [{"stable", "imag"}]
+            invalid_combos = [
+                {"stable", "imag"},
+                {"stable", "limited"},
+                {"imag", "limited"},
+            ]
 
             if len(eig_constraints.difference(valid_constraints)) != 0:
                 raise ValueError("Invalid eigenvalue constraint provided.")
