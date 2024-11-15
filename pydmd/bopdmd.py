@@ -888,7 +888,7 @@ class BOPDMDOperator(DMDOperator):
             B, alpha, converged = self._variable_projection(
                 H,
                 t,
-                alpha,
+                init_alpha,
                 self._exp_function,
                 self._exp_function_deriv,
                 True,
