@@ -17,6 +17,7 @@ from inspect import isfunction
 import copy
 
 import numpy as np
+from numpy.linalg import LinAlgError
 from scipy.linalg import qr
 from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
@@ -149,6 +150,7 @@ class BOPDMDOperator(DMDOperator):
         bag_warning,
         bag_maxfail,
         real_eig_limit,
+        percent_eig_limit,
         init_lambda=1.0,
         maxlam=52,
         lamup=2.0,
@@ -159,6 +161,7 @@ class BOPDMDOperator(DMDOperator):
         use_fulljac=True,
         verbose=False,
     ):
+        self._percent_eig_limit = None
         self._compute_A = compute_A
         self._use_proj = use_proj
         self._init_alpha = init_alpha
@@ -172,6 +175,7 @@ class BOPDMDOperator(DMDOperator):
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
         self._real_eig_limit = real_eig_limit
+        self._percent_eig_limit = percent_eig_limit
         self._varpro_opts = [
             init_lambda,
             maxlam,
@@ -598,6 +602,7 @@ class BOPDMDOperator(DMDOperator):
         dPhi,
         eigenvalue_constraints,
         var_pro_list,
+        amp_limit,
     ):
         """
         Variable projection routine for multivariate data.
@@ -661,23 +666,36 @@ class BOPDMDOperator(DMDOperator):
 
             return residual, objective, error
 
-        def compute_B(alpha):
+        def compute_B(alpha, amp_lim=None):
             """
             Update B for the current alpha.
             """
             # Compute B using least squares.
-            B = np.linalg.lstsq(Phi(alpha, t), H, rcond=None)[0]
+            try:
+                B = np.linalg.lstsq(Phi(alpha, t), H, rcond=None)[0]
+            except LinAlgError:
+                print(alpha)
+                raise
 
             # Apply proximal operator if given, and if data isn't projected.
             if self._mode_prox is not None and not self._use_proj:
                 B = self._mode_prox(B)
+
+            if amp_lim is not None:
+                b = np.sqrt(np.sum(np.abs(B) ** 2, axis=1))
+                B[b > amp_lim] = np.finfo(float).eps
+
+            if np.isnan(B).any():
+                print(B)
+                print(b)
+                print(alpha)
 
             return B
 
         # Initialize values.
         _lambda = init_lambda
         alpha = self._push_eigenvalues(init_alpha, eigenvalue_constraints)
-        B = compute_B(alpha)
+        B = compute_B(alpha, amp_lim=amp_limit)
         U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
         # Initialize termination flags.
@@ -764,7 +782,7 @@ class BOPDMDOperator(DMDOperator):
                 print("alpha before step")
                 print(alpha)
             delta_0, alpha_0 = step(_lambda, eigenvalue_constraints)
-            B_0 = compute_B(alpha_0)
+            B_0 = compute_B(alpha_0, amp_lim=amp_limit)
             residual_0, objective_0, error_0 = compute_error(B_0, alpha_0)
 
             # Check actual improvement vs predicted improvement.
@@ -787,7 +805,7 @@ class BOPDMDOperator(DMDOperator):
                 for _ in range(maxlam):
                     _lambda *= lamup
                     delta_0, alpha_0 = step(_lambda, eigenvalue_constraints)
-                    B_0 = compute_B(alpha_0)
+                    B_0 = compute_B(alpha_0, amp_lim=amp_limit)
                     residual_0, objective_0, error_0 = compute_error(
                         B_0, alpha_0
                     )
@@ -865,9 +883,26 @@ class BOPDMDOperator(DMDOperator):
         system matrix, full system matrix, and whether or not convergence
         of the variable projection routine was reached.
         """
-        adjust_real_eigs = {"stable", "imag", "limited"}
+        # A single mode should never carry a larger amplitude than necessary to
+        # describe the entire dataset.
+        b_lim = np.linalg.norm(H) / 2
+
+        # Limit the real component, but just slightly.
+        real_eig_limit = copy.copy(self._real_eig_limit)
+
+        # Growth cannot be larger than 2000 percent for the first pass.
+        if self._percent_eig_limit is None:
+            percent_eig_limit = np.log(10**12) / np.max(t)
+            self._real_eig_limit = percent_eig_limit
+        else:
+            self._real_eig_limit = self._percent_eig_limit
+        original_eig_constraints = copy.deepcopy(self._eig_constraints)
+        self._eig_constraints.add("limited")
+
+        adjust_real_eigs_all = {"stable", "imag", "limited"}
+        adjust_real_eigs_partial = {"stable", "imag"}
         if (not isfunction(self._eig_constraints)) and not (
-            self._eig_constraints.isdisjoint(adjust_real_eigs)
+            self._eig_constraints.isdisjoint(adjust_real_eigs_all)
         ):
             # First attempt at variable projection does not include constraints
             # adjust the real part of eigenvalues.
@@ -877,21 +912,24 @@ class BOPDMDOperator(DMDOperator):
                 init_alpha,
                 self._exp_function,
                 self._exp_function_deriv,
-                self._eig_constraints.difference(adjust_real_eigs),
+                self._eig_constraints.difference(adjust_real_eigs_partial),
                 self._varpro_opts,
+                b_lim,
             )
 
             # Second attempt at variable projection includes the constraints
             # on the real part of the eigenvalues.
+            self._real_eig_limit = real_eig_limit
+            self._eig_constraints = original_eig_constraints
 
             # Unpack all variable projection parameters stored in varpro_opts.
             varpro_opt_list = copy.copy(self._varpro_opts)
 
             # Overwrite the stall and tol options as we should be near a good
             # solution.
-            varpro_opt_list[4] = 10
-            varpro_opt_list[5] = 1e-6
-            varpro_opt_list[6] = 1e-6
+            # varpro_opt_list[4] = 10
+            # varpro_opt_list[5] = 1e-6
+            # varpro_opt_list[6] = 1e-6
 
             B, alpha, converged = self._variable_projection(
                 H,
@@ -901,6 +939,7 @@ class BOPDMDOperator(DMDOperator):
                 self._exp_function_deriv,
                 self._eig_constraints,
                 varpro_opt_list,
+                b_lim,
             )
 
         # Otherwise we didn't apply eigenvalue constraints or used conjugate
@@ -915,6 +954,7 @@ class BOPDMDOperator(DMDOperator):
                 self._exp_function_deriv,
                 self._eig_constraints,
                 self._varpro_opts,
+                b_lim,
             )
         # Save the modes, eigenvalues, and amplitudes respectively.
         w = B.T
@@ -927,6 +967,10 @@ class BOPDMDOperator(DMDOperator):
         w = w.dot(np.diag(1 / b))
         w[:, inds_small] = 0.0
         b[inds_small] = 0.0
+        if np.isnan(w).any():
+            print(inds_small)
+            print(b_lim)
+            print(b)
 
         # Compute the projected propagator Atilde.
         if self._use_proj:
@@ -938,9 +982,15 @@ class BOPDMDOperator(DMDOperator):
                 w = self._mode_prox(w)
         else:
             w_proj = self._proj_basis.conj().T.dot(w)
-            Atilde = np.linalg.multi_dot(
-                [w_proj, np.diag(e), np.linalg.pinv(w_proj)]
-            )
+            try:
+                Atilde = np.linalg.multi_dot(
+                    [w_proj, np.diag(e), np.linalg.pinv(w_proj)]
+                )
+            except LinAlgError:
+                print(e)
+                print(w)
+                print(w_proj)
+                raise
 
         # Compute the full system matrix A.
         if self._compute_A:
@@ -1208,6 +1258,7 @@ class BOPDMD(DMDBase):
         bag_maxfail=200,
         varpro_opts_dict=None,
         real_eig_limit=None,
+        percent_eig_limit=None,
     ):
         self._svd_rank = svd_rank
         self._compute_A = compute_A
@@ -1246,6 +1297,7 @@ class BOPDMD(DMDBase):
         self._eig_constraints = eig_constraints
         self._mode_prox = mode_prox
         self._real_eig_limit = real_eig_limit
+        self._percent_eig_limit = percent_eig_limit
 
         self._snapshots_holder = None
         self._time = None
@@ -1624,6 +1676,7 @@ class BOPDMD(DMDBase):
             self._bag_warning,
             self._bag_maxfail,
             self._real_eig_limit,
+            self._percent_eig_limit,
             **self._varpro_opts_dict,
         )
 
