@@ -289,22 +289,23 @@ class BOPDMDOperator(DMDOperator):
     def _diff_func(eigenvalues, omega, ind, absolute_diff):
         """Create an array of differences for the imaginary component.
 
-        Used to find the eigenvalue pairs that most closely approximate conjugate
-        pairs. There are two modes of operation for this function given by the
-        `absolute_diff` variable.
+        Used to find the eigenvalue pairs that most closely approximate
+        conjugate pairs. There are two modes of operation for this function
+        given by the `absolute_diff` variable.
 
-        If `absolute_diff == True` should be used when there is not an equal number of
-        eigenvalues with positive and negative imaginary components. The difference
-        array is simply found by looking at the absolute difference between imaginary
-        components.
+        `absolute_diff == True` should be used when there is not an equal number
+        of eigenvalues with positive and negative imaginary components. The
+        difference array is simply found by looking at the absolute
+        difference between imaginary components.
 
-        If `absolute_diff == False` should be used when there is an equal number of
+        `absolute_diff == False` should be used when there is an equal number of
         eigenvalues with positive and negative imaginary components. Here we can
         restrict ourselves to only looking at the differences between the input
-        eigenvalue (`omega`) and the eigenvalues with an oppositely signed imaginary
-        component. Also used to catch an edge case for `omega.imag == 0`.
+        eigenvalue (`omega`) and the eigenvalues with an oppositely signed
+        imaginary component. Also used to catch an edge case for `omega.imag
+        == 0`.
 
-        :param eigenvalues: Vector of eigenvalues to calculate the difference from.
+        :param eigenvalues: Vector of eigenvalues to calculate the difference
         :param omega: Currently considered eigenvalue
         :param ind: Index of omega inside of eigenvalues vector
         :param absolute_diff: Flag dictating difference matrix calculation.
@@ -355,7 +356,8 @@ class BOPDMDOperator(DMDOperator):
             diff_array = np.zeros((num_eigs, num_eigs))
 
             # If given an odd number of eigenvalues, find the eigenvalue with
-            # the smallest imaginary part and take it to be a DC mode eigenvalue.
+            # the smallest imaginary part and take it to be a DC mode
+            # eigenvalue.
             if num_eigs % 2 == 1:
                 ind_0 = np.argmin(np.abs(eigenvalues.imag))
                 new_eigs[ind_0] = eigenvalues[ind_0].real + 0j
@@ -376,8 +378,9 @@ class BOPDMDOperator(DMDOperator):
                 absolute_diff = True
 
             for nomega, omega in enumerate(eigenvalues):
-                # Comparing just the imaginary components allows the conjugate pair
-                # identification to be insensitive to the real part.
+                # Comparing just the imaginary components allows the
+                # conjugate pair identification to be insensitive to the real
+                # part.
                 diff_array[nomega, :] = self._diff_func(
                     eigenvalues, omega, nomega, absolute_diff
                 )
@@ -410,17 +413,17 @@ class BOPDMDOperator(DMDOperator):
                 sign_1 = np.sign(eig_1)
                 sign_2 = np.sign(eig_2)
                 if sign_1 == sign_2:
-                    # We arbitrarily select one of the pairs to take the opposite
-                    # sign
+                    # We arbitrarily select one of the pairs to take the
+                    # opposite sign
                     sign_1 = -1 * sign_1
 
                 new_eigs[ind_1] = a + 1j * (b * sign_1)
                 new_eigs[ind_2] = a + 1j * (b * sign_2)
 
             if not len(np.unique(pair_indices)) == num_eigs_adj:
-                # In this case the number of found pairs does not equal the expected
-                # number. Raise an error and let the user know the current state of
-                # the solver eigenvalues.
+                # In this case the number of found pairs does not equal the
+                # expected number. Raise an error and let the user know the
+                # current state of the solver eigenvalues.
                 msg = (
                     "Trouble pairing conjugate pairs. \n"
                     f"Pair indices = {pair_indices}"
@@ -712,10 +715,10 @@ class BOPDMDOperator(DMDOperator):
             q_out, djac_out, j_pvt = qr(
                 djac_matrix, mode="economic", pivoting=True
             )
-            ij_pvt = np.arange(IA)
-            ij_pvt = ij_pvt[j_pvt]
-            # ij_pvt = np.zeros(IA, dtype=int)
-            # ij_pvt[j_pvt] = np.arange(IA, dtype=int)
+            # ij_pvt = np.arange(IA)
+            # ij_pvt = ij_pvt[j_pvt]
+            ij_pvt = np.zeros(IA, dtype=int)
+            ij_pvt[j_pvt] = np.arange(IA, dtype=int)
             rjac[:IA] = np.triu(djac_out[:IA])
             rhs_top = q_out.conj().T.dot(rhs_temp)
             scales_pvt = scales[j_pvt[:IA]]
@@ -740,6 +743,7 @@ class BOPDMDOperator(DMDOperator):
                 return delta, alpha_updated
 
             # Take a step using our initial step size init_lambda.
+            print(alpha)
             delta_0, alpha_0 = step(_lambda)
             B_0 = compute_B(alpha_0)
             residual_0, objective_0, error_0 = compute_error(B_0, alpha_0)
@@ -797,6 +801,7 @@ class BOPDMDOperator(DMDOperator):
             if verbose:
                 update_msg = "Step {} Error {} Lambda {}"
                 print(update_msg.format(itr + 1, error, _lambda))
+            print(alpha)
 
             # Update termination status and terminate if converged or stalled.
             converged = error < tol
