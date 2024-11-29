@@ -98,8 +98,9 @@ jobs:
         cache-dependency-path: pyproject.toml
     - name: Install Python dependencies
       run: |
-        pip install --upgrade pip
         pip install .[test]
+        # Force NumPy version
+        pip install numpy==${{ matrix.numpy-version }}
     - name: Test with pytest
       run: |
         pytest
@@ -125,10 +126,11 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install --upgrade pip
-        pip install -e .[test]
+        pip install .[test]
         # Dependencies for tutorials
         pip install jupyter pandas opencv-python ffmpeg-python
+        # Force NumPy version
+        pip install numpy==${{ matrix.numpy-version }}
         # timeout not available by default on MacOS
         brew install coreutils || true
         
