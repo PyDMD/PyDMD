@@ -10,8 +10,13 @@ testing_matrix_ghact = {
     "exclude": [
         {"os": "windows-latest", "python-version": "3.11"},
         {"python-version": "3.8", "numpy-version": "2.0.2"},
+        # 1.24.4 is only kept for 3.8
+        {"python-version": "3.9", "numpy-version": "1.24.4"},
+        {"python-version": "3.10", "numpy-version": "1.24.4"},
+        {"python-version": "3.11", "numpy-version": "1.24.4"},
+        {"python-version": "3.12", "numpy_version": "1.24.4"},
     ],
-    "numpy-version": ["1.24.4", "2.0.2"],
+    "numpy-version": ["1.24.4", "1.26.4", "2.0.2"],
 }
 
 tutorial_testing_matrix_ghact = {
