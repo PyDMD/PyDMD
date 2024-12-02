@@ -18,6 +18,7 @@ tutorial_testing_matrix_ghact = {
     "python-version": testing_matrix_ghact["python-version"],
     "os": [macos_version, "ubuntu-latest"],
     "numpy-version": testing_matrix_ghact["numpy-version"],
+    "exclude": testing_matrix_ghact["exclude"],
 }
 
 deploy_matrix_ghact = {"python-version": ["3.8"], "os": ["ubuntu-latest"]}
