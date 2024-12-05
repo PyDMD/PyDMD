@@ -7,6 +7,7 @@ macos_version = "macos-13"
 testing_matrix_ghact = {
     "python-version": ["3.8", "3.9", "3.10", "3.11", "3.12"],
     "os": ["windows-latest", macos_version, "ubuntu-latest"],
+    "numpy-version": ["1.24.4", "1.26.4", "2.0.2"],
     "exclude": [
         {"os": "windows-latest", "python-version": "3.11"},
         {"python-version": "3.8", "numpy-version": "2.0.2"},
@@ -14,9 +15,8 @@ testing_matrix_ghact = {
         {"python-version": "3.9", "numpy-version": "1.24.4"},
         {"python-version": "3.10", "numpy-version": "1.24.4"},
         {"python-version": "3.11", "numpy-version": "1.24.4"},
-        {"python-version": "3.12", "numpy_version": "1.24.4"},
+        {"python-version": "3.12", "numpy-version": "1.24.4"},
     ],
-    "numpy-version": ["1.24.4", "1.26.4", "2.0.2"],
 }
 
 tutorial_testing_matrix_ghact = {
