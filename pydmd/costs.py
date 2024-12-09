@@ -559,10 +559,6 @@ class COSTS:
         # Get initial values for the eigenvalues.
         self._init_alpha = self._build_initialization()
 
-        # # This line CANNOT go into a public release
-        # if "eig_constraints" in self._pydmd_kwargs:
-        #     f = self._pydmd_kwargs["eig_constraints"]
-
         # Initialize the BOPDMD object.
         optdmd = BOPDMD(
             svd_rank=self._svd_rank,

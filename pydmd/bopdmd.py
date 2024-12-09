@@ -150,6 +150,7 @@ class BOPDMDOperator(DMDOperator):
         bag_warning,
         bag_maxfail,
         real_eig_limit,
+        percent_eig_limit,
         init_lambda=1.0,
         maxlam=52,
         lamup=2.0,
@@ -160,6 +161,7 @@ class BOPDMDOperator(DMDOperator):
         use_fulljac=True,
         verbose=False,
     ):
+        self._percent_eig_limit = None
         self._compute_A = compute_A
         self._use_proj = use_proj
         self._init_alpha = init_alpha
@@ -173,6 +175,7 @@ class BOPDMDOperator(DMDOperator):
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
         self._real_eig_limit = real_eig_limit
+        self._percent_eig_limit = percent_eig_limit
         self._varpro_opts = [
             init_lambda,
             maxlam,
@@ -890,10 +893,13 @@ class BOPDMDOperator(DMDOperator):
         # Limit the real component, but just slightly.
         real_eig_limit = copy.copy(self._real_eig_limit)
 
-        # Growth cannot be larger than 200 percent for the first pass.
-        percent_eig_limit = np.log(2) / len(t)
-        self._real_eig_limit = percent_eig_limit
-        original_eig_constraints = copy.copy(self._eig_constraints)
+        # Growth cannot be larger than 2000 percent for the first pass.
+        if self._percent_eig_limit is None:
+            percent_eig_limit = np.log(10**12) / np.max(t)
+            self._real_eig_limit = percent_eig_limit
+        else:
+            self._real_eig_limit = self._percent_eig_limit
+        original_eig_constraints = copy.deepcopy(self._eig_constraints)
         self._eig_constraints.add("limited")
 
         adjust_real_eigs_all = {"stable", "imag", "limited"}
@@ -924,9 +930,9 @@ class BOPDMDOperator(DMDOperator):
 
             # Overwrite the stall and tol options as we should be near a good
             # solution.
-            varpro_opt_list[4] = 10
-            varpro_opt_list[5] = 1e-6
-            varpro_opt_list[6] = 1e-6
+            # varpro_opt_list[4] = 10
+            # varpro_opt_list[5] = 1e-6
+            # varpro_opt_list[6] = 1e-6
 
             B, alpha, converged = self._variable_projection(
                 H,
@@ -1255,6 +1261,7 @@ class BOPDMD(DMDBase):
         bag_maxfail=200,
         varpro_opts_dict=None,
         real_eig_limit=None,
+        percent_eig_limit=None,
     ):
         self._svd_rank = svd_rank
         self._compute_A = compute_A
@@ -1293,6 +1300,7 @@ class BOPDMD(DMDBase):
         self._eig_constraints = eig_constraints
         self._mode_prox = mode_prox
         self._real_eig_limit = real_eig_limit
+        self._percent_eig_limit = percent_eig_limit
 
         self._snapshots_holder = None
         self._time = None
@@ -1671,6 +1679,7 @@ class BOPDMD(DMDBase):
             self._bag_warning,
             self._bag_maxfail,
             self._real_eig_limit,
+            self._percent_eig_limit,
             **self._varpro_opts_dict,
         )
 
