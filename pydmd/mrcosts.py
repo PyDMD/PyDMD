@@ -1062,9 +1062,9 @@ class mrCOSTS:
 
             # Convolve each windowed reconstruction with a gaussian filter.
             # Std dev of gaussian filter
-            recon_filter = mrd.build_kern(
-                mrd.window_length, mrd._relative_filter_length
-            )
+            # recon_filter = mrd.build_kern(
+            #     mrd.window_length, mrd._relative_filter_length
+            # )
 
             omega_classes = omega_classes_list[n_mrd]
 
@@ -1074,6 +1074,23 @@ class mrCOSTS:
 
             # Iterate over each window slide performed.
             for k in range(mrd.n_slides):
+
+                if k == 0:
+                    direction = "backward"
+                elif k == mrd.n_slides - 1:
+                    direction = "forward"
+                else:
+                    direction = "kern"
+
+                # Convolve each windowed reconstruction with a gaussian filter.
+                # Weights points in the middle of the window and de-emphasizes the
+                # edges of the window.
+                recon_filter = mrd.build_kern(
+                    mrd.window_length,
+                    relative_filter_length=mrd._relative_filter_length,
+                    direction=direction,
+                )
+
                 w = mrd.modes_array[k]
                 b = mrd.amplitudes_array[k]
                 omega = np.atleast_2d(mrd.omega_array[k]).T
