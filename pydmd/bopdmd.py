@@ -150,7 +150,7 @@ class BOPDMDOperator(DMDOperator):
         bag_warning,
         bag_maxfail,
         real_eig_limit,
-        percent_eig_limit,
+        initial_eig_limit,
         init_lambda=1.0,
         maxlam=52,
         lamup=2.0,
@@ -160,8 +160,9 @@ class BOPDMDOperator(DMDOperator):
         eps_stall=1e-12,
         use_fulljac=True,
         verbose=False,
+        varpro_flag=True,
     ):
-        self._percent_eig_limit = None
+        self._initial_eig_limit = None
         self._compute_A = compute_A
         self._use_proj = use_proj
         self._init_alpha = init_alpha
@@ -175,7 +176,8 @@ class BOPDMDOperator(DMDOperator):
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
         self._real_eig_limit = real_eig_limit
-        self._percent_eig_limit = percent_eig_limit
+        self._initial_eig_limit = initial_eig_limit
+        self._varpro_flag = varpro_flag
         self._varpro_opts = [
             init_lambda,
             maxlam,
@@ -445,6 +447,10 @@ class BOPDMDOperator(DMDOperator):
             # part to 0 to make the solver try again.
             too_big = np.abs(eigenvalues.real) > self._real_eig_limit
             eigenvalues[too_big] = 1j * eigenvalues[too_big].imag
+        elif "real_percent" in constraints:
+            # Set the limit as a percent of allowed growth over the time domain.
+            too_big = np.abs(eigenvalues.real) > self._real_eig_limit
+            eigenvalues[too_big] = 1j * eigenvalues[too_big].imag
 
         return eigenvalues
 
@@ -685,11 +691,6 @@ class BOPDMDOperator(DMDOperator):
                 b = np.sqrt(np.sum(np.abs(B) ** 2, axis=1))
                 B[b > amp_lim] = np.finfo(float).eps
 
-            if np.isnan(B).any():
-                print(B)
-                print(b)
-                print(alpha)
-
             return B
 
         # Initialize values.
@@ -740,13 +741,16 @@ class BOPDMDOperator(DMDOperator):
             q_out, djac_out, j_pvt = qr(
                 djac_matrix, mode="economic", pivoting=True
             )
-            # The below is the original python, which is a "mistake" that makes
-            # bopdmd behave more like exact DMD, apparently.
-            # ij_pvt = np.arange(IA)
-            # ij_pvt = ij_pvt[j_pvt]
-            # This is the fix, but if fails to work with eigenvalue constraints.
-            ij_pvt = np.zeros(IA, dtype=int)
-            ij_pvt[j_pvt] = np.arange(IA, dtype=int)
+            if not self._varpro_flag:
+                # The original python, which is a "mistake" that makes bopdmd behave
+                # more like exact DMD but also keeps the solver from wandering into
+                # bad states.
+                ij_pvt = np.arange(IA)
+                ij_pvt = ij_pvt[j_pvt]
+            elif self._varpro_flag:
+                # The true variable projection that can fail.
+                ij_pvt = np.zeros(IA, dtype=int)
+                ij_pvt[j_pvt] = np.arange(IA, dtype=int)
             rjac[:IA] = np.triu(djac_out[:IA])
             rhs_top = q_out.conj().T.dot(rhs_temp)
             scales_pvt = scales[j_pvt[:IA]]
@@ -885,77 +889,77 @@ class BOPDMDOperator(DMDOperator):
         """
         # A single mode should never carry a larger amplitude than necessary to
         # describe the entire dataset.
-        b_lim = np.linalg.norm(H) / 2
+        # b_lim = np.linalg.norm(H) / 2
+        # b_lim = None
+        # if "real_percent" in self._eig_constraints:
+        #     self._real_eig_limit = np.log(self._real_eig_limit) / np.max(t)
+        #
+        # # The default is to do the "true" variable projection.
+        # if self._varpro_flag:
+        #     # We do two passes of the variable projection solution. In the first
+        #     # pass, the real eigenvalue cannot generate growth larger than an absurd
+        #     # limit. In the second, we use whatever limits the user provides for the
+        #     # eigenvalues.
+        #     real_eig_limit = copy.copy(self._real_eig_limit)
+        #     if self._initial_eig_limit is None:
+        #         initial_eig_limit = np.log(10**17) / np.max(t)
+        #         self._real_eig_limit = initial_eig_limit
+        #     else:
+        #         self._real_eig_limit = self._initial_eig_limit
+        #     original_eig_constraints = copy.deepcopy(self._eig_constraints)
+        #     adjusted_eig_constraints = copy.deepcopy(self._eig_constraints)
+        #     adjusted_eig_constraints.add("limited")
+        #
+        #     adjust_real_eigs_partial = {"stable", "imag"}
+        #
+        #     B, alpha, converged = self._variable_projection(
+        #         H,
+        #         t,
+        #         init_alpha,
+        #         self._exp_function,
+        #         self._exp_function_deriv,
+        #         adjusted_eig_constraints.difference(adjust_real_eigs_partial),
+        #         self._varpro_opts,
+        #         b_lim,
+        #     )
 
-        # Limit the real component, but just slightly.
-        real_eig_limit = copy.copy(self._real_eig_limit)
+        # Second attempt at variable projection uses the constraints provided by
+        # the user.
+        # self._real_eig_limit = real_eig_limit
 
-        # Growth cannot be larger than 2000 percent for the first pass.
-        if self._percent_eig_limit is None:
-            percent_eig_limit = np.log(10**12) / np.max(t)
-            self._real_eig_limit = percent_eig_limit
-        else:
-            self._real_eig_limit = self._percent_eig_limit
-        original_eig_constraints = copy.deepcopy(self._eig_constraints)
-        self._eig_constraints.add("limited")
+        # Unpack all variable projection parameters stored in varpro_opts.
+        # varpro_opt_list = copy.copy(self._varpro_opts)
 
-        adjust_real_eigs_all = {"stable", "imag", "limited"}
-        adjust_real_eigs_partial = {"stable", "imag"}
-        if (not isfunction(self._eig_constraints)) and not (
-            self._eig_constraints.isdisjoint(adjust_real_eigs_all)
-        ):
-            # First attempt at variable projection does not include constraints
-            # adjust the real part of eigenvalues.
-            B, alpha, converged = self._variable_projection(
-                H,
-                t,
-                init_alpha,
-                self._exp_function,
-                self._exp_function_deriv,
-                self._eig_constraints.difference(adjust_real_eigs_partial),
-                self._varpro_opts,
-                b_lim,
-            )
-
-            # Second attempt at variable projection includes the constraints
-            # on the real part of the eigenvalues.
-            self._real_eig_limit = real_eig_limit
-            self._eig_constraints = original_eig_constraints
-
-            # Unpack all variable projection parameters stored in varpro_opts.
-            varpro_opt_list = copy.copy(self._varpro_opts)
-
-            # Overwrite the stall and tol options as we should be near a good
-            # solution.
-            # varpro_opt_list[4] = 10
-            # varpro_opt_list[5] = 1e-6
-            # varpro_opt_list[6] = 1e-6
-
-            B, alpha, converged = self._variable_projection(
-                H,
-                t,
-                alpha,
-                self._exp_function,
-                self._exp_function_deriv,
-                self._eig_constraints,
-                varpro_opt_list,
-                b_lim,
-            )
-
-        # Otherwise we didn't apply eigenvalue constraints or used conjugate
-        # pair constraints, which we can apply in the first attempt at a
+        # Overwrite the stall and tol options as we should be near a good
         # solution.
-        else:
-            B, alpha, converged = self._variable_projection(
-                H,
-                t,
-                init_alpha,
-                self._exp_function,
-                self._exp_function_deriv,
-                self._eig_constraints,
-                self._varpro_opts,
-                b_lim,
-            )
+        # varpro_opt_list[4] = 10
+        # varpro_opt_list[5] = 1e-6
+        # varpro_opt_list[6] = 1e-6
+
+        # B, alpha, converged = self._variable_projection(
+        #     H,
+        #     t,
+        #     alpha,
+        #     self._exp_function,
+        #     self._exp_function_deriv,
+        #     original_eig_constraints,
+        #     varpro_opt_list,
+        #     b_lim,
+        # )
+
+        # Otherwise we perform only an approximation of the variable projection.
+        # else:
+        b_lim = None
+        B, alpha, converged = self._variable_projection(
+            H,
+            t,
+            init_alpha,
+            self._exp_function,
+            self._exp_function_deriv,
+            self._eig_constraints,
+            self._varpro_opts,
+            b_lim,
+        )
         # Save the modes, eigenvalues, and amplitudes respectively.
         w = B.T
         e = alpha
@@ -967,10 +971,6 @@ class BOPDMDOperator(DMDOperator):
         w = w.dot(np.diag(1 / b))
         w[:, inds_small] = 0.0
         b[inds_small] = 0.0
-        if np.isnan(w).any():
-            print(inds_small)
-            print(b_lim)
-            print(b)
 
         # Compute the projected propagator Atilde.
         if self._use_proj:
@@ -982,15 +982,9 @@ class BOPDMDOperator(DMDOperator):
                 w = self._mode_prox(w)
         else:
             w_proj = self._proj_basis.conj().T.dot(w)
-            try:
-                Atilde = np.linalg.multi_dot(
-                    [w_proj, np.diag(e), np.linalg.pinv(w_proj)]
-                )
-            except LinAlgError:
-                print(e)
-                print(w)
-                print(w_proj)
-                raise
+            Atilde = np.linalg.multi_dot(
+                [w_proj, np.diag(e), np.linalg.pinv(w_proj)]
+            )
 
         # Compute the full system matrix A.
         if self._compute_A:
@@ -1258,7 +1252,8 @@ class BOPDMD(DMDBase):
         bag_maxfail=200,
         varpro_opts_dict=None,
         real_eig_limit=None,
-        percent_eig_limit=None,
+        initial_eig_limit=None,
+        varpro_flag=True,
     ):
         self._svd_rank = svd_rank
         self._compute_A = compute_A
@@ -1297,7 +1292,8 @@ class BOPDMD(DMDBase):
         self._eig_constraints = eig_constraints
         self._mode_prox = mode_prox
         self._real_eig_limit = real_eig_limit
-        self._percent_eig_limit = percent_eig_limit
+        self._initial_eig_limit = initial_eig_limit
+        self._varpro_flag = varpro_flag
 
         self._snapshots_holder = None
         self._time = None
@@ -1564,11 +1560,15 @@ class BOPDMD(DMDBase):
                 "stable",
                 "imag",
                 "conjugate_pairs",
+                "real_percent",
             }
             invalid_combos = [
                 {"stable", "imag"},
                 {"stable", "limited"},
                 {"imag", "limited"},
+                {"limited", "real_percent"},
+                {"imag", "real_percent"},
+                {"stable", "real_percent"},
             ]
 
             if len(eig_constraints.difference(valid_constraints)) != 0:
@@ -1676,7 +1676,8 @@ class BOPDMD(DMDBase):
             self._bag_warning,
             self._bag_maxfail,
             self._real_eig_limit,
-            self._percent_eig_limit,
+            self._initial_eig_limit,
+            varpro_flag=self._varpro_flag,
             **self._varpro_opts_dict,
         )
 
