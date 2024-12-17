@@ -361,7 +361,7 @@ class COSTS:
         return lv_kern
 
     @staticmethod
-    def build_kern(window_length, relative_filter_length):
+    def build_kern(window_length, relative_filter_length, direction=None):
         """Build the convolution kernel for the window reconstruction.
 
         Each window is convolved with a gaussian filter for the
@@ -378,6 +378,10 @@ class COSTS:
             -((np.arange(window_length) - (window_length - 1) / 2) ** 2)
             / recon_filter_sd**2
         )
+        if direction == "forward":
+            recon_filter[(window_length // 2) :] = 1
+        elif direction == "backward":
+            recon_filter[: (window_length // 2)] = 1
 
         return recon_filter
 
@@ -992,25 +996,32 @@ class COSTS:
         # Track the total contribution from all windows to each time step
         xn = np.zeros(self._n_time_steps)
 
-        # Convolve each windowed reconstruction with a gaussian filter.
-        # Weights points in the middle of the window and de-emphasizes the
-        # edges of the window.
-        # recon_filter = self.build_kern(
-        #     self._window_length,
-        #     relative_filter_length=self._relative_filter_length,
-        # )
+        k = np.arctanh(0.999)
+        corner_sharpness = k / (self._step_size / self.window_length)
 
         for k in range(self._n_slides):
 
             if k == 0:
-                kern = "backward"
+                direction = "backward"
             elif k == self._n_slides - 1:
-                kern = "forward"
+                direction = "forward"
             else:
-                kern = "kern"
-            recon_filter = self.calculate_lv_kern(
-                self.window_length, kern_method=kern
+                direction = "kern"
+
+            # Convolve each windowed reconstruction with a gaussian filter.
+            # Weights points in the middle of the window and de-emphasizes the
+            # edges of the window.
+            recon_filter = self.build_kern(
+                self._window_length,
+                relative_filter_length=self._relative_filter_length,
+                direction=direction,
             )
+
+            # recon_filter = self.calculate_lv_kern(
+            #     self.window_length,
+            #     corner_sharpness=corner_sharpness,
+            #     kern_method=direction,
+            # )
 
             window_indices = self.get_window_indices(k)
 
