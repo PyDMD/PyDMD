@@ -1060,12 +1060,6 @@ class mrCOSTS:
             # Track the total contribution from all windows to each time step
             xn = np.zeros(self._n_time_steps)
 
-            # Convolve each windowed reconstruction with a gaussian filter.
-            # Std dev of gaussian filter
-            # recon_filter = mrd.build_kern(
-            #     mrd.window_length, mrd._relative_filter_length
-            # )
-
             omega_classes = omega_classes_list[n_mrd]
 
             if mrd.svd_rank < np.max(self._svd_rank_array):
@@ -1095,13 +1089,6 @@ class mrCOSTS:
                 b = mrd.amplitudes_array[k]
                 omega = np.atleast_2d(mrd.omega_array[k]).T
                 classification = omega_classes[k]
-
-                if not w.shape[1] == omega_classes.shape[1]:
-                    print(w.shape)
-                    print(omega_classes.shape)
-                    print(n_mrd)
-                    print(mrd.svd_rank)
-                    print(truncate_slice)
 
                 # Compute each segment of xr starting at "t = 0"
                 t = mrd.time_array[k]
@@ -1136,7 +1123,7 @@ class mrCOSTS:
                             np.diag(b[class_ind]),
                             np.exp(omega[class_ind] * t),
                         ]
-                    )
+                    ).real
 
                     # Multiply by the reconstruction filter which weights
                     # the reconstruction towards the middle of the window.
