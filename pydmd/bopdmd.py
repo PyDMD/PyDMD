@@ -133,6 +133,9 @@ class BOPDMDOperator(DMDOperator):
         or not to print information regarding the method's iterative progress.
         Default is False, don't print information.
     :type verbose: bool
+    :param real_eig_limit: Value limiting the real eigenvalues. Only used when the
+    eigenvalue constraints include "limited" as an option otherwise it has no effect.
+    :type real_eig_limit: float
     """
 
     def __init__(
@@ -150,7 +153,6 @@ class BOPDMDOperator(DMDOperator):
         bag_warning,
         bag_maxfail,
         real_eig_limit,
-        initial_eig_limit,
         init_lambda=1.0,
         maxlam=52,
         lamup=2.0,
@@ -162,7 +164,6 @@ class BOPDMDOperator(DMDOperator):
         verbose=False,
         varpro_flag=True,
     ):
-        self._initial_eig_limit = None
         self._compute_A = compute_A
         self._use_proj = use_proj
         self._init_alpha = init_alpha
@@ -176,7 +177,6 @@ class BOPDMDOperator(DMDOperator):
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
         self._real_eig_limit = real_eig_limit
-        self._initial_eig_limit = initial_eig_limit
         self._varpro_flag = varpro_flag
         self._varpro_opts = [
             init_lambda,
@@ -296,22 +296,23 @@ class BOPDMDOperator(DMDOperator):
     def _diff_func(eigenvalues, omega, ind, absolute_diff):
         """Create an array of differences for the imaginary component.
 
-        Used to find the eigenvalue pairs that most closely approximate conjugate
-        pairs. There are two modes of operation for this function given by the
-        `absolute_diff` variable.
+        Used to find the eigenvalue pairs that most closely approximate
+        conjugate pairs. There are two modes of operation for this function
+        given by the `absolute_diff` variable.
 
-        If `absolute_diff == True` should be used when there is not an equal number of
-        eigenvalues with positive and negative imaginary components. The difference
-        array is simply found by looking at the absolute difference between imaginary
-        components.
+        `absolute_diff == True` should be used when there is not an equal number
+        of eigenvalues with positive and negative imaginary components. The
+        difference array is simply found by looking at the absolute
+        difference between imaginary components.
 
-        If `absolute_diff == False` should be used when there is an equal number of
+        `absolute_diff == False` should be used when there is an equal number of
         eigenvalues with positive and negative imaginary components. Here we can
         restrict ourselves to only looking at the differences between the input
-        eigenvalue (`omega`) and the eigenvalues with an oppositely signed imaginary
-        component. Also used to catch an edge case for `omega.imag == 0`.
+        eigenvalue (`omega`) and the eigenvalues with an oppositely signed
+        imaginary component. Also used to catch an edge case for `omega.imag
+        == 0`.
 
-        :param eigenvalues: Vector of eigenvalues to calculate the difference from.
+        :param eigenvalues: Vector of eigenvalues to calculate the difference
         :param omega: Currently considered eigenvalue
         :param ind: Index of omega inside of eigenvalues vector
         :param absolute_diff: Flag dictating difference matrix calculation.
@@ -362,7 +363,8 @@ class BOPDMDOperator(DMDOperator):
             diff_array = np.zeros((num_eigs, num_eigs))
 
             # If given an odd number of eigenvalues, find the eigenvalue with
-            # the smallest imaginary part and take it to be a DC mode eigenvalue.
+            # the smallest imaginary part and take it to be a DC mode
+            # eigenvalue.
             if num_eigs % 2 == 1:
                 ind_0 = np.argmin(np.abs(eigenvalues.imag))
                 new_eigs[ind_0] = eigenvalues[ind_0].real + 0j
@@ -383,8 +385,9 @@ class BOPDMDOperator(DMDOperator):
                 absolute_diff = True
 
             for nomega, omega in enumerate(eigenvalues):
-                # Comparing just the imaginary components allows the conjugate pair
-                # identification to be insensitive to the real part.
+                # Comparing just the imaginary components allows the
+                # conjugate pair identification to be insensitive to the real
+                # part.
                 diff_array[nomega, :] = self._diff_func(
                     eigenvalues, omega, nomega, absolute_diff
                 )
@@ -417,17 +420,17 @@ class BOPDMDOperator(DMDOperator):
                 sign_1 = np.sign(eig_1)
                 sign_2 = np.sign(eig_2)
                 if sign_1 == sign_2:
-                    # We arbitrarily select one of the pairs to take the opposite
-                    # sign
+                    # We arbitrarily select one of the pairs to take the
+                    # opposite sign
                     sign_1 = -1 * sign_1
 
                 new_eigs[ind_1] = a + 1j * (b * sign_1)
                 new_eigs[ind_2] = a + 1j * (b * sign_2)
 
             if not len(np.unique(pair_indices)) == num_eigs_adj:
-                # In this case the number of found pairs does not equal the expected
-                # number. Raise an error and let the user know the current state of
-                # the solver eigenvalues.
+                # In this case the number of found pairs does not equal the
+                # expected number. Raise an error and let the user know the
+                # current state of the solver eigenvalues.
                 msg = (
                     "Trouble pairing conjugate pairs. \n"
                     f"Pair indices = {pair_indices}"
@@ -680,13 +683,19 @@ class BOPDMDOperator(DMDOperator):
             try:
                 B = np.linalg.lstsq(Phi(alpha, t), H, rcond=None)[0]
             except LinAlgError:
-                print(alpha)
+                msg = (
+                    f"Could not solve variable projection. This failure is often "
+                    f"the result of the real eigenvalues being too large and "
+                    f"creating infs in the solution.\nEigenvalues={alpha}"
+                )
+                print(msg)
                 raise
 
             # Apply proximal operator if given, and if data isn't projected.
             if self._mode_prox is not None and not self._use_proj:
                 B = self._mode_prox(B)
 
+            # Apply amplitude limits if provided.
             if amp_lim is not None:
                 b = np.sqrt(np.sum(np.abs(B) ** 2, axis=1))
                 B[b > amp_lim] = np.finfo(float).eps
@@ -742,13 +751,14 @@ class BOPDMDOperator(DMDOperator):
                 djac_matrix, mode="economic", pivoting=True
             )
             if not self._varpro_flag:
-                # The original python, which is a "mistake" that makes bopdmd behave
-                # more like exact DMD but also keeps the solver from wandering into
-                # bad states.
+                # The original python, which is a mistake that makes bopdmd behave
+                # more like exact DMD. However, since the solver is more
+                # constrained, this option also keeps the solver from
+                # wandering into bad states.
                 ij_pvt = np.arange(IA)
                 ij_pvt = ij_pvt[j_pvt]
             elif self._varpro_flag:
-                # The true variable projection that can fail.
+                # Use the true variable projection.
                 ij_pvt = np.zeros(IA, dtype=int)
                 ij_pvt[j_pvt] = np.arange(IA, dtype=int)
             rjac[:IA] = np.triu(djac_out[:IA])
@@ -783,8 +793,7 @@ class BOPDMDOperator(DMDOperator):
 
             # Take a step using our initial step size init_lambda.
             if verbose:
-                print("alpha before step")
-                print(alpha)
+                print(f"alpha before step/n{alpha}")
             delta_0, alpha_0 = step(_lambda, eigenvalue_constraints)
             B_0 = compute_B(alpha_0, amp_lim=amp_limit)
             residual_0, objective_0, error_0 = compute_error(B_0, alpha_0)
@@ -833,8 +842,7 @@ class BOPDMDOperator(DMDOperator):
                 residual, objective, error = residual_0, objective_0, error_0
 
             if verbose:
-                print("alpha after step")
-                print(alpha)
+                print(f"alpha after step\n{alpha}")
 
             # Update SVD information.
             U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
@@ -887,68 +895,7 @@ class BOPDMDOperator(DMDOperator):
         system matrix, full system matrix, and whether or not convergence
         of the variable projection routine was reached.
         """
-        # A single mode should never carry a larger amplitude than necessary to
-        # describe the entire dataset.
-        # b_lim = np.linalg.norm(H) / 2
-        # b_lim = None
-        # if "real_percent" in self._eig_constraints:
-        #     self._real_eig_limit = np.log(self._real_eig_limit) / np.max(t)
-        #
-        # # The default is to do the "true" variable projection.
-        # if self._varpro_flag:
-        #     # We do two passes of the variable projection solution. In the first
-        #     # pass, the real eigenvalue cannot generate growth larger than an absurd
-        #     # limit. In the second, we use whatever limits the user provides for the
-        #     # eigenvalues.
-        #     real_eig_limit = copy.copy(self._real_eig_limit)
-        #     if self._initial_eig_limit is None:
-        #         initial_eig_limit = np.log(10**17) / np.max(t)
-        #         self._real_eig_limit = initial_eig_limit
-        #     else:
-        #         self._real_eig_limit = self._initial_eig_limit
-        #     original_eig_constraints = copy.deepcopy(self._eig_constraints)
-        #     adjusted_eig_constraints = copy.deepcopy(self._eig_constraints)
-        #     adjusted_eig_constraints.add("limited")
-        #
-        #     adjust_real_eigs_partial = {"stable", "imag"}
-        #
-        #     B, alpha, converged = self._variable_projection(
-        #         H,
-        #         t,
-        #         init_alpha,
-        #         self._exp_function,
-        #         self._exp_function_deriv,
-        #         adjusted_eig_constraints.difference(adjust_real_eigs_partial),
-        #         self._varpro_opts,
-        #         b_lim,
-        #     )
 
-        # Second attempt at variable projection uses the constraints provided by
-        # the user.
-        # self._real_eig_limit = real_eig_limit
-
-        # Unpack all variable projection parameters stored in varpro_opts.
-        # varpro_opt_list = copy.copy(self._varpro_opts)
-
-        # Overwrite the stall and tol options as we should be near a good
-        # solution.
-        # varpro_opt_list[4] = 10
-        # varpro_opt_list[5] = 1e-6
-        # varpro_opt_list[6] = 1e-6
-
-        # B, alpha, converged = self._variable_projection(
-        #     H,
-        #     t,
-        #     alpha,
-        #     self._exp_function,
-        #     self._exp_function_deriv,
-        #     original_eig_constraints,
-        #     varpro_opt_list,
-        #     b_lim,
-        # )
-
-        # Otherwise we perform only an approximation of the variable projection.
-        # else:
         b_lim = None
         B, alpha, converged = self._variable_projection(
             H,
@@ -1233,6 +1180,12 @@ class BOPDMD(DMDBase):
         See `BOPDMDOperator` documentation for default values and descriptions
         for each parameter.
     :type varpro_opts_dict: dict
+    :param real_eig_limit: Value limiting the real eigenvalues. Only used when the
+    eigenvalue constraints include "limited" as an option otherwise it has no effect.
+    :type real_eig_limit: float
+    :param varpro_flag: Indicates if the true variable projection or an approximation
+    of exact DMD is used.
+    :type varpro_flag: bool
     """
 
     def __init__(
@@ -1252,7 +1205,6 @@ class BOPDMD(DMDBase):
         bag_maxfail=200,
         varpro_opts_dict=None,
         real_eig_limit=None,
-        initial_eig_limit=None,
         varpro_flag=True,
     ):
         self._svd_rank = svd_rank
@@ -1292,7 +1244,6 @@ class BOPDMD(DMDBase):
         self._eig_constraints = eig_constraints
         self._mode_prox = mode_prox
         self._real_eig_limit = real_eig_limit
-        self._initial_eig_limit = initial_eig_limit
         self._varpro_flag = varpro_flag
 
         self._snapshots_holder = None
@@ -1676,7 +1627,6 @@ class BOPDMD(DMDBase):
             self._bag_warning,
             self._bag_maxfail,
             self._real_eig_limit,
-            self._initial_eig_limit,
             varpro_flag=self._varpro_flag,
             **self._varpro_opts_dict,
         )
@@ -1943,16 +1893,16 @@ class BOPDMD(DMDBase):
 
         if flip_axes:
             eigs = self.eigs.imag + 1j * self.eigs.real
-            plt.xlabel("$Im(\omega)$")
-            plt.ylabel("$Re(\omega)$")
+            plt.xlabel(r"$Im(\omega)$")
+            plt.ylabel(r"$Re(\omega)$")
 
             if eigs_true is not None:
                 eigs_true = eigs_true.imag + 1j * eigs_true.real
 
         else:
             eigs = self.eigs
-            plt.xlabel("$Re(\omega)$")
-            plt.ylabel("$Im(\omega)$")
+            plt.xlabel(r"$Re(\omega)$")
+            plt.ylabel(r"$Im(\omega)$")
 
         for e, std in zip(eigs, self.eigenvalues_std):
             # Plot 2 standard deviations.
