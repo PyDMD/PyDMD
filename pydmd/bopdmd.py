@@ -1469,16 +1469,16 @@ class BOPDMD(DMDBase):
 
         return self
 
-    def fit_econ(self, U, s, V, t):
+    def fit_econ(self, s, V, t):
         """
         Compute the Optimized Dynamic Mode Decomposition using the
         SVD results of the snapshot matrix.
         Use this method if you have pre-computed the SVD and the
         original snapshot matrix is not avaialble or too large to
         store in memory.
+        The left singular vectors (U) must be specified as the projection
+        basis when initializing the BOPDMD object.
 
-        :param U: the left singular vectors.
-        :type U: numpy.ndarray
         :param s: the singular values.
         :type s: numpy.ndarray
         :param V: the right singular vectors.
@@ -1489,32 +1489,34 @@ class BOPDMD(DMDBase):
         self._reset()
         self._time = np.array(t).squeeze()
 
+        if self._proj_basis is None:
+            msg = "proj_basis must be provided when using fit_econ."
+            raise ValueError(msg)
+
         # Check that input time vector is one-dimensional.
         if self._time.ndim > 1:
             msg = "Input time vector t must be one-dimensional."
             raise ValueError(msg)
 
-        # Check that U is a 2D numpy.ndarray.
-        if not isinstance(U, np.ndarray) or U.ndim != 2:
-            msg = "U must be a 2D numpy.ndarray."
-            raise ValueError(msg)
-
         # Check that s is a 1D numpy.ndarray.
-        if not isinstance(s, np.ndarray) or s.ndim != 1 or len(s) != U.shape[1]:
-            msg = "s must be a 1D numpy.ndarray with length equal to the number of columns in U."
+        if not isinstance(s, np.ndarray) or s.ndim != 1 or len(s) != self._proj_basis.shape[1]:
+            msg = """
+            s must be a 1D numpy.ndarray with length equal to the number
+            of columns in the projection basis (U).
+            """
             raise ValueError(msg)
 
         # Check that V is a 2D numpy.ndarray.
         if (
             not isinstance(V, np.ndarray)
             or V.ndim != 2
-            or V.shape[0] != U.shape[1]
+            or V.shape[0] != self._proj_basis.shape[1]
             or V.shape[1] != len(self._time)
         ):
             msg = """
             V must be a 2D numpy.ndarray with the same number of rows
-            as U has columns and the same number of columns as the length
-            of the time vector t.
+            as the projection basis (U) has columns and the same number of columns
+            as the length of the time vector t.
             """
             raise ValueError(msg)
 
