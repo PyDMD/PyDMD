@@ -1499,7 +1499,11 @@ class BOPDMD(DMDBase):
             raise ValueError(msg)
 
         # Check that s is a 1D numpy.ndarray.
-        if not isinstance(s, np.ndarray) or s.ndim != 1 or len(s) != self._proj_basis.shape[1]:
+        if (
+            not isinstance(s, np.ndarray)
+            or s.ndim != 1
+            or len(s) != self._proj_basis.shape[1]
+        ):
             msg = """
             s must be a 1D numpy.ndarray with length equal to the number
             of columns in the projection basis (U).
