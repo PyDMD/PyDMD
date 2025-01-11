@@ -1520,6 +1520,9 @@ class BOPDMD(DMDBase):
             """
             raise ValueError(msg)
 
+        if self._init_alpha is None:
+            self._init_alpha = self._initialize_alpha(s=s, V=V)
+
     def forecast(self, t):
         """
         Predict the output X given the input time t using the fitted DMD model.
