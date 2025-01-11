@@ -1553,6 +1553,14 @@ class BOPDMD(DMDBase):
             **self._varpro_opts_dict,
         )
 
+        # Define the snapshots that will be used for fitting.
+        snp = np.diag(s).dot(V)
+
+        # Fit the data.
+        self._b = self.operator.compute_operator(snp.T, self._time)
+
+        return self
+
     def forecast(self, t):
         """
         Predict the output X given the input time t using the fitted DMD model.
