@@ -1535,6 +1535,23 @@ class BOPDMD(DMDBase):
             msg = "init_alpha must be a 1D np.ndarray with {} entries."
             raise ValueError(msg.format(self._svd_rank))
 
+        # Build the BOP-DMD operator now that the initial alpha and
+        # the projection basis have been defined.
+        self._Atilde = BOPDMDOperator(
+            self._compute_A,
+            self._use_proj,
+            self._init_alpha,
+            self._proj_basis,
+            self._num_trials,
+            self._trial_size,
+            self._eig_sort,
+            self._eig_constraints,
+            self._mode_prox,
+            self._remove_bad_bags,
+            self._bag_warning,
+            self._bag_maxfail,
+            **self._varpro_opts_dict,
+        )
 
     def forecast(self, t):
         """
