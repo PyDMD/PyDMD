@@ -1524,8 +1524,17 @@ class BOPDMD(DMDBase):
             """
             raise ValueError(msg)
 
+        # Set/check the initial guess for the continuous-time DMD eigenvalues.
         if self._init_alpha is None:
             self._init_alpha = self._initialize_alpha(s=s, V=V)
+        elif (
+            not isinstance(self._init_alpha, np.ndarray)
+            or self._init_alpha.ndim > 1
+            or len(self._init_alpha) != self._svd_rank
+        ):
+            msg = "init_alpha must be a 1D np.ndarray with {} entries."
+            raise ValueError(msg.format(self._svd_rank))
+
 
     def forecast(self, t):
         """
