@@ -1489,9 +1489,19 @@ class BOPDMD(DMDBase):
         self._reset()
         self._time = np.array(t).squeeze()
 
-        if self._proj_basis is None:
-            msg = "proj_basis must be provided when using fit_econ."
+        if self._proj_basis is None or not self._use_proj:
+            msg = """
+            proj_basis must be provided when using fit_econ,
+            and use_proj must be set to True.
+            """
             raise ValueError(msg)
+        elif (
+            not isinstance(self._proj_basis, np.ndarray)
+            or self._proj_basis.ndim != 2
+            or self._proj_basis.shape[1] != self._svd_rank
+        ):
+            msg = "proj_basis must be a 2D np.ndarray with {} columns."
+            raise ValueError(msg.format(self._svd_rank))
 
         # Check that input time vector is one-dimensional.
         if self._time.ndim > 1:
@@ -1502,27 +1512,24 @@ class BOPDMD(DMDBase):
         if (
             not isinstance(s, np.ndarray)
             or s.ndim != 1
-            or len(s) != self._proj_basis.shape[1]
+            or len(s) != self._svd_rank
         ):
             msg = """
-            s must be a 1D numpy.ndarray with length equal to the number
-            of columns in the projection basis (U).
+            s must be a 1D numpy.ndarray of length {}.
             """
-            raise ValueError(msg)
+            raise ValueError(msg.format(self._svd_rank))
 
         # Check that V is a 2D numpy.ndarray.
         if (
             not isinstance(V, np.ndarray)
             or V.ndim != 2
-            or V.shape[0] != self._proj_basis.shape[1]
+            or V.shape[0] != self._svd_rank
             or V.shape[1] != len(self._time)
         ):
             msg = """
-            V must be a 2D numpy.ndarray with the same number of rows
-            as the projection basis (U) has columns and the same number of columns
-            as the length of the time vector t.
+            V must be a 2D numpy.ndarray with shape ({}, {}).
             """
-            raise ValueError(msg)
+            raise ValueError(msg.format(self._svd_rank, len(self._time)))
 
         # Set/check the initial guess for the continuous-time DMD eigenvalues.
         if self._init_alpha is None:
