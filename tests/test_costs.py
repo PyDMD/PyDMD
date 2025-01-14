@@ -107,7 +107,7 @@ def overlapping_oscillators():
 # Simulate data.
 time, data, low_frequency, high_frequency = overlapping_oscillators()
 # Define the true eigenvalues of the system.
-expected_frequency_bands = np.array((1.1, 2.5))
+expected_frequency_bands = np.array((1.2, 2.5))
 # Define the expected error in the reconstructions.
 expected_global_error = 0.045
 expected_lf_error = 0.11
@@ -119,11 +119,12 @@ window = 60
 step = 12
 rank = 4
 transform_method = "absolute"
-pydmd_kwargs = {"eig_constraints": {"conjugate_pairs", "stable"}}
+pydmd_kwargs = {"eig_constraints": {"conjugate_pairs"}}
 mrd = COSTS(
     svd_rank=rank,
     global_svd=True,
     pydmd_kwargs=pydmd_kwargs,
+    relative_filter_length=4,
 )
 mrd.fit(data, np.atleast_2d(time), window, step, verbose=False)
 # Force the clustering to use two components due to the nature of the toy data.

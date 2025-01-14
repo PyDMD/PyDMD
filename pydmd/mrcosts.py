@@ -566,7 +566,7 @@ class mrCOSTS:
             pydmd_kwargs=pydmd_kwargs,
             n_components_array=n_components_array,
             relative_filter_length=mrd_list[0]._relative_filter_length,
-            kern_method=mrd_list[0]._kern_method,
+            kern_method=mrd_list[0].kern_method,
         )
 
         # Initialize variables that are defined in fitting.
@@ -1060,12 +1060,6 @@ class mrCOSTS:
             # Track the total contribution from all windows to each time step
             xn = np.zeros(self._n_time_steps)
 
-            # Convolve each windowed reconstruction with a gaussian filter.
-            # Std dev of gaussian filter
-            # recon_filter = mrd.build_kern(
-            #     mrd.window_length, mrd._relative_filter_length
-            # )
-
             omega_classes = omega_classes_list[n_mrd]
 
             if mrd.svd_rank < np.max(self._svd_rank_array):
@@ -1083,11 +1077,11 @@ class mrCOSTS:
                     direction = "kern"
 
                 # Convolve each windowed reconstruction with a gaussian filter.
-                # Weights points in the middle of the window and de-emphasizes the
-                # edges of the window.
+                # Weights points in the middle of the window and
+                # de-emphasizes the edges of the window.
                 recon_filter = mrd.build_kern(
                     mrd.window_length,
-                    relative_filter_length=mrd._relative_filter_length,
+                    relative_filter_length=mrd.relative_filter_length,
                     direction=direction,
                 )
 
@@ -1095,13 +1089,6 @@ class mrCOSTS:
                 b = mrd.amplitudes_array[k]
                 omega = np.atleast_2d(mrd.omega_array[k]).T
                 classification = omega_classes[k]
-
-                if not w.shape[1] == omega_classes.shape[1]:
-                    print(w.shape)
-                    print(omega_classes.shape)
-                    print(n_mrd)
-                    print(mrd.svd_rank)
-                    print(truncate_slice)
 
                 # Compute each segment of xr starting at "t = 0"
                 t = mrd.time_array[k]
@@ -1115,7 +1102,7 @@ class mrCOSTS:
                         self._n_data_vars,
                         mrd.window_length,
                     )
-                )
+                ).real
 
                 # Get the indices for this window.
                 if k == mrd.n_slides - 1 and mrd._non_integer_n_slide:

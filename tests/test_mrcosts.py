@@ -294,9 +294,8 @@ def test_netcdf(tmp_path):
     netcdf format and back to mrCOSTS.
     """
     # Perform this test in a temp directory.
-    os.chdir(tmp_path)
-    mrc.to_netcdf("tests")
-    file_list = glob.glob("*tests*.nc")
+    mrc.to_netcdf("tests", filepath=tmp_path)
+    file_list = glob.glob(os.path.join(tmp_path, "*tests*.nc"))
     mrc_from_file = mrCOSTS()
     mrc_from_file.from_netcdf(file_list)
 

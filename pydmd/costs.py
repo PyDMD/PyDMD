@@ -70,6 +70,15 @@ class COSTS:
     :param reset_alpha_init: Flag specifying if the initial eigenvalue guess
         should be reset between windows.
     :type reset_alpha_init: bool
+    :param kern_method: Specifies if the fit should be made to the data
+    convolved with a kern that rounds towards zero at the edges of the time
+    domain ("kern") or without a kerning ("flat").
+    :type kern_method: string
+    :param relative_filter_length: Value that determines how sharp the
+    reconstruction convolution for each window is. Larger numbers mean that
+    the convolution more heavily de-weights the edges of the time domain.
+    Default is 2. Must be greater than zero.
+    :type relative_filter_length: float
     """
 
     def __init__(
@@ -255,6 +264,25 @@ class COSTS:
         """
         return self._omega_classes
 
+    @property
+    def kern_method(self):
+        """Return the kern method used for the reconstruction.
+
+        :return: kern method used by the `build_kern` method
+        :rtype: str
+        """
+        return self._kern_method
+
+    @property
+    def relative_filter_length(self):
+        """Return the relative filter length used for the reconstruction.
+
+        :return: The filter length for weighting the reconstruction of each
+        window.
+        :rtype: float
+        """
+        return self._relative_filter_length
+
     def periods(self):
         """Convert the omega array into periods.
 
@@ -323,6 +351,11 @@ class COSTS:
         :type window_length: int
         :return: Kernel for convolving with the windowed data.
         :rtype: np.ndarray
+        :param kern_method: Specify how the window should be built. "flat"
+        means no weighting is applied and "kern" means a gaussian weighting is
+        applied that is dictated by `corner_sharpness`. "forward" and
+        "backward" are options used internally for fitting windows at the
+        edges of the time domain.
         """
 
         if kern_method is None:
@@ -372,6 +405,7 @@ class COSTS:
         :type window_length: int
         :return: Gaussian filter of length `window_length`
         :rtype: np.ndarray
+
         """
         recon_filter_sd = window_length / relative_filter_length
         recon_filter = np.exp(
@@ -996,9 +1030,6 @@ class COSTS:
         # Track the total contribution from all windows to each time step
         xn = np.zeros(self._n_time_steps)
 
-        k = np.arctanh(0.999)
-        corner_sharpness = k / (self._step_size / self.window_length)
-
         for k in range(self._n_slides):
 
             if k == 0:
@@ -1016,12 +1047,6 @@ class COSTS:
                 relative_filter_length=self._relative_filter_length,
                 direction=direction,
             )
-
-            # recon_filter = self.calculate_lv_kern(
-            #     self.window_length,
-            #     corner_sharpness=corner_sharpness,
-            #     kern_method=direction,
-            # )
 
             window_indices = self.get_window_indices(k)
 
