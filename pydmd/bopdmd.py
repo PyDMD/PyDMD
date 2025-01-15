@@ -384,7 +384,8 @@ class BOPDMDOperator(DMDOperator):
             )
 
         while unassigned_inds:
-            # Choose the pair that are closest together
+            # Choose the pair that are closest together, pair them, and then
+            # remove them from further consideration.
             ind_1, ind_2 = np.nonzero(diff_array == np.nanmin(diff_array))
             ind_1 = ind_1[0]
             ind_2 = ind_2[0]
@@ -432,7 +433,7 @@ class BOPDMDOperator(DMDOperator):
         eigenvalues = np.copy(new_eigs)
         return eigenvalues
 
-    def _push_eigenvalues(self, eigenvalues, constraints):
+    def _push_eigenvalues(self, eigenvalues):
         """
         Helper function that constrains the given eigenvalues according to
         the arguments found in `self._eig_constraints`. If no constraints were
@@ -445,18 +446,19 @@ class BOPDMDOperator(DMDOperator):
         :return: Vector of constrained eigenvalues.
         :rtype: numpy.ndarray
         """
-        if isfunction(constraints):
-            return constraints(eigenvalues)
 
-        if "conjugate_pairs" in constraints:
+        if isfunction(self._eig_constraints):
+            return self._eig_constraints(eigenvalues)
+
+        if "conjugate_pairs" in self._eig_constraints:
             eigenvalues = self._force_conj_pairs(eigenvalues)
 
-        if "stable" in constraints:
+        if "stable" in self._eig_constraints:
             right_half = eigenvalues.real > 0.0
             eigenvalues[right_half] = 1j * eigenvalues[right_half].imag
-        elif "imag" in constraints:
+        elif "imag" in self._eig_constraints:
             eigenvalues = 1j * eigenvalues.imag
-        elif "limited" in constraints:
+        elif "limited" in self._eig_constraints:
             # For eigenvalues with the real part over the limit, reset the real
             # part to 0 to make the solver try again.
             too_big = np.abs(eigenvalues.real) > self._real_eig_limit
@@ -616,8 +618,6 @@ class BOPDMDOperator(DMDOperator):
         init_alpha,
         Phi,
         dPhi,
-        eigenvalue_constraints,
-        var_pro_list,
         amp_limit,
     ):
         """
@@ -639,6 +639,9 @@ class BOPDMDOperator(DMDOperator):
         :param dPhi: (M, N) matrix-valued function dPhi(alpha,t,i) that
             contains the derivatives of Phi wrt the ith component of alpha.
         :type dPhi: function
+        :param amp_limit: Value constraining the fit amplitude (not
+            implemented).
+        :type amp_limit: float
         :return: Tuple of two numpy arrays and a boolean representing:
             1. (N, IS) best-fit matrix B.
             2. (N,) best-fit vector alpha.
@@ -670,7 +673,7 @@ class BOPDMDOperator(DMDOperator):
             eps_stall,
             use_fulljac,
             verbose,
-        ) = var_pro_list
+        ) = self._varpro_opts
 
         def compute_error(B, alpha):
             """
@@ -693,7 +696,9 @@ class BOPDMDOperator(DMDOperator):
                 msg = (
                     f"Could not solve variable projection. This failure is"
                     f"often the result of the real eigenvalues being too large"
-                    f"and creating infs in the solution.\nEigenvalues={alpha}"
+                    f"and creating infs in the solution. Try "
+                    f"reducing the rank or providing a constraint "
+                    f"on the real eigenvalues.\nEigenvalues={alpha}"
                 )
                 print(msg)
                 raise
@@ -711,7 +716,7 @@ class BOPDMDOperator(DMDOperator):
 
         # Initialize values.
         _lambda = init_lambda
-        alpha = self._push_eigenvalues(init_alpha, eigenvalue_constraints)
+        alpha = self._push_eigenvalues(init_alpha)
         B = compute_B(alpha, amp_lim=amp_limit)
         U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
@@ -776,7 +781,6 @@ class BOPDMDOperator(DMDOperator):
 
             def step(
                 _lambda,
-                eigenvalue_constraints,
                 scales_pvt=scales_pvt,
                 rhs=rhs,
                 ij_pvt=ij_pvt,
@@ -792,15 +796,13 @@ class BOPDMDOperator(DMDOperator):
 
                 # Compute the updated alpha vector.
                 alpha_updated = alpha.ravel() + delta.ravel()
-                alpha_updated = self._push_eigenvalues(
-                    alpha_updated, eigenvalue_constraints
-                )
+                alpha_updated = self._push_eigenvalues(alpha_updated)
                 return delta, alpha_updated
 
             # Take a step using our initial step size init_lambda.
             if verbose:
                 print(f"alpha before step/n{alpha}")
-            delta_0, alpha_0 = step(_lambda, eigenvalue_constraints)
+            delta_0, alpha_0 = step(_lambda)
             B_0 = compute_B(alpha_0, amp_lim=amp_limit)
             residual_0, objective_0, error_0 = compute_error(B_0, alpha_0)
 
@@ -823,7 +825,7 @@ class BOPDMDOperator(DMDOperator):
                 # Increase lambda until something works.
                 for _ in range(maxlam):
                     _lambda *= lamup
-                    delta_0, alpha_0 = step(_lambda, eigenvalue_constraints)
+                    delta_0, alpha_0 = step(_lambda)
                     B_0 = compute_B(alpha_0, amp_lim=amp_limit)
                     residual_0, objective_0, error_0 = compute_error(
                         B_0, alpha_0
@@ -910,8 +912,6 @@ class BOPDMDOperator(DMDOperator):
             init_alpha,
             self._exp_function,
             self._exp_function_deriv,
-            self._eig_constraints,
-            self._varpro_opts,
             b_lim,
         )
         # Save the modes, eigenvalues, and amplitudes respectively.
