@@ -1493,7 +1493,7 @@ class BOPDMD(DMDBase):
         :type t: numpy.ndarray
         """
         self._reset()
-        self._time = np.array(t).squeeze()
+        self._time = np.asarray(t).squeeze()
 
         if self._proj_basis is None or not self._use_proj:
             msg = """
