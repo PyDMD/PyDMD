@@ -1518,10 +1518,8 @@ class BOPDMD(DMDBase):
             raise ValueError(msg)
 
         if (s.ndim != 1 or len(s) != self._svd_rank):
-            msg = """
-            s must be a 1D numpy.ndarray of length {}.
-            """
-            raise ValueError(msg.format(self._svd_rank))
+            msg = f"s must be one-dimensional and of length {self._svd_rank}."
+            raise ValueError(msg)
 
         # Check that V is a 2D numpy.ndarray.
         if (
@@ -1530,10 +1528,11 @@ class BOPDMD(DMDBase):
             or V.shape[0] != self._svd_rank
             or V.shape[1] != len(self._time)
         ):
-            msg = """
-            V must be a 2D numpy.ndarray with shape ({}, {}).
-            """
-            raise ValueError(msg.format(self._svd_rank, len(self._time)))
+            msg = (
+                "V must be a 2D numpy.ndarray with shape "
+                f"({self._svd_rank}, {len(self._time)})."
+            )
+            raise ValueError(msg)
 
         # Set/check the initial guess for the continuous-time DMD eigenvalues.
         if self._init_alpha is None:
