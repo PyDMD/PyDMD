@@ -1501,7 +1501,7 @@ class BOPDMD(DMDBase):
             and use_proj must be set to True.
             """
             raise ValueError(msg)
-        elif (
+        if (
             not isinstance(self._proj_basis, np.ndarray)
             or self._proj_basis.ndim != 2
             or self._proj_basis.shape[1] != self._svd_rank
