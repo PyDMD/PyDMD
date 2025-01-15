@@ -1521,7 +1521,6 @@ class BOPDMD(DMDBase):
             msg = f"s must be one-dimensional and of length {self._svd_rank}."
             raise ValueError(msg)
 
-        # Check that V is a 2D numpy.ndarray.
         if (
             not isinstance(V, np.ndarray)
             or V.ndim != 2
