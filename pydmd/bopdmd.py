@@ -1512,12 +1512,10 @@ class BOPDMD(DMDBase):
             )
             raise ValueError(msg)
 
-        # Check that input time vector is one-dimensional.
         if self._time.ndim > 1:
             msg = "Input time vector t must be one-dimensional."
             raise ValueError(msg)
 
-        # Check that s is a 1D numpy.ndarray.
         if (
             not isinstance(s, np.ndarray)
             or s.ndim != 1
