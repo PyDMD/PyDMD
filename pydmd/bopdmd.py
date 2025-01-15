@@ -1506,8 +1506,11 @@ class BOPDMD(DMDBase):
             or self._proj_basis.ndim != 2
             or self._proj_basis.shape[1] != self._svd_rank
         ):
-            msg = "proj_basis must be a 2D np.ndarray with {} columns."
-            raise ValueError(msg.format(self._svd_rank))
+            msg = (
+                "proj_basis must be a 2D np.ndarray with "
+                f"{self._svd_rank} columns."
+            )
+            raise ValueError(msg)
 
         # Check that input time vector is one-dimensional.
         if self._time.ndim > 1:
