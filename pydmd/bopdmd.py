@@ -1486,7 +1486,7 @@ class BOPDMD(DMDBase):
         basis when initializing the BOPDMD object.
 
         :param s: the singular values.
-        :type s: numpy.ndarray
+        :type s: array_like
         :param V: the right singular vectors.
         :type V: numpy.ndarray
         :param t: the input time vector.
@@ -1494,6 +1494,7 @@ class BOPDMD(DMDBase):
         """
         self._reset()
         self._time = np.asarray(t).squeeze()
+        s = np.asarray(s).squeeze()
 
         if self._proj_basis is None or not self._use_proj:
             msg = """
@@ -1516,11 +1517,7 @@ class BOPDMD(DMDBase):
             msg = "Input time vector t must be one-dimensional."
             raise ValueError(msg)
 
-        if (
-            not isinstance(s, np.ndarray)
-            or s.ndim != 1
-            or len(s) != self._svd_rank
-        ):
+        if (s.ndim != 1 or len(s) != self._svd_rank):
             msg = """
             s must be a 1D numpy.ndarray of length {}.
             """
