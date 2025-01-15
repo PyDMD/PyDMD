@@ -111,7 +111,6 @@ class COSTS:
         self._force_even_eigs = force_even_eigs
         self._max_rank = max_rank
         self._reset_alpha_init = reset_alpha_init
-        self._kern_method = kern_method
         self._relative_filter_length = relative_filter_length
 
         # Initialize variables that are defined in fitting.
@@ -129,6 +128,12 @@ class COSTS:
         self._window_means_array = None
         self._non_integer_n_slide = None
         self._svd_rank_pre_allocate = None
+
+        # Specify how the data windows are constructed before fitting.
+        if kern_method is None:
+            self._kern_method = "kern"
+        else:
+            self._kern_method = kern_method
 
         # Specify default keywords to hand to BOPDMD.
         if pydmd_kwargs is None:
@@ -358,8 +363,6 @@ class COSTS:
         edges of the time domain.
         """
 
-        if kern_method is None:
-            kern_method = "kern"
         if corner_sharpness is None:
             corner_sharpness = 16
 
@@ -390,6 +393,8 @@ class COSTS:
             )
         elif kern_method == "flat":
             lv_kern = np.ones(window_length)
+        else:
+            raise ValueError("Invalid `kern_method` provided.")
 
         return lv_kern
 
