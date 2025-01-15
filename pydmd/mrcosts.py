@@ -565,7 +565,7 @@ class mrCOSTS:
             global_svd_array=global_svd_array,
             pydmd_kwargs=pydmd_kwargs,
             n_components_array=n_components_array,
-            relative_filter_length=mrd_list[0]._relative_filter_length,
+            relative_filter_length=mrd_list[0].relative_filter_length,
             kern_method=mrd_list[0].kern_method,
         )
 
@@ -1123,7 +1123,7 @@ class mrCOSTS:
                             np.diag(b[class_ind]),
                             np.exp(omega[class_ind] * t),
                         ]
-                    )
+                    ).real
 
                     # Multiply by the reconstruction filter which weights
                     # the reconstruction towards the middle of the window.
