@@ -463,7 +463,7 @@ def test_eig_constraints_conjugate():
     for eigs in eig_list:
         # We have to make a copy because the function changes the contents of
         # the input vector.
-        new_eigs = BDO._push_eigenvalues(np.copy(eigs), eig_constraints)
+        new_eigs = BDO._push_eigenvalues(np.copy(eigs))
 
         # We should have only n // 2 unique imaginary eigenvalues or n // 2 +
         # 1 for the case of the odd rank with a DC mode.
