@@ -1351,22 +1351,28 @@ class BOPDMD(DMDBase):
                     msg = "Invalid eigenvalue constraint combination provided."
                     raise ValueError(msg)
 
-    def _initialize_alpha(self, **kwargs):
+    def _initialize_alpha(self, s=None, V=None):
         """
         Uses projected trapezoidal rule to approximate the eigenvalues of A in
             z' = Az.
         The computed eigenvalues will serve as our initial guess for alpha.
+        If the singular values and right singular vectors are provided, they
+        will be used to compute the projection. Otherwise, the snapshot data
+        will be projected onto the projection basis.
 
-        :param kwargs: Optionally provide the singular values (s) and right
-            singular vectors (V) of the snapshot data to compute the projection.
-        :type kwargs: numpy.ndarray
+        :param s: the singular values of the snapshot matrix. If provided, they
+            will be used along with V to compute the projection.
+        :type s: numpy.ndarray
+        :param V: the right singular vectors of the snapshot matrix. If
+            provided, they will be used along with s to compute the projection.
+        :type V: numpy.ndarray
         :return: Approximated eigenvalues of the matrix A.
         :rtype: numpy.ndarray
         """
-        if "s" and "V" in kwargs:
+        if s is not None and V is not None:
             # If the singular values and right singular vectors are provided,
             # use them to compute the projection.
-            ux = np.diag(kwargs["s"]).dot(kwargs["V"])
+            ux = np.diag(s).dot(V)
         else:
             # Project the snapshot data onto the projection basis.
             ux = self._proj_basis.conj().T.dot(self.snapshots)
