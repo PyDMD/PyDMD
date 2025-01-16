@@ -132,8 +132,9 @@ class BOPDMDOperator(DMDOperator):
         or not to print information regarding the method's iterative progress.
         Default is False, don't print information.
     :type verbose: bool
-    :param real_eig_limit: Value limiting the real eigenvalues. Only used when the
-    eigenvalue constraints include "limited" as an option otherwise it has no effect.
+    :param real_eig_limit: Value limiting the real eigenvalues. Only used
+    when the eigenvalue constraints include "limited" as an option otherwise
+    it has no effect.
     :type real_eig_limit: float
     """
 
