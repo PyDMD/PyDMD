@@ -1517,7 +1517,7 @@ class BOPDMD(DMDBase):
             msg = "Input time vector t must be one-dimensional."
             raise ValueError(msg)
 
-        if (s.ndim != 1 or len(s) != self._svd_rank):
+        if s.ndim != 1 or len(s) != self._svd_rank:
             msg = f"s must be one-dimensional and of length {self._svd_rank}."
             raise ValueError(msg)
 
