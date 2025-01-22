@@ -380,7 +380,7 @@ class BOPDMDOperator(DMDOperator):
             # Comparing just the imaginary components allows the
             # conjugate pair identification to be insensitive to the real
             # part.
-            diff_array[nomega, :] = self._diff_func(
+            diff_array[nomega] = self._diff_func(
                 eigenvalues, omega, nomega, absolute_diff
             )
 
@@ -396,10 +396,10 @@ class BOPDMDOperator(DMDOperator):
 
             unassigned_inds.remove(ind_2)
             unassigned_inds.remove(ind_1)
-            diff_array[ind_1, :] = np.nan
+            diff_array[ind_1] = np.nan
             diff_array[:, ind_1] = np.nan
             diff_array[:, ind_2] = np.nan
-            diff_array[ind_2, :] = np.nan
+            diff_array[ind_2] = np.nan
             pair_indices[pair_counter, 0] = ind_1
             pair_indices[pair_counter, 1] = ind_2
             pair_counter += 1
@@ -431,8 +431,7 @@ class BOPDMDOperator(DMDOperator):
             )
             raise ValueError(msg)
 
-        eigenvalues = np.copy(new_eigs)
-        return eigenvalues
+        return np.copy(new_eigs)
 
     def _push_eigenvalues(self, eigenvalues):
         """

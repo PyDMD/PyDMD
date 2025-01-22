@@ -367,7 +367,15 @@ class COSTS:
             corner_sharpness = 16
 
         if kern_method == "kern":
-            # Higher = sharper corners
+            # This is the window kerning from the original implementation of
+            # the sliding mrDMD algorithm. It rounds rather sharply the data
+            # towards zero at the beginning and end of the window's time
+            # domain. The intent of the window kerning was to suppress the
+            # real components. However, this also has the effect of reducing
+            # fit veracity as well as distorting derived time scales from the
+            # imaginary eigenvalue components. This window kerning is no longer
+            # the recommended practice.
+            # Higher corner sharpness = sharper corners.
             lv_kern = (
                 np.tanh(
                     corner_sharpness
@@ -381,17 +389,8 @@ class COSTS:
                 )
                 - 1
             )
-        elif kern_method == "forward":
-            lv_kern = np.tanh(
-                corner_sharpness * np.arange(0, window_length) / window_length
-            )
-        elif kern_method == "backward":
-            lv_kern = -np.tanh(
-                corner_sharpness
-                * (np.arange(0, window_length) - window_length + 1)
-                / window_length
-            )
         elif kern_method == "flat":
+            # Do not apply a window kerning prior to fitting each window.
             lv_kern = np.ones(window_length)
         else:
             raise ValueError("Invalid `kern_method` provided.")
@@ -408,6 +407,13 @@ class COSTS:
 
         :param window_length: Length of the data window in units of time
         :type window_length: int
+        :param relative_filter_length: A parameter governing how strongly
+        weighted the windowed construction is. Larger values mean more
+        strongly weighting the middle of the window.
+        :type relative_filter_length: float
+        :param direction: Specify the special cases for reconstructing
+        windows at the beginning and end of the time domain.
+        :type direction: string
         :return: Gaussian filter of length `window_length`
         :rtype: np.ndarray
 
@@ -417,8 +423,14 @@ class COSTS:
             -((np.arange(window_length) - (window_length - 1) / 2) ** 2)
             / recon_filter_sd**2
         )
+        # Do not apply the kerning at the end of the time domain. This
+        # assists in fitting the last window of the decomposition and stops
+        # the propagation of errors at the edge of the time domain.
         if direction == "forward":
             recon_filter[(window_length // 2) :] = 1
+        # Do not apply the kerning at the beginning of the time domain. This
+        # assists in fitting the last window of the decomposition and stops
+        # the propagation of errors at the edge of the time domain.
         elif direction == "backward":
             recon_filter[: (window_length // 2)] = 1
 
