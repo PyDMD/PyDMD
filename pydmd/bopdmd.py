@@ -1487,7 +1487,8 @@ class BOPDMD(DMDBase):
 
         :param s: the singular values.
         :type s: array_like
-        :param V: the right singular vectors.
+        :param V: matrix of right singular vectors, where each row is a
+            different singular vector.
         :type V: numpy.ndarray
         :param t: the input time vector.
         :type t: numpy.ndarray
