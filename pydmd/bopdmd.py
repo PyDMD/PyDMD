@@ -1570,7 +1570,7 @@ class BOPDMD(DMDBase):
         self._b = self.operator.compute_operator(snp.T, self._time)
 
         # Store the singular values
-        self.singular_values = s
+        self._singular_values = s
 
         return self
 

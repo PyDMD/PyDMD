@@ -788,7 +788,7 @@ def plot_summary(
         s = np.linalg.svd(snp, full_matrices=False, compute_uv=False)
     else:
         try:
-            s = dmd.singular_values
+            s = dmd._singular_values
         except AttributeError as e:
             msg = "Snapshots and singular values are not available."
             raise ValueError(msg) from e
