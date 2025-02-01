@@ -5,13 +5,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.varprodmd &mdash; PyDMD 2025.1.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+  <title>pydmd.varprodmd &mdash; PyDMD 2025.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=d8b4753c"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=4acbabd7"></script>
       <script src="../../_static/doctools.js?v=888ff710"></script>
       <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -89,18 +89,18 @@
 <span class="sd">        &quot;ftol&quot;: 1e-8}</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">MappingProxyType</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MappingProxyType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">qr</span>
-<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">OptimizeResult</span><span class="p">,</span> <span class="n">least_squares</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">qr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizeResult</span><span class="p">,</span> <span class="n">least_squares</span>
 
-<span class="kn">from</span> <span class="nn">.dmd</span> <span class="kn">import</span> <span class="n">DMDBase</span>
-<span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
-<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.dmd</span><span class="w"> </span><span class="kn">import</span> <span class="n">DMDBase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.dmdoperator</span><span class="w"> </span><span class="kn">import</span> <span class="n">DMDOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.snapshots</span><span class="w"> </span><span class="kn">import</span> <span class="n">Snapshots</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_svd</span>
 
 <span class="n">OPT_DEF_ARGS</span> <span class="o">=</span> <span class="n">MappingProxyType</span><span class="p">(</span>
     <span class="p">{</span>
@@ -115,7 +115,7 @@
 <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_compute_dmd_ev</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_dmd_ev</span><span class="p">(</span>
     <span class="n">x_current</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">x_next</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">rank</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
@@ -150,14 +150,14 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">a_approx</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">_OptimizeHelper</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_OptimizeHelper</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper Class to store intermediate results during the optimization.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;phi&quot;</span><span class="p">,</span> <span class="s2">&quot;phi_inv&quot;</span><span class="p">,</span> <span class="s2">&quot;u_svd&quot;</span><span class="p">,</span> <span class="s2">&quot;s_inv&quot;</span><span class="p">,</span> <span class="s2">&quot;v_svd&quot;</span><span class="p">,</span> <span class="s2">&quot;b_matrix&quot;</span><span class="p">,</span> <span class="s2">&quot;rho&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">m_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">m_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">m_in</span><span class="p">,</span> <span class="n">l_in</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">u_svd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">m_in</span><span class="p">,</span> <span class="n">l_in</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">s_inv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">l_in</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
@@ -166,7 +166,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">m_in</span><span class="p">,</span> <span class="n">n_in</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_compute_dmd_rho</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_dmd_rho</span><span class="p">(</span>
     <span class="n">alphas</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -225,7 +225,7 @@
     <span class="k">return</span> <span class="n">rho_out</span>
 
 
-<span class="k">def</span> <span class="nf">_compute_dmd_jac</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_dmd_jac</span><span class="p">(</span>
     <span class="n">alphas</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -291,7 +291,7 @@
     <span class="k">return</span> <span class="n">jac_out</span>
 
 
-<span class="k">def</span> <span class="nf">_varpro_preprocessing</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_varpro_preprocessing</span><span class="p">(</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">rank</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
@@ -339,7 +339,7 @@
     <span class="k">return</span> <span class="n">z_out</span><span class="p">,</span> <span class="n">y_out</span><span class="p">,</span> <span class="n">data_out</span><span class="p">,</span> <span class="n">u_r</span>
 
 
-<span class="k">def</span> <span class="nf">_compute_dmd_varpro</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_dmd_varpro</span><span class="p">(</span>
     <span class="n">alphas_init</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -373,7 +373,7 @@
     <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">select_best_samples_fast</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">comp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">select_best_samples_fast</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">comp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Select library samples using QR decomposition with column pivoting.</span>
 
@@ -403,7 +403,7 @@
     <span class="k">return</span> <span class="n">pcolumn</span><span class="p">[:</span><span class="n">n_samples</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">compute_varprodmd_any</span><span class="p">(</span>  <span class="c1"># pylint: disable=unused-variable</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_varprodmd_any</span><span class="p">(</span>  <span class="c1"># pylint: disable=unused-variable</span>
     <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">optargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
@@ -495,7 +495,7 @@
     <span class="k">return</span> <span class="n">xi</span> <span class="o">/</span> <span class="n">eigenf</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span> <span class="n">omegas</span><span class="p">,</span> <span class="n">eigenf</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">opt</span>
 
 
-<span class="k">def</span> <span class="nf">varprodmd_predict</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">varprodmd_predict</span><span class="p">(</span>
     <span class="n">phi</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">omegas</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
     <span class="n">eigenf</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -525,12 +525,12 @@
     <span class="k">return</span> <span class="n">phi</span> <span class="o">@</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">omegas</span><span class="p">,</span> <span class="n">time</span><span class="p">))</span> <span class="o">*</span> <span class="n">eigenf</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span>
 
 
-<div class="viewcode-block" id="VarProOperator"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProOperator">[docs]</a><span class="k">class</span> <span class="nc">VarProOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
+<div class="viewcode-block" id="VarProOperator"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProOperator">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">VarProOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Variable Projection Operator for DMD.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">svd_rank</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
         <span class="n">exact</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
@@ -599,7 +599,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_modes</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_eigenvalues</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="VarProOperator.compute_operator"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProOperator.compute_operator">[docs]</a>    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span>
+<div class="viewcode-block" id="VarProOperator.compute_operator"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProOperator.compute_operator">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">compute_operator</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">OptimizeResult</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -672,7 +672,7 @@
         <span class="k">return</span> <span class="n">eigenf</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">indices</span></div></div>
 
 
-<div class="viewcode-block" id="VarProDMD"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProDMD">[docs]</a><span class="k">class</span> <span class="nc">VarProDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
+<div class="viewcode-block" id="VarProDMD"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProDMD">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">VarProDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Variable Projection for DMD using SciPy&#39;s</span>
 <span class="sd">    nonlinear least squares solver. The original problem</span>
@@ -681,7 +681,7 @@
 <span class="sd">    Further simplifications (outer products) avoids using sparse matrices.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># pylint: disable=super-init-not-called</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># pylint: disable=super-init-not-called</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">svd_rank</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">exact</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -758,7 +758,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="VarProDMD.fit"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+<div class="viewcode-block" id="VarProDMD.fit"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProDMD.fit">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fit the eigenvalues, modes and eigenfunctions/amplitudes</span>
 <span class="sd">        to measurements.</span>
@@ -781,7 +781,7 @@
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="VarProDMD.forecast"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProDMD.forecast">[docs]</a>    <span class="k">def</span> <span class="nf">forecast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<div class="viewcode-block" id="VarProDMD.forecast"><a class="viewcode-back" href="../../varprodmd.html#pydmd.varprodmd.VarProDMD.forecast">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">forecast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Forecast measurements at given timestamps `time`.</span>
 
@@ -800,7 +800,7 @@
         <span class="p">)</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">ssr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ssr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the square root of sum squared residual (SSR) taken from</span>
 <span class="sd">        https://link.springer.com/article/10.1007/s10589-012-9492-9.</span>
@@ -835,7 +835,7 @@
         <span class="k">return</span> <span class="n">ssr</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">selected_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">selected_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return indices for creating the library.</span>
 
@@ -855,7 +855,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indices</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">opt_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizeResult</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">opt_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OptimizeResult</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return optimization statistics of the Variable Projection</span>
 <span class="sd">        optimization.</span>
@@ -873,7 +873,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optres</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the time evolution of each mode.</span>
 
@@ -885,7 +885,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">amplitudes</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">t_omega</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the amplitude spectrum.</span>
 
@@ -896,7 +896,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">imag</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">growth_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">growth_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the growth rate values relative to the modes.</span>
 
@@ -915,7 +915,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2025, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2025.
+      <span class="lastupdated">Last updated on Feb 01, 2025.
       </span></p>
   </div>
 

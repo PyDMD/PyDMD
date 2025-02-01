@@ -5,13 +5,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.cdmd &mdash; PyDMD 2025.1.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+  <title>pydmd.cdmd &mdash; PyDMD 2025.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=d8b4753c"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=4acbabd7"></script>
       <script src="../../_static/doctools.js?v=888ff710"></script>
       <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -77,17 +77,17 @@
 <span class="sd">https://doi.org/10.1007/s11554-016-0655-2</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scipy.sparse</span>
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">sqrtm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">sqrtm</span>
 
-<span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
-<span class="kn">from</span> <span class="nn">.dmdoperator</span> <span class="kn">import</span> <span class="n">DMDOperator</span>
-<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">compute_svd</span><span class="p">,</span> <span class="n">compute_tlsq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.dmdbase</span><span class="w"> </span><span class="kn">import</span> <span class="n">DMDBase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.dmdoperator</span><span class="w"> </span><span class="kn">import</span> <span class="n">DMDOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.snapshots</span><span class="w"> </span><span class="kn">import</span> <span class="n">Snapshots</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_svd</span><span class="p">,</span> <span class="n">compute_tlsq</span>
 
 
-<span class="k">class</span> <span class="nc">CDMDOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CDMDOperator</span><span class="p">(</span><span class="n">DMDOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    DMD operator for Compressed-DMD.</span>
 
@@ -116,7 +116,7 @@
 <span class="sd">    :type tikhonov_regularization: int or float</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">svd_rank</span><span class="p">,</span>
         <span class="n">rescale_mode</span><span class="p">,</span>
@@ -134,7 +134,7 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_Atilde</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compressedX</span><span class="p">,</span> <span class="n">compressedY</span><span class="p">,</span> <span class="n">nonCompressedY</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compressedX</span><span class="p">,</span> <span class="n">compressedY</span><span class="p">,</span> <span class="n">nonCompressedY</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the low-rank operator.</span>
 
@@ -167,7 +167,7 @@
         <span class="k">return</span> <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span>
 
 
-<div class="viewcode-block" id="CDMD"><a class="viewcode-back" href="../../cdmd.html#pydmd.cdmd.CDMD">[docs]</a><span class="k">class</span> <span class="nc">CDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
+<div class="viewcode-block" id="CDMD"><a class="viewcode-back" href="../../cdmd.html#pydmd.cdmd.CDMD">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">CDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compressed Dynamic Mode Decomposition.</span>
 
@@ -228,7 +228,7 @@
 <span class="sd">    :type tikhonov_regularization: int or float</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -255,11 +255,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">compression_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compression_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The compression matrix&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compression_matrix</span>
 
-<div class="viewcode-block" id="CDMD._compress_snapshots"><a class="viewcode-back" href="../../cdmd.html#pydmd.cdmd.CDMD._compress_snapshots">[docs]</a>    <span class="k">def</span> <span class="nf">_compress_snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CDMD._compress_snapshots"><a class="viewcode-back" href="../../cdmd.html#pydmd.cdmd.CDMD._compress_snapshots">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_compress_snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Private method that compresses the snapshots matrix by pre-multiplying</span>
 <span class="sd">        it by the chosen `compression_matrix`.</span>
@@ -289,7 +289,7 @@
 
         <span class="k">return</span> <span class="n">Y</span></div>
 
-<div class="viewcode-block" id="CDMD.fit"><a class="viewcode-back" href="../../cdmd.html#pydmd.cdmd.CDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<div class="viewcode-block" id="CDMD.fit"><a class="viewcode-back" href="../../cdmd.html#pydmd.cdmd.CDMD.fit">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the Dynamic Modes Decomposition to the input data.</span>
 
@@ -326,7 +326,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2025, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2025.
+      <span class="lastupdated">Last updated on Feb 01, 2025.
       </span></p>
   </div>
 

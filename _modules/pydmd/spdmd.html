@@ -5,13 +5,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.spdmd &mdash; PyDMD 2025.1.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+  <title>pydmd.spdmd &mdash; PyDMD 2025.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=d8b4753c"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=4acbabd7"></script>
       <script src="../../_static/doctools.js?v=888ff710"></script>
       <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -73,17 +73,17 @@
   <h1>Source code for pydmd.spdmd</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Derived module from dmdbase.py for sparsity-promoting DMD.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">solve</span>
-<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">csc_matrix</span> <span class="k">as</span> <span class="n">sparse</span>
-<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">hstack</span> <span class="k">as</span> <span class="n">sphstack</span>
-<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">vstack</span> <span class="k">as</span> <span class="n">spvstack</span>
-<span class="kn">from</span> <span class="nn">scipy.sparse.linalg</span> <span class="kn">import</span> <span class="n">spsolve</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">csc_matrix</span> <span class="k">as</span> <span class="n">sparse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">hstack</span> <span class="k">as</span> <span class="n">sphstack</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">vstack</span> <span class="k">as</span> <span class="n">spvstack</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">spsolve</span>
 
-<span class="kn">from</span> <span class="nn">.dmd</span> <span class="kn">import</span> <span class="n">DMD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.dmd</span><span class="w"> </span><span class="kn">import</span> <span class="n">DMD</span>
 
 
-<span class="k">def</span> <span class="nf">soft_thresholding_operator</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">soft_thresholding_operator</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Soft-thresholding operator as defined in 10.1063/1.4863670.</span>
 
@@ -97,7 +97,7 @@
     <span class="p">)</span>
 
 
-<div class="viewcode-block" id="SpDMD"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD">[docs]</a><span class="k">class</span> <span class="nc">SpDMD</span><span class="p">(</span><span class="n">DMD</span><span class="p">):</span>
+<div class="viewcode-block" id="SpDMD"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">SpDMD</span><span class="p">(</span><span class="n">DMD</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sparsity-Promoting Dynamic Mode Decomposition. Promotes solutions having an</span>
 <span class="sd">    high number of amplitudes set to zero (i.e. *sparse solutions*).</span>
@@ -151,7 +151,7 @@
 <span class="sd">        algorithm are deleted after the termination of a call to :func:`fit`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -196,7 +196,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_modes_activation_bitmask_proxy</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="SpDMD.fit"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<div class="viewcode-block" id="SpDMD.fit"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD.fit">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the Dynamic Modes Decomposition of the input data.</span>
 <span class="sd">        :param X: the input snapshots.</span>
@@ -229,7 +229,7 @@
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="SpDMD._update_alpha"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._update_alpha">[docs]</a>    <span class="k">def</span> <span class="nf">_update_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">):</span>
+<div class="viewcode-block" id="SpDMD._update_alpha"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._update_alpha">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_update_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the vector :math:`\\alpha_k` of DMD amplitudes.</span>
 <span class="sd">        :param np.ndarray beta: Current value of :math:`\\beta_k` (vector of</span>
@@ -244,7 +244,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_Plow</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Plow</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="o">+</span> <span class="n">uk</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="SpDMD._update_beta"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._update_beta">[docs]</a>    <span class="k">def</span> <span class="nf">_update_beta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">):</span>
+<div class="viewcode-block" id="SpDMD._update_beta"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._update_beta">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_update_beta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the vector :math:`\\beta` of non-zero amplitudes.</span>
 <span class="sd">        :param np.ndarray alpha: Updated value of :math:`\\alpha_{k+1}` (vector</span>
@@ -258,7 +258,7 @@
             <span class="n">alpha</span> <span class="o">+</span> <span class="n">lmbd</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="SpDMD._update_lagrangian"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._update_lagrangian">[docs]</a>    <span class="k">def</span> <span class="nf">_update_lagrangian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">):</span>
+<div class="viewcode-block" id="SpDMD._update_lagrangian"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._update_lagrangian">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_update_lagrangian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the vector :math:`\\lambda` of Lagrange multipliers.</span>
 <span class="sd">        :param np.ndarray alpha: Updated value of :math:`\\alpha_{k+1}` (vector</span>
@@ -272,7 +272,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">lmbd</span> <span class="o">+</span> <span class="p">(</span><span class="n">alpha</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span></div>
 
-<div class="viewcode-block" id="SpDMD._update"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._update">[docs]</a>    <span class="k">def</span> <span class="nf">_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">):</span>
+<div class="viewcode-block" id="SpDMD._update"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._update">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Operate an entire step of ADMM.</span>
 <span class="sd">        :param np.ndarray beta: Current value of :math:`\\beta_k` (vector of</span>
@@ -289,7 +289,7 @@
 
         <span class="k">return</span> <span class="n">a_new</span><span class="p">,</span> <span class="n">b_new</span><span class="p">,</span> <span class="n">l_new</span></div>
 
-<div class="viewcode-block" id="SpDMD._loop_condition"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._loop_condition">[docs]</a>    <span class="k">def</span> <span class="nf">_loop_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">,</span> <span class="n">old_beta</span><span class="p">):</span>
+<div class="viewcode-block" id="SpDMD._loop_condition"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._loop_condition">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_loop_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">lmbd</span><span class="p">,</span> <span class="n">old_beta</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check whether ADMM can stop now, or should perform another iteration.</span>
 <span class="sd">        :param np.ndarray alpha: Current value of :math:`\\alpha_k` (vector</span>
@@ -314,7 +314,7 @@
 
         <span class="k">return</span> <span class="n">primal_residual</span> <span class="o">&lt;</span> <span class="n">eps_primal</span> <span class="ow">and</span> <span class="n">dual_residual</span> <span class="o">&lt;</span> <span class="n">eps_dual</span></div>
 
-<div class="viewcode-block" id="SpDMD._find_zero_amplitudes"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._find_zero_amplitudes">[docs]</a>    <span class="k">def</span> <span class="nf">_find_zero_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SpDMD._find_zero_amplitudes"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._find_zero_amplitudes">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_find_zero_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Use ADMM to find which amplitudes (i.e. their position in the</span>
 <span class="sd">        DMD amplitudes array) which can be set to zero according to the given</span>
@@ -356,7 +356,7 @@
         <span class="c1"># set to 0</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">old_beta</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zero_absolute_tolerance</span></div>
 
-<div class="viewcode-block" id="SpDMD._optimal_amplitudes"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._optimal_amplitudes">[docs]</a>    <span class="k">def</span> <span class="nf">_optimal_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zero_amplitudes</span><span class="p">):</span>
+<div class="viewcode-block" id="SpDMD._optimal_amplitudes"><a class="viewcode-back" href="../../spdmd.html#pydmd.spdmd.SpDMD._optimal_amplitudes">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_optimal_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zero_amplitudes</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Find the optimal DMD amplitudes with the constraint that the given</span>
 <span class="sd">        indexes should be set to 0.</span>
@@ -410,7 +410,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2025, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2025.
+      <span class="lastupdated">Last updated on Feb 01, 2025.
       </span></p>
   </div>
 

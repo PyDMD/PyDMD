@@ -5,13 +5,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.mrdmd &mdash; PyDMD 2025.1.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+  <title>pydmd.mrdmd &mdash; PyDMD 2025.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=d8b4753c"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=4acbabd7"></script>
       <script src="../../_static/doctools.js?v=888ff710"></script>
       <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -79,28 +79,28 @@
 <span class="sd">Decomposition. SIAM Journal on Applied Dynamical Systems 15.2 (2016): 713-735.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">block_diag</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">block_diag</span>
 
-<span class="kn">from</span> <span class="nn">.dmd_modes_tuner</span> <span class="kn">import</span> <span class="n">select_modes</span>
-<span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
-<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.dmd_modes_tuner</span><span class="w"> </span><span class="kn">import</span> <span class="n">select_modes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.dmdbase</span><span class="w"> </span><span class="kn">import</span> <span class="n">DMDBase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.snapshots</span><span class="w"> </span><span class="kn">import</span> <span class="n">Snapshots</span>
 
 
-<span class="k">class</span> <span class="nc">BinaryTree</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BinaryTree</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple Binary tree&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tree</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
         <span class="n">level_</span><span class="p">,</span> <span class="n">bin_</span> <span class="o">=</span> <span class="n">val</span>
         <span class="k">if</span> <span class="n">level_</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -116,22 +116,22 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="p">[</span><span class="mi">2</span><span class="o">**</span><span class="n">level_</span> <span class="o">+</span> <span class="n">bin_</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
         <span class="n">level_</span><span class="p">,</span> <span class="n">bin_</span> <span class="o">=</span> <span class="n">val</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="p">[</span><span class="mi">2</span><span class="o">**</span><span class="n">level_</span> <span class="o">+</span> <span class="n">bin_</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
 
-    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tree</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">levels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">levels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">index_leaves</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">index_leaves</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="n">level</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="MrDMD"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD">[docs]</a><span class="k">class</span> <span class="nc">MrDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">MrDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Multi-resolution Dynamic Mode Decomposition</span>
 
@@ -145,17 +145,17 @@
 <span class="sd">        and `4`. Default is 2.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dmd</span><span class="p">,</span> <span class="n">max_level</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_cycles</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dmd</span><span class="p">,</span> <span class="n">max_level</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_cycles</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dmd</span> <span class="o">=</span> <span class="n">dmd</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_cycles</span> <span class="o">=</span> <span class="n">max_cycles</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_level</span> <span class="o">=</span> <span class="n">max_level</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_build_tree</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the matrix containing the DMD modes, stored by column.</span>
 
@@ -167,7 +167,7 @@
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the time evolution of each mode.</span>
 
@@ -180,7 +180,7 @@
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the eigenvalues of A tilde.</span>
 
@@ -190,15 +190,15 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span> <span class="k">for</span> <span class="n">dmd</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">])</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This feature has not been implemented yet.&quot;</span><span class="p">)</span>
 
     <span class="nd">@modes_activation_bitmask</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This feature has not been implemented yet.&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the reconstructed data.</span>
 
@@ -220,7 +220,7 @@
             <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="MrDMD._dmd_builder"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD._dmd_builder">[docs]</a>    <span class="k">def</span> <span class="nf">_dmd_builder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD._dmd_builder"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD._dmd_builder">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_dmd_builder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Builds a function which takes in input a level and a leaf count</span>
 <span class="sd">        (i.e. coordinates inside the binary tree) and produces an appropriate</span>
@@ -288,17 +288,17 @@
                     <span class="p">)</span>
                 <span class="p">)</span>
 
-            <span class="k">def</span> <span class="nf">builder_func</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">builder_func</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd</span><span class="p">[</span><span class="n">level</span><span class="p">])</span>
 
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd</span><span class="p">,</span> <span class="n">DMDBase</span><span class="p">):</span>
 
-            <span class="k">def</span> <span class="nf">builder_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">builder_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">builder_func</span></div>
 
-<div class="viewcode-block" id="MrDMD._build_tree"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD._build_tree">[docs]</a>    <span class="k">def</span> <span class="nf">_build_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD._build_tree"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD._build_tree">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_build_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build the internal binary tree that contain the DMD subclasses.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -316,7 +316,7 @@
                 <span class="n">dmd</span> <span class="o">=</span> <span class="n">builder_func</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">]</span> <span class="o">=</span> <span class="n">dmd</span></div>
 
-<div class="viewcode-block" id="MrDMD.time_window_bins"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_bins">[docs]</a>    <span class="k">def</span> <span class="nf">time_window_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.time_window_bins"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_bins">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">time_window_bins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Find which bins are embedded (partially or totally) in a given</span>
 <span class="sd">        time window.</span>
@@ -340,7 +340,7 @@
         <span class="n">indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">indexes</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">indexes</span></div>
 
-<div class="viewcode-block" id="MrDMD.time_window_eigs"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_eigs">[docs]</a>    <span class="k">def</span> <span class="nf">time_window_eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.time_window_eigs"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_eigs">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">time_window_eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the eigenvalues relative to the modes of the bins embedded</span>
 <span class="sd">        (partially or totally) in a given time window.</span>
@@ -353,7 +353,7 @@
         <span class="n">indexes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_window_bins</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">eigs</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="MrDMD.time_window_frequency"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_frequency">[docs]</a>    <span class="k">def</span> <span class="nf">time_window_frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.time_window_frequency"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_frequency">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">time_window_frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the frequencies relative to the modes of the bins embedded</span>
 <span class="sd">        (partially or totally) in a given time window.</span>
@@ -366,7 +366,7 @@
         <span class="n">indexes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_window_bins</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">frequency</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="MrDMD.time_window_growth_rate"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_growth_rate">[docs]</a>    <span class="k">def</span> <span class="nf">time_window_growth_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.time_window_growth_rate"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_growth_rate">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">time_window_growth_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the growth rate values relative to the modes of the bins embedded</span>
 <span class="sd">        (partially or totally) in a given time window.</span>
@@ -381,7 +381,7 @@
             <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">growth_rate</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">]</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="MrDMD.time_window_amplitudes"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_amplitudes">[docs]</a>    <span class="k">def</span> <span class="nf">time_window_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.time_window_amplitudes"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.time_window_amplitudes">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">time_window_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">tend</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the amplitudes relative to the modes of the bins embedded</span>
 <span class="sd">        (partially or totally) in a given time window.</span>
@@ -396,7 +396,7 @@
             <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">amplitudes</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indexes</span><span class="p">]</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="MrDMD.partial_modes"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_modes">[docs]</a>    <span class="k">def</span> <span class="nf">partial_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.partial_modes"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_modes">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">partial_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the modes at the specific `level` and at the specific `node`; if</span>
 <span class="sd">        `node` is not specified, the method returns all the modes of the given</span>
@@ -414,7 +414,7 @@
         <span class="n">leaves</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">index_leaves</span><span class="p">(</span><span class="n">level</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">]</span><span class="o">.</span><span class="n">modes</span> <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="n">leaves</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="MrDMD.partial_dynamics"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_dynamics">[docs]</a>    <span class="k">def</span> <span class="nf">partial_dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.partial_dynamics"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_dynamics">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">partial_dynamics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the time evolution of the specific `level` and of the specific</span>
 <span class="sd">        `node`; if `node` is not specified, the method returns the time</span>
@@ -439,7 +439,7 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">dynamics</span></div>
 
-<div class="viewcode-block" id="MrDMD.partial_eigs"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_eigs">[docs]</a>    <span class="k">def</span> <span class="nf">partial_eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.partial_eigs"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_eigs">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">partial_eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the eigenvalues of the specific `level` and of the specific</span>
 <span class="sd">        `node`; if `node` is not specified, the method returns the eigenvalues</span>
@@ -459,7 +459,7 @@
             <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">]</span><span class="o">.</span><span class="n">eigs</span> <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="n">leaves</span><span class="p">]</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="MrDMD.partial_amplitudes"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_amplitudes">[docs]</a>    <span class="k">def</span> <span class="nf">partial_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.partial_amplitudes"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_amplitudes">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">partial_amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the amplitudes of the specific `level` and of the specific</span>
 <span class="sd">        `node`; if `node` is not specified, the method returns the amplitudes</span>
@@ -479,7 +479,7 @@
             <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">]</span><span class="o">.</span><span class="n">amplitudes</span> <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="n">leaves</span><span class="p">]</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="MrDMD.partial_reconstructed_data"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_reconstructed_data">[docs]</a>    <span class="k">def</span> <span class="nf">partial_reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.partial_reconstructed_data"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_reconstructed_data">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">partial_reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the reconstructed data computed using the modes and the time</span>
 <span class="sd">        evolution at the specific `level` and at the specific `node`; if `node`</span>
@@ -499,7 +499,7 @@
 
         <span class="k">return</span> <span class="n">modes</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dynamics</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MrDMD.partial_time_interval"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_time_interval">[docs]</a>    <span class="k">def</span> <span class="nf">partial_time_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.partial_time_interval"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.partial_time_interval">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">partial_time_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Evaluate the start and end time and the period of a given bin.</span>
 
@@ -525,7 +525,7 @@
         <span class="n">tend</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">+</span> <span class="n">period</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;t0&quot;</span><span class="p">:</span> <span class="n">t0</span><span class="p">,</span> <span class="s2">&quot;tend&quot;</span><span class="p">:</span> <span class="n">tend</span><span class="p">,</span> <span class="s2">&quot;delta&quot;</span><span class="p">:</span> <span class="n">period</span><span class="p">}</span></div>
 
-<div class="viewcode-block" id="MrDMD.enumerate"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.enumerate">[docs]</a>    <span class="k">def</span> <span class="nf">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.enumerate"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.enumerate">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Example:</span>
@@ -540,7 +540,7 @@
             <span class="k">for</span> <span class="n">leaf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="o">.</span><span class="n">index_leaves</span><span class="p">(</span><span class="n">level</span><span class="p">):</span>
                 <span class="k">yield</span> <span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dmd_tree</span><span class="p">[</span><span class="n">level</span><span class="p">,</span> <span class="n">leaf</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="MrDMD.fit"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<div class="viewcode-block" id="MrDMD.fit"><a class="viewcode-back" href="../../mrdmd.html#pydmd.mrdmd.MrDMD.fit">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the Dynamic Modes Decomposition to the input data.</span>
 
@@ -563,7 +563,7 @@
                 <span class="s2">&quot;Redefining `max_level` to </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_level</span><span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">slow_modes</span><span class="p">(</span><span class="n">dmd</span><span class="p">,</span> <span class="n">rho</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">slow_modes</span><span class="p">(</span><span class="n">dmd</span><span class="p">,</span> <span class="n">rho</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">rho</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
 
         <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">snapshots</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -603,7 +603,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2025, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2025.
+      <span class="lastupdated">Last updated on Feb 01, 2025.
       </span></p>
   </div>
 

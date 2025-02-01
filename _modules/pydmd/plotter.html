@@ -5,13 +5,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.plotter &mdash; PyDMD 2025.1.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+  <title>pydmd.plotter &mdash; PyDMD 2025.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=d8b4753c"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=4acbabd7"></script>
       <script src="../../_static/doctools.js?v=888ff710"></script>
       <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -75,26 +75,26 @@
 <span class="sd">Module for DMD plotting.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">splitext</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">splitext</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
-<span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="kn">import</span> <span class="n">Patch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpl_toolkits.axes_grid1</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_axes_locatable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.patches</span><span class="w"> </span><span class="kn">import</span> <span class="n">Patch</span>
 
-<span class="kn">from</span> <span class="nn">pydmd</span> <span class="kn">import</span> <span class="n">MrDMD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydmd</span><span class="w"> </span><span class="kn">import</span> <span class="n">MrDMD</span>
 
-<span class="kn">from</span> <span class="nn">.bopdmd</span> <span class="kn">import</span> <span class="n">BOPDMD</span>
-<span class="kn">from</span> <span class="nn">.hankeldmd</span> <span class="kn">import</span> <span class="n">HankelDMD</span>
-<span class="kn">from</span> <span class="nn">.havok</span> <span class="kn">import</span> <span class="n">HAVOK</span>
-<span class="kn">from</span> <span class="nn">.preprocessing</span> <span class="kn">import</span> <span class="n">PrePostProcessingDMD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.bopdmd</span><span class="w"> </span><span class="kn">import</span> <span class="n">BOPDMD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.hankeldmd</span><span class="w"> </span><span class="kn">import</span> <span class="n">HankelDMD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.havok</span><span class="w"> </span><span class="kn">import</span> <span class="n">HAVOK</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrePostProcessingDMD</span>
 
 <span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;figure.max_open_warning&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
 
-<div class="viewcode-block" id="_enforce_ratio"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter._enforce_ratio">[docs]</a><span class="k">def</span> <span class="nf">_enforce_ratio</span><span class="p">(</span><span class="n">goal_ratio</span><span class="p">,</span> <span class="n">supx</span><span class="p">,</span> <span class="n">infx</span><span class="p">,</span> <span class="n">supy</span><span class="p">,</span> <span class="n">infy</span><span class="p">):</span>
+<div class="viewcode-block" id="_enforce_ratio"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter._enforce_ratio">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">_enforce_ratio</span><span class="p">(</span><span class="n">goal_ratio</span><span class="p">,</span> <span class="n">supx</span><span class="p">,</span> <span class="n">infx</span><span class="p">,</span> <span class="n">supy</span><span class="p">,</span> <span class="n">infy</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the right value of `supx,infx,supy,infy` to obtain the desired</span>
 <span class="sd">    ratio in :func:`plot_eigs`. Ratio is defined as</span>
@@ -135,7 +135,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">supx</span><span class="p">,</span> <span class="n">infx</span><span class="p">,</span> <span class="n">supy</span><span class="p">,</span> <span class="n">infy</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="_plot_limits"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter._plot_limits">[docs]</a><span class="k">def</span> <span class="nf">_plot_limits</span><span class="p">(</span><span class="n">dmd</span><span class="p">,</span> <span class="n">narrow_view</span><span class="p">):</span>
+<div class="viewcode-block" id="_plot_limits"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter._plot_limits">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">_plot_limits</span><span class="p">(</span><span class="n">dmd</span><span class="p">,</span> <span class="n">narrow_view</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">narrow_view</span><span class="p">:</span>
         <span class="n">supx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.05</span>
         <span class="n">infx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.05</span>
@@ -147,7 +147,7 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">dmd</span><span class="o">.</span><span class="n">eigs</span><span class="p">)))</span></div>
 
 
-<div class="viewcode-block" id="plot_eigs"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter.plot_eigs">[docs]</a><span class="k">def</span> <span class="nf">plot_eigs</span><span class="p">(</span>
+<div class="viewcode-block" id="plot_eigs"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter.plot_eigs">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">plot_eigs</span><span class="p">(</span>
     <span class="n">dmd</span><span class="p">,</span>
     <span class="n">show_axes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">show_unit_circle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -282,7 +282,7 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="plot_eigs_mrdmd"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter.plot_eigs_mrdmd">[docs]</a><span class="k">def</span> <span class="nf">plot_eigs_mrdmd</span><span class="p">(</span>
+<div class="viewcode-block" id="plot_eigs_mrdmd"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter.plot_eigs_mrdmd">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">plot_eigs_mrdmd</span><span class="p">(</span>
     <span class="n">dmd</span><span class="p">,</span>
     <span class="n">show_axes</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">show_unit_circle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -395,7 +395,7 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="plot_modes_2D"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter.plot_modes_2D">[docs]</a><span class="k">def</span> <span class="nf">plot_modes_2D</span><span class="p">(</span>
+<div class="viewcode-block" id="plot_modes_2D"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter.plot_modes_2D">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">plot_modes_2D</span><span class="p">(</span>
     <span class="n">dmd</span><span class="p">,</span>
     <span class="n">snapshots_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">index_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -513,7 +513,7 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="plot_snapshots_2D"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter.plot_snapshots_2D">[docs]</a><span class="k">def</span> <span class="nf">plot_snapshots_2D</span><span class="p">(</span>
+<div class="viewcode-block" id="plot_snapshots_2D"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter.plot_snapshots_2D">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">plot_snapshots_2D</span><span class="p">(</span>
     <span class="n">dmd</span><span class="p">,</span>
     <span class="n">snapshots_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">index_snap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -607,7 +607,7 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="plot_summary"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter.plot_summary">[docs]</a><span class="k">def</span> <span class="nf">plot_summary</span><span class="p">(</span>
+<div class="viewcode-block" id="plot_summary"><a class="viewcode-back" href="../../plotter.html#pydmd.plotter.plot_summary">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">plot_summary</span><span class="p">(</span>
     <span class="n">dmd</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1038,7 +1038,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2025, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2025.
+      <span class="lastupdated">Last updated on Feb 01, 2025.
       </span></p>
   </div>
 

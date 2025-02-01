@@ -5,13 +5,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.hankeldmd &mdash; PyDMD 2025.1.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+  <title>pydmd.hankeldmd &mdash; PyDMD 2025.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=d8b4753c"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=4acbabd7"></script>
       <script src="../../_static/doctools.js?v=888ff710"></script>
       <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -80,18 +80,18 @@
 <span class="sd">Applied Dynamical Systems, 2017, 16.4: 2096-2126.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
-<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">copy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numbers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Number</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.dmd</span> <span class="kn">import</span> <span class="n">DMD</span>
-<span class="kn">from</span> <span class="nn">.dmdbase</span> <span class="kn">import</span> <span class="n">DMDBase</span>
-<span class="kn">from</span> <span class="nn">.preprocessing.hankel</span> <span class="kn">import</span> <span class="n">hankel_preprocessing</span>
-<span class="kn">from</span> <span class="nn">.snapshots</span> <span class="kn">import</span> <span class="n">Snapshots</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.dmd</span><span class="w"> </span><span class="kn">import</span> <span class="n">DMD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.dmdbase</span><span class="w"> </span><span class="kn">import</span> <span class="n">DMDBase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.preprocessing.hankel</span><span class="w"> </span><span class="kn">import</span> <span class="n">hankel_preprocessing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.snapshots</span><span class="w"> </span><span class="kn">import</span> <span class="n">Snapshots</span>
 
 
-<div class="viewcode-block" id="HankelDMD"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD">[docs]</a><span class="k">class</span> <span class="nc">HankelDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
+<div class="viewcode-block" id="HankelDMD"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">HankelDMD</span><span class="p">(</span><span class="n">DMDBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Hankel Dynamic Mode Decomposition</span>
 
@@ -134,7 +134,7 @@
 <span class="sd">    :type reconstruction_method: {&#39;first&#39;, &#39;mean&#39;} or array-like</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">svd_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">tlsq_rank</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
@@ -187,7 +187,7 @@
             <span class="n">sub_dmd</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">reconstruction_method</span><span class="o">=</span><span class="n">reconstruction_method</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="HankelDMD._hankel_first_occurrence"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._hankel_first_occurrence">[docs]</a>    <span class="k">def</span> <span class="nf">_hankel_first_occurrence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+<div class="viewcode-block" id="HankelDMD._hankel_first_occurrence"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._hankel_first_occurrence">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_hankel_first_occurrence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For a given `t` such that there is :math:`k \in \mathbb{N}` such that</span>
 <span class="sd">        :math:`t = t_0 + k dt`, return the index of the first column in Hankel</span>
@@ -206,7 +206,7 @@
             <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original_time</span><span class="p">[</span><span class="s2">&quot;t0&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="HankelDMD._update_sub_dmd_time"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._update_sub_dmd_time">[docs]</a>    <span class="k">def</span> <span class="nf">_update_sub_dmd_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="HankelDMD._update_sub_dmd_time"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD._update_sub_dmd_time">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_update_sub_dmd_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Update the time dictionaries (`dmd_time` and `original_time`) of</span>
 <span class="sd">        the auxiliary DMD instance `HankelDMD._sub_dmd` after an update of the</span>
@@ -221,7 +221,7 @@
         <span class="p">)</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reconstructed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_sub_dmd_time</span><span class="p">()</span>
 
         <span class="c1"># we want to return only the requested timesteps</span>
@@ -237,27 +237,27 @@
         <span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">modes</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eigs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">eigs</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">amplitudes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">amplitudes</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">operator</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">svd_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">svd_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">svd_rank</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">ho_snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ho_snapshots</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the time-delay data matrix.</span>
 
@@ -267,18 +267,18 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">snapshots</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span>
 
     <span class="nd">@modes_activation_bitmask</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modes_activation_bitmask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sub_dmd</span><span class="o">.</span><span class="n">modes_activation_bitmask</span> <span class="o">=</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="c1"># The implementation was asking for problems...</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;This operation is not allowed for HankelDMD&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="HankelDMD.fit"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<div class="viewcode-block" id="HankelDMD.fit"><a class="viewcode-back" href="../../hankeldmd.html#pydmd.hankeldmd.HankelDMD.fit">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the Dynamic Modes Decomposition to the input data.</span>
 
@@ -313,7 +313,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2025, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Jan 01, 2025.
+      <span class="lastupdated">Last updated on Feb 01, 2025.
       </span></p>
   </div>
 
