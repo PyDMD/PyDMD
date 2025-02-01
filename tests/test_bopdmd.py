@@ -641,3 +641,22 @@ def test_getter_errors():
 
     with raises(ValueError):
         _ = bopdmd.amplitudes_std
+
+
+def test_fit_econ():
+    """
+    Test that the fit_econ method gives the same results as the fit method.
+    """
+    svd_rank = 2
+    bopdmd = BOPDMD(svd_rank=svd_rank, use_proj=True)
+    bopdmd.fit(Z, t)
+
+    U, s, V = np.linalg.svd(Z)
+    U = U[:, :svd_rank]
+    s = s[:svd_rank]
+    V = V[:svd_rank, :]
+    bopdmd_econ = BOPDMD(svd_rank=svd_rank, use_proj=True, proj_basis=U)
+    bopdmd_econ.fit_econ(s, V, t)
+
+    np.testing.assert_allclose(bopdmd_econ.eigs, bopdmd.eigs)
+    np.testing.assert_allclose(bopdmd_econ.modes, bopdmd.modes)

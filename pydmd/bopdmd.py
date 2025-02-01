@@ -1351,17 +1351,31 @@ class BOPDMD(DMDBase):
                     msg = "Invalid eigenvalue constraint combination provided."
                     raise ValueError(msg)
 
-    def _initialize_alpha(self):
+    def _initialize_alpha(self, s=None, V=None):
         """
         Uses projected trapezoidal rule to approximate the eigenvalues of A in
             z' = Az.
         The computed eigenvalues will serve as our initial guess for alpha.
+        If the singular values and right singular vectors are provided, they
+        will be used to compute the projection. Otherwise, the snapshot data
+        will be projected onto the projection basis.
 
+        :param s: the singular values of the snapshot matrix. If provided, they
+            will be used along with V to compute the projection.
+        :type s: numpy.ndarray
+        :param V: the right singular vectors of the snapshot matrix. If
+            provided, they will be used along with s to compute the projection.
+        :type V: numpy.ndarray
         :return: Approximated eigenvalues of the matrix A.
         :rtype: numpy.ndarray
         """
-        # Project the snapshot data onto the projection basis.
-        ux = self._proj_basis.conj().T.dot(self.snapshots)
+        if s is not None and V is not None:
+            # If the singular values and right singular vectors are provided,
+            # use them to compute the projection.
+            ux = np.diag(s).dot(V)
+        else:
+            # Project the snapshot data onto the projection basis.
+            ux = self._proj_basis.conj().T.dot(self.snapshots)
         ux1 = ux[:, :-1]
         ux2 = ux[:, 1:]
 
@@ -1458,6 +1472,105 @@ class BOPDMD(DMDBase):
 
         # Fit the data.
         self._b = self.operator.compute_operator(snp.T, self._time)
+
+        return self
+
+    def fit_econ(self, s, V, t):
+        """
+        Compute the Optimized Dynamic Mode Decomposition using the
+        SVD results of the snapshot matrix.
+        Use this method if you have pre-computed the SVD and the
+        original snapshot matrix is not avaialble or too large to
+        store in memory.
+        The left singular vectors (U) must be specified as the projection
+        basis when initializing the BOPDMD object.
+
+        :param s: the singular values.
+        :type s: array_like
+        :param V: matrix of right singular vectors, where each row is a
+            different singular vector.
+        :type V: numpy.ndarray
+        :param t: the input time vector.
+        :type t: numpy.ndarray
+        """
+        self._reset()
+        self._time = np.asarray(t).squeeze()
+        s = np.asarray(s).squeeze()
+
+        if self._proj_basis is None or not self._use_proj:
+            msg = """
+            proj_basis must be provided when using fit_econ,
+            and use_proj must be set to True.
+            """
+            raise ValueError(msg)
+        if (
+            not isinstance(self._proj_basis, np.ndarray)
+            or self._proj_basis.ndim != 2
+            or self._proj_basis.shape[1] != self._svd_rank
+        ):
+            msg = (
+                "proj_basis must be a 2D np.ndarray with "
+                f"{self._svd_rank} columns."
+            )
+            raise ValueError(msg)
+
+        if self._time.ndim > 1:
+            msg = "Input time vector t must be one-dimensional."
+            raise ValueError(msg)
+
+        if s.ndim != 1 or len(s) != self._svd_rank:
+            msg = f"s must be one-dimensional and of length {self._svd_rank}."
+            raise ValueError(msg)
+
+        if (
+            not isinstance(V, np.ndarray)
+            or V.ndim != 2
+            or V.shape[0] != self._svd_rank
+            or V.shape[1] != len(self._time)
+        ):
+            msg = (
+                "V must be a 2D numpy.ndarray with shape "
+                f"({self._svd_rank}, {len(self._time)})."
+            )
+            raise ValueError(msg)
+
+        # Set/check the initial guess for the continuous-time DMD eigenvalues.
+        if self._init_alpha is None:
+            self._init_alpha = self._initialize_alpha(s=s, V=V)
+        elif (
+            not isinstance(self._init_alpha, np.ndarray)
+            or self._init_alpha.ndim > 1
+            or len(self._init_alpha) != self._svd_rank
+        ):
+            msg = "init_alpha must be a 1D np.ndarray with {} entries."
+            raise ValueError(msg.format(self._svd_rank))
+
+        # Build the BOP-DMD operator now that the initial alpha and
+        # the projection basis have been defined.
+        self._Atilde = BOPDMDOperator(
+            self._compute_A,
+            self._use_proj,
+            self._init_alpha,
+            self._proj_basis,
+            self._num_trials,
+            self._trial_size,
+            self._eig_sort,
+            self._eig_constraints,
+            self._mode_prox,
+            self._remove_bad_bags,
+            self._bag_warning,
+            self._bag_maxfail,
+            **self._varpro_opts_dict,
+        )
+
+        # Define the snapshots that will be used for fitting.
+        snp = np.diag(s).dot(V)
+
+        # Fit the data.
+        self._b = self.operator.compute_operator(snp.T, self._time)
+
+        # Store the singular values
+        self._singular_values = s
 
         return self
 
