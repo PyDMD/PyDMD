@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "Python Dynamic Mode Decomposition."
 requires-python = ">=3.8"
 dependencies = [
-    "numpy<2",
+    "numpy",
     "scipy>=1.6.0",
     "matplotlib",
     "scikit-learn",
