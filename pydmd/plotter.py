@@ -650,7 +650,10 @@ def plot_summary(
         sizes of all other eigenvalues are then scaled according to eigenvalue
         significance.
     :type max_eig_ms: int
-    :param max_sval_plot: Maximum number of singular values to plot.
+    :param max_sval_plot: Maximum number of singular values to plot. If the DMD
+        instance was fitted via the `fit_econ` method, the maximum number of
+        singular values that can be plotted is determined by the length of the
+        array of singular values passed to `fit_econ`.
     :type max_sval_plot: int
     :param title_fontsize: Fontsize used for subplot titles.
     :type title_fontsize: int
@@ -781,7 +784,14 @@ def plot_summary(
     else:
         # Use input data matrix to compute singular values.
         snp = dmd.snapshots
-    s = np.linalg.svd(snp, full_matrices=False, compute_uv=False)
+    if snp is not None:
+        s = np.linalg.svd(snp, full_matrices=False, compute_uv=False)
+    else:
+        try:
+            s = dmd._singular_values
+        except AttributeError as e:
+            msg = "Snapshots and singular values are not available."
+            raise ValueError(msg) from e
     # Compute the percent of data variance captured by each singular value.
     s_var = s * (100 / np.sum(s))
     s_var = s_var[:max_sval_plot]
