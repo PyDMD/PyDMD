@@ -318,23 +318,40 @@ class BOPDMDOperator(DMDOperator):
         :param absolute_diff: Flag dictating difference matrix calculation.
         :return: Difference vector between omega and other eigenvalues.
         """
+        # if absolute_diff:
+        #     diff = np.abs(np.abs(eigenvalues.imag) - np.abs(omega.imag))
+        #     diff[ind] = np.nan
+        #     return diff
+        #
+        # sign = np.sign(omega.imag)
+        #
+        # # Catch the edge case of the eigenvalues being exactly 0.
+        # if sign == 0.0:
+        #     diff = np.abs(np.abs(eigenvalues.imag) - omega.imag)
+        #     diff[ind] = np.nan
+        #     return diff
+        #
+        # same_sign_index = np.sign(eigenvalues.imag) == sign
+        # opp_sign_eigs = np.copy(eigenvalues.imag)
+        # opp_sign_eigs[same_sign_index] = np.nan
+        # return np.abs(np.abs(opp_sign_eigs) - np.abs(omega.imag))
+
         if absolute_diff:
             diff = np.abs(np.abs(eigenvalues.imag) - np.abs(omega.imag))
             diff[ind] = np.nan
-            return diff
+        else:
+            sign = np.sign(omega.imag)
+            # Catch the edge case of the eigenvalues being exactly 0.
+            if sign == 0.0:
+                diff = np.abs(np.abs(eigenvalues.imag) - omega.imag)
+                diff[ind] = np.nan
+            else:
+                same_sign_index = np.sign(eigenvalues.imag) == sign
+                opp_sign_eigs = np.copy(eigenvalues.imag)
+                opp_sign_eigs[same_sign_index] = np.nan
+                diff = np.abs(np.abs(opp_sign_eigs) - np.abs(omega.imag))
 
-        sign = np.sign(omega.imag)
-
-        # Catch the edge case of the eigenvalues being exactly 0.
-        if sign == 0.0:
-            diff = np.abs(np.abs(eigenvalues.imag) - omega.imag)
-            diff[ind] = np.nan
-            return diff
-
-        same_sign_index = np.sign(eigenvalues.imag) == sign
-        opp_sign_eigs = np.copy(eigenvalues.imag)
-        opp_sign_eigs[same_sign_index] = np.nan
-        return np.abs(np.abs(opp_sign_eigs) - np.abs(omega.imag))
+        return diff
 
     def _force_conj_pairs(self, eigenvalues):
         """Force pairing of complex eigenvalues.
@@ -370,9 +387,18 @@ class BOPDMDOperator(DMDOperator):
 
         # Determine if we have eigenvalues with opposite signs or if we are
         # in a weird state where we might not be able to match eigenvalues.
-        absolute_diff = np.count_nonzero(
-            eigenvalues.imag > 0
-        ) != np.count_nonzero(eigenvalues.imag < 0)
+        # absolute_diff = np.count_nonzero(
+        #     eigenvalues.imag > 0
+        # ) != np.count_nonzero(eigenvalues.imag < 0)
+
+        # Determine if we have eigenvalues with opposite signs or if we are
+        # in a weird state where we might not be able to match eigenvalues.
+        if np.count_nonzero(eigenvalues.imag > 0) == np.count_nonzero(
+            eigenvalues.imag < 0
+        ):
+            absolute_diff = False
+        else:
+            absolute_diff = True
 
         for nomega, omega in enumerate(eigenvalues):
             # Comparing just the imaginary components allows the
