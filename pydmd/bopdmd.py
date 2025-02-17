@@ -16,6 +16,7 @@ from collections import OrderedDict
 from inspect import isfunction
 
 import numpy as np
+from numpy.linalg import LinAlgError
 from scipy.linalg import qr
 from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
@@ -131,6 +132,10 @@ class BOPDMDOperator(DMDOperator):
         or not to print information regarding the method's iterative progress.
         Default is False, don't print information.
     :type verbose: bool
+    :param real_eig_limit: Value limiting the real eigenvalues. Only used
+    when the eigenvalue constraints include "limited" as an option otherwise
+    it has no effect.
+    :type real_eig_limit: float
     """
 
     def __init__(
@@ -147,6 +152,7 @@ class BOPDMDOperator(DMDOperator):
         remove_bad_bags,
         bag_warning,
         bag_maxfail,
+        real_eig_limit,
         init_lambda=1.0,
         maxlam=52,
         lamup=2.0,
@@ -156,6 +162,7 @@ class BOPDMDOperator(DMDOperator):
         eps_stall=1e-12,
         use_fulljac=True,
         verbose=False,
+        varpro_flag=True,
     ):
         self._compute_A = compute_A
         self._use_proj = use_proj
@@ -169,6 +176,8 @@ class BOPDMDOperator(DMDOperator):
         self._remove_bad_bags = remove_bad_bags
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
+        self._real_eig_limit = real_eig_limit
+        self._varpro_flag = varpro_flag
         self._varpro_opts = [
             init_lambda,
             maxlam,
@@ -283,6 +292,145 @@ class BOPDMDOperator(DMDOperator):
                 )
                 warnings.warn(msg.format(opt_name, opt_value, opt_max))
 
+    @staticmethod
+    def _diff_func(eigenvalues, omega, ind, absolute_diff):
+        """Create an array of differences for the imaginary component.
+
+        Used to find the eigenvalue pairs that most closely approximate
+        conjugate pairs. There are two modes of operation for this function
+        given by the `absolute_diff` variable.
+
+        `absolute_diff == True` should be used when there is not an equal number
+        of eigenvalues with positive and negative imaginary components. The
+        difference array is simply found by looking at the absolute
+        difference between imaginary components.
+
+        `absolute_diff == False` should be used when there is an equal number of
+        eigenvalues with positive and negative imaginary components. Here we can
+        restrict ourselves to only looking at the differences between the input
+        eigenvalue (`omega`) and the eigenvalues with an oppositely signed
+        imaginary component. Also used to catch an edge case for `omega.imag
+        == 0`.
+
+        :param eigenvalues: Vector of eigenvalues to calculate the difference
+        :param omega: Currently considered eigenvalue
+        :param ind: Index of omega inside of eigenvalues vector
+        :param absolute_diff: Flag dictating difference matrix calculation.
+        :return: Difference vector between omega and other eigenvalues.
+        """
+        if absolute_diff:
+            diff = np.abs(np.abs(eigenvalues.imag) - np.abs(omega.imag))
+            diff[ind] = np.nan
+            return diff
+
+        sign = np.sign(omega.imag)
+
+        # Catch the edge case of the eigenvalues being exactly 0.
+        if sign == 0.0:
+            diff = np.abs(np.abs(eigenvalues.imag) - omega.imag)
+            diff[ind] = np.nan
+            return diff
+
+        same_sign_index = np.sign(eigenvalues.imag) == sign
+        opp_sign_eigs = np.copy(eigenvalues.imag)
+        opp_sign_eigs[same_sign_index] = np.nan
+        return np.abs(np.abs(opp_sign_eigs) - np.abs(omega.imag))
+
+    def _force_conj_pairs(self, eigenvalues):
+        """Force pairing of complex eigenvalues.
+
+        :param eigenvalues: Vector of original eigenvalues.
+        :type eigenvalues: numpy.ndarray
+        :return: Vector of forced paired eigenvalues.
+        :rtype: numpy.ndarray
+        """
+
+        num_eigs = len(eigenvalues)
+        new_eigs = np.empty(num_eigs, dtype=np.complex64)
+
+        unassigned_inds = set(np.arange(num_eigs))
+        pair_indices = np.zeros((num_eigs // 2, 2))
+        pair_counter = 0
+        num_expected_pairs = num_eigs
+
+        diff_array = np.zeros((num_eigs, num_eigs))
+
+        # If given an odd number of eigenvalues, find the eigenvalue with
+        # the smallest imaginary part and take it to be a DC mode
+        # eigenvalue.
+        if num_eigs % 2 == 1:
+            ind_0 = np.argmin(np.abs(eigenvalues.imag))
+            new_eigs[ind_0] = eigenvalues[ind_0].real + 0j
+            unassigned_inds.remove(ind_0)
+            eigenvalues[ind_0] = np.nan + 1j * np.nan
+            num_expected_pairs -= 1
+            num_eigs_adj = num_eigs - 1
+        else:
+            num_eigs_adj = num_eigs
+
+        # Determine if we have eigenvalues with opposite signs or if we are
+        # in a weird state where we might not be able to match eigenvalues.
+        absolute_diff = np.count_nonzero(
+            eigenvalues.imag > 0
+        ) != np.count_nonzero(eigenvalues.imag < 0)
+
+        for nomega, omega in enumerate(eigenvalues):
+            # Comparing just the imaginary components allows the
+            # conjugate pair identification to be insensitive to the real
+            # part.
+            diff_array[nomega] = BOPDMDOperator._diff_func(
+                eigenvalues, omega, nomega, absolute_diff
+            )
+
+        while unassigned_inds:
+            # Choose the pair that are closest together, pair them, and then
+            # remove them from further consideration.
+            ind_1, ind_2 = np.nonzero(diff_array == np.nanmin(diff_array))
+            ind_1 = ind_1[0]
+            ind_2 = ind_2[0]
+
+            eig_1 = eigenvalues[ind_1]
+            eig_2 = eigenvalues[ind_2]
+
+            unassigned_inds.remove(ind_2)
+            unassigned_inds.remove(ind_1)
+            diff_array[ind_1] = np.nan
+            diff_array[:, ind_1] = np.nan
+            diff_array[:, ind_2] = np.nan
+            diff_array[ind_2] = np.nan
+            pair_indices[pair_counter, 0] = ind_1
+            pair_indices[pair_counter, 1] = ind_2
+            pair_counter += 1
+
+            a = 0.5 * (eig_1.real + eig_2.real)
+            b = 0.5 * (np.abs(eig_1.imag) + np.abs(eig_2.imag))
+
+            # If a conjugate pair is not a conjugate pair because of sign
+            # issues, we can force the solution back to conjugate pairs
+            # by giving them opposite signs.
+            sign_1 = np.sign(eig_1.imag)
+            sign_2 = np.sign(eig_2.imag)
+            if sign_1 == sign_2:
+                # We arbitrarily select one of the pairs to take the
+                # opposite sign
+                sign_1 = -1 * sign_1
+
+            new_eigs[ind_1] = a + 1j * (b * sign_1)
+            new_eigs[ind_2] = a + 1j * (b * sign_2)
+
+        if not len(np.unique(pair_indices)) == num_eigs_adj:
+            # In this case the number of found pairs does not equal the
+            # expected number. Raise an error and let the user know the
+            # current state of the solver eigenvalues.
+            msg = (
+                "Trouble pairing conjugate pairs. \n"
+                f"Pair indices = {pair_indices}"
+                f"eigenvalues = {eigenvalues}"
+            )
+            raise ValueError(msg)
+
+        return np.copy(new_eigs)
+
     def _push_eigenvalues(self, eigenvalues):
         """
         Helper function that constrains the given eigenvalues according to
@@ -296,62 +444,23 @@ class BOPDMDOperator(DMDOperator):
         :return: Vector of constrained eigenvalues.
         :rtype: numpy.ndarray
         """
+
         if isfunction(self._eig_constraints):
             return self._eig_constraints(eigenvalues)
 
         if "conjugate_pairs" in self._eig_constraints:
-            num_eigs = len(eigenvalues)
-            new_eigs = np.empty(num_eigs, dtype="complex")
-
-            # Set of indices -- keeps track of indices of eigenvalues that
-            # still need to be paired with their complex conjugate.
-            unassigned_inds = set(np.arange(num_eigs))
-
-            # If given an odd number of eigenvalues, find the eigenvalue with
-            # the smallest imaginary part and take it to be a real eigenvalue.
-            if num_eigs % 2 == 1:
-                ind_0 = np.argmin(np.abs(eigenvalues.imag))
-                new_eigs[ind_0] = eigenvalues[ind_0].real
-                unassigned_inds.remove(ind_0)
-
-            # Assign complex conjugate pairs until all eigenvalues are paired.
-            while unassigned_inds:
-                # Randomly grab the next unassigned eigenvalue.
-                ind_1 = unassigned_inds.pop()
-                eig_1 = eigenvalues[ind_1]
-
-                # Get the index of the eigenvalue that's closest to being the
-                # complex conjugate of the randomly selected eigenvalue.
-                ind_2 = np.argmin(np.abs(eigenvalues - np.conj(eig_1)))
-
-                # Alert the user if an error occurs while pairing.
-                # Complex conjugate pairs should be unique in theory.
-                if ind_2 not in unassigned_inds:
-                    msg = (
-                        "Error occurred while finding conjugate pairs. "
-                        'Please remove the "conjugate pairs" constraint and '
-                        "check that your system eigenvalues approximately "
-                        "consist of complex conjugate pairs."
-                    )
-                    raise ValueError(msg)
-
-                # Uniquely pair eig_1 and eig_2.
-                eig_2 = eigenvalues[ind_2]
-                unassigned_inds.remove(ind_2)
-
-                # Average their real and imaginary components together.
-                a = 0.5 * (eig_1.real + eig_2.real)
-                b = 0.5 * (np.abs(eig_1.imag) + np.abs(eig_2.imag))
-                new_eigs[ind_1] = a + 1j * (b * np.sign(eig_1.imag))
-                new_eigs[ind_2] = a + 1j * (b * np.sign(eig_2.imag))
-
-            eigenvalues = np.copy(new_eigs)
+            eigenvalues = self._force_conj_pairs(eigenvalues)
 
         if "stable" in self._eig_constraints:
             right_half = eigenvalues.real > 0.0
             eigenvalues[right_half] = 1j * eigenvalues[right_half].imag
         elif "imag" in self._eig_constraints:
             eigenvalues = 1j * eigenvalues.imag
+        elif "limited" in self._eig_constraints:
+            # For eigenvalues with the real part over the limit, reset the real
+            # part to 0 to make the solver try again.
+            too_big = np.abs(eigenvalues.real) > self._real_eig_limit
+            eigenvalues[too_big] = 1j * eigenvalues[too_big].imag
 
         return eigenvalues
 
@@ -500,7 +609,15 @@ class BOPDMDOperator(DMDOperator):
         )
         return H[subset_inds], subset_inds
 
-    def _variable_projection(self, H, t, init_alpha, Phi, dPhi):
+    def _variable_projection(
+        self,
+        H,
+        t,
+        init_alpha,
+        Phi,
+        dPhi,
+        amp_limit,
+    ):
         """
         Variable projection routine for multivariate data.
         Attempts to fit the columns of H as linear combinations of the columns
@@ -520,6 +637,9 @@ class BOPDMDOperator(DMDOperator):
         :param dPhi: (M, N) matrix-valued function dPhi(alpha,t,i) that
             contains the derivatives of Phi wrt the ith component of alpha.
         :type dPhi: function
+        :param amp_limit: Value constraining the fit amplitude (not
+            implemented).
+        :type amp_limit: float
         :return: Tuple of two numpy arrays and a boolean representing:
             1. (N, IS) best-fit matrix B.
             2. (N,) best-fit vector alpha.
@@ -563,23 +683,39 @@ class BOPDMDOperator(DMDOperator):
 
             return residual, objective, error
 
-        def compute_B(alpha):
+        def compute_B(alpha, amp_lim=None):
             """
             Update B for the current alpha.
             """
             # Compute B using least squares.
-            B = np.linalg.lstsq(Phi(alpha, t), H, rcond=None)[0]
+            try:
+                B = np.linalg.lstsq(Phi(alpha, t), H, rcond=None)[0]
+            except LinAlgError:
+                msg = (
+                    f"Could not solve variable projection. This failure is "
+                    f"often the result of the real eigenvalues being too large "
+                    f"and creating infs in the solution. Try "
+                    f"reducing the rank or providing a constraint "
+                    f"on the real eigenvalues.\nEigenvalues={alpha}"
+                )
+                print(msg)
+                raise
 
             # Apply proximal operator if given, and if data isn't projected.
             if self._mode_prox is not None and not self._use_proj:
                 B = self._mode_prox(B)
+
+            # Apply amplitude limits if provided.
+            if amp_lim is not None:
+                b = np.sqrt(np.sum(np.abs(B) ** 2, axis=1))
+                B[b > amp_lim] = np.finfo(float).eps
 
             return B
 
         # Initialize values.
         _lambda = init_lambda
         alpha = self._push_eigenvalues(init_alpha)
-        B = compute_B(alpha)
+        B = compute_B(alpha, amp_lim=amp_limit)
         U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
 
         # Initialize termination flags.
@@ -624,8 +760,16 @@ class BOPDMDOperator(DMDOperator):
             q_out, djac_out, j_pvt = qr(
                 djac_matrix, mode="economic", pivoting=True
             )
-            ij_pvt = np.zeros(IA, dtype=int)
-            ij_pvt[j_pvt] = np.arange(IA, dtype=int)
+            if not self._varpro_flag:
+                # The original python, which is a "mistake" that makes bopdmd
+                # behave more like exact DMD but also keeps the solver from
+                # wandering into bad states.
+                ij_pvt = np.arange(IA)
+                ij_pvt = ij_pvt[j_pvt]
+            elif self._varpro_flag:
+                # Use the true variable projection.
+                ij_pvt = np.zeros(IA, dtype=int)
+                ij_pvt[j_pvt] = np.arange(IA, dtype=int)
             rjac[:IA] = np.triu(djac_out[:IA])
             rhs_top = q_out.conj().T.dot(rhs_temp)
             scales_pvt = scales[j_pvt[:IA]]
@@ -633,7 +777,12 @@ class BOPDMDOperator(DMDOperator):
                 (rhs_top[:IA], np.zeros(IA, dtype="complex")), axis=None
             )
 
-            def step(_lambda, scales_pvt=scales_pvt, rhs=rhs, ij_pvt=ij_pvt):
+            def step(
+                _lambda,
+                scales_pvt=scales_pvt,
+                rhs=rhs,
+                ij_pvt=ij_pvt,
+            ):
                 """
                 Helper function that, when given a step size _lambda,
                 computes and returns the updated step and alpha vectors.
@@ -646,12 +795,13 @@ class BOPDMDOperator(DMDOperator):
                 # Compute the updated alpha vector.
                 alpha_updated = alpha.ravel() + delta.ravel()
                 alpha_updated = self._push_eigenvalues(alpha_updated)
-
                 return delta, alpha_updated
 
             # Take a step using our initial step size init_lambda.
+            if verbose:
+                print(f"alpha before step/n{alpha}")
             delta_0, alpha_0 = step(_lambda)
-            B_0 = compute_B(alpha_0)
+            B_0 = compute_B(alpha_0, amp_lim=amp_limit)
             residual_0, objective_0, error_0 = compute_error(B_0, alpha_0)
 
             # Check actual improvement vs predicted improvement.
@@ -674,7 +824,7 @@ class BOPDMDOperator(DMDOperator):
                 for _ in range(maxlam):
                     _lambda *= lamup
                     delta_0, alpha_0 = step(_lambda)
-                    B_0 = compute_B(alpha_0)
+                    B_0 = compute_B(alpha_0, amp_lim=amp_limit)
                     residual_0, objective_0, error_0 = compute_error(
                         B_0, alpha_0
                     )
@@ -696,6 +846,9 @@ class BOPDMDOperator(DMDOperator):
                 # ...otherwise, update and proceed.
                 alpha, B = alpha_0, B_0
                 residual, objective, error = residual_0, objective_0, error_0
+
+            if verbose:
+                print(f"alpha after step\n{alpha}")
 
             # Update SVD information.
             U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
@@ -748,8 +901,16 @@ class BOPDMDOperator(DMDOperator):
         system matrix, full system matrix, and whether or not convergence
         of the variable projection routine was reached.
         """
+
+        # An amplitude limit is available but not implemented.
+        b_lim = None
         B, alpha, converged = self._variable_projection(
-            H, t, init_alpha, self._exp_function, self._exp_function_deriv
+            H,
+            t,
+            init_alpha,
+            self._exp_function,
+            self._exp_function_deriv,
+            b_lim,
         )
         # Save the modes, eigenvalues, and amplitudes respectively.
         w = B.T
@@ -1024,6 +1185,13 @@ class BOPDMD(DMDBase):
         See `BOPDMDOperator` documentation for default values and descriptions
         for each parameter.
     :type varpro_opts_dict: dict
+    :param real_eig_limit: Value limiting the real eigenvalues. Only used when
+    the eigenvalue constraints include "limited" as an option otherwise it
+    has no effect.
+    :type real_eig_limit: float
+    :param varpro_flag: Indicates if the true variable projection or an
+    approximation of exact DMD is used.
+    :type varpro_flag: bool
     """
 
     def __init__(
@@ -1042,6 +1210,8 @@ class BOPDMD(DMDBase):
         bag_warning=100,
         bag_maxfail=200,
         varpro_opts_dict=None,
+        real_eig_limit=None,
+        varpro_flag=True,
     ):
         self._svd_rank = svd_rank
         self._compute_A = compute_A
@@ -1079,6 +1249,8 @@ class BOPDMD(DMDBase):
         self._check_eig_constraints(eig_constraints)
         self._eig_constraints = eig_constraints
         self._mode_prox = mode_prox
+        self._real_eig_limit = real_eig_limit
+        self._varpro_flag = varpro_flag
 
         self._snapshots_holder = None
         self._time = None
@@ -1340,8 +1512,17 @@ class BOPDMD(DMDBase):
                 raise ValueError(msg)
 
         else:
-            valid_constraints = {"stable", "imag", "conjugate_pairs"}
-            invalid_combos = [{"stable", "imag"}]
+            valid_constraints = {
+                "limited",
+                "stable",
+                "imag",
+                "conjugate_pairs",
+            }
+            invalid_combos = [
+                {"stable", "imag"},
+                {"stable", "limited"},
+                {"imag", "limited"},
+            ]
 
             if len(eig_constraints.difference(valid_constraints)) != 0:
                 raise ValueError("Invalid eigenvalue constraint provided.")
@@ -1461,6 +1642,8 @@ class BOPDMD(DMDBase):
             self._remove_bad_bags,
             self._bag_warning,
             self._bag_maxfail,
+            self._real_eig_limit,
+            varpro_flag=self._varpro_flag,
             **self._varpro_opts_dict,
         )
 
@@ -1560,6 +1743,7 @@ class BOPDMD(DMDBase):
             self._remove_bad_bags,
             self._bag_warning,
             self._bag_maxfail,
+            self._real_eig_limit,
             **self._varpro_opts_dict,
         )
 
