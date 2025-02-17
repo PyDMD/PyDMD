@@ -318,40 +318,23 @@ class BOPDMDOperator(DMDOperator):
         :param absolute_diff: Flag dictating difference matrix calculation.
         :return: Difference vector between omega and other eigenvalues.
         """
-        # if absolute_diff:
-        #     diff = np.abs(np.abs(eigenvalues.imag) - np.abs(omega.imag))
-        #     diff[ind] = np.nan
-        #     return diff
-        #
-        # sign = np.sign(omega.imag)
-        #
-        # # Catch the edge case of the eigenvalues being exactly 0.
-        # if sign == 0.0:
-        #     diff = np.abs(np.abs(eigenvalues.imag) - omega.imag)
-        #     diff[ind] = np.nan
-        #     return diff
-        #
-        # same_sign_index = np.sign(eigenvalues.imag) == sign
-        # opp_sign_eigs = np.copy(eigenvalues.imag)
-        # opp_sign_eigs[same_sign_index] = np.nan
-        # return np.abs(np.abs(opp_sign_eigs) - np.abs(omega.imag))
-
         if absolute_diff:
             diff = np.abs(np.abs(eigenvalues.imag) - np.abs(omega.imag))
             diff[ind] = np.nan
-        else:
-            sign = np.sign(omega.imag)
-            # Catch the edge case of the eigenvalues being exactly 0.
-            if sign == 0.0:
-                diff = np.abs(np.abs(eigenvalues.imag) - omega.imag)
-                diff[ind] = np.nan
-            else:
-                same_sign_index = np.sign(eigenvalues.imag) == sign
-                opp_sign_eigs = np.copy(eigenvalues.imag)
-                opp_sign_eigs[same_sign_index] = np.nan
-                diff = np.abs(np.abs(opp_sign_eigs) - np.abs(omega.imag))
+            return diff
 
-        return diff
+        sign = np.sign(omega.imag)
+
+        # Catch the edge case of the eigenvalues being exactly 0.
+        if sign == 0.0:
+            diff = np.abs(np.abs(eigenvalues.imag) - omega.imag)
+            diff[ind] = np.nan
+            return diff
+
+        same_sign_index = np.sign(eigenvalues.imag) == sign
+        opp_sign_eigs = np.copy(eigenvalues.imag)
+        opp_sign_eigs[same_sign_index] = np.nan
+        return np.abs(np.abs(opp_sign_eigs) - np.abs(omega.imag))
 
     def _force_conj_pairs(self, eigenvalues):
         """Force pairing of complex eigenvalues.
@@ -363,7 +346,7 @@ class BOPDMDOperator(DMDOperator):
         """
 
         num_eigs = len(eigenvalues)
-        new_eigs = np.empty(num_eigs, dtype="complex")
+        new_eigs = np.empty(num_eigs, dtype=np.complex64)
 
         unassigned_inds = set(np.arange(num_eigs))
         pair_indices = np.zeros((num_eigs // 2, 2))
@@ -387,18 +370,9 @@ class BOPDMDOperator(DMDOperator):
 
         # Determine if we have eigenvalues with opposite signs or if we are
         # in a weird state where we might not be able to match eigenvalues.
-        # absolute_diff = np.count_nonzero(
-        #     eigenvalues.imag > 0
-        # ) != np.count_nonzero(eigenvalues.imag < 0)
-
-        # Determine if we have eigenvalues with opposite signs or if we are
-        # in a weird state where we might not be able to match eigenvalues.
-        if np.count_nonzero(eigenvalues.imag > 0) == np.count_nonzero(
-            eigenvalues.imag < 0
-        ):
-            absolute_diff = False
-        else:
-            absolute_diff = True
+        absolute_diff = np.count_nonzero(
+            eigenvalues.imag > 0
+        ) != np.count_nonzero(eigenvalues.imag < 0)
 
         for nomega, omega in enumerate(eigenvalues):
             # Comparing just the imaginary components allows the
@@ -434,8 +408,8 @@ class BOPDMDOperator(DMDOperator):
             # If a conjugate pair is not a conjugate pair because of sign
             # issues, we can force the solution back to conjugate pairs
             # by giving them opposite signs.
-            sign_1 = np.sign(eig_1)
-            sign_2 = np.sign(eig_2)
+            sign_1 = np.sign(eig_1.imag)
+            sign_2 = np.sign(eig_2.imag)
             if sign_1 == sign_2:
                 # We arbitrarily select one of the pairs to take the
                 # opposite sign
@@ -718,8 +692,8 @@ class BOPDMDOperator(DMDOperator):
                 B = np.linalg.lstsq(Phi(alpha, t), H, rcond=None)[0]
             except LinAlgError:
                 msg = (
-                    f"Could not solve variable projection. This failure is"
-                    f"often the result of the real eigenvalues being too large"
+                    f"Could not solve variable projection. This failure is "
+                    f"often the result of the real eigenvalues being too large "
                     f"and creating infs in the solution. Try "
                     f"reducing the rank or providing a constraint "
                     f"on the real eigenvalues.\nEigenvalues={alpha}"
