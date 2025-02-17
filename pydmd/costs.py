@@ -393,7 +393,10 @@ class COSTS:
             # Do not apply a window kerning prior to fitting each window.
             lv_kern = np.ones(window_length)
         else:
-            raise ValueError("Invalid `kern_method` provided.")
+            raise ValueError(
+                f"Unrecognized argument for `kern_method` provided:"
+                f" {kern_method}. Valid options are `flat` and `kern`."
+            )
 
         return lv_kern
 
@@ -433,6 +436,12 @@ class COSTS:
         # the propagation of errors at the edge of the time domain.
         elif direction == "backward":
             recon_filter[: (window_length // 2)] = 1
+        elif direction is not None:
+            raise ValueError(
+                f"Unrecognized option for `direction` provided. Provided "
+                f"argument was {direction}. Valid options are `forward`, "
+                f"`backward`, and `None`."
+            )
 
         return recon_filter
 
@@ -1054,7 +1063,7 @@ class COSTS:
             elif k == self._n_slides - 1:
                 direction = "forward"
             else:
-                direction = "kern"
+                direction = None
 
             # Convolve each windowed reconstruction with a gaussian filter.
             # Weights points in the middle of the window and de-emphasizes the

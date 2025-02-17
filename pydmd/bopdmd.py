@@ -378,7 +378,7 @@ class BOPDMDOperator(DMDOperator):
             # Comparing just the imaginary components allows the
             # conjugate pair identification to be insensitive to the real
             # part.
-            diff_array[nomega] = self._diff_func(
+            diff_array[nomega] = BOPDMDOperator._diff_func(
                 eigenvalues, omega, nomega, absolute_diff
             )
 

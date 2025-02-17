@@ -1074,7 +1074,7 @@ class mrCOSTS:
                 elif k == mrd.n_slides - 1:
                     direction = "forward"
                 else:
-                    direction = "kern"
+                    direction = None
 
                 # Convolve each windowed reconstruction with a gaussian filter.
                 # Weights points in the middle of the window and
