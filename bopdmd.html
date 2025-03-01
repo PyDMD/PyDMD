@@ -6,13 +6,13 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BOPDMD: Optimized DMD and Bagging, Optimized DMD &mdash; PyDMD 2025.2.1 documentation</title>
+  <title>BOPDMD: Optimized DMD and Bagging, Optimized DMD &mdash; PyDMD 2025.3.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=4acbabd7"></script>
+      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=3b1ee18e"></script>
       <script src="_static/doctools.js?v=888ff710"></script>
       <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
@@ -222,18 +222,29 @@ combination of eigenvalue constraints</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">_initialize_alpha</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD._initialize_alpha"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="sig-name descname"><span class="pre">_initialize_alpha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD._initialize_alpha"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><dl class="simple">
 <dt>Uses projected trapezoidal rule to approximate the eigenvalues of A in</dt><dd><p>z’ = Az.</p>
 </dd>
 </dl>
-<p>The computed eigenvalues will serve as our initial guess for alpha.</p>
+<p>The computed eigenvalues will serve as our initial guess for alpha.
+If the singular values and right singular vectors are provided, they
+will be used to compute the projection. Otherwise, the snapshot data
+will be projected onto the projection basis.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Approximated eigenvalues of the matrix A.</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – the singular values of the snapshot matrix. If provided, they
+will be used along with V to compute the projection.</p></li>
+<li><p><strong>V</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – the right singular vectors of the snapshot matrix. If
+provided, they will be used along with s to compute the projection.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)">numpy.ndarray</a></p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Approximated eigenvalues of the matrix A.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)">numpy.ndarray</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -330,6 +341,28 @@ combination of eigenvalue constraints</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>X</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input snapshots.</p></li>
 <li><p><strong>t</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a><em> or </em><em>iterable</em>) – the input time vector.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">fit_econ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD.fit_econ"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Compute the Optimized Dynamic Mode Decomposition using the
+SVD results of the snapshot matrix.
+Use this method if you have pre-computed the SVD and the
+original snapshot matrix is not avaialble or too large to
+store in memory.
+The left singular vectors (U) must be specified as the projection
+basis when initializing the BOPDMD object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s</strong> (<em>array_like</em>) – the singular values.</p></li>
+<li><p><strong>V</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – matrix of right singular vectors, where each row is a
+different singular vector.</p></li>
+<li><p><strong>t</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – the input time vector.</p></li>
 </ul>
 </dd>
 </dl>
@@ -741,7 +774,7 @@ of the matrix X.</p>
 <dd class="field-even"><p>Derivatives of Phi(alpha, t) with respect to alpha[i].</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html#scipy.sparse.csr_matrix" title="(in SciPy v1.15.1)">scipy.sparse.csr_matrix</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html#scipy.sparse.csr_matrix" title="(in SciPy v1.15.2)">scipy.sparse.csr_matrix</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -916,7 +949,7 @@ generates a warning if any value lies outside of the recommended range.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2025, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Feb 01, 2025.
+      <span class="lastupdated">Last updated on Mar 01, 2025.
       </span></p>
   </div>
 

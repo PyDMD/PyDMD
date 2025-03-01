@@ -5,13 +5,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.plotter &mdash; PyDMD 2025.2.1 documentation</title>
+  <title>pydmd.plotter &mdash; PyDMD 2025.3.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=4acbabd7"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=3b1ee18e"></script>
       <script src="../../_static/doctools.js?v=888ff710"></script>
       <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -723,7 +723,10 @@
 <span class="sd">        sizes of all other eigenvalues are then scaled according to eigenvalue</span>
 <span class="sd">        significance.</span>
 <span class="sd">    :type max_eig_ms: int</span>
-<span class="sd">    :param max_sval_plot: Maximum number of singular values to plot.</span>
+<span class="sd">    :param max_sval_plot: Maximum number of singular values to plot. If the DMD</span>
+<span class="sd">        instance was fitted via the `fit_econ` method, the maximum number of</span>
+<span class="sd">        singular values that can be plotted is determined by the length of the</span>
+<span class="sd">        array of singular values passed to `fit_econ`.</span>
 <span class="sd">    :type max_sval_plot: int</span>
 <span class="sd">    :param title_fontsize: Fontsize used for subplot titles.</span>
 <span class="sd">    :type title_fontsize: int</span>
@@ -854,7 +857,14 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Use input data matrix to compute singular values.</span>
         <span class="n">snp</span> <span class="o">=</span> <span class="n">dmd</span><span class="o">.</span><span class="n">snapshots</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">snp</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">compute_uv</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">snp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">snp</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">compute_uv</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">dmd</span><span class="o">.</span><span class="n">_singular_values</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Snapshots and singular values are not available.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
     <span class="c1"># Compute the percent of data variance captured by each singular value.</span>
     <span class="n">s_var</span> <span class="o">=</span> <span class="n">s</span> <span class="o">*</span> <span class="p">(</span><span class="mi">100</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
     <span class="n">s_var</span> <span class="o">=</span> <span class="n">s_var</span><span class="p">[:</span><span class="n">max_sval_plot</span><span class="p">]</span>
@@ -1038,7 +1048,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2025, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Feb 01, 2025.
+      <span class="lastupdated">Last updated on Mar 01, 2025.
       </span></p>
   </div>
 
