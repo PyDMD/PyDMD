@@ -270,16 +270,14 @@ class DMDc(DMDBase):
         eigs = np.power(
             self.eigs, self.dmd_time["dt"] // self.original_time["dt"]
         )
-        A = np.linalg.multi_dot(
-            [self.modes, np.diag(eigs), np.linalg.pinv(self.modes)]
-        )
-
+        
+        pinv_modes = np.linalg.pinv(self.modes)
         data = [self.snapshots[:, i] for i in range(self._lag)]
-
         expected_shape = data[0].shape
 
         for i, u in enumerate(controlin.T):
-            arr = A.dot(data[i]) + self._B.dot(u)
+            arr = np.linalg.multi_dot(
+                [self.modes, np.diag(eigs), pinv_modes, data[i]]) + self._B.dot(u)
             if arr.shape != expected_shape:
                 raise ValueError(
                     f"Invalid shape: expected {expected_shape}, got {arr.shape}"
