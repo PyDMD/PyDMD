@@ -6,13 +6,13 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BOPDMD: Optimized DMD and Bagging, Optimized DMD &mdash; PyDMD 2025.3.1 documentation</title>
+  <title>BOPDMD: Optimized DMD and Bagging, Optimized DMD &mdash; PyDMD 2025.4.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=3b1ee18e"></script>
+      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b5451040"></script>
       <script src="_static/doctools.js?v=888ff710"></script>
       <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
@@ -111,7 +111,7 @@ decomposition (bop-dmd) for robust, stable forecasting with spatial and
 temporal uncertainty-quantification. 2021. arXiv:2107.10878.</p>
 <dl class="py class">
 <dt class="sig sig-object py">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BOPDMD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">svd_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_A</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_proj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eig_sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eig_constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode_prox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_bad_bags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bag_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bag_maxfail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">varpro_opts_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BOPDMD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">svd_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_A</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_proj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eig_sort</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eig_constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode_prox</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_bad_bags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bag_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bag_maxfail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">varpro_opts_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_eig_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">varpro_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMD"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDBase</span></code></p>
 <p>Bagging, Optimized Dynamic Mode Decomposition.</p>
 <dl class="field-list simple">
@@ -188,9 +188,16 @@ for variable projection. The following parameters may be specified:
 any parameters not specified in <cite>varpro_opts_dict</cite>.
 See <cite>BOPDMDOperator</cite> documentation for default values and descriptions
 for each parameter.</p></li>
+<li><p><strong>real_eig_limit</strong> – Value limiting the real eigenvalues. Only used when</p></li>
 </ul>
 </dd>
 </dl>
+<p>the eigenvalue constraints include “limited” as an option otherwise it
+has no effect.
+:type real_eig_limit: float
+:param varpro_flag: Indicates if the true variable projection or an
+approximation of exact DMD is used.
+:type varpro_flag: bool</p>
 <dl class="py property">
 <dt class="sig sig-object py">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">A</span></span></dt>
@@ -560,7 +567,7 @@ variable projection parameter values.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BOPDMDOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compute_A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_proj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_basis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_trials</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eig_sort</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eig_constraints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode_prox</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_bad_bags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bag_warning</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bag_maxfail</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_lambda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxlam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">52</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lamup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_levmarq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_stall</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fulljac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMDOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BOPDMDOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compute_A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_proj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proj_basis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_trials</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trial_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eig_sort</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eig_constraints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode_prox</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_bad_bags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bag_warning</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bag_maxfail</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_eig_limit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_lambda</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxlam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">52</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lamup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_levmarq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_stall</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fulljac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">varpro_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMDOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDOperator</span></code></p>
 <p>BOP-DMD operator.</p>
 <dl class="field-list simple">
@@ -652,9 +659,13 @@ True, use full expression.</p></li>
 messages that arise during the variable projection routine, and whether
 or not to print information regarding the method’s iterative progress.
 Default is False, don’t print information.</p></li>
+<li><p><strong>real_eig_limit</strong> – Value limiting the real eigenvalues. Only used</p></li>
 </ul>
 </dd>
 </dl>
+<p>when the eigenvalue constraints include “limited” as an option otherwise
+it has no effect.
+:type real_eig_limit: float</p>
 <dl class="py property">
 <dt class="sig sig-object py">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">A</span></span></dt>
@@ -740,6 +751,38 @@ of the matrix X.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_diff_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eigenvalues</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">absolute_diff</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMDOperator._diff_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Create an array of differences for the imaginary component.</p>
+<p>Used to find the eigenvalue pairs that most closely approximate
+conjugate pairs. There are two modes of operation for this function
+given by the <cite>absolute_diff</cite> variable.</p>
+<p><cite>absolute_diff == True</cite> should be used when there is not an equal number
+of eigenvalues with positive and negative imaginary components. The
+difference array is simply found by looking at the absolute
+difference between imaginary components.</p>
+<p><cite>absolute_diff == False</cite> should be used when there is an equal number of
+eigenvalues with positive and negative imaginary components. Here we can
+restrict ourselves to only looking at the differences between the input
+eigenvalue (<cite>omega</cite>) and the eigenvalues with an oppositely signed
+imaginary component. Also used to catch an edge case for <cite>omega.imag
+== 0</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>eigenvalues</strong> – Vector of eigenvalues to calculate the difference</p></li>
+<li><p><strong>omega</strong> – Currently considered eigenvalue</p></li>
+<li><p><strong>ind</strong> – Index of omega inside of eigenvalues vector</p></li>
+<li><p><strong>absolute_diff</strong> – Flag dictating difference matrix calculation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Difference vector between omega and other eigenvalues.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">_exp_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMDOperator._exp_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Matrix of exponentials.</p>
 <dl class="field-list simple">
@@ -781,6 +824,23 @@ of the matrix X.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_force_conj_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eigenvalues</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMDOperator._force_conj_pairs"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<dd><p>Force pairing of complex eigenvalues.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>eigenvalues</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – Vector of original eigenvalues.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Vector of forced paired eigenvalues.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
 <span class="sig-name descname"><span class="pre">_push_eigenvalues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eigenvalues</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMDOperator._push_eigenvalues"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Helper function that constrains the given eigenvalues according to
 the arguments found in <cite>self._eig_constraints</cite>. If no constraints were
@@ -811,7 +871,7 @@ of the variable projection routine was reached.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">_variable_projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Phi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dPhi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMDOperator._variable_projection"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
+<span class="sig-name descname"><span class="pre">_variable_projection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Phi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dPhi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amp_limit</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pydmd/bopdmd.html#BOPDMDOperator._variable_projection"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
 <dd><p>Variable projection routine for multivariate data.
 Attempts to fit the columns of H as linear combinations of the columns
 of Phi(alpha,t) such that H = Phi(alpha,t)B. Note that M denotes the
@@ -827,6 +887,8 @@ of the alpha vector.</p>
 <li><p><strong>Phi</strong> (<em>function</em>) – (M, N) matrix-valued function Phi(alpha,t).</p></li>
 <li><p><strong>dPhi</strong> (<em>function</em>) – (M, N) matrix-valued function dPhi(alpha,t,i) that
 contains the derivatives of Phi wrt the ith component of alpha.</p></li>
+<li><p><strong>amp_limit</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Value constraining the fit amplitude (not
+implemented).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -949,7 +1011,7 @@ generates a warning if any value lies outside of the recommended range.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2025, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Mar 01, 2025.
+      <span class="lastupdated">Last updated on Apr 01, 2025.
       </span></p>
   </div>
 

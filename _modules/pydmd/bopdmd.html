@@ -5,13 +5,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>pydmd.bopdmd &mdash; PyDMD 2025.3.1 documentation</title>
+  <title>pydmd.bopdmd &mdash; PyDMD 2025.4.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
 
   
-      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=3b1ee18e"></script>
+      <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=b5451040"></script>
       <script src="../../_static/doctools.js?v=888ff710"></script>
       <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -89,6 +89,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">inspect</span><span class="w"> </span><span class="kn">import</span> <span class="n">isfunction</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">qr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">csr_matrix</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
@@ -204,6 +205,10 @@
 <span class="sd">        or not to print information regarding the method&#39;s iterative progress.</span>
 <span class="sd">        Default is False, don&#39;t print information.</span>
 <span class="sd">    :type verbose: bool</span>
+<span class="sd">    :param real_eig_limit: Value limiting the real eigenvalues. Only used</span>
+<span class="sd">    when the eigenvalue constraints include &quot;limited&quot; as an option otherwise</span>
+<span class="sd">    it has no effect.</span>
+<span class="sd">    :type real_eig_limit: float</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -220,6 +225,7 @@
         <span class="n">remove_bad_bags</span><span class="p">,</span>
         <span class="n">bag_warning</span><span class="p">,</span>
         <span class="n">bag_maxfail</span><span class="p">,</span>
+        <span class="n">real_eig_limit</span><span class="p">,</span>
         <span class="n">init_lambda</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
         <span class="n">maxlam</span><span class="o">=</span><span class="mi">52</span><span class="p">,</span>
         <span class="n">lamup</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
@@ -229,6 +235,7 @@
         <span class="n">eps_stall</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
         <span class="n">use_fulljac</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">varpro_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_A</span> <span class="o">=</span> <span class="n">compute_A</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_use_proj</span> <span class="o">=</span> <span class="n">use_proj</span>
@@ -242,6 +249,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_remove_bad_bags</span> <span class="o">=</span> <span class="n">remove_bad_bags</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_bag_warning</span> <span class="o">=</span> <span class="n">bag_warning</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_bag_maxfail</span> <span class="o">=</span> <span class="n">bag_maxfail</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_real_eig_limit</span> <span class="o">=</span> <span class="n">real_eig_limit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_flag</span> <span class="o">=</span> <span class="n">varpro_flag</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_opts</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">init_lambda</span><span class="p">,</span>
             <span class="n">maxlam</span><span class="p">,</span>
@@ -356,6 +365,145 @@
                 <span class="p">)</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">opt_name</span><span class="p">,</span> <span class="n">opt_value</span><span class="p">,</span> <span class="n">opt_max</span><span class="p">))</span></div>
 
+<div class="viewcode-block" id="BOPDMDOperator._diff_func"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._diff_func">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_diff_func</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">ind</span><span class="p">,</span> <span class="n">absolute_diff</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create an array of differences for the imaginary component.</span>
+
+<span class="sd">        Used to find the eigenvalue pairs that most closely approximate</span>
+<span class="sd">        conjugate pairs. There are two modes of operation for this function</span>
+<span class="sd">        given by the `absolute_diff` variable.</span>
+
+<span class="sd">        `absolute_diff == True` should be used when there is not an equal number</span>
+<span class="sd">        of eigenvalues with positive and negative imaginary components. The</span>
+<span class="sd">        difference array is simply found by looking at the absolute</span>
+<span class="sd">        difference between imaginary components.</span>
+
+<span class="sd">        `absolute_diff == False` should be used when there is an equal number of</span>
+<span class="sd">        eigenvalues with positive and negative imaginary components. Here we can</span>
+<span class="sd">        restrict ourselves to only looking at the differences between the input</span>
+<span class="sd">        eigenvalue (`omega`) and the eigenvalues with an oppositely signed</span>
+<span class="sd">        imaginary component. Also used to catch an edge case for `omega.imag</span>
+<span class="sd">        == 0`.</span>
+
+<span class="sd">        :param eigenvalues: Vector of eigenvalues to calculate the difference</span>
+<span class="sd">        :param omega: Currently considered eigenvalue</span>
+<span class="sd">        :param ind: Index of omega inside of eigenvalues vector</span>
+<span class="sd">        :param absolute_diff: Flag dictating difference matrix calculation.</span>
+<span class="sd">        :return: Difference vector between omega and other eigenvalues.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">absolute_diff</span><span class="p">:</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">omega</span><span class="o">.</span><span class="n">imag</span><span class="p">))</span>
+            <span class="n">diff</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="k">return</span> <span class="n">diff</span>
+
+        <span class="n">sign</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">omega</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+
+        <span class="c1"># Catch the edge case of the eigenvalues being exactly 0.</span>
+        <span class="k">if</span> <span class="n">sign</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">-</span> <span class="n">omega</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+            <span class="n">diff</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="k">return</span> <span class="n">diff</span>
+
+        <span class="n">same_sign_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">==</span> <span class="n">sign</span>
+        <span class="n">opp_sign_eigs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+        <span class="n">opp_sign_eigs</span><span class="p">[</span><span class="n">same_sign_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">opp_sign_eigs</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">omega</span><span class="o">.</span><span class="n">imag</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="BOPDMDOperator._force_conj_pairs"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._force_conj_pairs">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_force_conj_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eigenvalues</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Force pairing of complex eigenvalues.</span>
+
+<span class="sd">        :param eigenvalues: Vector of original eigenvalues.</span>
+<span class="sd">        :type eigenvalues: numpy.ndarray</span>
+<span class="sd">        :return: Vector of forced paired eigenvalues.</span>
+<span class="sd">        :rtype: numpy.ndarray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">num_eigs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span>
+        <span class="n">new_eigs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">num_eigs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+
+        <span class="n">unassigned_inds</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_eigs</span><span class="p">))</span>
+        <span class="n">pair_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_eigs</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">pair_counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">num_expected_pairs</span> <span class="o">=</span> <span class="n">num_eigs</span>
+
+        <span class="n">diff_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_eigs</span><span class="p">,</span> <span class="n">num_eigs</span><span class="p">))</span>
+
+        <span class="c1"># If given an odd number of eigenvalues, find the eigenvalue with</span>
+        <span class="c1"># the smallest imaginary part and take it to be a DC mode</span>
+        <span class="c1"># eigenvalue.</span>
+        <span class="k">if</span> <span class="n">num_eigs</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">ind_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">imag</span><span class="p">))</span>
+            <span class="n">new_eigs</span><span class="p">[</span><span class="n">ind_0</span><span class="p">]</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">ind_0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="mi">0</span><span class="n">j</span>
+            <span class="n">unassigned_inds</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ind_0</span><span class="p">)</span>
+            <span class="n">eigenvalues</span><span class="p">[</span><span class="n">ind_0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">num_expected_pairs</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">num_eigs_adj</span> <span class="o">=</span> <span class="n">num_eigs</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">num_eigs_adj</span> <span class="o">=</span> <span class="n">num_eigs</span>
+
+        <span class="c1"># Determine if we have eigenvalues with opposite signs or if we are</span>
+        <span class="c1"># in a weird state where we might not be able to match eigenvalues.</span>
+        <span class="n">absolute_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span>
+            <span class="n">eigenvalues</span><span class="o">.</span><span class="n">imag</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="p">)</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">imag</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">nomega</span><span class="p">,</span> <span class="n">omega</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">):</span>
+            <span class="c1"># Comparing just the imaginary components allows the</span>
+            <span class="c1"># conjugate pair identification to be insensitive to the real</span>
+            <span class="c1"># part.</span>
+            <span class="n">diff_array</span><span class="p">[</span><span class="n">nomega</span><span class="p">]</span> <span class="o">=</span> <span class="n">BOPDMDOperator</span><span class="o">.</span><span class="n">_diff_func</span><span class="p">(</span>
+                <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">nomega</span><span class="p">,</span> <span class="n">absolute_diff</span>
+            <span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">unassigned_inds</span><span class="p">:</span>
+            <span class="c1"># Choose the pair that are closest together, pair them, and then</span>
+            <span class="c1"># remove them from further consideration.</span>
+            <span class="n">ind_1</span><span class="p">,</span> <span class="n">ind_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">diff_array</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">diff_array</span><span class="p">))</span>
+            <span class="n">ind_1</span> <span class="o">=</span> <span class="n">ind_1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ind_2</span> <span class="o">=</span> <span class="n">ind_2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">eig_1</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">ind_1</span><span class="p">]</span>
+            <span class="n">eig_2</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">ind_2</span><span class="p">]</span>
+
+            <span class="n">unassigned_inds</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ind_2</span><span class="p">)</span>
+            <span class="n">unassigned_inds</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ind_1</span><span class="p">)</span>
+            <span class="n">diff_array</span><span class="p">[</span><span class="n">ind_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">diff_array</span><span class="p">[:,</span> <span class="n">ind_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">diff_array</span><span class="p">[:,</span> <span class="n">ind_2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">diff_array</span><span class="p">[</span><span class="n">ind_2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">pair_indices</span><span class="p">[</span><span class="n">pair_counter</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind_1</span>
+            <span class="n">pair_indices</span><span class="p">[</span><span class="n">pair_counter</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ind_2</span>
+            <span class="n">pair_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="n">a</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">eig_1</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="n">eig_2</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eig_1</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eig_2</span><span class="o">.</span><span class="n">imag</span><span class="p">))</span>
+
+            <span class="c1"># If a conjugate pair is not a conjugate pair because of sign</span>
+            <span class="c1"># issues, we can force the solution back to conjugate pairs</span>
+            <span class="c1"># by giving them opposite signs.</span>
+            <span class="n">sign_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">eig_1</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+            <span class="n">sign_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">eig_2</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sign_1</span> <span class="o">==</span> <span class="n">sign_2</span><span class="p">:</span>
+                <span class="c1"># We arbitrarily select one of the pairs to take the</span>
+                <span class="c1"># opposite sign</span>
+                <span class="n">sign_1</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">sign_1</span>
+
+            <span class="n">new_eigs</span><span class="p">[</span><span class="n">ind_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">sign_1</span><span class="p">)</span>
+            <span class="n">new_eigs</span><span class="p">[</span><span class="n">ind_2</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">sign_2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">pair_indices</span><span class="p">))</span> <span class="o">==</span> <span class="n">num_eigs_adj</span><span class="p">:</span>
+            <span class="c1"># In this case the number of found pairs does not equal the</span>
+            <span class="c1"># expected number. Raise an error and let the user know the</span>
+            <span class="c1"># current state of the solver eigenvalues.</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Trouble pairing conjugate pairs. </span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Pair indices = </span><span class="si">{</span><span class="n">pair_indices</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;eigenvalues = </span><span class="si">{</span><span class="n">eigenvalues</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">new_eigs</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="BOPDMDOperator._push_eigenvalues"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._push_eigenvalues">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_push_eigenvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eigenvalues</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Helper function that constrains the given eigenvalues according to</span>
@@ -369,62 +517,23 @@
 <span class="sd">        :return: Vector of constrained eigenvalues.</span>
 <span class="sd">        :rtype: numpy.ndarray</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="k">if</span> <span class="n">isfunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="s2">&quot;conjugate_pairs&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span><span class="p">:</span>
-            <span class="n">num_eigs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span>
-            <span class="n">new_eigs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">num_eigs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;complex&quot;</span><span class="p">)</span>
-
-            <span class="c1"># Set of indices -- keeps track of indices of eigenvalues that</span>
-            <span class="c1"># still need to be paired with their complex conjugate.</span>
-            <span class="n">unassigned_inds</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_eigs</span><span class="p">))</span>
-
-            <span class="c1"># If given an odd number of eigenvalues, find the eigenvalue with</span>
-            <span class="c1"># the smallest imaginary part and take it to be a real eigenvalue.</span>
-            <span class="k">if</span> <span class="n">num_eigs</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">ind_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">imag</span><span class="p">))</span>
-                <span class="n">new_eigs</span><span class="p">[</span><span class="n">ind_0</span><span class="p">]</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">ind_0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
-                <span class="n">unassigned_inds</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ind_0</span><span class="p">)</span>
-
-            <span class="c1"># Assign complex conjugate pairs until all eigenvalues are paired.</span>
-            <span class="k">while</span> <span class="n">unassigned_inds</span><span class="p">:</span>
-                <span class="c1"># Randomly grab the next unassigned eigenvalue.</span>
-                <span class="n">ind_1</span> <span class="o">=</span> <span class="n">unassigned_inds</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-                <span class="n">eig_1</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">ind_1</span><span class="p">]</span>
-
-                <span class="c1"># Get the index of the eigenvalue that&#39;s closest to being the</span>
-                <span class="c1"># complex conjugate of the randomly selected eigenvalue.</span>
-                <span class="n">ind_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvalues</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">eig_1</span><span class="p">)))</span>
-
-                <span class="c1"># Alert the user if an error occurs while pairing.</span>
-                <span class="c1"># Complex conjugate pairs should be unique in theory.</span>
-                <span class="k">if</span> <span class="n">ind_2</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">unassigned_inds</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="s2">&quot;Error occurred while finding conjugate pairs. &quot;</span>
-                        <span class="s1">&#39;Please remove the &quot;conjugate pairs&quot; constraint and &#39;</span>
-                        <span class="s2">&quot;check that your system eigenvalues approximately &quot;</span>
-                        <span class="s2">&quot;consist of complex conjugate pairs.&quot;</span>
-                    <span class="p">)</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-                <span class="c1"># Uniquely pair eig_1 and eig_2.</span>
-                <span class="n">eig_2</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">ind_2</span><span class="p">]</span>
-                <span class="n">unassigned_inds</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ind_2</span><span class="p">)</span>
-
-                <span class="c1"># Average their real and imaginary components together.</span>
-                <span class="n">a</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">eig_1</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="n">eig_2</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
-                <span class="n">b</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eig_1</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eig_2</span><span class="o">.</span><span class="n">imag</span><span class="p">))</span>
-                <span class="n">new_eigs</span><span class="p">[</span><span class="n">ind_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">eig_1</span><span class="o">.</span><span class="n">imag</span><span class="p">))</span>
-                <span class="n">new_eigs</span><span class="p">[</span><span class="n">ind_2</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">eig_2</span><span class="o">.</span><span class="n">imag</span><span class="p">))</span>
-
-            <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">new_eigs</span><span class="p">)</span>
+            <span class="n">eigenvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_conj_pairs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="s2">&quot;stable&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span><span class="p">:</span>
             <span class="n">right_half</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">real</span> <span class="o">&gt;</span> <span class="mf">0.0</span>
             <span class="n">eigenvalues</span><span class="p">[</span><span class="n">right_half</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">right_half</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span>
         <span class="k">elif</span> <span class="s2">&quot;imag&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span><span class="p">:</span>
             <span class="n">eigenvalues</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">imag</span>
+        <span class="k">elif</span> <span class="s2">&quot;limited&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span><span class="p">:</span>
+            <span class="c1"># For eigenvalues with the real part over the limit, reset the real</span>
+            <span class="c1"># part to 0 to make the solver try again.</span>
+            <span class="n">too_big</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">real</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_eig_limit</span>
+            <span class="n">eigenvalues</span><span class="p">[</span><span class="n">too_big</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">too_big</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span>
 
         <span class="k">return</span> <span class="n">eigenvalues</span></div>
 
@@ -573,7 +682,15 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">H</span><span class="p">[</span><span class="n">subset_inds</span><span class="p">],</span> <span class="n">subset_inds</span></div>
 
-<div class="viewcode-block" id="BOPDMDOperator._variable_projection"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._variable_projection">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_variable_projection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">init_alpha</span><span class="p">,</span> <span class="n">Phi</span><span class="p">,</span> <span class="n">dPhi</span><span class="p">):</span>
+<div class="viewcode-block" id="BOPDMDOperator._variable_projection"><a class="viewcode-back" href="../../bopdmd.html#pydmd.bopdmd.BOPDMDOperator._variable_projection">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">_variable_projection</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">H</span><span class="p">,</span>
+        <span class="n">t</span><span class="p">,</span>
+        <span class="n">init_alpha</span><span class="p">,</span>
+        <span class="n">Phi</span><span class="p">,</span>
+        <span class="n">dPhi</span><span class="p">,</span>
+        <span class="n">amp_limit</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Variable projection routine for multivariate data.</span>
 <span class="sd">        Attempts to fit the columns of H as linear combinations of the columns</span>
@@ -593,6 +710,9 @@
 <span class="sd">        :param dPhi: (M, N) matrix-valued function dPhi(alpha,t,i) that</span>
 <span class="sd">            contains the derivatives of Phi wrt the ith component of alpha.</span>
 <span class="sd">        :type dPhi: function</span>
+<span class="sd">        :param amp_limit: Value constraining the fit amplitude (not</span>
+<span class="sd">            implemented).</span>
+<span class="sd">        :type amp_limit: float</span>
 <span class="sd">        :return: Tuple of two numpy arrays and a boolean representing:</span>
 <span class="sd">            1. (N, IS) best-fit matrix B.</span>
 <span class="sd">            2. (N,) best-fit vector alpha.</span>
@@ -636,23 +756,39 @@
 
             <span class="k">return</span> <span class="n">residual</span><span class="p">,</span> <span class="n">objective</span><span class="p">,</span> <span class="n">error</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">compute_B</span><span class="p">(</span><span class="n">alpha</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">compute_B</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">amp_lim</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Update B for the current alpha.</span>
 <span class="sd">            &quot;&quot;&quot;</span>
             <span class="c1"># Compute B using least squares.</span>
-            <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">Phi</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">H</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">Phi</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">H</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">except</span> <span class="n">LinAlgError</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Could not solve variable projection. This failure is &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;often the result of the real eigenvalues being too large &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;and creating infs in the solution. Try &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;reducing the rank or providing a constraint &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;on the real eigenvalues.</span><span class="se">\n</span><span class="s2">Eigenvalues=</span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span>
 
             <span class="c1"># Apply proximal operator if given, and if data isn&#39;t projected.</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode_prox</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_proj</span><span class="p">:</span>
                 <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode_prox</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+
+            <span class="c1"># Apply amplitude limits if provided.</span>
+            <span class="k">if</span> <span class="n">amp_lim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">B</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">B</span><span class="p">[</span><span class="n">b</span> <span class="o">&gt;</span> <span class="n">amp_lim</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
 
             <span class="k">return</span> <span class="n">B</span>
 
         <span class="c1"># Initialize values.</span>
         <span class="n">_lambda</span> <span class="o">=</span> <span class="n">init_lambda</span>
         <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_push_eigenvalues</span><span class="p">(</span><span class="n">init_alpha</span><span class="p">)</span>
-        <span class="n">B</span> <span class="o">=</span> <span class="n">compute_B</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">compute_B</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">amp_lim</span><span class="o">=</span><span class="n">amp_limit</span><span class="p">)</span>
         <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Vh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_irank_svd</span><span class="p">(</span><span class="n">Phi</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">tolrank</span><span class="p">)</span>
 
         <span class="c1"># Initialize termination flags.</span>
@@ -697,8 +833,16 @@
             <span class="n">q_out</span><span class="p">,</span> <span class="n">djac_out</span><span class="p">,</span> <span class="n">j_pvt</span> <span class="o">=</span> <span class="n">qr</span><span class="p">(</span>
                 <span class="n">djac_matrix</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;economic&quot;</span><span class="p">,</span> <span class="n">pivoting</span><span class="o">=</span><span class="kc">True</span>
             <span class="p">)</span>
-            <span class="n">ij_pvt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">IA</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-            <span class="n">ij_pvt</span><span class="p">[</span><span class="n">j_pvt</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">IA</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_flag</span><span class="p">:</span>
+                <span class="c1"># The original python, which is a &quot;mistake&quot; that makes bopdmd</span>
+                <span class="c1"># behave more like exact DMD but also keeps the solver from</span>
+                <span class="c1"># wandering into bad states.</span>
+                <span class="n">ij_pvt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">IA</span><span class="p">)</span>
+                <span class="n">ij_pvt</span> <span class="o">=</span> <span class="n">ij_pvt</span><span class="p">[</span><span class="n">j_pvt</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_flag</span><span class="p">:</span>
+                <span class="c1"># Use the true variable projection.</span>
+                <span class="n">ij_pvt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">IA</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+                <span class="n">ij_pvt</span><span class="p">[</span><span class="n">j_pvt</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">IA</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
             <span class="n">rjac</span><span class="p">[:</span><span class="n">IA</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">djac_out</span><span class="p">[:</span><span class="n">IA</span><span class="p">])</span>
             <span class="n">rhs_top</span> <span class="o">=</span> <span class="n">q_out</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rhs_temp</span><span class="p">)</span>
             <span class="n">scales_pvt</span> <span class="o">=</span> <span class="n">scales</span><span class="p">[</span><span class="n">j_pvt</span><span class="p">[:</span><span class="n">IA</span><span class="p">]]</span>
@@ -706,7 +850,12 @@
                 <span class="p">(</span><span class="n">rhs_top</span><span class="p">[:</span><span class="n">IA</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">IA</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;complex&quot;</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span>
             <span class="p">)</span>
 
-            <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="n">_lambda</span><span class="p">,</span> <span class="n">scales_pvt</span><span class="o">=</span><span class="n">scales_pvt</span><span class="p">,</span> <span class="n">rhs</span><span class="o">=</span><span class="n">rhs</span><span class="p">,</span> <span class="n">ij_pvt</span><span class="o">=</span><span class="n">ij_pvt</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span>
+                <span class="n">_lambda</span><span class="p">,</span>
+                <span class="n">scales_pvt</span><span class="o">=</span><span class="n">scales_pvt</span><span class="p">,</span>
+                <span class="n">rhs</span><span class="o">=</span><span class="n">rhs</span><span class="p">,</span>
+                <span class="n">ij_pvt</span><span class="o">=</span><span class="n">ij_pvt</span><span class="p">,</span>
+            <span class="p">):</span>
 <span class="w">                </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">                Helper function that, when given a step size _lambda,</span>
 <span class="sd">                computes and returns the updated step and alpha vectors.</span>
@@ -719,12 +868,13 @@
                 <span class="c1"># Compute the updated alpha vector.</span>
                 <span class="n">alpha_updated</span> <span class="o">=</span> <span class="n">alpha</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="o">+</span> <span class="n">delta</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
                 <span class="n">alpha_updated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_push_eigenvalues</span><span class="p">(</span><span class="n">alpha_updated</span><span class="p">)</span>
-
                 <span class="k">return</span> <span class="n">delta</span><span class="p">,</span> <span class="n">alpha_updated</span>
 
             <span class="c1"># Take a step using our initial step size init_lambda.</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;alpha before step/n</span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">delta_0</span><span class="p">,</span> <span class="n">alpha_0</span> <span class="o">=</span> <span class="n">step</span><span class="p">(</span><span class="n">_lambda</span><span class="p">)</span>
-            <span class="n">B_0</span> <span class="o">=</span> <span class="n">compute_B</span><span class="p">(</span><span class="n">alpha_0</span><span class="p">)</span>
+            <span class="n">B_0</span> <span class="o">=</span> <span class="n">compute_B</span><span class="p">(</span><span class="n">alpha_0</span><span class="p">,</span> <span class="n">amp_lim</span><span class="o">=</span><span class="n">amp_limit</span><span class="p">)</span>
             <span class="n">residual_0</span><span class="p">,</span> <span class="n">objective_0</span><span class="p">,</span> <span class="n">error_0</span> <span class="o">=</span> <span class="n">compute_error</span><span class="p">(</span><span class="n">B_0</span><span class="p">,</span> <span class="n">alpha_0</span><span class="p">)</span>
 
             <span class="c1"># Check actual improvement vs predicted improvement.</span>
@@ -747,7 +897,7 @@
                 <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxlam</span><span class="p">):</span>
                     <span class="n">_lambda</span> <span class="o">*=</span> <span class="n">lamup</span>
                     <span class="n">delta_0</span><span class="p">,</span> <span class="n">alpha_0</span> <span class="o">=</span> <span class="n">step</span><span class="p">(</span><span class="n">_lambda</span><span class="p">)</span>
-                    <span class="n">B_0</span> <span class="o">=</span> <span class="n">compute_B</span><span class="p">(</span><span class="n">alpha_0</span><span class="p">)</span>
+                    <span class="n">B_0</span> <span class="o">=</span> <span class="n">compute_B</span><span class="p">(</span><span class="n">alpha_0</span><span class="p">,</span> <span class="n">amp_lim</span><span class="o">=</span><span class="n">amp_limit</span><span class="p">)</span>
                     <span class="n">residual_0</span><span class="p">,</span> <span class="n">objective_0</span><span class="p">,</span> <span class="n">error_0</span> <span class="o">=</span> <span class="n">compute_error</span><span class="p">(</span>
                         <span class="n">B_0</span><span class="p">,</span> <span class="n">alpha_0</span>
                     <span class="p">)</span>
@@ -769,6 +919,9 @@
                 <span class="c1"># ...otherwise, update and proceed.</span>
                 <span class="n">alpha</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">alpha_0</span><span class="p">,</span> <span class="n">B_0</span>
                 <span class="n">residual</span><span class="p">,</span> <span class="n">objective</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">residual_0</span><span class="p">,</span> <span class="n">objective_0</span><span class="p">,</span> <span class="n">error_0</span>
+
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;alpha after step</span><span class="se">\n</span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
             <span class="c1"># Update SVD information.</span>
             <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Vh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_irank_svd</span><span class="p">(</span><span class="n">Phi</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">tolrank</span><span class="p">)</span>
@@ -821,8 +974,16 @@
 <span class="sd">        system matrix, full system matrix, and whether or not convergence</span>
 <span class="sd">        of the variable projection routine was reached.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># An amplitude limit is available but not implemented.</span>
+        <span class="n">b_lim</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">B</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">converged</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_variable_projection</span><span class="p">(</span>
-            <span class="n">H</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">init_alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exp_function</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exp_function_deriv</span>
+            <span class="n">H</span><span class="p">,</span>
+            <span class="n">t</span><span class="p">,</span>
+            <span class="n">init_alpha</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_exp_function</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_exp_function_deriv</span><span class="p">,</span>
+            <span class="n">b_lim</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># Save the modes, eigenvalues, and amplitudes respectively.</span>
         <span class="n">w</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">T</span>
@@ -1097,6 +1258,13 @@
 <span class="sd">        See `BOPDMDOperator` documentation for default values and descriptions</span>
 <span class="sd">        for each parameter.</span>
 <span class="sd">    :type varpro_opts_dict: dict</span>
+<span class="sd">    :param real_eig_limit: Value limiting the real eigenvalues. Only used when</span>
+<span class="sd">    the eigenvalue constraints include &quot;limited&quot; as an option otherwise it</span>
+<span class="sd">    has no effect.</span>
+<span class="sd">    :type real_eig_limit: float</span>
+<span class="sd">    :param varpro_flag: Indicates if the true variable projection or an</span>
+<span class="sd">    approximation of exact DMD is used.</span>
+<span class="sd">    :type varpro_flag: bool</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -1115,6 +1283,8 @@
         <span class="n">bag_warning</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
         <span class="n">bag_maxfail</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
         <span class="n">varpro_opts_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">real_eig_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">varpro_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_svd_rank</span> <span class="o">=</span> <span class="n">svd_rank</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_A</span> <span class="o">=</span> <span class="n">compute_A</span>
@@ -1152,6 +1322,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_eig_constraints</span><span class="p">(</span><span class="n">eig_constraints</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_eig_constraints</span> <span class="o">=</span> <span class="n">eig_constraints</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mode_prox</span> <span class="o">=</span> <span class="n">mode_prox</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_real_eig_limit</span> <span class="o">=</span> <span class="n">real_eig_limit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_varpro_flag</span> <span class="o">=</span> <span class="n">varpro_flag</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_snapshots_holder</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1413,8 +1585,17 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">valid_constraints</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;stable&quot;</span><span class="p">,</span> <span class="s2">&quot;imag&quot;</span><span class="p">,</span> <span class="s2">&quot;conjugate_pairs&quot;</span><span class="p">}</span>
-            <span class="n">invalid_combos</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;stable&quot;</span><span class="p">,</span> <span class="s2">&quot;imag&quot;</span><span class="p">}]</span>
+            <span class="n">valid_constraints</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;limited&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;stable&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;imag&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;conjugate_pairs&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">invalid_combos</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">{</span><span class="s2">&quot;stable&quot;</span><span class="p">,</span> <span class="s2">&quot;imag&quot;</span><span class="p">},</span>
+                <span class="p">{</span><span class="s2">&quot;stable&quot;</span><span class="p">,</span> <span class="s2">&quot;limited&quot;</span><span class="p">},</span>
+                <span class="p">{</span><span class="s2">&quot;imag&quot;</span><span class="p">,</span> <span class="s2">&quot;limited&quot;</span><span class="p">},</span>
+            <span class="p">]</span>
 
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eig_constraints</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">valid_constraints</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid eigenvalue constraint provided.&quot;</span><span class="p">)</span>
@@ -1534,6 +1715,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_remove_bad_bags</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_bag_warning</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_bag_maxfail</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_real_eig_limit</span><span class="p">,</span>
+            <span class="n">varpro_flag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_varpro_flag</span><span class="p">,</span>
             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_varpro_opts_dict</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -1633,6 +1816,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_remove_bad_bags</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_bag_warning</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_bag_maxfail</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_real_eig_limit</span><span class="p">,</span>
             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_varpro_opts_dict</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -1941,7 +2125,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2017-2025, PyDMD Contributors.
-      <span class="lastupdated">Last updated on Mar 01, 2025.
+      <span class="lastupdated">Last updated on Apr 01, 2025.
       </span></p>
   </div>
 
