@@ -95,6 +95,25 @@ plot_summary(
     flip_continuous_axes=True,  # Rotate the continuous-time eig plot.
 )
 
+# Alternatively, pre-compute the SVD and use the `fit_econ` function.
+# This is useful when the SVD is already computed and the snapshots matrix
+# X is not available or is too large to store in memory.
+U, s, V = np.linalg.svd(X, full_matrices=False)
+U = U[:, :11]
+s = s[:11]
+V = V[:11, :]
+
+bopdmd_econ = BOPDMD(svd_rank=11, num_trials=0, use_proj=True, proj_basis=U)
+bopdmd_econ.fit_econ(s, V, t)
+
+plot_summary(
+    bopdmd_econ,
+    figsize=(12, 6),  # Figure size.
+    index_modes=(0, 1, 3),  # Indices of the modes to plot.
+    snapshots_shape=(ny, nx),  # Shape of the modes.
+    order="F",  # Order to use when reshaping the modes.
+    flip_continuous_axes=True,  # Rotate the continuous-time eig plot.
+)
 
 # In[4]:
 

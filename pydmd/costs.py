@@ -70,6 +70,15 @@ class COSTS:
     :param reset_alpha_init: Flag specifying if the initial eigenvalue guess
         should be reset between windows.
     :type reset_alpha_init: bool
+    :param kern_method: Specifies if the fit should be made to the data
+    convolved with a kern that rounds towards zero at the edges of the time
+    domain ("kern") or without a kerning ("flat").
+    :type kern_method: string
+    :param relative_filter_length: Value that determines how sharp the
+    reconstruction convolution for each window is. Larger numbers mean that
+    the convolution more heavily de-weights the edges of the time domain.
+    Default is 2. Must be greater than zero.
+    :type relative_filter_length: float
     """
 
     def __init__(
@@ -85,6 +94,8 @@ class COSTS:
         force_even_eigs=True,
         max_rank=None,
         n_components=None,
+        kern_method=None,
+        relative_filter_length=2,
     ):
         self._hist_kwargs = None
         self._omega_label = None
@@ -100,6 +111,7 @@ class COSTS:
         self._force_even_eigs = force_even_eigs
         self._max_rank = max_rank
         self._reset_alpha_init = reset_alpha_init
+        self._relative_filter_length = relative_filter_length
 
         # Initialize variables that are defined in fitting.
         self._n_data_vars = None
@@ -116,6 +128,12 @@ class COSTS:
         self._window_means_array = None
         self._non_integer_n_slide = None
         self._svd_rank_pre_allocate = None
+
+        # Specify how the data windows are constructed before fitting.
+        if kern_method is None:
+            self._kern_method = "kern"
+        else:
+            self._kern_method = kern_method
 
         # Specify default keywords to hand to BOPDMD.
         if pydmd_kwargs is None:
@@ -251,6 +269,25 @@ class COSTS:
         """
         return self._omega_classes
 
+    @property
+    def kern_method(self):
+        """Return the kern method used for the reconstruction.
+
+        :return: kern method used by the `build_kern` method
+        :rtype: str
+        """
+        return self._kern_method
+
+    @property
+    def relative_filter_length(self):
+        """Return the relative filter length used for the reconstruction.
+
+        :return: The filter length for weighting the reconstruction of each
+        window.
+        :rtype: float
+        """
+        return self._relative_filter_length
+
     def periods(self):
         """Convert the omega array into periods.
 
@@ -307,7 +344,9 @@ class COSTS:
         return n_slides + 1
 
     @staticmethod
-    def calculate_lv_kern(window_length, corner_sharpness=None):
+    def calculate_lv_kern(
+        window_length, corner_sharpness=None, kern_method=None
+    ):
         """Calculate the kerning window for suppressing real eigenvalues.
 
         :param corner_sharpness: Parameter specifying how sharp the kerning
@@ -317,29 +356,52 @@ class COSTS:
         :type window_length: int
         :return: Kernel for convolving with the windowed data.
         :rtype: np.ndarray
+        :param kern_method: Specify how the window should be built. "flat"
+        means no weighting is applied and "kern" means a gaussian weighting is
+        applied that is dictated by `corner_sharpness`. "forward" and
+        "backward" are options used internally for fitting windows at the
+        edges of the time domain.
         """
 
-        # Higher = sharper corners
         if corner_sharpness is None:
             corner_sharpness = 16
 
-        lv_kern = (
-            np.tanh(
-                corner_sharpness
-                * np.linspace(0, 1, window_length, endpoint=False)
+        if kern_method == "kern":
+            # This is the window kerning from the original implementation of
+            # the sliding mrDMD algorithm. It rounds rather sharply the data
+            # towards zero at the beginning and end of the window's time
+            # domain. The intent of the window kerning was to suppress the
+            # real components. However, this also has the effect of reducing
+            # fit veracity as well as distorting derived time scales from the
+            # imaginary eigenvalue components. This window kerning is no longer
+            # the recommended practice.
+            # Higher corner sharpness = sharper corners.
+            lv_kern = (
+                np.tanh(
+                    corner_sharpness
+                    * np.arange(0, window_length)
+                    / window_length
+                )
+                - np.tanh(
+                    corner_sharpness
+                    * (np.arange(0, window_length) - window_length + 1)
+                    / window_length
+                )
+                - 1
             )
-            - np.tanh(
-                corner_sharpness
-                * (np.arange(0, window_length) - window_length - 1)
-                / window_length
+        elif kern_method == "flat":
+            # Do not apply a window kerning prior to fitting each window.
+            lv_kern = np.ones(window_length)
+        else:
+            raise ValueError(
+                f"Unrecognized argument for `kern_method` provided:"
+                f" {kern_method}. Valid options are `flat` and `kern`."
             )
-            - 1
-        )
 
         return lv_kern
 
     @staticmethod
-    def build_kern(window_length):
+    def build_kern(window_length, relative_filter_length, direction=None):
         """Build the convolution kernel for the window reconstruction.
 
         Each window is convolved with a gaussian filter for the
@@ -348,14 +410,39 @@ class COSTS:
 
         :param window_length: Length of the data window in units of time
         :type window_length: int
+        :param relative_filter_length: A parameter governing how strongly
+        weighted the windowed construction is. Larger values mean more
+        strongly weighting the middle of the window.
+        :type relative_filter_length: float
+        :param direction: Specify the special cases for reconstructing
+        windows at the beginning and end of the time domain.
+        :type direction: string
         :return: Gaussian filter of length `window_length`
         :rtype: np.ndarray
+
         """
-        recon_filter_sd = window_length / 8
+        recon_filter_sd = window_length / relative_filter_length
         recon_filter = np.exp(
             -((np.arange(window_length) - (window_length - 1) / 2) ** 2)
             / recon_filter_sd**2
         )
+        # Do not apply the kerning at the end of the time domain. This
+        # assists in fitting the last window of the decomposition and stops
+        # the propagation of errors at the edge of the time domain.
+        if direction == "forward":
+            recon_filter[(window_length // 2) :] = 1
+        # Do not apply the kerning at the beginning of the time domain. This
+        # assists in fitting the last window of the decomposition and stops
+        # the propagation of errors at the edge of the time domain.
+        elif direction == "backward":
+            recon_filter[: (window_length // 2)] = 1
+        elif direction is not None:
+            raise ValueError(
+                f"Unrecognized option for `direction` provided. Provided "
+                f"argument was {direction}. Valid options are `forward`, "
+                f"`backward`, and `None`."
+            )
+
         return recon_filter
 
     @staticmethod
@@ -547,7 +634,9 @@ class COSTS:
         # the real components of the fitted eigenvalues away from unrealistic
         # exponential growth.
         lv_kern = self.calculate_lv_kern(
-            self._window_length, corner_sharpness=corner_sharpness
+            self._window_length,
+            corner_sharpness=corner_sharpness,
+            kern_method=self._kern_method,
         )
 
         # Perform the sliding window DMD fitting.
@@ -967,12 +1056,24 @@ class COSTS:
         # Track the total contribution from all windows to each time step
         xn = np.zeros(self._n_time_steps)
 
-        # Convolve each windowed reconstruction with a gaussian filter.
-        # Weights points in the middle of the window and de-emphasizes the
-        # edges of the window.
-        recon_filter = self.build_kern(self._window_length)
-
         for k in range(self._n_slides):
+
+            if k == 0:
+                direction = "backward"
+            elif k == self._n_slides - 1:
+                direction = "forward"
+            else:
+                direction = None
+
+            # Convolve each windowed reconstruction with a gaussian filter.
+            # Weights points in the middle of the window and de-emphasizes the
+            # edges of the window.
+            recon_filter = self.build_kern(
+                self._window_length,
+                relative_filter_length=self._relative_filter_length,
+                direction=direction,
+            )
+
             window_indices = self.get_window_indices(k)
 
             w = self._modes_array[k]
@@ -1359,9 +1460,11 @@ class COSTS:
         fig, axes = plt.subplots(
             nrows=self.n_components + 2,
             sharex=True,
-            sharey=True,
             figsize=(8, np.max((8, 1.5 * self.n_components))),
         )
+        # Only share the y axis for the components
+        for target in axes[2:]:
+            target._shared_axes["y"].join(target, axes[2])
 
         ax = axes[0]
         ax.plot(ground_truth, color="k")
@@ -1486,6 +1589,7 @@ class COSTS:
             },
             attrs={
                 "svd_rank": self.svd_rank,
+                "svd_rank_pre_allocate": self._svd_rank_pre_allocate,
                 "omega_transformation": self._xarray_sanitize(
                     self._transform_method
                 ),
@@ -1497,6 +1601,8 @@ class COSTS:
                 "step_size": self._step_size,
                 "non_integer_n_slide": self._non_integer_n_slide,
                 "global_svd": self._global_svd,
+                "relative_filter_length": self._relative_filter_length,
+                "kern_method": self._kern_method,
             },
         )
 
@@ -1530,6 +1636,9 @@ class COSTS:
         self._step_size = ds.attrs["step_size"]
         self._window_length = ds.attrs["window_length"]
         self._global_svd = ds.attrs["global_svd"]
+        self._relative_filter_length = ds.attrs["relative_filter_length"]
+        self._kern_method = ds.attrs["kern_method"]
+        self._svd_rank_pre_allocate = ds.attrs["svd_rank_pre_allocate"]
 
         self._pydmd_kwargs = {}
         for attr in ds.attrs:

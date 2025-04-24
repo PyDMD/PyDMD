@@ -47,7 +47,7 @@ def build_multiscale_process():
 
         return dy
 
-    T = 64
+    T = 32
 
     x0 = np.array([-1.110, -0.125])
     tau1 = 2
@@ -148,19 +148,18 @@ expected_frequency_bands = np.array((0.4, 1.0))
 expected_n_components = 2
 
 # Define the expected error in the reconstructions.
-expected_global_error = 0.053
-expected_lf_error = 0.10
-expected_hf_error = 0.16
-expected_transient_error = 0.3
+expected_global_error = 0.045
+expected_lf_error = 0.055
+expected_hf_error = 0.058
+expected_transient_error = 0.085
 
 # Fit mrCOSTS for testing
 window_lengths = [15, 60]
 step_sizes = [1, 12]
 svd_ranks = [4] * len(window_lengths)
-suppress_growth = True
-transform_method = "square_frequencies"
+transform_method = "absolute"
 n_components_array = [2] * len(window_lengths)
-global_svd_array = [True] * len(window_lengths)
+global_svd_array = [False] * len(window_lengths)
 
 mrc = mrCOSTS(
     svd_rank_array=svd_ranks,
@@ -169,6 +168,9 @@ mrc = mrCOSTS(
     global_svd_array=global_svd_array,
     transform_method=transform_method,
     n_components_array=n_components_array,
+    relative_filter_length=2,
+    kern_method="flat",
+    pydmd_kwargs={"eig_constraints": {"conjugate_pairs"}},
 )
 mrc.fit(data, np.atleast_2d(time))
 mrc.multi_res_interp()
@@ -291,7 +293,7 @@ def test_netcdf(tmp_path):
     Test the round trip conversion of the mrCOSTS object to file in
     netcdf format and back to mrCOSTS.
     """
-    # Move the I/O tests to the temporary test directory.
+    # Perform this test in a temp directory.
     mrc.to_netcdf("tests", filepath=tmp_path)
     file_list = glob.glob(os.path.join(tmp_path, "*tests*.nc"))
     mrc_from_file = mrCOSTS()

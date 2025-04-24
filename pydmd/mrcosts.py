@@ -57,6 +57,9 @@ class mrCOSTS:
         n_components_array=None,
         cluster_sweep=False,
         transform_method=None,
+        kern_method=None,
+        relative_filter_length=2,
+        costs_kwargs=None,
     ):
         self._n_components_array = n_components_array
         self._step_size_array = step_size_array
@@ -65,6 +68,8 @@ class mrCOSTS:
         self._global_svd_array = global_svd_array
         self._cluster_sweep = cluster_sweep
         self._transform_method = transform_method
+        self._kern_method = kern_method
+        self._relative_filter_length = relative_filter_length
 
         if (self._n_components_array is not None) and (
             self._step_size_array is not None
@@ -108,6 +113,11 @@ class mrCOSTS:
             self._costs_recon_kwargs = {}
         else:
             self._costs_recon_kwargs = costs_recon_kwargs
+
+        if costs_kwargs is None:
+            self._costs_kwargs = {}
+        else:
+            self._costs_kwargs = costs_kwargs
 
     @property
     def costs_array(self):
@@ -315,6 +325,9 @@ class mrCOSTS:
                 svd_rank=rank,
                 global_svd=global_svd,
                 pydmd_kwargs=self._pydmd_kwargs,
+                kern_method=self._kern_method,
+                relative_filter_length=self._relative_filter_length,
+                **self._costs_kwargs,
             )
 
             if verbose:
@@ -552,6 +565,8 @@ class mrCOSTS:
             global_svd_array=global_svd_array,
             pydmd_kwargs=pydmd_kwargs,
             n_components_array=n_components_array,
+            relative_filter_length=mrd_list[0].relative_filter_length,
+            kern_method=mrd_list[0].kern_method,
         )
 
         # Initialize variables that are defined in fitting.
@@ -1045,10 +1060,6 @@ class mrCOSTS:
             # Track the total contribution from all windows to each time step
             xn = np.zeros(self._n_time_steps)
 
-            # Convolve each windowed reconstruction with a gaussian filter.
-            # Std dev of gaussian filter
-            recon_filter = mrd.build_kern(mrd.window_length)
-
             omega_classes = omega_classes_list[n_mrd]
 
             if mrd.svd_rank < np.max(self._svd_rank_array):
@@ -1057,6 +1068,23 @@ class mrCOSTS:
 
             # Iterate over each window slide performed.
             for k in range(mrd.n_slides):
+
+                if k == 0:
+                    direction = "backward"
+                elif k == mrd.n_slides - 1:
+                    direction = "forward"
+                else:
+                    direction = None
+
+                # Convolve each windowed reconstruction with a gaussian filter.
+                # Weights points in the middle of the window and
+                # de-emphasizes the edges of the window.
+                recon_filter = mrd.build_kern(
+                    mrd.window_length,
+                    relative_filter_length=mrd.relative_filter_length,
+                    direction=direction,
+                )
+
                 w = mrd.modes_array[k]
                 b = mrd.amplitudes_array[k]
                 omega = np.atleast_2d(mrd.omega_array[k]).T
@@ -1074,7 +1102,7 @@ class mrCOSTS:
                         self._n_data_vars,
                         mrd.window_length,
                     )
-                )
+                ).real
 
                 # Get the indices for this window.
                 if k == mrd.n_slides - 1 and mrd._non_integer_n_slide:
@@ -1095,7 +1123,7 @@ class mrCOSTS:
                             np.diag(b[class_ind]),
                             np.exp(omega[class_ind] * t),
                         ]
-                    )
+                    ).real
 
                     # Multiply by the reconstruction filter which weights
                     # the reconstruction towards the middle of the window.
