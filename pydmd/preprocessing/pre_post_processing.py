@@ -1,5 +1,11 @@
 """
-Pre/post-processing capability for DMD instances.
+Decorator for pre- and post-processing a DMD model.
+
+The purpose is to generate a pipeline that can look like:
+data → pre-processing → fit (→ reconstruct) → post-processing
+
+Where the reconstruction and processing hooks may or may not
+be performed depending on the intent of the analysis.
 """
 
 from __future__ import annotations
@@ -11,24 +17,49 @@ import numpy as np
 
 from pydmd.dmdbase import DMDBase
 
-# Pre-processing output type
+# Generic type representing pre-processing state
 S = TypeVar("S")
 
 
 class PrePostProcessing(Generic[S]):
+    """
+    Interface for defining pre- and post-processing behavior.
+    Override this class to add custom data transformations.
+    """
+
     def pre_processing(self, X: np.ndarray) -> Tuple[S, np.ndarray]:
+        """
+        Apply transformations to input training data.
+
+        :param X: Original input data.
+        :return: A tuple of (state, transformed input).
+        """
         return None, X
 
     def post_processing(
         self, pre_processing_output: S, Y: np.ndarray
     ) -> np.ndarray:
+        """
+        Apply transformations to reconstructed output.
+
+        :param pre_processing_output: The state generated during pre-processing.
+        :param Y: Output from wrapped DMD.
+        :return: Transformed output.
+        """
         return Y
 
 
 class PrePostProcessingDMD(Generic[S]):
     """
-    Pre/post-processing decorator. This class is not thread-safe in case of
-    stateful transformations.
+    Decorator for a DMD instance that supports user-defined pre- and
+    post-processing.
+
+    Intended use:
+      - Pre-process input data before `.fit()` is called
+      - `undo` the processing step to return DMD components consistent
+      with the original data.
+
+    NOTE: This class is **not thread-safe** if the processing hooks are stateful.
 
     :param dmd: DMD instance to be decorated.
     :param pre_processing: Pre-processing function, receives a state holder
@@ -43,83 +74,106 @@ class PrePostProcessingDMD(Generic[S]):
     def __init__(
         self,
         dmd: DMDBase,
-        pre_post_processing: PrePostProcessing[S] = PrePostProcessing(),
+        processing_hooks: PrePostProcessing[S] = PrePostProcessing(),
     ):
         if dmd is None:
             raise ValueError("DMD instance cannot be None")
-        self._pre_post_processing = pre_post_processing
+        self._processing_hooks = processing_hooks
 
-        self._dmd = dmd
-        self._pre_processing_output: S | None = None
+        self._wrapped_dmd = dmd
+        self._processing_state: S | None = None
 
     def __getattribute__(self, name):
+        """
+        Transparent passthrough for almost all attribute access.
+
+        Currently intercepts:
+          - `.fit` by running pre-processing first
+          - `.reconstructed_data` by wrapping with post-processing
+        """
         try:
             return object.__getattribute__(self, name)
         except AttributeError:
             pass
 
         if "fit" == name:
-            return self._pre_processing_fit
+            return self._fit_with_preprocessing
 
         if "reconstructed_data" == name:
             return self._reconstructed_data_with_post_processing()
 
         # This check is needed to allow copy/deepcopy
-        if name != "_dmd":
-            sub_dmd = self._dmd
-            if isinstance(sub_dmd, PrePostProcessingDMD):
-                return PrePostProcessingDMD.__getattribute__(sub_dmd, name)
-            return object.__getattribute__(self._dmd, name)
+        if name != "_wrapped_dmd":
+            wrapped = self._wrapped_dmd
+            if isinstance(wrapped, PrePostProcessingDMD):
+                return PrePostProcessingDMD.__getattribute__(wrapped, name)
+            return object.__getattribute__(wrapped, name)
         return None
 
     @property
-    def pre_post_processed_dmd(self):
+    def wrapped_dmd(self):
         """
-        Return the pre/post-processed DMD instance.
+        Return the warpped DMD instance.
 
         :return: decorated DMD instance.
         :rtype: pydmd.DMDBase
         """
-        return self._dmd
+        return self._wrapped_dmd
 
-    @property
-    def modes_activation_bitmask(self):
-        return self._dmd.modes_activation_bitmask
+    # I am proposing to remove the activation bitmask as it heavily obscures
+    # a basic function. Instead, I would expose this functionality in a way
+    # that is consistent with the phsaor notation framework.
+    # @property
+    # def modes_activation_bitmask(self):
+    #     return self._wrapped_dmd.modes_activation_bitmask
 
-    @modes_activation_bitmask.setter
-    def modes_activation_bitmask(self, value):
-        self._dmd.modes_activation_bitmask = value
+    # @modes_activation_bitmask.setter
+    # def modes_activation_bitmask(self, value):
+    #     self._wrapped_dmd.modes_activation_bitmask = value
 
-    def _pre_processing_fit(self, *args, **kwargs):
-        X = PrePostProcessingDMD._extract_training_data(*args, **kwargs)
-        self._pre_processing_output, pre_processed_training_data = (
-            self._pre_post_processing.pre_processing(X)
+    def _fit_with_preprocessing(self, *args, **kwargs):
+        """
+        Runs pre-processing before calling the wrapped DMD's fit method.
+        Stores the pre-processing state for use during post-processing.
+        """
+        original_X = PrePostProcessingDMD._extract_training_data(
+            *args, **kwargs
+        )
+        self._processing_state, transformed_X = (
+            self._processing_hooks.pre_processing(original_X)
         )
         new_args, new_kwargs = PrePostProcessingDMD._replace_training_data(
-            pre_processed_training_data, *args, **kwargs
+            transformed_X, *args, **kwargs
         )
-        return self._dmd.fit(*new_args, **new_kwargs)
+        return self._wrapped_dmd.fit(*new_args, **new_kwargs)
 
     def _reconstructed_data_with_post_processing(self) -> np.ndarray:
-        data = self._dmd.reconstructed_data
+        """
+        Returns the post-processed result of reconstructed_data.
+        Handles both property and callable types.
+        """
+        data = self._wrapped_dmd.reconstructed_data
 
         if not isroutine(data):
-            return self._pre_post_processing.post_processing(
-                self._pre_processing_output,
+            return self._processing_hooks.post_processing(
+                self._processing_state,
                 data,
             )
 
-        # e.g. DMDc
-        def output(*args, **kwargs) -> np.ndarray:
-            return self._pre_post_processing.post_processing(
-                self._pre_processing_output,
+        # For DMDs where `reconstructed_data` is a callable, e.g. DMDc
+        def wrapped_callable(*args, **kwargs) -> np.ndarray:
+            return self._processing_hooks.post_processing(
+                self._processing_state,
                 data(*args, **kwargs),
             )
 
-        return output
+        return wrapped_callable
 
     @staticmethod
     def _extract_training_data(*args, **kwargs):
+        """
+        Locate the training data (X) from positional or keyword args.
+        """
         if len(args) >= 1:
             return args[0]
         elif "X" in kwargs:
@@ -130,11 +184,14 @@ class PrePostProcessingDMD(Generic[S]):
 
     @staticmethod
     def _replace_training_data(
-        new_training_data: Any, *args, **kwargs
+        new_X: Any, *args, **kwargs
     ) -> [Tuple[Any, ...], Dict[str, Any]]:
+        """
+        Replace original training data with transformed version in the args/kwargs.
+        """
         if len(args) >= 1:
-            return (new_training_data,) + args[1:], kwargs
+            return (new_X,) + args[1:], kwargs
         elif "X" in kwargs:
             new_kwargs = dict(kwargs)
-            new_kwargs["X"] = new_training_data
+            new_kwargs["X"] = new_X
             return args, new_kwargs
