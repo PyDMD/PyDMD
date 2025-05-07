@@ -1,17 +1,42 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
-authors:
-- family-names: "Demo"
-  given-names: "Nicola"
-  orcid: "https://orcid.org/0000-0003-3107-9738"
-- family-names: "Tezzele"
-  given-names: "Marco"
-  orcid: "https://orcid.org/0000-0001-9747-6328"
-- family-names: "Rozza"
-  given-names: "Gianluigi"
-  orcid: "https://orcid.org/0000-0002-0810-8812"
-title: "PyDMD: Python Dynamic Mode Decomposition"
-version: 0.3.3
-doi: 10.21105/joss.00530
-date-released: 2018-02-12
-url: "https://github.com/mathLab/PyDMD"
+
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Ichinaga"
+      given-names: "Sara M."
+      orcid: "https://orcid.org/0000-0002-5605-1232"
+    - family-names: "Andreuzzi"
+      given-names: "Francesco"
+      orcid: "https://orcid.org/0000-0002-9508-7801"
+    - family-names: "Demo"
+      given-names: "Nicola"
+      orcid: "https://orcid.org/0000-0003-3107-9738"
+    - family-names: "Tezzele"
+      given-names: "Marco"
+      orcid: "https://orcid.org/0000-0001-9747-6328"
+    - family-names: "Lapo"
+      given-names: "Karl"
+      orcid: "https://orcid.org/0000-0002-4637-2032"
+    - family-names: "Rozza"
+      given-names: "Gianluigi"
+      orcid: "https://orcid.org/0000-0002-0810-8812"
+    - family-names: "Brunton"
+      given-names: "Steven L."
+      orcid: "https://orcid.org/0000-0002-6565-5118"
+    - family-names: "Kutz"
+      given-names: "J. Nathan"
+      orcid: "https://orcid.org/0000-0002-6004-2275"
+  title: "PyDMD: A Python Package for Robust Dynamic Mode Decomposition"
+  journal: "Journal of Machine Learning Research"
+  volume: 25
+  issue: 417
+  start: 1
+  end: 9
+  year: 2024
+  url: "http://jmlr.org/papers/v25/24-0739.html"
+
+version: 2025.05.01
+date-released: 2025-05-01
+url: "https://github.com/PyDMD/PyDMD"
