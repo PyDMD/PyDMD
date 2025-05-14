@@ -176,8 +176,8 @@ First prize winner in **DSWeb 2019 Contest** _Tutorials on Dynamical Systems Sof
 
 ## Citing PyDMD
 When citing PyDMD, please cite both of the following references:
-* Demo, Tezzele, Rozza. *PyDMD: Python Dynamic Mode Decomposition*. Journal of Open Source Software, 2018. [[DOI](https://doi.org/10.21105/joss.00530)][[bibitem](readme/refs/Demo2018)]
-* Ichinaga, Andreuzzi, Demo, Tezzele, Lapo, Rozza, Brunton, Kutz. *PyDMD: A Python package for robust dynamic mode decomposition*. arXiv preprint, 2024. [[arXiv](https://doi.org/10.48550/arXiv.2402.07463)]
+* Demo, Tezzele, Rozza. *PyDMD: Python Dynamic Mode Decomposition*. Journal of Open Source Software, 2018. [[DOI](https://doi.org/10.21105/joss.00530)][[bibitem](readme/refs/Demo2018.bib)]
+* Ichinaga, Andreuzzi, Demo, Tezzele, Lapo, Rozza, Brunton, Kutz. *PyDMD: A Python Package for Robust Dynamic Mode Decomposition*. Journal of Machine Learning Research, 2024. [[DOI](http://jmlr.org/papers/v25/24-0739.html)][[bibitem](readme/refs/Ichinaga2024.bib)][[arXiv](https://doi.org/10.48550/arXiv.2402.07463)]
 
 ## References
 To implement the various versions of the DMD algorithm we follow these works:
