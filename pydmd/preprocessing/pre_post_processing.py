@@ -120,16 +120,13 @@ class PrePostProcessingDMD(Generic[S]):
         """
         return self._wrapped_dmd
 
-    # I am proposing to remove the activation bitmask as it heavily obscures
-    # a basic function. Instead, I would expose this functionality in a way
-    # that is consistent with the phsaor notation framework.
-    # @property
-    # def modes_activation_bitmask(self):
-    #     return self._wrapped_dmd.modes_activation_bitmask
+    @property
+    def modes_activation_bitmask(self):
+        return self._wrapped_dmd.modes_activation_bitmask
 
-    # @modes_activation_bitmask.setter
-    # def modes_activation_bitmask(self, value):
-    #     self._wrapped_dmd.modes_activation_bitmask = value
+    @modes_activation_bitmask.setter
+    def modes_activation_bitmask(self, value):
+        self._wrapped_dmd.modes_activation_bitmask = value
 
     def _fit_with_preprocessing(self, *args, **kwargs):
         """
