@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
        matrix_unit_test: ${{ steps.setmatrix.outputs.matrix1 }}
-       matrix_tutorial_test: ${{ steps.setmatrix.outputs.matrix2 }}
 
     steps:
         - uses: actions/checkout@v4
