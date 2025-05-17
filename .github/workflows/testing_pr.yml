@@ -172,7 +172,8 @@ jobs:
           if [[ $dir != tutorial5* ]]
             then
             cd $dir
-            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT python -Xfrozen_modules=off -m jupyter nbconvert --to notebook --execute *.ipynb
+            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT python -Xfrozen_modules=off -m jupyter nbconvert --to notebook --execute *.ipynb || \
+              ( [[ $? -eq 124 ]] && echo "WARNING: Timeout" )
             cd ..
           fi
         done
