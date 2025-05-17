@@ -1,23 +1,13 @@
 import json
 from argparse import ArgumentParser
 
-# TODO: Monitor https://github.com/federicocarboni/setup-ffmpeg/issues/21
-macos_version = "macos-13"
-
 testing_matrix_ghact = {
     "python-version": ["3.9", "3.10", "3.11", "3.12"],
-    "os": ["windows-latest", macos_version, "ubuntu-latest"],
+    "os": ["windows-latest", "macos-15", "ubuntu-latest"],
     "numpy-version": ["1.26.4", "2.0.2"],
     "exclude": [
         {"os": "windows-latest", "python-version": "3.11"},
     ],
-}
-
-tutorial_testing_matrix_ghact = {
-    "python-version": testing_matrix_ghact["python-version"],
-    "os": ["ubuntu-latest"],
-    "numpy-version": [testing_matrix_ghact["numpy-version"][-1]],
-    "exclude": testing_matrix_ghact["exclude"],
 }
 
 deploy_matrix_ghact = {"python-version": ["3.8"], "os": ["ubuntu-latest"]}
@@ -25,7 +15,6 @@ deploy_matrix_ghact = {"python-version": ["3.8"], "os": ["ubuntu-latest"]}
 if __name__ == "__main__":
     info = {
         "testing_matrix": testing_matrix_ghact,
-        "tutorial_testing_matrix": tutorial_testing_matrix_ghact,
         "deploy_matrix": deploy_matrix_ghact,
     }
     parser = ArgumentParser(description="Export info using JSON output")
