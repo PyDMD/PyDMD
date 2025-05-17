@@ -22,8 +22,6 @@ jobs:
           run: |
            matrix_str=$(python utils/info2json.py testing_matrix)
            echo "matrix1=$matrix_str" >> $GITHUB_OUTPUT
-           matrix_str=$(python utils/info2json.py tutorial_testing_matrix)
-           echo "matrix2=$matrix_str" >> $GITHUB_OUTPUT
 
   check_matrix: ##############################################################################
     runs-on: ubuntu-latest
