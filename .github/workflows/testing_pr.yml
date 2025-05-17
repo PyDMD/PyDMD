@@ -112,7 +112,7 @@ jobs:
       matrix: ${{ fromJson(needs.prepare_matrix.outputs.matrix_tutorial_test) }}
       fail-fast: false
     env:
-      TUTORIAL_TIMEOUT: 1200s
+      TUTORIAL_TIMEOUT: 300s
 
     steps:
     - uses: actions/checkout@v4

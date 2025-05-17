@@ -5,26 +5,18 @@ from argparse import ArgumentParser
 macos_version = "macos-13"
 
 testing_matrix_ghact = {
-    "python-version": ["3.8", "3.9", "3.10", "3.11", "3.12"],
+    "python-version": ["3.9", "3.10", "3.11", "3.12", "3.13"],
     "os": ["windows-latest", macos_version, "ubuntu-latest"],
-    "numpy-version": ["1.24.4", "1.26.4", "2.0.2"],
+    "numpy-version": ["1.26.4", "2.2.5"],
     "exclude": [
         {"os": "windows-latest", "python-version": "3.11"},
-        # 3.8 is only tested with NumPy 1.24.5
-        {"python-version": "3.8", "numpy-version": "1.26.4"},
-        {"python-version": "3.8", "numpy-version": "2.0.2"},
-        # NumPy 1.24.4 is only kept for 3.8
-        {"python-version": "3.9", "numpy-version": "1.24.4"},
-        {"python-version": "3.10", "numpy-version": "1.24.4"},
-        {"python-version": "3.11", "numpy-version": "1.24.4"},
-        {"python-version": "3.12", "numpy-version": "1.24.4"},
     ],
 }
 
 tutorial_testing_matrix_ghact = {
     "python-version": testing_matrix_ghact["python-version"],
-    "os": [macos_version, "ubuntu-latest"],
-    "numpy-version": testing_matrix_ghact["numpy-version"],
+    "os": ["ubuntu-latest"],
+    "numpy-version": [testing_matrix_ghact["numpy-version"][-1]],
     "exclude": testing_matrix_ghact["exclude"],
 }
 
