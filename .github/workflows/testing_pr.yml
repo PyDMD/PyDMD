@@ -169,11 +169,13 @@ jobs:
         set -x
         cd tutorials/
         for dir in $(ls -d tutorial*/); do
-          if [[ $dir != tutorial5* ]]
+          if [[ $dir != "tutorial5/" ]] && [[ $dir != "tutorial20/" ]]
             then
             cd $dir
-            timeout --signal=SIGKILL $TUTORIAL_TIMEOUT python -Xfrozen_modules=off -m jupyter nbconvert --to notebook --execute *.ipynb || \
-              ( [[ $? -eq 124 ]] && echo "WARNING: Timeout" )
+            timeout --preserve-status \
+              --signal=SIGKILL \
+              $TUTORIAL_TIMEOUT \
+              python -Xfrozen_modules=off -m jupyter nbconvert --to notebook --execute *.ipynb
             cd ..
           fi
         done
