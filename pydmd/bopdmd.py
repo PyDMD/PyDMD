@@ -1087,7 +1087,7 @@ class BOPDMDOperator(DMDOperator):
             # Step 3: process results one at a time, as they become available
             converged_bags = 0
             for future in futures:
-                w_i, e_i, b_i, _, _, converged = dask.compute(future)
+                w_i, e_i, b_i, _, _, converged = dask.compute(future)[0]
                 if converged or not self._remove_bad_bags:
                     sorted_inds = self._argsort_eigenvalues(e_i)
                     w_sum += w_i[:, sorted_inds]
