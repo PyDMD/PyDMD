@@ -15,6 +15,7 @@ import warnings
 from collections import OrderedDict
 from inspect import isfunction
 
+import dask
 import numpy as np
 from numpy.linalg import LinAlgError
 from scipy.linalg import qr
@@ -152,6 +153,7 @@ class BOPDMDOperator(DMDOperator):
         remove_bad_bags,
         bag_warning,
         bag_maxfail,
+        parallel_bagging,
         real_eig_limit,
         init_lambda=1.0,
         maxlam=52,
@@ -176,6 +178,7 @@ class BOPDMDOperator(DMDOperator):
         self._remove_bad_bags = remove_bad_bags
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
+        self._parallel_bagging = parallel_bagging
         self._real_eig_limit = real_eig_limit
         self._varpro_flag = varpro_flag
         self._varpro_opts = [
@@ -1003,64 +1006,100 @@ class BOPDMDOperator(DMDOperator):
         e_sum2 = np.zeros(e_0.shape, dtype="complex")
         b_sum2 = np.zeros(b_0.shape, dtype="complex")
 
-        # Perform num_trials many successful trials of optimized dmd.
-        num_successful_trials = 0
-        num_consecutive_fails = 0
-        runtime_warning_given = False
+        if not self._parallel_bagging:
+            # Perform num_trials many successful trials of optimized dmd sequentially
+            num_successful_trials = 0
+            num_consecutive_fails = 0
+            runtime_warning_given = False
 
-        while num_successful_trials < self._num_trials:
-            H_i, subset_inds = self._bag(H, self._trial_size)
-            trial_optdmd_results = self._single_trial_compute_operator(
-                H_i, t[subset_inds], e_0
+            while num_successful_trials < self._num_trials:
+                H_i, subset_inds = self._bag(H, self._trial_size)
+                trial_optdmd_results = self._single_trial_compute_operator(
+                    H_i, t[subset_inds], e_0
+                )
+                w_i, e_i, b_i, _, _, converged = trial_optdmd_results
+                if verbose:
+                    print()
+                    num_trial_print -= 1
+                    verbose = num_trial_print > 0
+                    self._varpro_opts[-1] = verbose
+
+                # Incorporate trial results into the running average if successful.
+                if converged or not self._remove_bad_bags:
+                    sorted_inds = self._argsort_eigenvalues(e_i)
+
+                    # Add to iterative sums.
+                    w_sum += w_i[:, sorted_inds]
+                    e_sum += e_i[sorted_inds]
+                    b_sum += b_i[sorted_inds]
+
+                    # Add to iterative sums of squares.
+                    w_sum2 += np.abs(w_i[:, sorted_inds]) ** 2
+                    e_sum2 += np.abs(e_i[sorted_inds]) ** 2
+                    b_sum2 += np.abs(b_i[sorted_inds]) ** 2
+
+                    # Bump up the number of successful trials
+                    # and reset the consecutive fails counter.
+                    num_successful_trials += 1
+                    num_consecutive_fails = 0
+
+                # Trial did not converge, and we are throwing away bad bags.
+                else:
+                    num_consecutive_fails += 1
+
+                if (
+                    num_consecutive_fails == self._bag_warning
+                    and not runtime_warning_given
+                ):
+                    msg = (
+                        "{} many trials without convergence. "
+                        "Consider loosening the tol requirements "
+                        "of the variable projection routine."
+                    )
+                    print(msg.format(num_consecutive_fails))
+                    runtime_warning_given = True
+
+                if num_consecutive_fails == self._bag_maxfail:
+                    msg = (
+                        "Terminating the bagging routine due to "
+                        "{} many trials without convergence."
+                    )
+                    raise RuntimeError(msg.format(num_consecutive_fails))
+
+        else:
+            # perform num_trials many trials of optimized dmd in parallel, whether
+            # they are successful or not.
+
+            # Step 1: create delayed tasks
+            # This only builds the task graph
+            lazy_results = []
+            for _ in range(self._num_trials):
+                H_i, subset_inds = self._bag(H, self._trial_size)
+                delayed_result = dask.delayed(
+                    self._single_trial_compute_operator
+                )(H_i, t[subset_inds], e_0)
+                lazy_results.append(delayed_result)
+
+            # Step 2: persist results in distributed memory (they may be large)
+            # This triggers the computation in the background
+            futures = dask.persist(*lazy_results)
+
+            # Step 3: process results one at a time, as they become available
+            converged_bags = 0
+            for future in futures:
+                w_i, e_i, b_i, _, _, converged = dask.compute(future)
+                if converged or not self._remove_bad_bags:
+                    sorted_inds = self._argsort_eigenvalues(e_i)
+                    w_sum += w_i[:, sorted_inds]
+                    e_sum += e_i[sorted_inds]
+                    b_sum += b_i[sorted_inds]
+                    w_sum2 += np.abs(w_i[:, sorted_inds]) ** 2
+                    e_sum2 += np.abs(e_i[sorted_inds]) ** 2
+                    b_sum2 += np.abs(b_i[sorted_inds]) ** 2
+                converged_bags += int(converged)
+            print(
+                f"Number of converged bags: {converged_bags} out of {self._num_trials}."
             )
-            w_i, e_i, b_i, _, _, converged = trial_optdmd_results
-            if verbose:
-                print()
-                num_trial_print -= 1
-                verbose = num_trial_print > 0
-                self._varpro_opts[-1] = verbose
-
-            # Incorporate trial results into the running average if successful.
-            if converged or not self._remove_bad_bags:
-                sorted_inds = self._argsort_eigenvalues(e_i)
-
-                # Add to iterative sums.
-                w_sum += w_i[:, sorted_inds]
-                e_sum += e_i[sorted_inds]
-                b_sum += b_i[sorted_inds]
-
-                # Add to iterative sums of squares.
-                w_sum2 += np.abs(w_i[:, sorted_inds]) ** 2
-                e_sum2 += np.abs(e_i[sorted_inds]) ** 2
-                b_sum2 += np.abs(b_i[sorted_inds]) ** 2
-
-                # Bump up the number of successful trials
-                # and reset the consecutive fails counter.
-                num_successful_trials += 1
-                num_consecutive_fails = 0
-
-            # Trial did not converge, and we are throwing away bad bags.
-            else:
-                num_consecutive_fails += 1
-
-            if (
-                num_consecutive_fails == self._bag_warning
-                and not runtime_warning_given
-            ):
-                msg = (
-                    "{} many trials without convergence. "
-                    "Consider loosening the tol requirements "
-                    "of the variable projection routine."
-                )
-                print(msg.format(num_consecutive_fails))
-                runtime_warning_given = True
-
-            if num_consecutive_fails == self._bag_maxfail:
-                msg = (
-                    "Terminating the bagging routine due to "
-                    "{} many trials without convergence."
-                )
-                raise RuntimeError(msg.format(num_consecutive_fails))
 
         # Compute the BOP-DMD statistics.
         w_mu = w_sum / self._num_trials
@@ -1209,6 +1248,7 @@ class BOPDMD(DMDBase):
         remove_bad_bags=False,
         bag_warning=100,
         bag_maxfail=200,
+        parallel_bagging=False,
         varpro_opts_dict=None,
         real_eig_limit=None,
         varpro_flag=True,
@@ -1232,6 +1272,7 @@ class BOPDMD(DMDBase):
         self._remove_bad_bags = remove_bad_bags
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
+        self._parallel_bagging = parallel_bagging
 
         if varpro_opts_dict is None:
             self._varpro_opts_dict = {}
@@ -1642,6 +1683,7 @@ class BOPDMD(DMDBase):
             self._remove_bad_bags,
             self._bag_warning,
             self._bag_maxfail,
+            self._parallel_bagging,
             self._real_eig_limit,
             varpro_flag=self._varpro_flag,
             **self._varpro_opts_dict,
@@ -1743,6 +1785,7 @@ class BOPDMD(DMDBase):
             self._remove_bad_bags,
             self._bag_warning,
             self._bag_maxfail,
+            self._parallel_bagging,
             self._real_eig_limit,
             **self._varpro_opts_dict,
         )

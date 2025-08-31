@@ -456,6 +456,7 @@ def test_eig_constraints_conjugate():
         None,
         None,
         None,
+        None,
     )
 
     eig_list = [eigs_1, eigs_2, eigs_3, eigs_4, eigs_5, eigs_6]
