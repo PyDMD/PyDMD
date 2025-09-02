@@ -1,3 +1,4 @@
+import dask
 import numpy as np
 import matplotlib.pyplot as plt
 from pytest import raises, warns
@@ -833,3 +834,42 @@ def test_fit_econ_with_bagging():
     np.testing.assert_allclose(bopdmd_econ.modes, bopdmd.modes)
     np.testing.assert_allclose(bopdmd_econ.amplitudes, bopdmd.amplitudes)
     np.testing.assert_allclose(forecast_econ.real, forecast.real)
+
+
+def test_parallel_bopdmd():
+    """Test that sequential and parallel bagging give the same results."""
+    svd_rank = 2
+    bopdmd_sequential = BOPDMD(
+        svd_rank=svd_rank,
+        num_trials=20,
+        trial_size=0.80,
+    )
+    bopdmd_parallel = BOPDMD(
+        svd_rank=svd_rank,
+        num_trials=20,
+        trial_size=0.80,
+        parallel_bagging=True,
+    )
+
+    np.random.seed(42)
+    bopdmd_sequential.fit(Z, t)
+
+    # with the synchronous scheduler, this actually runs single-threaded
+    with dask.config.set(scheduler="synchronous"):
+        np.random.seed(42)
+        bopdmd_parallel.fit(Z, t)
+
+    np.testing.assert_allclose(bopdmd_sequential.eigs, bopdmd_parallel.eigs)
+    np.testing.assert_allclose(
+        bopdmd_sequential.eigenvalues_std, bopdmd_parallel.eigenvalues_std
+    )
+    np.testing.assert_allclose(bopdmd_sequential.modes, bopdmd_parallel.modes)
+    np.testing.assert_allclose(
+        bopdmd_sequential.modes_std, bopdmd_parallel.modes_std
+    )
+    np.testing.assert_allclose(
+        bopdmd_sequential.amplitudes, bopdmd_parallel.amplitudes
+    )
+    np.testing.assert_allclose(
+        bopdmd_sequential.amplitudes_std, bopdmd_parallel.amplitudes_std
+    )
