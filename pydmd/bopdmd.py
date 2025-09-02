@@ -1086,6 +1086,7 @@ class BOPDMDOperator(DMDOperator):
 
             # Step 3: process results one at a time, as they become available
             converged_bags = 0
+            num_successful_trials = 0
             for future in futures:
                 w_i, e_i, b_i, _, _, converged = dask.compute(future)[0]
                 if converged or not self._remove_bad_bags:
@@ -1096,6 +1097,7 @@ class BOPDMDOperator(DMDOperator):
                     w_sum2 += np.abs(w_i[:, sorted_inds]) ** 2
                     e_sum2 += np.abs(e_i[sorted_inds]) ** 2
                     b_sum2 += np.abs(b_i[sorted_inds]) ** 2
+                    num_successful_trials += 1
                 converged_bags += int(converged)
             if converged_bags == 0 and self._remove_bad_bags:
                 msg = (
@@ -1112,12 +1114,12 @@ class BOPDMDOperator(DMDOperator):
                 print(msg)
 
         # Compute the BOP-DMD statistics.
-        w_mu = w_sum / self._num_trials
-        e_mu = e_sum / self._num_trials
-        b_mu = b_sum / self._num_trials
-        w_std = np.sqrt(np.abs(w_sum2 / self._num_trials - np.abs(w_mu) ** 2))
-        e_std = np.sqrt(np.abs(e_sum2 / self._num_trials - np.abs(e_mu) ** 2))
-        b_std = np.sqrt(np.abs(b_sum2 / self._num_trials - np.abs(b_mu) ** 2))
+        w_mu = w_sum / num_successful_trials
+        e_mu = e_sum / num_successful_trials
+        b_mu = b_sum / num_successful_trials
+        w_std = np.sqrt(np.abs(w_sum2 / num_successful_trials - np.abs(w_mu) ** 2))
+        e_std = np.sqrt(np.abs(e_sum2 / num_successful_trials - np.abs(e_mu) ** 2))
+        b_std = np.sqrt(np.abs(b_sum2 / num_successful_trials - np.abs(b_mu) ** 2))
 
         # Save the BOP-DMD statistics.
         self._modes = w_mu
