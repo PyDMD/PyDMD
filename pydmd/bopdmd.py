@@ -1097,9 +1097,19 @@ class BOPDMDOperator(DMDOperator):
                     e_sum2 += np.abs(e_i[sorted_inds]) ** 2
                     b_sum2 += np.abs(b_i[sorted_inds]) ** 2
                 converged_bags += int(converged)
-            print(
-                f"Number of converged bags: {converged_bags} out of {self._num_trials}."
-            )
+            if converged_bags == 0 and self._remove_bad_bags:
+                msg = (
+                    "There are no converged bags to compute statistics. "
+                    "Set 'remove_bad_bags' to False, or consider looseing the "
+                    "tol requirements of the variable projection routine."
+                )
+                raise RuntimeError(msg)
+            elif converged_bags < 0.5 * self._num_trials:
+                msg = (
+                    f"Number of converged bags: {converged_bags} out of {self._num_trials}. "
+                    "Consider loosening the tol requirements of the variable projection routine."
+                )
+                print(msg)
 
         # Compute the BOP-DMD statistics.
         w_mu = w_sum / self._num_trials
