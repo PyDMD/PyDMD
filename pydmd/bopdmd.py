@@ -1106,7 +1106,7 @@ class BOPDMDOperator(DMDOperator):
                     "tol requirements of the variable projection routine."
                 )
                 raise RuntimeError(msg)
-            elif converged_bags < 0.5 * self._num_trials:
+            if converged_bags < 0.5 * self._num_trials:
                 msg = (
                     f"Number of converged bags: {converged_bags} out of {self._num_trials}. "
                     "Consider loosening the tol requirements of the variable projection routine."
