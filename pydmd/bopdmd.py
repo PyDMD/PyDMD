@@ -96,6 +96,12 @@ class BOPDMDOperator(DMDOperator):
         active only when `remove_bad_bags=True`. Use negative arguments for no
         stopping condition.
     :type bag_maxfail: int
+    :param parallel_bagging: Whether to perform bagging in parallel or sequentially.
+        Parallel bagging can speed up the calculation of statistics when running
+        a large number of BOP-DMD trials on large datatasets. Dask is used for
+        parallelization, and Dask's multi-processing or distributed schedulers are
+        recommended in order to overcome the GIL. The default is False (run sequentially).
+    :type parallel_bagging: bool
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
         Note: Larger lambda values make the method more like gradient descent.
@@ -1117,9 +1123,15 @@ class BOPDMDOperator(DMDOperator):
         w_mu = w_sum / num_successful_trials
         e_mu = e_sum / num_successful_trials
         b_mu = b_sum / num_successful_trials
-        w_std = np.sqrt(np.abs(w_sum2 / num_successful_trials - np.abs(w_mu) ** 2))
-        e_std = np.sqrt(np.abs(e_sum2 / num_successful_trials - np.abs(e_mu) ** 2))
-        b_std = np.sqrt(np.abs(b_sum2 / num_successful_trials - np.abs(b_mu) ** 2))
+        w_std = np.sqrt(
+            np.abs(w_sum2 / num_successful_trials - np.abs(w_mu) ** 2)
+        )
+        e_std = np.sqrt(
+            np.abs(e_sum2 / num_successful_trials - np.abs(e_mu) ** 2)
+        )
+        b_std = np.sqrt(
+            np.abs(b_sum2 / num_successful_trials - np.abs(b_mu) ** 2)
+        )
 
         # Save the BOP-DMD statistics.
         self._modes = w_mu
@@ -1228,6 +1240,12 @@ class BOPDMD(DMDBase):
         active only when `remove_bad_bags=True`. Use negative arguments for no
         stopping condition.
     :type bag_maxfail: int
+    :param parallel_bagging: Whether to perform bagging in parallel or sequentially.
+        Parallel bagging can speed up the calculation of statistics when running
+        a large number of BOP-DMD trials on large datatasets. Dask is used for
+        parallelization, and Dask's multi-processing or distributed schedulers are
+        recommended in order to overcome the GIL. The default is False (run sequentially).
+    :type parallel_bagging: bool
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
         `init_lambda`, `maxlam`, `lamup`, `use_levmarq`, `maxiter`, `tol`,
