@@ -4,9 +4,9 @@
 # # PyDMD
 
 # ## User Manual 1: BOP-DMD on Flow Past a Cylinder Data
-# 
+#
 # In this guide, we briefly highlight all of the major features of the `BOPDMD`[[docs]](https://pydmd.github.io/PyDMD/bopdmd.html)[[source]](https://github.com/PyDMD/PyDMD/blob/master/pydmd/bopdmd.py) module by applying it to 2-D flow past a cylinder vorticity data with Reynolds number $Re = 100$. Examples listed in the table of contents will consecutively build on one another so that sample models will slowly increase in complexity. Data is available at <ins>dmdbook.com/DATA.zip</ins>. Note that we use a low resolution version of the data in this guide.
-# 
+#
 # #### Table of Contents:
 # 1. [Optimized DMD](#optdmd)
 # 2. [Optimized DMD with Bagging (BOP-DMD)](#bopdmd)
@@ -175,7 +175,9 @@ bopdmd.plot_mode_uq(
 # Build a BOP-DMD model with 11 spatiotemporal modes, and 100 bagging trials,
 # where each trial uses 80% of the total number of snapshots per trial.
 # Request parallel bagging.
-bopdmd = BOPDMD(svd_rank=11, num_trials=100, trial_size=0.8, parallel_bagging=True)
+bopdmd = BOPDMD(
+    svd_rank=11, num_trials=100, trial_size=0.8, parallel_bagging=True
+)
 
 # Use the multi-processing scheduler
 with dask.config.set(scheduler="processes"):
@@ -200,13 +202,21 @@ bopdmd.plot_mode_uq(
 # In[8]:
 
 
-get_ipython().run_cell_magic('time', '', 'bopdmd = BOPDMD(svd_rank=11, num_trials=1000, trial_size=0.8)\nbopdmd.fit(X, t)\n')
+get_ipython().run_cell_magic(
+    "time",
+    "",
+    "bopdmd = BOPDMD(svd_rank=11, num_trials=1000, trial_size=0.8)\nbopdmd.fit(X, t)\n",
+)
 
 
 # In[9]:
 
 
-get_ipython().run_cell_magic('time', '', 'bopdmd = BOPDMD(svd_rank=11, num_trials=1000, trial_size=0.8, parallel_bagging=True)\n\nwith dask.config.set(scheduler="processes"):\n    bopdmd.fit(X, t)\n')
+get_ipython().run_cell_magic(
+    "time",
+    "",
+    'bopdmd = BOPDMD(svd_rank=11, num_trials=1000, trial_size=0.8, parallel_bagging=True)\n\nwith dask.config.set(scheduler="processes"):\n    bopdmd.fit(X, t)\n',
+)
 
 
 # ### 4. BOP-DMD with Eigenvalue Constraints
@@ -309,4 +319,3 @@ bopdmd.fit(X, t=t)
 # Same plot_summary call, but plot modes 1, 3, and 5.
 plot_summary_kwargs["index_modes"] = (0, 2, 4)
 plot_summary(bopdmd, **plot_summary_kwargs)
-
