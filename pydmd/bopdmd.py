@@ -100,7 +100,10 @@ class BOPDMDOperator(DMDOperator):
         Parallel bagging can speed up the calculation of statistics when running
         a large number of BOP-DMD trials on large datatasets. Dask is used for
         parallelization, and Dask's multi-processing or distributed schedulers are
-        recommended in order to overcome the GIL. The default is False (run sequentially).
+        recommended in order to overcome the GIL. Note that, unlike the sequential
+        case, the parallelized version will attempt a maximum of `num_trials` BOP-DMD
+        trials, and if `remove_bad_bags` is set to True only the converged trials
+        will be used to compute statistics.
     :type parallel_bagging: bool
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
@@ -1244,7 +1247,10 @@ class BOPDMD(DMDBase):
         Parallel bagging can speed up the calculation of statistics when running
         a large number of BOP-DMD trials on large datatasets. Dask is used for
         parallelization, and Dask's multi-processing or distributed schedulers are
-        recommended in order to overcome the GIL. The default is False (run sequentially).
+        recommended in order to overcome the GIL. Note that, unlike the sequential
+        case, the parallelized version will attempt a maximum of `num_trials` BOP-DMD
+        trials, and if `remove_bad_bags` is set to True only the converged trials
+        will be used to compute statistics.
     :type parallel_bagging: bool
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
