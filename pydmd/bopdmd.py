@@ -1015,6 +1015,20 @@ class BOPDMDOperator(DMDOperator):
         e_sum2 = np.zeros(e_0.shape, dtype="complex")
         b_sum2 = np.zeros(b_0.shape, dtype="complex")
 
+        def _update_bopdmd_stats(
+            w_i: np.ndarray,
+            e_i: np.ndarray,
+            b_i: np.ndarray,
+        ):
+            nonlocal w_sum, e_sum, b_sum, w_sum2, e_sum2, b_sum2
+            sorted_inds = self._argsort_eigenvalues(e_i)
+            w_sum += w_i[:, sorted_inds]
+            e_sum += e_i[sorted_inds]
+            b_sum += b_i[sorted_inds]
+            w_sum2 += np.abs(w_i[:, sorted_inds]) ** 2
+            e_sum2 += np.abs(e_i[sorted_inds]) ** 2
+            b_sum2 += np.abs(b_i[sorted_inds]) ** 2
+
         if not self._parallel_bagging:
             # Perform num_trials many successful trials of optimized dmd sequentially
             num_successful_trials = 0
@@ -1035,17 +1049,7 @@ class BOPDMDOperator(DMDOperator):
 
                 # Incorporate trial results into the running average if successful.
                 if converged or not self._remove_bad_bags:
-                    sorted_inds = self._argsort_eigenvalues(e_i)
-
-                    # Add to iterative sums.
-                    w_sum += w_i[:, sorted_inds]
-                    e_sum += e_i[sorted_inds]
-                    b_sum += b_i[sorted_inds]
-
-                    # Add to iterative sums of squares.
-                    w_sum2 += np.abs(w_i[:, sorted_inds]) ** 2
-                    e_sum2 += np.abs(e_i[sorted_inds]) ** 2
-                    b_sum2 += np.abs(b_i[sorted_inds]) ** 2
+                    _update_bopdmd_stats(w_i=w_i, e_i=e_i, b_i=b_i)
 
                     # Bump up the number of successful trials
                     # and reset the consecutive fails counter.
@@ -1099,13 +1103,7 @@ class BOPDMDOperator(DMDOperator):
             for future in futures:
                 w_i, e_i, b_i, _, _, converged = dask.compute(future)[0]
                 if converged or not self._remove_bad_bags:
-                    sorted_inds = self._argsort_eigenvalues(e_i)
-                    w_sum += w_i[:, sorted_inds]
-                    e_sum += e_i[sorted_inds]
-                    b_sum += b_i[sorted_inds]
-                    w_sum2 += np.abs(w_i[:, sorted_inds]) ** 2
-                    e_sum2 += np.abs(e_i[sorted_inds]) ** 2
-                    b_sum2 += np.abs(b_i[sorted_inds]) ** 2
+                    _update_bopdmd_stats(w_i=w_i, e_i=e_i, b_i=b_i)
                     num_successful_trials += 1
                 converged_bags += int(converged)
             if converged_bags == 0 and self._remove_bad_bags:
