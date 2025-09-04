@@ -88,13 +88,13 @@ class BOPDMDOperator(DMDOperator):
     :type remove_bad_bags: bool
     :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
         at which to produce a warning message for the user. Default is 100.
-        This parameter becomes active only when `remove_bad_bags=True`. Use
-        negative arguments for no warning condition.
+        This parameter becomes active only when `remove_bad_bags=True` and
+        `parallel_bagging=False`. Use negative arguments for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Default is 200. This parameter becomes
-        active only when `remove_bad_bags=True`. Use negative arguments for no
-        stopping condition.
+        active only when `remove_bad_bags=True` and `parallel_bagging=False`.
+        Use negative arguments for no stopping condition.
     :type bag_maxfail: int
     :param parallel_bagging: Whether to perform bagging in parallel or sequentially.
         Parallel bagging can speed up the calculation of statistics when running
@@ -1233,13 +1233,13 @@ class BOPDMD(DMDBase):
     :type remove_bad_bags: bool
     :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
         at which to produce a warning message for the user. Default is 100.
-        This parameter becomes active only when `remove_bad_bags=True`. Use
-        negative arguments for no warning condition.
+        This parameter becomes active only when `remove_bad_bags=True` and
+        `parallel_bagging=False`. Use negative arguments for no warning condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Default is 200. This parameter becomes
-        active only when `remove_bad_bags=True`. Use negative arguments for no
-        stopping condition.
+        active only when `remove_bad_bags=True` and `parallel_bagging=False`.
+        Use negative arguments for no stopping condition.
     :type bag_maxfail: int
     :param parallel_bagging: Whether to perform bagging in parallel or sequentially.
         Parallel bagging can speed up the calculation of statistics when running
