@@ -1780,7 +1780,7 @@ class BOPDMD(DMDBase):
         if self.operator.eigenvalues_std is not None:
             # Compute num_trials many forecasts.
             all_x = np.empty(
-                (self._num_trials, self.snapshots.shape[0], len(t)),
+                (self._num_trials, self.proj_basis.shape[0], len(t)),
                 dtype="complex",
             )
 
