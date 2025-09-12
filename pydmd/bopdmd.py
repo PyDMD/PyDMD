@@ -1020,14 +1020,13 @@ class BOPDMDOperator(DMDOperator):
             e_i: np.ndarray,
             b_i: np.ndarray,
         ):
-            nonlocal w_sum, e_sum, b_sum, w_sum2, e_sum2, b_sum2
             sorted_inds = self._argsort_eigenvalues(e_i)
-            w_sum += w_i[:, sorted_inds]
-            e_sum += e_i[sorted_inds]
-            b_sum += b_i[sorted_inds]
-            w_sum2 += np.abs(w_i[:, sorted_inds]) ** 2
-            e_sum2 += np.abs(e_i[sorted_inds]) ** 2
-            b_sum2 += np.abs(b_i[sorted_inds]) ** 2
+            np.add(w_sum, w_i[:, sorted_inds], out=w_sum)
+            np.add(e_sum, e_i[sorted_inds], out=e_sum)
+            np.add(b_sum, b_i[sorted_inds], out=b_sum)
+            np.add(w_sum2, np.abs(w_i[:, sorted_inds]) ** 2, out=w_sum2)
+            np.add(e_sum2, np.abs(e_i[sorted_inds]) ** 2, out=e_sum2)
+            np.add(b_sum2, np.abs(b_i[sorted_inds]) ** 2, out=b_sum2)
 
         if not self._parallel_bagging:
             # Perform num_trials many successful trials of optimized dmd sequentially
