@@ -215,7 +215,7 @@ get_ipython().run_cell_magic(
 get_ipython().run_cell_magic(
     "time",
     "",
-    'bopdmd = BOPDMD(svd_rank=11, num_trials=1000, trial_size=0.8, parallel_bagging=True)\n\nwith dask.config.set(scheduler="processes"):\n    bopdmd.fit(X, t)\n',
+    'bopdmd = BOPDMD(\n    svd_rank=11, num_trials=1000, trial_size=0.8, parallel_bagging=True\n)\n\nwith dask.config.set(scheduler="processes"):\n    bopdmd.fit(X, t)\n',
 )
 
 
@@ -277,6 +277,8 @@ bopdmd.fit(X, t)
 # - Whether or not a trial converges depends on the tolerance parameter, which is controlled by `tol`.
 #     - Set this parameter with the `varpro_opts_dict`.
 #     - Use verbosity to gauge what a realistic tolerance might look like for your data.
+#
+# The behavior of `remove_bad_bags=True` is different with sequential and parallel bagging. With parallel bagging (`parallel_bagging=True`, defaults to `False`), the algorithm will attempt a maximum of `num_trials` BOP-DMD trials, and will only use the converged trials to compute statistics. If the converged trials are fewer than 50\% of `num_trials`, a warning is issued. The parameters `bag_warning` and `bag_maxfail` do not apply when `parallel_bagging=True`.
 
 # In[12]:
 
