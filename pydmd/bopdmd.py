@@ -1084,13 +1084,12 @@ class BOPDMDOperator(DMDOperator):
 
             # Step 1: create delayed tasks
             # This only builds the task graph
-            lazy_results = []
-            for _ in range(self._num_trials):
-                H_i, subset_inds = self._bag(H, self._trial_size)
-                delayed_result = dask.delayed(
-                    self._single_trial_compute_operator
-                )(H_i, t[subset_inds], e_0)
-                lazy_results.append(delayed_result)
+            @dask.delayed
+            def _run_trial(H, t, e_0, trial_size, seed):
+                H_i, subset_inds = self._bag(H, trial_size, seed)
+                return self._single_trial_compute_operator(H_i, t[subset_inds], e_0)
+
+            lazy_results = [_run_trial(H, t, e_0, self._trial_size, seed) for _ in range(self._num_trials)]
 
             # Step 2: persist results in distributed memory (they may be large)
             # This triggers the computation in the background
