@@ -814,8 +814,9 @@ def test_fit_econ_with_bagging():
     """
     svd_rank = 2
     num_trials = 5
-    bopdmd = BOPDMD(svd_rank=svd_rank, use_proj=True, num_trials=num_trials)
-    np.random.seed(42)
+    bopdmd = BOPDMD(
+        svd_rank=svd_rank, use_proj=True, num_trials=num_trials, seed=1234
+    )
     bopdmd.fit(Z, t)
     forecast, _ = bopdmd.forecast(t_long)
 
@@ -824,9 +825,12 @@ def test_fit_econ_with_bagging():
     s = s[:svd_rank]
     V = V[:svd_rank, :]
     bopdmd_econ = BOPDMD(
-        svd_rank=svd_rank, use_proj=True, proj_basis=U, num_trials=num_trials
+        svd_rank=svd_rank,
+        use_proj=True,
+        proj_basis=U,
+        num_trials=num_trials,
+        seed=1234,
     )
-    np.random.seed(42)
     bopdmd_econ.fit_econ(s, V, t)
     forecast_econ, _ = bopdmd_econ.forecast(t_long)
 
@@ -843,20 +847,20 @@ def test_parallel_bopdmd():
         svd_rank=svd_rank,
         num_trials=20,
         trial_size=0.80,
+        seed=1234,
     )
     bopdmd_parallel = BOPDMD(
         svd_rank=svd_rank,
         num_trials=20,
         trial_size=0.80,
         parallel_bagging=True,
+        seed=1234,
     )
 
-    np.random.seed(42)
     bopdmd_sequential.fit(Z, t)
 
     # with the synchronous scheduler, this actually runs single-threaded
     with dask.config.set(scheduler="synchronous"):
-        np.random.seed(42)
         bopdmd_parallel.fit(Z, t)
 
     np.testing.assert_allclose(bopdmd_sequential.eigs, bopdmd_parallel.eigs)

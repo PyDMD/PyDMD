@@ -164,6 +164,7 @@ class BOPDMDOperator(DMDOperator):
         bag_maxfail,
         parallel_bagging,
         real_eig_limit,
+        seed=None,
         init_lambda=1.0,
         maxlam=52,
         lamup=2.0,
@@ -189,6 +190,7 @@ class BOPDMDOperator(DMDOperator):
         self._bag_maxfail = bag_maxfail
         self._parallel_bagging = parallel_bagging
         self._real_eig_limit = real_eig_limit
+        self._seed = seed
         self._varpro_flag = varpro_flag
         self._varpro_opts = [
             init_lambda,
@@ -565,7 +567,7 @@ class BOPDMDOperator(DMDOperator):
 
         raise ValueError("Provided eig_sort method is not supported.")
 
-    def _bag(self, H, trial_size):
+    def _bag(self, H, trial_size, trial_seed):
         """
         Given a 2D array of data X, where each row contains a data snapshot,
         randomly sub-selects and returns data snapshots while preserving the
@@ -616,8 +618,9 @@ class BOPDMDOperator(DMDOperator):
 
         # Obtain and return subset of the data.
         all_inds = np.arange(H.shape[0])
+        rng = np.random.default_rng(trial_seed)
         subset_inds = np.sort(
-            np.random.choice(all_inds, size=batch_size, replace=False)
+            rng.choice(all_inds, size=batch_size, replace=False)
         )
         return H[subset_inds], subset_inds
 
@@ -1032,10 +1035,13 @@ class BOPDMDOperator(DMDOperator):
             # Perform num_trials many successful trials of optimized dmd sequentially
             num_successful_trials = 0
             num_consecutive_fails = 0
+            trial_seed = self._seed
             runtime_warning_given = False
 
             while num_successful_trials < self._num_trials:
-                H_i, subset_inds = self._bag(H, self._trial_size)
+                H_i, subset_inds = self._bag(H, self._trial_size, trial_seed)
+                if trial_seed is not None:
+                    trial_seed += 1
                 trial_optdmd_results = self._single_trial_compute_operator(
                     H_i, t[subset_inds], e_0
                 )
@@ -1085,11 +1091,22 @@ class BOPDMDOperator(DMDOperator):
             # Step 1: create delayed tasks
             # This only builds the task graph
             @dask.delayed
-            def _run_trial(H, t, e_0, trial_size, seed):
-                H_i, subset_inds = self._bag(H, trial_size, seed)
-                return self._single_trial_compute_operator(H_i, t[subset_inds], e_0)
+            def _run_trial(H, t, e_0, trial_size, trial_seed):
+                H_i, subset_inds = self._bag(H, trial_size, trial_seed)
+                return self._single_trial_compute_operator(
+                    H_i, t[subset_inds], e_0
+                )
 
-            lazy_results = [_run_trial(H, t, e_0, self._trial_size, seed) for _ in range(self._num_trials)]
+            lazy_results = [
+                _run_trial(
+                    H,
+                    t,
+                    e_0,
+                    self._trial_size,
+                    None if self._seed is None else self._seed + i,
+                )
+                for i in range(self._num_trials)
+            ]
 
             # Step 2: persist results in distributed memory (they may be large)
             # This triggers the computation in the background
@@ -1281,6 +1298,7 @@ class BOPDMD(DMDBase):
         bag_warning=100,
         bag_maxfail=200,
         parallel_bagging=False,
+        seed=None,
         varpro_opts_dict=None,
         real_eig_limit=None,
         varpro_flag=True,
@@ -1305,6 +1323,7 @@ class BOPDMD(DMDBase):
         self._bag_warning = bag_warning
         self._bag_maxfail = bag_maxfail
         self._parallel_bagging = parallel_bagging
+        self._seed = seed
 
         if varpro_opts_dict is None:
             self._varpro_opts_dict = {}
@@ -1717,6 +1736,7 @@ class BOPDMD(DMDBase):
             self._bag_maxfail,
             self._parallel_bagging,
             self._real_eig_limit,
+            seed=self._seed,
             varpro_flag=self._varpro_flag,
             **self._varpro_opts_dict,
         )
@@ -1819,6 +1839,8 @@ class BOPDMD(DMDBase):
             self._bag_maxfail,
             self._parallel_bagging,
             self._real_eig_limit,
+            seed=self._seed,
+            varpro_flag=self._varpro_flag,
             **self._varpro_opts_dict,
         )
 
@@ -1859,10 +1881,11 @@ class BOPDMD(DMDBase):
                 dtype="complex",
             )
 
+            rng = np.random.default_rng(self._seed)
             for k in range(self._num_trials):
                 # Draw eigenvalues and amplitudes from random distribution.
                 eigs_k = self.eigs + np.multiply(
-                    np.random.randn(*self.eigs.shape),
+                    rng.standard_normal(*self.eigs.shape),
                     self.operator.eigenvalues_std,
                 )
                 b_k = self.amplitudes + np.multiply(
