@@ -149,7 +149,8 @@ plot_summary_kwargs["flip_continuous_axes"] = True
 
 # Build a BOP-DMD model with 11 spatiotemporal modes, and 100 bagging trials,
 # where each trial uses 80% of the total number of snapshots per trial.
-bopdmd = BOPDMD(svd_rank=11, num_trials=100, trial_size=0.8)
+# Set the seed for reproducible output.
+bopdmd = BOPDMD(svd_rank=11, num_trials=100, trial_size=0.8, seed=1234)
 bopdmd.fit(X, t)
 plot_summary(bopdmd, **plot_summary_kwargs)
 
@@ -174,9 +175,13 @@ bopdmd.plot_mode_uq(
 
 # Build a BOP-DMD model with 11 spatiotemporal modes, and 100 bagging trials,
 # where each trial uses 80% of the total number of snapshots per trial.
-# Request parallel bagging.
+# Request parallel bagging, and set the seed for reproducible output.
 bopdmd = BOPDMD(
-    svd_rank=11, num_trials=100, trial_size=0.8, parallel_bagging=True
+    svd_rank=11,
+    num_trials=100,
+    trial_size=0.8,
+    parallel_bagging=True,
+    seed=1234,
 )
 
 # Use the multi-processing scheduler
