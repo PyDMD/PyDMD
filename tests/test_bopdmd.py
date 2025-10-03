@@ -863,6 +863,9 @@ def test_parallel_bopdmd():
     with dask.config.set(scheduler="synchronous"):
         bopdmd_parallel.fit(Z, t)
 
+    forecast_sequential, _ = bopdmd_sequential.forecast(t_long)
+    forecast_parallel, _ = bopdmd_parallel.forecast(t_long)
+
     np.testing.assert_allclose(bopdmd_sequential.eigs, bopdmd_parallel.eigs)
     np.testing.assert_allclose(
         bopdmd_sequential.eigenvalues_std, bopdmd_parallel.eigenvalues_std
@@ -877,3 +880,4 @@ def test_parallel_bopdmd():
     np.testing.assert_allclose(
         bopdmd_sequential.amplitudes_std, bopdmd_parallel.amplitudes_std
     )
+    np.testing.assert_allclose(forecast_sequential.real, forecast_parallel.real)
