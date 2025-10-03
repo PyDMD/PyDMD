@@ -789,6 +789,7 @@ def test_fit_econ():
     svd_rank = 2
     bopdmd = BOPDMD(svd_rank=svd_rank, use_proj=True)
     bopdmd.fit(Z, t)
+    forecast = bopdmd.forecast(t_long)
 
     U, s, V = np.linalg.svd(Z)
     U = U[:, :svd_rank]
@@ -796,6 +797,38 @@ def test_fit_econ():
     V = V[:svd_rank, :]
     bopdmd_econ = BOPDMD(svd_rank=svd_rank, use_proj=True, proj_basis=U)
     bopdmd_econ.fit_econ(s, V, t)
+    forecast_econ = bopdmd_econ.forecast(t_long)
 
     np.testing.assert_allclose(bopdmd_econ.eigs, bopdmd.eigs)
     np.testing.assert_allclose(bopdmd_econ.modes, bopdmd.modes)
+    np.testing.assert_allclose(bopdmd_econ.amplitudes, bopdmd.amplitudes)
+    np.testing.assert_allclose(forecast_econ.real, forecast.real)
+
+
+def test_fit_econ_with_bagging():
+    """
+    Test that the fit_econ method gives the same results as the fit method
+    when bagging is used.
+    """
+    svd_rank = 2
+    num_trials = 5
+    bopdmd = BOPDMD(svd_rank=svd_rank, use_proj=True, num_trials=num_trials)
+    np.random.seed(42)
+    bopdmd.fit(Z, t)
+    forecast, _ = bopdmd.forecast(t_long)
+
+    U, s, V = np.linalg.svd(Z)
+    U = U[:, :svd_rank]
+    s = s[:svd_rank]
+    V = V[:svd_rank, :]
+    bopdmd_econ = BOPDMD(
+        svd_rank=svd_rank, use_proj=True, proj_basis=U, num_trials=num_trials
+    )
+    np.random.seed(42)
+    bopdmd_econ.fit_econ(s, V, t)
+    forecast_econ, _ = bopdmd_econ.forecast(t_long)
+
+    np.testing.assert_allclose(bopdmd_econ.eigs, bopdmd.eigs)
+    np.testing.assert_allclose(bopdmd_econ.modes, bopdmd.modes)
+    np.testing.assert_allclose(bopdmd_econ.amplitudes, bopdmd.amplitudes)
+    np.testing.assert_allclose(forecast_econ.real, forecast.real)
