@@ -105,6 +105,12 @@ class BOPDMDOperator(DMDOperator):
         trials, and if `remove_bad_bags` is set to True only the converged trials
         will be used to compute statistics.
     :type parallel_bagging: bool
+    :param seed: Random seed used to initialize the random number generator.
+        Default is None, which initializes the random number generator using
+        system entropy. Used only if `num_trials` is a positive integer, i.e.
+        when performing BOP-DMD. Set seed to a fixed integer value to obtain
+        reproducible results.
+    :type seed: int or None
     :param init_lambda: Initial value used for the regularization parameter in
         the Levenberg method. Default is 1.0.
         Note: Larger lambda values make the method more like gradient descent.
@@ -567,7 +573,7 @@ class BOPDMDOperator(DMDOperator):
 
         raise ValueError("Provided eig_sort method is not supported.")
 
-    def _bag(self, H, trial_size, trial_seed):
+    def _bag(self, H, trial_size, trial_seed=None):
         """
         Given a 2D array of data X, where each row contains a data snapshot,
         randomly sub-selects and returns data snapshots while preserving the
@@ -581,6 +587,8 @@ class BOPDMDOperator(DMDOperator):
         :type H: numpy.ndarray
         :param trial_size: Size of the sub-selection from H.
         :type trial_size: int or float
+        :param trial_seed: Random seed used to initialize the random number generator.
+        :type trial_seed: int or None
         :return: Matrix of sub-selected data snapshots, stored in each row,
             and a vector of each snapshots's row index location in H.
         :rtype: numpy.ndarray, numpy.ndarray
@@ -1265,6 +1273,12 @@ class BOPDMD(DMDBase):
         trials, and if `remove_bad_bags` is set to True only the converged trials
         will be used to compute statistics.
     :type parallel_bagging: bool
+    :param seed: Random seed used to initialize the random number generator.
+        Default is None, which initializes the random number generator using
+        system entropy. Used only if `num_trials` is a positive integer, i.e.
+        when performing BOP-DMD. Set seed to a fixed integer value to obtain
+        reproducible results.
+    :type seed: int or None
     :param varpro_opts_dict: Dictionary containing the desired parameter values
         for variable projection. The following parameters may be specified:
         `init_lambda`, `maxlam`, `lamup`, `use_levmarq`, `maxiter`, `tol`,
