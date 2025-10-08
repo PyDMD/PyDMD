@@ -1,4 +1,4 @@
-import dask
+from dask.distributed import Client
 import numpy as np
 import matplotlib.pyplot as plt
 from pytest import raises, warns
@@ -859,8 +859,7 @@ def test_parallel_bopdmd():
 
     bopdmd_sequential.fit(Z, t)
 
-    # with the synchronous scheduler, this actually runs single-threaded
-    with dask.config.set(scheduler="synchronous"):
+    with Client(processes=False) as _:
         bopdmd_parallel.fit(Z, t)
 
     forecast_sequential, _ = bopdmd_sequential.forecast(t_long)
