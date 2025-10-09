@@ -1104,9 +1104,7 @@ class BOPDMDOperator(DMDOperator):
                         H_i, t[subset_inds], e_0
                     )
 
-                H_future, t_future, e_0_future = client.scatter(
-                    [H, t, e_0], broadcast=True
-                )
+                H_future, t_future, e_0_future = client.scatter([H, t, e_0])
                 futures = []
                 for i in range(self._num_trials):
                     future = client.submit(
