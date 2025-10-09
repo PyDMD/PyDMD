@@ -16,7 +16,6 @@ from collections import OrderedDict
 from inspect import isfunction
 
 import dask
-from dask.distributed import Client, get_client
 import numpy as np
 from numpy.linalg import LinAlgError
 from scipy.linalg import qr
@@ -1097,43 +1096,35 @@ class BOPDMDOperator(DMDOperator):
             # perform num_trials many trials of optimized dmd in parallel, whether
             # they are successful or not.
 
-            def pipeline_with_client(client) -> list:
-                def run_trial(H, t, e_0, trial_size, trial_seed):
-                    H_i, subset_inds = self._bag(H, trial_size, trial_seed)
-                    return self._single_trial_compute_operator(
-                        H_i, t[subset_inds], e_0
-                    )
-
-                H_future, t_future, e_0_future = client.scatter(
-                    [H, t, e_0], broadcast=True
+            # Step 1: create delayed tasks
+            # This only builds the task graph
+            @dask.delayed
+            def _run_trial(H, t, e_0, trial_size, trial_seed):
+                H_i, subset_inds = self._bag(H, trial_size, trial_seed)
+                return self._single_trial_compute_operator(
+                    H_i, t[subset_inds], e_0
                 )
-                futures = []
-                for i in range(self._num_trials):
-                    future = client.submit(
-                        run_trial,
-                        H_future,
-                        t_future,
-                        e_0_future,
-                        self._trial_size,
-                        None if self._seed is None else self._seed + i,
-                    )
-                    futures.append(future)
-                return client.gather(futures)
 
-            try:
-                client = get_client()
-                futures = pipeline_with_client(client)
-            except ValueError:
-                print("Setting up a multi-process local Dask cluster...")
-                with Client() as client:
-                    print(f"Cluster dashboard:{client.dashboard_link}")
-                    futures = pipeline_with_client(client)
+            lazy_results = [
+                _run_trial(
+                    H,
+                    t,
+                    e_0,
+                    self._trial_size,
+                    None if self._seed is None else self._seed + i,
+                )
+                for i in range(self._num_trials)
+            ]
+
+            # Step 2: persist results in distributed memory (they may be large)
+            # This triggers the computation in the background
+            futures = dask.persist(*lazy_results)
 
             # Step 3: process results one at a time, as they become available
             converged_bags = 0
             num_successful_trials = 0
             for future in futures:
-                w_i, e_i, b_i, _, _, converged = future
+                w_i, e_i, b_i, _, _, converged = dask.compute(future)[0]
                 if converged or not self._remove_bad_bags:
                     _update_bopdmd_stats(w_i=w_i, e_i=e_i, b_i=b_i)
                     num_successful_trials += 1
