@@ -1105,11 +1105,15 @@ class BOPDMDOperator(DMDOperator):
                     H_i, t[subset_inds], e_0
                 )
 
+            H_delayed = dask.delayed(H)
+            t_delayed = dask.delayed(t)
+            e_0_delayed = dask.delayed(e_0)
+
             lazy_results = [
                 _run_trial(
-                    H,
-                    t,
-                    e_0,
+                    H_delayed,
+                    t_delayed,
+                    e_0_delayed,
                     self._trial_size,
                     None if self._seed is None else self._seed + i,
                 )
