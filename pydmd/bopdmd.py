@@ -1908,7 +1908,7 @@ class BOPDMD(DMDBase):
                     self.operator.eigenvalues_std,
                 )
                 b_k = self.amplitudes + np.multiply(
-                    np.random.randn(*self.amplitudes.shape),
+                    rng.standard_normal(*self.amplitudes.shape),
                     self.operator.amplitudes_std,
                 )
                 # Compute forecast using average modes and eigs_k, b_k.
