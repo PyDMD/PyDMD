@@ -1105,6 +1105,7 @@ class BOPDMDOperator(DMDOperator):
                     H_i, t[subset_inds], e_0
                 )
 
+            # Convert data to Dask objects before embedding them into the graph
             H_delayed = dask.delayed(H)
             t_delayed = dask.delayed(t)
             e_0_delayed = dask.delayed(e_0)
