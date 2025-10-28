@@ -100,10 +100,10 @@ class BOPDMDOperator(DMDOperator):
         Parallel bagging can speed up the calculation of statistics when running
         a large number of BOP-DMD trials on large datatasets. Dask is used for
         parallelization, and Dask's multi-processing or distributed schedulers are
-        recommended in order to overcome the GIL. Note that, unlike the sequential
-        case, the parallelized version will attempt a maximum of `num_trials` BOP-DMD
-        trials, and if `remove_bad_bags` is set to True only the converged trials
-        will be used to compute statistics.
+        recommended in order to overcome Python's Global Interpreter Lock (GIL).
+        Note that, unlike the sequential case, the parallelized version will attempt
+        a maximum of `num_trials` BOP-DMD trials, and if `remove_bad_bags` is set to
+        True, only the converged trials will be used to compute statistics.
     :type parallel_bagging: bool
     :param seed: Random seed used to initialize the random number generator.
         Default is None, which initializes the random number generator using
@@ -1280,10 +1280,10 @@ class BOPDMD(DMDBase):
         Parallel bagging can speed up the calculation of statistics when running
         a large number of BOP-DMD trials on large datatasets. Dask is used for
         parallelization, and Dask's multi-processing or distributed schedulers are
-        recommended in order to overcome the GIL. Note that, unlike the sequential
-        case, the parallelized version will attempt a maximum of `num_trials` BOP-DMD
-        trials, and if `remove_bad_bags` is set to True only the converged trials
-        will be used to compute statistics.
+        recommended in order to overcome Python's Global Interpreter Lock (GIL).
+        Note that, unlike the sequential case, the parallelized version will attempt
+        a maximum of `num_trials` BOP-DMD trials, and if `remove_bad_bags` is set to
+        True, only the converged trials will be used to compute statistics.
     :type parallel_bagging: bool
     :param seed: Random seed used to initialize the random number generator.
         Default is None, which initializes the random number generator using
