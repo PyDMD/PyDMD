@@ -1031,12 +1031,11 @@ class BOPDMDOperator(DMDOperator):
             e_i: np.ndarray,
             b_i: np.ndarray,
         ):
-        """
-        Helper function that uses the given modes, eigenvalues, and amplitudes
-        from a single trial of optimized DMD to update the collective sum and
-        sum of squares of modes, eigenvalues, and amplitudes computed across
-        all (successful) optimized DMD trials so far.
-        """
+            """Helper function that uses the given modes, eigenvalues, and amplitudes
+            from a single trial of optimized DMD to update the collective sum and
+            sum of squares of modes, eigenvalues, and amplitudes computed across
+            all (successful) optimized DMD trials so far.
+            """
             sorted_inds = self._argsort_eigenvalues(e_i)
             np.add(w_sum, w_i[:, sorted_inds], out=w_sum)
             np.add(e_sum, e_i[sorted_inds], out=e_sum)
