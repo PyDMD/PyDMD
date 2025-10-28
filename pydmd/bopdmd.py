@@ -1098,8 +1098,10 @@ class BOPDMDOperator(DMDOperator):
                     raise RuntimeError(msg.format(num_consecutive_fails))
 
         else:
-            # perform num_trials many trials of optimized dmd in parallel, whether
-            # they are successful or not.
+            # Perform num_trials many trials of optimized dmd in parallel, whether
+            # they are successful or not. The implementation used here uses Dask
+            # Delayed, which wraps function calls into tasks that build a lazy
+            # computational graph that can be executed in parallel.
 
             # Step 1: create delayed tasks
             # This only builds the task graph
@@ -1127,7 +1129,7 @@ class BOPDMDOperator(DMDOperator):
             ]
 
             # Step 2: persist results in distributed memory (they may be large)
-            # This triggers the computation in the background
+            # This triggers the graph computation in the background
             futures = dask.persist(*lazy_results)
 
             # Step 3: process results one at a time, as they become available
