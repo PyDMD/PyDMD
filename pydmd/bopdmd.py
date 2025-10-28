@@ -89,21 +89,23 @@ class BOPDMDOperator(DMDOperator):
     :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
         at which to produce a warning message for the user. Default is 100.
         This parameter becomes active only when `remove_bad_bags=True` and
-        `parallel_bagging=False`. Use negative arguments for no warning condition.
+        `parallel_bagging=False`. Use negative arguments for no warning
+        condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Default is 200. This parameter becomes
         active only when `remove_bad_bags=True` and `parallel_bagging=False`.
         Use negative arguments for no stopping condition.
     :type bag_maxfail: int
-    :param parallel_bagging: Whether to perform bagging in parallel or sequentially.
-        Parallel bagging can speed up the calculation of statistics when running
-        a large number of BOP-DMD trials on large datatasets. Dask is used for
-        parallelization, and Dask's multi-processing or distributed schedulers are
-        recommended in order to overcome Python's Global Interpreter Lock (GIL).
-        Note that, unlike the sequential case, the parallelized version will attempt
-        a maximum of `num_trials` BOP-DMD trials, and if `remove_bad_bags` is set to
-        True, only the converged trials will be used to compute statistics.
+    :param parallel_bagging: Whether to perform bagging in parallel or
+        sequentially. Parallel bagging can speed up the calculation of
+        statistics when running a large number of BOP-DMD trials on large
+        datatasets. Dask is used for parallelization, and Dask's
+        multi-processing or distributed schedulers are recommended in order
+        to overcome Python's Global Interpreter Lock (GIL). Note that, unlike
+        the sequential case, the parallelized version will attempt a maximum of
+        `num_trials` BOP-DMD trials, and if `remove_bad_bags` is set to True,
+        only the converged trials will be used to compute statistics.
     :type parallel_bagging: bool
     :param seed: Random seed used to initialize the random number generator.
         Default is None, which initializes the random number generator using
@@ -587,7 +589,7 @@ class BOPDMDOperator(DMDOperator):
         :type H: numpy.ndarray
         :param trial_size: Size of the sub-selection from H.
         :type trial_size: int or float
-        :param trial_seed: Random seed used to initialize the random number generator.
+        :param trial_seed: seed used to initialize the random number generator.
         :type trial_seed: int or None
         :return: Matrix of sub-selected data snapshots, stored in each row,
             and a vector of each snapshots's row index location in H.
@@ -1031,10 +1033,11 @@ class BOPDMDOperator(DMDOperator):
             e_i: np.ndarray,
             b_i: np.ndarray,
         ):
-            """Helper function that uses the given modes, eigenvalues, and amplitudes
-            from a single trial of optimized DMD to update the collective sum and
-            sum of squares of modes, eigenvalues, and amplitudes computed across
-            all (successful) optimized DMD trials so far.
+            """Helper function that uses the given modes, eigenvalues,
+            and amplitudes from a single trial of optimized DMD to update
+            the collective sum and sum of squares of modes, eigenvalues,
+            and amplitudes computed across all (successful) optimized DMD
+            trials so far.
             """
             sorted_inds = self._argsort_eigenvalues(e_i)
             np.add(w_sum, w_i[:, sorted_inds], out=w_sum)
@@ -1045,7 +1048,8 @@ class BOPDMDOperator(DMDOperator):
             np.add(b_sum2, np.abs(b_i[sorted_inds]) ** 2, out=b_sum2)
 
         if not self._parallel_bagging:
-            # Perform num_trials many successful trials of optimized dmd sequentially
+            # Perform num_trials many successful trials of optimized
+            # dmd sequentially
             num_successful_trials = 0
             num_consecutive_fails = 0
             trial_seed = self._seed
@@ -1065,7 +1069,8 @@ class BOPDMDOperator(DMDOperator):
                     verbose = num_trial_print > 0
                     self._varpro_opts[-1] = verbose
 
-                # Incorporate trial results into the running average if successful.
+                # Incorporate trial results into the running average if
+                # successful.
                 if converged or not self._remove_bad_bags:
                     _update_bopdmd_stats(w_i=w_i, e_i=e_i, b_i=b_i)
 
@@ -1098,10 +1103,11 @@ class BOPDMDOperator(DMDOperator):
                     raise RuntimeError(msg.format(num_consecutive_fails))
 
         else:
-            # Perform num_trials many trials of optimized dmd in parallel, whether
-            # they are successful or not. The implementation used here uses Dask
-            # Delayed, which wraps function calls into tasks that build a lazy
-            # computational graph that can be executed in parallel.
+            # Perform num_trials many trials of optimized dmd in parallel,
+            # whether they are successful or not. The implementation used
+            # here uses Dask Delayed, which wraps function calls into tasks
+            # that build a lazy computational graph that can be executed in
+            # parallel.
 
             # Step 1: create delayed tasks
             # This only builds the task graph
@@ -1150,8 +1156,10 @@ class BOPDMDOperator(DMDOperator):
                 raise RuntimeError(msg)
             if converged_bags < 0.5 * self._num_trials:
                 msg = (
-                    f"Number of converged bags: {converged_bags} out of {self._num_trials}. "
-                    "Consider loosening the tol requirements of the variable projection routine."
+                    f"Number of converged bags: {converged_bags} "
+                    f"out of {self._num_trials}. "
+                    "Consider loosening the tol requirements "
+                    "of the variable projection routine."
                 )
                 print(msg)
 
@@ -1269,21 +1277,23 @@ class BOPDMD(DMDBase):
     :param bag_warning: Number of consecutive non-converged trials of BOP-DMD
         at which to produce a warning message for the user. Default is 100.
         This parameter becomes active only when `remove_bad_bags=True` and
-        `parallel_bagging=False`. Use negative arguments for no warning condition.
+        `parallel_bagging=False`. Use negative arguments for no warning
+        condition.
     :type bag_warning: int
     :param bag_maxfail: Number of consecutive non-converged trials of BOP-DMD
         at which to terminate the fit. Default is 200. This parameter becomes
         active only when `remove_bad_bags=True` and `parallel_bagging=False`.
         Use negative arguments for no stopping condition.
     :type bag_maxfail: int
-    :param parallel_bagging: Whether to perform bagging in parallel or sequentially.
-        Parallel bagging can speed up the calculation of statistics when running
-        a large number of BOP-DMD trials on large datatasets. Dask is used for
-        parallelization, and Dask's multi-processing or distributed schedulers are
-        recommended in order to overcome Python's Global Interpreter Lock (GIL).
-        Note that, unlike the sequential case, the parallelized version will attempt
-        a maximum of `num_trials` BOP-DMD trials, and if `remove_bad_bags` is set to
-        True, only the converged trials will be used to compute statistics.
+    :param parallel_bagging: Whether to perform bagging in parallel or
+        sequentially. Parallel bagging can speed up the calculation of
+        statistics when running a large number of BOP-DMD trials on large
+        datatasets. Dask is used for parallelization, and Dask's
+        multi-processing or distributed schedulers are recommended in order
+        to overcome Python's Global Interpreter Lock (GIL). Note that, unlike
+        the sequential case, the parallelized version will attempt a maximum of
+        `num_trials` BOP-DMD trials, and if `remove_bad_bags` is set to True,
+        only the converged trials will be used to compute statistics.
     :type parallel_bagging: bool
     :param seed: Random seed used to initialize the random number generator.
         Default is None, which initializes the random number generator using
