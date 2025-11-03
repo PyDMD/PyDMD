@@ -859,7 +859,7 @@ def test_parallel_bopdmd():
 
     bopdmd_sequential.fit(Z, t)
 
-    # with the synchronous scheduler, this actually runs single-threaded
+    # run test with the synchronous scheduler (i.e. single-threaded)
     with dask.config.set(scheduler="synchronous"):
         bopdmd_parallel.fit(Z, t)
 
