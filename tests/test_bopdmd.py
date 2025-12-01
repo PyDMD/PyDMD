@@ -1,3 +1,4 @@
+import dask
 import numpy as np
 import matplotlib.pyplot as plt
 from pytest import raises, warns
@@ -456,6 +457,7 @@ def test_eig_constraints_conjugate():
         None,
         None,
         None,
+        None,
     )
 
     eig_list = [eigs_1, eigs_2, eigs_3, eigs_4, eigs_5, eigs_6]
@@ -812,8 +814,9 @@ def test_fit_econ_with_bagging():
     """
     svd_rank = 2
     num_trials = 5
-    bopdmd = BOPDMD(svd_rank=svd_rank, use_proj=True, num_trials=num_trials)
-    np.random.seed(42)
+    bopdmd = BOPDMD(
+        svd_rank=svd_rank, use_proj=True, num_trials=num_trials, seed=1234
+    )
     bopdmd.fit(Z, t)
     forecast, _ = bopdmd.forecast(t_long)
 
@@ -822,9 +825,12 @@ def test_fit_econ_with_bagging():
     s = s[:svd_rank]
     V = V[:svd_rank, :]
     bopdmd_econ = BOPDMD(
-        svd_rank=svd_rank, use_proj=True, proj_basis=U, num_trials=num_trials
+        svd_rank=svd_rank,
+        use_proj=True,
+        proj_basis=U,
+        num_trials=num_trials,
+        seed=1234,
     )
-    np.random.seed(42)
     bopdmd_econ.fit_econ(s, V, t)
     forecast_econ, _ = bopdmd_econ.forecast(t_long)
 
@@ -832,3 +838,49 @@ def test_fit_econ_with_bagging():
     np.testing.assert_allclose(bopdmd_econ.modes, bopdmd.modes)
     np.testing.assert_allclose(bopdmd_econ.amplitudes, bopdmd.amplitudes)
     np.testing.assert_allclose(forecast_econ.real, forecast.real)
+
+
+def test_parallel_bopdmd():
+    """Test that sequential and parallel bagging give the same results."""
+    svd_rank = 2
+    bopdmd_sequential = BOPDMD(
+        svd_rank=svd_rank,
+        num_trials=20,
+        trial_size=0.80,
+        seed=1234,
+    )
+    bopdmd_parallel = BOPDMD(
+        svd_rank=svd_rank,
+        num_trials=20,
+        trial_size=0.80,
+        parallel_bagging=True,
+        seed=1234,
+    )
+
+    bopdmd_sequential.fit(Z, t)
+
+    # run test with the synchronous scheduler (i.e. single-threaded)
+    with dask.config.set(scheduler="synchronous"):
+        bopdmd_parallel.fit(Z, t)
+
+    forecast_sequential, forecast_sequential_var = bopdmd_sequential.forecast(
+        t_long
+    )
+    forecast_parallel, forecast_parallel_var = bopdmd_parallel.forecast(t_long)
+
+    np.testing.assert_allclose(bopdmd_sequential.eigs, bopdmd_parallel.eigs)
+    np.testing.assert_allclose(
+        bopdmd_sequential.eigenvalues_std, bopdmd_parallel.eigenvalues_std
+    )
+    np.testing.assert_allclose(bopdmd_sequential.modes, bopdmd_parallel.modes)
+    np.testing.assert_allclose(
+        bopdmd_sequential.modes_std, bopdmd_parallel.modes_std
+    )
+    np.testing.assert_allclose(
+        bopdmd_sequential.amplitudes, bopdmd_parallel.amplitudes
+    )
+    np.testing.assert_allclose(
+        bopdmd_sequential.amplitudes_std, bopdmd_parallel.amplitudes_std
+    )
+    np.testing.assert_allclose(forecast_sequential.real, forecast_parallel.real)
+    np.testing.assert_allclose(forecast_sequential_var, forecast_parallel_var)

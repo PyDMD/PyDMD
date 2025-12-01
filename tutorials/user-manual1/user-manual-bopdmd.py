@@ -10,10 +10,11 @@
 # #### Table of Contents:
 # 1. [Optimized DMD](#optdmd)
 # 2. [Optimized DMD with Bagging (BOP-DMD)](#bopdmd)
-# 3. [BOP-DMD with Eigenvalue Constraints](#eig)
-# 4. [Using Verbose Outputs](#verbose)
-# 5. [Removing Bad Bags](#bag-fail)
-# 6. [Applying Data Preprocessors](#preprocess)
+# 3. [Parallelized Bagging](#parallel-bopdmd)
+# 4. [BOP-DMD with Eigenvalue Constraints](#eig)
+# 5. [Using Verbose Outputs](#verbose)
+# 6. [Removing Bad Bags](#bag-fail)
+# 7. [Applying Data Preprocessors](#preprocess)
 
 # ### Import the Latest Version of PyDMD
 # To ensure that you are working with the most up-to-date version of PyDMD, clone the repository with
@@ -29,6 +30,7 @@
 # In[1]:
 
 
+import dask
 import warnings
 import numpy as np
 import scipy.io as sio
@@ -95,9 +97,14 @@ plot_summary(
     flip_continuous_axes=True,  # Rotate the continuous-time eig plot.
 )
 
+
 # Alternatively, pre-compute the SVD and use the `fit_econ` function.
-# This is useful when the SVD is already computed and the snapshots matrix
-# X is not available or is too large to store in memory.
+# `fit_econ` is useful when the SVD is already computed and the snapshots matrix `X` is not available or is too large to store in memory.
+
+# In[4]:
+
+
+# Pre-compute the SVD. For a large matrix X, you could do this with a randomized SVD.
 U, s, V = np.linalg.svd(X, full_matrices=False)
 U = U[:, :11]
 s = s[:11]
@@ -115,7 +122,8 @@ plot_summary(
     flip_continuous_axes=True,  # Rotate the continuous-time eig plot.
 )
 
-# In[4]:
+
+# In[5]:
 
 
 # Set the plot_summary arguments for later function calls.
@@ -136,12 +144,13 @@ plot_summary_kwargs["flip_continuous_axes"] = True
 #     - Use `plot_eig_uq` for eigenvalue UQ metrics.
 #     - Use `plot_mode_uq` for mode UQ metrics.
 
-# In[5]:
+# In[6]:
 
 
 # Build a BOP-DMD model with 11 spatiotemporal modes, and 100 bagging trials,
 # where each trial uses 80% of the total number of snapshots per trial.
-bopdmd = BOPDMD(svd_rank=11, num_trials=100, trial_size=0.8)
+# Set the seed for reproducible output.
+bopdmd = BOPDMD(svd_rank=11, num_trials=100, trial_size=0.8, seed=1234)
 bopdmd.fit(X, t)
 plot_summary(bopdmd, **plot_summary_kwargs)
 
@@ -157,7 +166,65 @@ bopdmd.plot_mode_uq(
 )
 
 
-# ### 3. BOP-DMD with Eigenvalue Constraints
+# ### 3. Parallelized bagging
+# <a id='parallel-bopdmd'></a>
+# If you are working on a large dataset or using a large number of bags, you might want to run the bagging in parallel. Bagging is an embarrassingly parallel problem run in a loop where each loop iteration is independent from other iterations. The parallelization is here implemented with [Dask](https://www.dask.org/). To overcome Python's GIL, it is recommended to use Dask's multiprocessing or distributed [schedulers](https://docs.dask.org/en/stable/scheduler-overview.html). The example below shows how to call the `fit()` method using the multiprocessing scheduler. For this to work, you need to set the `parallel_bagging` flag to `True` when creating the `BOPDMD` instance.
+
+# In[7]:
+
+
+# Build a BOP-DMD model with 11 spatiotemporal modes, and 100 bagging trials,
+# where each trial uses 80% of the total number of snapshots per trial.
+# Request parallel bagging, and set the seed for reproducible output.
+bopdmd = BOPDMD(
+    svd_rank=11,
+    num_trials=100,
+    trial_size=0.8,
+    parallel_bagging=True,
+    seed=1234,
+)
+
+# Use the multi-processing scheduler
+with dask.config.set(scheduler="processes"):
+    bopdmd.fit(X, t)
+
+plot_summary(bopdmd, **plot_summary_kwargs)
+
+# Plot eigenvalue UQ metrics.
+bopdmd.plot_eig_uq(figsize=(4, 2), flip_axes=True, draw_axes=True)
+
+# Plot mode UQ metrics.
+bopdmd.plot_mode_uq(
+    figsize=(14, 4),
+    plot_modes=(0, 1, 3, 5),
+    modes_shape=(ny, nx),
+    order="F",
+)
+
+
+# In the example above the parallelization hasn't speeded up things. That's because we are dealing with a relatively small dataset and only requesting 100 bags, so the overhead of spinning up and communicating information between multiple processes doesn't really pay off. The example below shows improved performance when requesting 1000 bags.
+
+# In[8]:
+
+
+get_ipython().run_cell_magic(
+    "time",
+    "",
+    "bopdmd = BOPDMD(svd_rank=11, num_trials=1000, trial_size=0.8)\nbopdmd.fit(X, t)\n",
+)
+
+
+# In[9]:
+
+
+get_ipython().run_cell_magic(
+    "time",
+    "",
+    'bopdmd = BOPDMD(\n    svd_rank=11, num_trials=1000, trial_size=0.8, parallel_bagging=True\n)\n\nwith dask.config.set(scheduler="processes"):\n    bopdmd.fit(X, t)\n',
+)
+
+
+# ### 4. BOP-DMD with Eigenvalue Constraints
 # <a id='eig'></a>
 # Set the `eig_constraints` parameter to constrain the eigenvalue structure.
 # - Can be a set of preset constraints, which may be combined:
@@ -166,7 +233,7 @@ bopdmd.plot_mode_uq(
 #     - `"conjugate_pairs"` = eigenvalues must be present with their complex conjugate.
 # - Can also be a custom function that will be applied to the eigenvalues.
 
-# In[6]:
+# In[10]:
 
 
 bopdmd = BOPDMD(
@@ -184,14 +251,14 @@ plot_summary(bopdmd, **plot_summary_kwargs)
 bopdmd.plot_eig_uq(figsize=(4, 2), flip_axes=True, draw_axes=True)
 
 
-# ### 4. Using Verbose Outputs
+# ### 5. Using Verbose Outputs
 # <a id='verbose'></a>
 # Turn on verbosity with the `varpro_opts_dict` parameter.
 # - Verbosity allows users to see the iterative progress of the variable projection routine.
 # - Verbosity also allows users to see the convergence status of the first 5 bagging trials.
 # - See the `BOPDMDOperator` documentation [[docs]](https://pydmd.github.io/PyDMD/bopdmd.html) for more information on all of the parameters that can be set with the `varpro_opts_dict`.
 
-# In[7]:
+# In[11]:
 
 
 bopdmd = BOPDMD(
@@ -205,7 +272,7 @@ bopdmd = BOPDMD(
 bopdmd.fit(X, t)
 
 
-# ### 5. Removing Bad Bags
+# ### 6. Removing Bad Bags
 # <a id='bag-fail'></a>
 # Omit the results of non-converged trials by setting `remove_bad_bags=True` (defaults to `False`).
 # - Doing this activates the parameters `bag_warning` and `bag_maxfail`:
@@ -215,8 +282,10 @@ bopdmd.fit(X, t)
 # - Whether or not a trial converges depends on the tolerance parameter, which is controlled by `tol`.
 #     - Set this parameter with the `varpro_opts_dict`.
 #     - Use verbosity to gauge what a realistic tolerance might look like for your data.
+#
+# The behavior of `remove_bad_bags=True` is different with sequential and parallel bagging. With parallel bagging (`parallel_bagging=True`, defaults to `False`), the algorithm will attempt a maximum of `num_trials` BOP-DMD trials, and will only use the converged trials to compute statistics. If the converged trials are fewer than 50\% of `num_trials`, a warning is issued. The parameters `bag_warning` and `bag_maxfail` do not apply when `parallel_bagging=True`.
 
-# In[8]:
+# In[12]:
 
 
 bopdmd = BOPDMD(
@@ -233,13 +302,13 @@ bopdmd = BOPDMD(
 bopdmd.fit(X, t)
 
 
-# ### 6. Applying Data Preprocessors
+# ### 7. Applying Data Preprocessors
 # <a id='preprocess'></a>
 # `BOPDMD` models can be used with tools from the `pydmd.preprocessing` suite.
 # - Simply wrap your `BOPDMD` model with the desired preprocessing tool.
 # - Calls to `fit` will now require setting the time vector `t` with a keyword argument.
 
-# In[9]:
+# In[13]:
 
 
 # BOP-DMD with zero mean centered data.
@@ -257,6 +326,3 @@ bopdmd.fit(X, t=t)
 # Same plot_summary call, but plot modes 1, 3, and 5.
 plot_summary_kwargs["index_modes"] = (0, 2, 4)
 plot_summary(bopdmd, **plot_summary_kwargs)
-
-
-# In[ ]:
