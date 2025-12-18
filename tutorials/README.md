@@ -8,6 +8,12 @@ Provided below are a line of tutorials and guides that quickly highlight key mod
 | Manual1&#160;[[.ipynb](user-manual1/user-manual-bopdmd.ipynb),&#160;[.py](user-manual1/user-manual-bopdmd.py)]| The Basics of `BOPDMD` | `pydmd.BOPDMD` |
 
 
+# PyDMD Video Tutorial Series
+
+| Title | Description | Video | Code |
+| ----- | ----------- | ----- | ---- |
+| PyDMD: A Python Package for DMD | This video introduces the dynamic mode decomposition (DMD) algorithm and demonstrates how scientists and engineers with a background in Python can get started with the PyDMD Python package for modeling snapshot data. | [[YouTube]()] | [[.ipynb](video-tutorial-code/dmd-basic-tutorial.ipynb)]
+
 
 # Tutorials
 
