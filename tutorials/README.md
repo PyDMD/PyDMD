@@ -2,7 +2,7 @@
 
 | Title | Description | Video | Code |
 | ----- | ----------- | ----- | ---- |
-| PyDMD: A Python Package for DMD | This video introduces the dynamic mode decomposition (DMD) algorithm and demonstrates how scientists and engineers with a background in Python can get started with the PyDMD Python package for modeling snapshot data. | [[YouTube]()] | [[.ipynb](video-tutorial-code/dmd-basic-tutorial.ipynb)]
+| PyDMD: A Python Package for DMD | This video introduces the dynamic mode decomposition (DMD) algorithm and demonstrates how scientists and engineers with a background in Python can get started with the PyDMD Python package for modeling snapshot data. | [[YouTube](https://www.youtube.com/watch?v=v33cL3o2Yuk)] | [[.ipynb](video-tutorial-code/dmd-basic-tutorial.ipynb)]
 
 
 # PyDMD User Manuals
