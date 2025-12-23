@@ -55,7 +55,5 @@ class _SvdProjectionPrePostProcessing(PrePostProcessing):
         return projection_matrix, projection_matrix.T.dot(X)
 
     @override
-    def post_processing(
-        self, pre_processing_output: np.ndarray, Y: np.ndarray
-    ) -> np.ndarray:
-        return pre_processing_output.dot(Y)
+    def post_processing(self, state: np.ndarray, Y: np.ndarray) -> np.ndarray:
+        return state.dot(Y)
