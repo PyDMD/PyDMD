@@ -208,3 +208,11 @@ def test_getitem_not_implemented():
         optdmd = OptDMD(svd_rank=2)
         optdmd.fit(X=sample_data)
         optdmd[1:3]
+
+def test_optdmd_predict_evd_runs_and_shapes():
+    X = np.random.randn(4, 10)
+    dmd = OptDMD(factorization="evd", svd_rank=2)
+    dmd.fit(X)
+    x = X[:, 0]       
+    y = dmd.predict(x) 
+    assert y.shape == x.shape
