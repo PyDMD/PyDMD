@@ -18,7 +18,6 @@ import datetime
 import shlex
 import sphinx
 from sphinx.errors import VersionRequirementError
-import sphinx_rtd_theme
 import importlib.metadata
 
 
@@ -53,6 +52,7 @@ extensions = [
     "sphinx.ext.imgmath",
     "sphinx.ext.ifconfig",
     "sphinx.ext.mathjax",
+    "nbsphinx",
 ]
 
 intersphinx_mapping = {
@@ -153,15 +153,26 @@ viewcode_import = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 # html_theme = 'bizstyle'
-html_theme = "sphinx_rtd_theme"
+html_theme = "pydata_sphinx_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-# html_theme_options = {}
+html_theme_options = {
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/PyDMD/PyDMD",
+            "icon": "fab fa-github-square",
+            "type": "fontawesome",
+        },
+    ],
+    "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "footer_start": ["copyright"],
+    "footer_end": ["sphinx-version"],
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
