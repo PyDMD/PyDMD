@@ -53,6 +53,7 @@ extensions = [
     "sphinx.ext.ifconfig",
     "sphinx.ext.mathjax",
     "nbsphinx",
+    "sphinx_design",
 ]
 
 intersphinx_mapping = {
