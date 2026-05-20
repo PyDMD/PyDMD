@@ -17,6 +17,7 @@ PyDMD is a Python package for **Dynamic Mode Decomposition (DMD)** — a data-dr
         +++
 
         .. button-ref:: installation
+            :ref-type: doc
             :expand:
             :color: secondary
             :click-parent:
@@ -31,6 +32,7 @@ PyDMD is a Python package for **Dynamic Mode Decomposition (DMD)** — a data-dr
         +++
 
         .. button-ref:: tutorials
+            :ref-type: doc
             :expand:
             :color: secondary
             :click-parent:
