@@ -7,6 +7,29 @@ Tutorials
    :hidden:
 
    tutorial-1-dmd
+   tutorial-2-adv-dmd
+   tutorial-3-mrdmd
+   tutorial-4-cdmd
+   tutorial-5-fbdmd
+   tutorial-6-hodmd
+   tutorial-7-dmdc
+   tutorial-8-comparisons
+   tutorial-9-spdmd
+   tutorial-10-paramdmd
+   tutorial-11-regularization
+   tutorial-12-cdmd
+   tutorial-13-subspacedmd
+   tutorial-14-bop-dmd
+   tutorial-15-pidmd
+   tutorial-16-rdmd
+   tutorial-17-edmd
+   tutorial-18-lando
+   tutorial-19-havok
+   costs-tutorial_toy-data
+   costs-tutorial_real-data
+   developers-help-1
+   user-manual-bopdmd
+   dmd-basic-tutorial
 
 
 The following tutorials cover PyDMD's capabilities from basic to advanced usage.
@@ -31,13 +54,9 @@ New to PyDMD? Start with our video tutorial series on YouTube:
     </div>
 
     <p style="text-align: center;">
-        <a href="https://www.youtube.com/watch?v=v33cL3o2Yuk" target="_blank">
-            Watch directly on YouTube
-        </a>
+        <a href="https://www.youtube.com/watch?v=v33cL3o2Yuk" target="_blank">Watch directly on YouTube</a>
          | 
-        <a href="https://github.com/PyDMD/PyDMD/blob/master/tutorials/video-tutorial-code/dmd-basic-tutorial.ipynb" target="_blank">
-            Download notebook
-        </a>
+        <a href="dmd-basic-tutorial.html">View notebook on this site</a>
     </p>
 
 
@@ -47,8 +66,8 @@ User Manuals
 Quick guides highlighting key modules and features. Great for new users.
 
 - **Manual 1** — The Basics of ``BOPDMD``
-  [`notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/user-manual1/user-manual-bopdmd.ipynb>`_,
-  `script <https://github.com/PyDMD/PyDMD/blob/master/tutorials/user-manual1/user-manual-bopdmd.py>`_]
+  `webpage <user-manual-bopdmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/user-manual1/user-manual-bopdmd.ipynb>`_
   — ``pydmd.BOPDMD``
 
 
@@ -61,105 +80,110 @@ Basic Tutorials
   — ``pydmd.DMD``, ``pydmd.BOPDMD``
 
 - **Tutorial 2** — Advanced features of standard DMD
-  [`html <http://pydmd.github.io/PyDMD/tutorial2advdmd.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial2/tutorial-2-adv-dmd.ipynb>`_]
+  `webpage <tutorial-2-adv-dmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial2/tutorial-2-adv-dmd.ipynb>`_
   — ``pydmd.DMD``
 
 - **Tutorial 3** — Multi-resolution DMD for transient phenomena
-  [`html <http://pydmd.github.io/PyDMD/tutorial3mrdmd.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial3/tutorial-3-mrdmd.ipynb>`_]
+  `webpage <tutorial-3-mrdmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial3/tutorial-3-mrdmd.ipynb>`_
   — ``pydmd.MrDMD``
 
 - **Tutorial 4** — Compressed DMD for computation speedup
-  [`html <http://pydmd.github.io/PyDMD/tutorial4cdmd.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial4/tutorial-4-cdmd.ipynb>`_]
+  `webpage <tutorial-4-cdmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial4/tutorial-4-cdmd.ipynb>`_
   — ``pydmd.CDMD``
 
 - **Tutorial 5** — Forward-backward DMD for CFD model analysis
-  [`html <http://pydmd.github.io/PyDMD/tutorial5fbdmd.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial5/tutorial-5-fbdmd.ipynb>`_]
+  `webpage <tutorial-5-fbdmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial5/tutorial-5-fbdmd.ipynb>`_
   — ``pydmd.FbDMD``
 
 - **Tutorial 6** — Higher-order DMD applied to scalar time-series
-  [`html <http://pydmd.github.io/PyDMD/tutorial6hodmd.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial6/tutorial-6-hodmd.ipynb>`_]
+  `webpage <tutorial-6-hodmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial6/tutorial-6-hodmd.ipynb>`_
   — ``pydmd.HODMD``
 
 - **Tutorial 7** — DMD with control
-  [`html <http://pydmd.github.io/PyDMD/tutorial7dmdc.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial7/tutorial-7-dmdc.ipynb>`_]
+  `webpage <tutorial-7-dmdc.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial7/tutorial-7-dmdc.ipynb>`_
   — ``pydmd.DMDC``
 
 - **Tutorial 8** — Comparison between DMD and optimal closed-form DMD
-  [`html <http://pydmd.github.io/PyDMD/tutorial8comparison.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial8/tutorial-8-comparisons.ipynb>`_]
+  `webpage <tutorial-8-comparisons.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial8/tutorial-8-comparisons.ipynb>`_
   — ``pydmd.OptDMD``
 
 - **Tutorial 9** — Sparsity-promoting DMD
-  [`html <http://pydmd.github.io/PyDMD/tutorial9spdmd.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial9/tutorial-9-spdmd.ipynb>`_]
+  `webpage <tutorial-9-spdmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial9/tutorial-9-spdmd.ipynb>`_
   — ``pydmd.SpDMD``
 
 - **Tutorial 10** — Parametric DMD
-  [`html <http://pydmd.github.io/PyDMD/tutorial10paramdmd.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial10/tutorial-10-paramdmd.ipynb>`_]
+  `webpage <tutorial-10-paramdmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial10/tutorial-10-paramdmd.ipynb>`_
   — ``pydmd.ParametricDMD``
 
 - **Tutorial 11** — Tikhonov regularization
-  [`html <http://pydmd.github.io/PyDMD/tutorial11regularization.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial11/tutorial-11-regularization.ipynb>`_]
+  `webpage <tutorial-11-regularization.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial11/tutorial-11-regularization.ipynb>`_
   — ``pydmd.DMDBase``
 
 - **Tutorial 12** — cDMD for background modeling
-  [`notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial12/tutorial-12-cdmd.ipynb>`_]
+  `webpage <tutorial-12-cdmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial12/tutorial-12-cdmd.ipynb>`_
   — ``pydmd.CDMD``
 
 - **Tutorial 13** — SubspaceDMD for locating eigenvalues of stochastic systems
-  [`notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial13/tutorial-13-subspacedmd.ipynb>`_]
+  `webpage <tutorial-13-subspacedmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial13/tutorial-13-subspacedmd.ipynb>`_
   — ``pydmd.SubspaceDMD``
 
 - **Tutorial 14** — Comparison between Bagging/Optimized DMD and exact DMD
-  [`html <http://pydmd.github.io/PyDMD/tutorial14-bop-dmd.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial14/tutorial-14-bop-dmd.ipynb>`_]
+  `webpage <tutorial-14-bop-dmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial14/tutorial-14-bop-dmd.ipynb>`_
   — ``pydmd.BOPDMD``
 
 - **Tutorial 15** — Physics-informed DMD for manifold enforcement
-  [`html <http://pydmd.github.io/PyDMD/tutorial15-pidmd.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial15/tutorial-15-pidmd.ipynb>`_]
+  `webpage <tutorial-15-pidmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial15/tutorial-15-pidmd.ipynb>`_
   — ``pydmd.PiDMD``
 
 - **Tutorial 16** — Randomized DMD for greater computation speedup
-  [`html <http://pydmd.github.io/PyDMD/tutorial16-rdmd.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial16/tutorial-16-rdmd.ipynb>`_]
+  `webpage <tutorial-16-rdmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial16/tutorial-16-rdmd.ipynb>`_
   — ``pydmd.RDMD``
 
 - **Tutorial 17** — Extended DMD for nonlinear eigenfunction discovery
-  [`html <http://pydmd.github.io/PyDMD/tutorial17-edmd.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial17/tutorial-17-edmd.ipynb>`_]
+  `webpage <tutorial-17-edmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial17/tutorial-17-edmd.ipynb>`_
   — ``pydmd.EDMD``
 
 - **Tutorial 18** — LANDO for nonlinear system modeling
-  [`html <http://pydmd.github.io/PyDMD/tutorial18-lando.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial18/tutorial-18-lando.ipynb>`_]
+  `webpage <tutorial-18-lando.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial18/tutorial-18-lando.ipynb>`_
   — ``pydmd.LANDO``
 
 - **Tutorial 19** — HAVOK for modeling chaos with partial measurements
-  [`html <http://pydmd.github.io/PyDMD/tutorial19-havok.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial19/tutorial-19-havok.ipynb>`_]
+  `webpage <tutorial-19-havok.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial19/tutorial-19-havok.ipynb>`_
   — ``pydmd.HAVOK``
 
 - **Tutorial 20a** — COSTS for decomposing toy data
-  [`notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial20/costs-tutorial_toy-data.ipynb>`_]
+  `webpage <costs-tutorial_toy-data.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial20/costs-tutorial_toy-data.ipynb>`_
   — ``pydmd.COSTS``
 
 - **Tutorial 20b** — mrCOSTS for decomposing multi-scale physics of real, noisy data
-  [`notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial20/costs-tutorial_real-data.ipynb>`_]
+  `webpage <costs-tutorial_real-data.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial20/costs-tutorial_real-data.ipynb>`_
   — ``pydmd.mrCOSTS``
 
-.. note::
-   Tutorials 12, 13, 20a, and 20b currently only have ``.ipynb`` and ``.py`` versions
-   available — rendered HTML versions are coming soon.
 
+.. note::
+   Tutorials 12 and 13 do not have pre-executed outputs saved — they will
+   be rendered but may show empty output cells.
+   
 
 Developer Tutorials
 -------------------
@@ -167,6 +191,6 @@ Developer Tutorials
 Resources for contributors looking to extend PyDMD.
 
 - **Developer Tutorial 1** — Implementing a new version of DMD
-  [`html <http://pydmd.github.io/PyDMD/dev-tutorial1.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/developers-tutorial1/developers-help-1.ipynb>`_]
+  `webpage <developers-help-1.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/developers-tutorial1/developers-help-1.ipynb>`_
   — ``pydmd.DMDBase``
