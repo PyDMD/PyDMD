@@ -82,6 +82,7 @@ PyDMD is a Python package for **Dynamic Mode Decomposition (DMD)** — a data-dr
     references
     code_of_conduct
     LICENSE
+    maintainers
 
 
 .. image:: _static/pydmd_capabilities.svg
