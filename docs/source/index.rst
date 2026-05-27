@@ -73,7 +73,10 @@ PyDMD is a Python package for **Dynamic Mode Decomposition (DMD)** — a data-dr
     :hidden:
 
     installation
+    quickstart
     tutorials
+    dmd_guide
+    faq
     code
     contributing
     contact
