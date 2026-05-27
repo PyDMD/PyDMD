@@ -9,7 +9,7 @@ PyDMD is a Python package for **Dynamic Mode Decomposition (DMD)** — a data-dr
 
 .. grid:: 2
 
-    .. grid-item-card:: Getting Started
+    .. grid-item-card:: :fas:`rocket` Getting Started
 
         New to PyDMD? Start here for a quick introduction and installation
         instructions.
@@ -17,29 +17,29 @@ PyDMD is a Python package for **Dynamic Mode Decomposition (DMD)** — a data-dr
         +++
 
         .. button-ref:: installation
-            :ref-type: doc
             :expand:
             :color: secondary
             :click-parent:
+            :ref-type: doc
 
             To the installation guide
 
-    .. grid-item-card:: Tutorials
+    .. grid-item-card:: :fas:`book` Tutorials
 
-        Step-by-step examples covering all DMD variants available in PyDMD,
+        Examples covering all DMD variants available in PyDMD,
         from basic usage to advanced techniques.
 
         +++
 
         .. button-ref:: tutorials
-            :ref-type: doc
             :expand:
             :color: secondary
             :click-parent:
+            :ref-type: doc
 
             To the tutorials
 
-    .. grid-item-card:: API Reference
+    .. grid-item-card:: :fas:`code` API Reference
 
         Detailed description of all classes, methods, and functions included
         in PyDMD.
@@ -53,7 +53,7 @@ PyDMD is a Python package for **Dynamic Mode Decomposition (DMD)** — a data-dr
 
             To the API reference
 
-    .. grid-item-card:: Developer's Guide
+    .. grid-item-card:: :fas:`code-branch` Developer's Guide
 
         Want to contribute to PyDMD? Learn how to set up your environment,
         write tests, and submit pull requests.
