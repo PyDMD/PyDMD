@@ -336,3 +336,8 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
+
+# Remove left sidebar from all pages
+html_sidebars = {
+    "**": []
+}

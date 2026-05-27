@@ -136,13 +136,40 @@ References
 - Le Clainche, Vega. *Higher Order Dynamic Mode Decomposition*. SIAM Journal on Applied Dynamical Systems, 2017.
 
 
+Developers and Contributors
+---------------------------
+
+The main developers are:
+
+.. image:: _static/main_developers.png
+   :width: 700px
+   :align: center
+
+|
+
+We warmly thank all contributors who have supported PyDMD! Do you want
+to join the team? Read the :doc:`contributing` guidelines before starting.
+
+
 Funding
 -------
+
 PyDMD has been supported by the H2020 ERC CoG 2015 AROMA-CFD project 681447
 (P.I. Gianluigi Rozza), and the FSE HEaD project Bulbous Bow Shape Optimization
-through Reduced Order Modelling. We are grateful for all project and university-funded
-contributions that have advanced this package.
+through Reduced Order Modelling. We are grateful for all project and
+university-funded contributions that have advanced this package.
 
+.. image:: _static/logos_funding.png
+   :width: 700px
+   :align: center
+
+
+Affiliations
+------------
+
+.. image:: _static/numfocus-affiliated-project.png
+   :width: 300px
+   :align: center
 
 Indices and tables
 ------------------
