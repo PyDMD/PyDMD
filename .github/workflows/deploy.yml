@@ -18,6 +18,8 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
           pip install sphinx pydata-sphinx-theme nbsphinx sphinx-design
           pip install .
 
