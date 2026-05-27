@@ -79,7 +79,7 @@ PyDMD is a Python package for **Dynamic Mode Decomposition (DMD)** — a data-dr
     faq
     code
     contributing
-    contact
+    references
     code_of_conduct
     LICENSE
 
@@ -109,32 +109,25 @@ offers a variety of visualization tools, including mode reconstruction, energy s
 analysis, and time evolution plotting.
 
 
-Installation
-------------
+Video Introduction
+------------------
 
-PyDMD can be installed via pip:
+New to PyDMD? Watch this introduction to the DMD algorithm and learn how
+to get started with the package:
 
-.. code-block:: bash
+.. raw:: html
 
-    pip install pydmd
+    <div style="margin: 20px 0; text-align: center;">
+        <iframe width="700" height="394"
+            src="https://www.youtube.com/embed/v33cL3o2Yuk"
+            title="PyDMD: A Python Package for DMD"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+        </iframe>
+    </div>
 
-Or clone and install from source:
-
-.. code-block:: bash
-
-    git clone https://github.com/PyDMD/PyDMD
-    pip install -e .
-
-
-References
-----------
-- Kutz, Brunton, Brunton, Proctor. *Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems*. SIAM, 2016.
-- Gavish, Donoho. *The optimal hard threshold for singular values is 4/sqrt(3)*. IEEE Trans. Information Theory, 2014.
-- Hemati, Rowley, Deem, Cattafesta. *De-biasing the dynamic mode decomposition*. Theoretical and Computational Fluid Dynamics, 2017.
-- Kutz, Fu, Brunton. *Multiresolution Dynamic Mode Decomposition*. SIAM Journal on Applied Dynamical Systems, 2016.
-- Erichson, Brunton, Kutz. *Compressed dynamic mode decomposition for background modeling*. J. Real-Time Image Processing, 2016.
-- Le Clainche, Vega. *Higher Order Dynamic Mode Decomposition*. SIAM Journal on Applied Dynamical Systems, 2017.
-
+|
 
 Developers and Contributors
 ---------------------------
