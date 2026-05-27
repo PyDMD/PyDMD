@@ -48,7 +48,6 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
     "sphinx.ext.viewcode",
-    "sphinx.ext.imgmath",
     "sphinx.ext.ifconfig",
     "sphinx.ext.mathjax",
     "nbsphinx",
@@ -341,3 +340,19 @@ texinfo_documents = [
 html_sidebars = {
     "**": []
 }
+
+nbsphinx_execute = 'never'
+
+# Add Binder launch button to all notebooks
+nbsphinx_prolog = """
+.. raw:: html
+
+    <div style="margin-bottom: 20px;">
+        <a href="https://mybinder.org/v2/gh/PyDMD/PyDMD/master?filepath=tutorials/tutorial1/tutorial-1-dmd.ipynb" target="_blank">
+            <img src="https://mybinder.org/badge_logo.svg" alt="Launch Binder"/>
+        </a>
+        <span style="margin-left: 10px; font-size: 0.9em; color: gray;">
+            Launch this notebook in an interactive environment
+        </span>
+    </div>
+"""

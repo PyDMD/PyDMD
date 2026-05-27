@@ -3,6 +3,12 @@
 Tutorials
 =========
 
+.. toctree::
+   :hidden:
+
+   tutorial-1-dmd
+
+
 The following tutorials cover PyDMD's capabilities from basic to advanced usage.
 All tutorials are available as Jupyter notebooks (``.ipynb``) and Python scripts (``.py``).
 
@@ -50,8 +56,8 @@ Basic Tutorials
 ---------------
 
 - **Tutorial 1** — Analyzing real, simple data sets with PyDMD
-  [`html <http://pydmd.github.io/PyDMD/tutorial1dmd.html>`_,
-  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial1/tutorial-1-dmd.ipynb>`_]
+  `webpage <tutorial-1-dmd.html>`_ |
+  `notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial1/tutorial-1-dmd.ipynb>`_
   — ``pydmd.DMD``, ``pydmd.BOPDMD``
 
 - **Tutorial 2** — Advanced features of standard DMD
