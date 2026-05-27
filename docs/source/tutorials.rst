@@ -6,9 +6,6 @@ Tutorials
 The following tutorials cover PyDMD's capabilities from basic to advanced usage.
 All tutorials are available as Jupyter notebooks (``.ipynb``) and Python scripts (``.py``).
 
-.. note::
-   Tutorials 12, 13, 20a, and 20b currently only have ``.ipynb`` and ``.py`` versions
-   available — rendered HTML versions are coming soon.
 
 Video Tutorial Series
 ---------------------
@@ -152,6 +149,10 @@ Basic Tutorials
 - **Tutorial 20b** — mrCOSTS for decomposing multi-scale physics of real, noisy data
   [`notebook <https://github.com/PyDMD/PyDMD/blob/master/tutorials/tutorial20/costs-tutorial_real-data.ipynb>`_]
   — ``pydmd.mrCOSTS``
+
+.. note::
+   Tutorials 12, 13, 20a, and 20b currently only have ``.ipynb`` and ``.py`` versions
+   available — rendered HTML versions are coming soon.
 
 
 Developer Tutorials
