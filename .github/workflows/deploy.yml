@@ -1,0 +1,33 @@
+name: Deploy Sphinx Documentation
+
+on:
+  push:
+    branches:
+      - website-redesign
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install sphinx pydata-sphinx-theme nbsphinx sphinx-design
+          pip install .
+
+      - name: Build documentation
+        run: |
+          cd docs
+          make html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/build/html
