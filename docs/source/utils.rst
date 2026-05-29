@@ -1,9 +1,7 @@
 Utilities
-==========================
+=========
 
 .. currentmodule:: pydmd.utils
-
-.. automodule:: pydmd.utils
 
 .. autofunction:: compute_rank
 .. autofunction:: compute_svd
