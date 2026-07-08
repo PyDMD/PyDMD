@@ -206,7 +206,7 @@ class DMDBase:
         """
         return np.arange(
             self.dmd_time["t0"],
-            self.dmd_time["tend"] + self.dmd_time["dt"],
+            self.dmd_time["tend"] + self.dmd_time["dt"] / 2,
             self.dmd_time["dt"],
         )
 
@@ -220,7 +220,7 @@ class DMDBase:
         """
         return np.arange(
             self.original_time["t0"],
-            self.original_time["tend"] + self.original_time["dt"],
+            self.original_time["tend"] + self.original_time["dt"] / 2,
             self.original_time["dt"],
         )
 
