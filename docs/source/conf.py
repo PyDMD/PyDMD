@@ -52,6 +52,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "nbsphinx",
     "sphinx_design",
+    "sphinxcontrib.mermaid",
 ]
 
 
