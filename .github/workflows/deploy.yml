@@ -3,7 +3,7 @@ name: Deploy Sphinx Documentation
 on:
   push:
     branches:
-      - website-redesign
+      - main
 
 jobs:
   deploy:
