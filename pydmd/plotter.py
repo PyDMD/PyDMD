@@ -905,10 +905,10 @@ def plot_summary(
 
     # Build the spatial grid for the mode plots.
     if x is None:
-        x = np.arange(snapshots_shape[1])
+        x = np.arange(snapshots_shape[0])
     if len(snapshots_shape) == 2:
         if y is None:
-            y = np.arange(snapshots_shape[0])
+            y = np.arange(snapshots_shape[1])
         xgrid, ygrid = np.meshgrid(x, y)
 
     # PLOTS 4-6: Plot the DMD modes.

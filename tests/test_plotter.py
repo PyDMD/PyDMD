@@ -279,3 +279,93 @@ def test_plot_summary_5():
     dmd.fit(X=sample_data)
     plot_summary(dmd, snapshots_shape=(20, 20), filename="tmp.png")
     os.remove("tmp.png")
+
+
+# A non-square factorization of the 400-point spatial dimension of
+# sample_data. Square snapshots hide a transposed grid, which is why the
+# axis swap of issue #565 went unnoticed.
+ROWS, COLS = 25, 16
+
+# An asymmetric marker, so that a grid which is reversed or transposed cannot
+# render the same picture as a correct one.
+MARKER = np.zeros((ROWS, COLS))
+MARKER[1:4, 1:3] = 1.0
+
+
+def marker_snapshots():
+    """
+    Snapshots carrying MARKER, scaled so the leading mode reproduces it.
+    """
+    return [MARKER * (1.0 + 0.01 * k) for k in range(sample_data.shape[1])]
+
+
+def rendered_grids(axes):
+    """
+    The C array each axis handed to pcolor, in the shape it was drawn.
+    """
+    grids = []
+    for ax in axes:
+        for collection in ax.collections:
+            array = collection.get_array()
+            if array is not None:
+                coords = np.asarray(collection.get_coordinates())
+                # Corner coordinates must run left to right and bottom to top,
+                # otherwise the values below are drawn mirrored.
+                assert np.all(np.diff(coords[..., 0], axis=1) > 0)
+                assert np.all(np.diff(coords[..., 1], axis=0) > 0)
+                grids.append(np.asarray(array))
+    assert grids, "no pcolor mesh was drawn, so there is nothing to check"
+    return grids
+
+
+def axes_extents(axes):
+    """
+    The x and y limits of every given axis.
+    """
+    extents = [(ax.get_xlim(), ax.get_ylim()) for ax in axes]
+    assert extents, "no axes were left open, so there is nothing to compare"
+    return extents
+
+
+def test_plot_modes_2D_default_grid():
+    # Omitting x and y must be equivalent to passing the grid implied by the
+    # snapshot shape: x spans the columns, y spans the rows. See issue #565.
+    dmd = DMD(svd_rank=1)
+    dmd.fit(X=marker_snapshots())
+
+    plot_modes_2D(dmd, index_mode=0)
+    default_extents = axes_extents(plt.gcf().axes)
+    default_grids = rendered_grids(plt.gcf().axes)
+    plt.close()
+
+    plot_modes_2D(dmd, index_mode=0, x=np.arange(COLS), y=np.arange(ROWS))
+    assert default_extents == axes_extents(plt.gcf().axes)
+    plt.close()
+
+    # The drawn mode must carry MARKER in its original orientation, which a
+    # transposed or reversed grid cannot produce.
+    drawn = np.abs(default_grids[0])
+    assert drawn.shape == (ROWS, COLS)
+    hot = drawn > 0.5 * drawn.max()
+    assert list(np.flatnonzero(hot.any(axis=1))) == [1, 2, 3]
+    assert list(np.flatnonzero(hot.any(axis=0))) == [1, 2]
+
+
+def test_plot_snapshots_2D_default_grid():
+    dmd = DMD(svd_rank=1)
+    dmd.fit(X=marker_snapshots())
+
+    plot_snapshots_2D(dmd, index_snap=0)
+    default_extents = axes_extents(plt.gcf().axes)
+    default_grids = rendered_grids(plt.gcf().axes)
+    plt.close()
+
+    plot_snapshots_2D(dmd, index_snap=0, x=np.arange(COLS), y=np.arange(ROWS))
+    assert default_extents == axes_extents(plt.gcf().axes)
+    plt.close()
+
+    drawn = np.abs(default_grids[0])
+    assert drawn.shape == (ROWS, COLS)
+    hot = drawn > 0.5 * drawn.max()
+    assert list(np.flatnonzero(hot.any(axis=1))) == [1, 2, 3]
+    assert list(np.flatnonzero(hot.any(axis=0))) == [1, 2]
