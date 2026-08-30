@@ -293,9 +293,7 @@ MARKER[1:4, 1:3] = 1.0
 
 
 def marker_snapshots():
-    """
-    Snapshots carrying MARKER, scaled so the leading mode reproduces it.
-    """
+    """Snapshots carrying MARKER, scaled so the leading mode reproduces it."""
     return [MARKER * (1.0 + 0.01 * k) for k in range(sample_data.shape[1])]
 
 
