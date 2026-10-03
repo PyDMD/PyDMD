@@ -19,9 +19,10 @@ def soft_thresholding_operator(v, k):
     :return np.ndarray: The result of the application of the soft-tresholding
         operator on ´v´.
     """
-    return np.multiply(
-        np.multiply(np.divide(1 - k, np.abs(v)), v), np.abs(v) > k
-    )
+    abs_v = np.abs(v)
+    # Guard the division: dividing by |v| = 0 would give inf or nan.
+    safe_abs_v = np.where(abs_v > k, abs_v, 1)
+    return np.multiply(np.multiply(1 - k / safe_abs_v, v), abs_v > k)
 
 
 class SpDMD(DMD):
