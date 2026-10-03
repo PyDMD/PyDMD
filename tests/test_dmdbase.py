@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from pytest import raises
 
 from pydmd import DMD
@@ -103,3 +104,85 @@ def test_dmd_time_wrong_key():
 
     with raises(KeyError):
         dmd.dmd_time["tstart"] = 10
+
+
+def test_timesteps_integer_dt():
+    # fit() builds an integer time dictionary, whose timesteps must stay
+    # integral and must span exactly one step per snapshot.
+    dmd = DMD(svd_rank=10)
+    dmd.fit(sample_data)
+
+    expected = np.arange(sample_data.shape[1])
+    np.testing.assert_array_equal(dmd.original_timesteps, expected)
+    np.testing.assert_array_equal(dmd.dmd_timesteps, expected)
+    assert np.issubdtype(dmd.original_timesteps.dtype, np.integer)
+    assert np.issubdtype(dmd.dmd_timesteps.dtype, np.integer)
+
+
+@pytest.mark.parametrize(
+    "t0, dt, n_steps",
+    [
+        (0.0, 0.1, 2),  # smallest case exhibiting the #583 failure mode
+        (0.0, 0.1, 11),
+        (0.0, 0.3, 13),
+        (0.0, 1 / 3, 3),  # dt with no exact binary representation
+        (0.0, 0.25, 8),  # dt exactly representable, control case
+        (0.5, 0.1, 7),  # t0 not on a dt boundary
+        (-1.0, 0.2, 6),  # negative t0
+    ],
+)
+def test_dmd_timesteps_float_dt(t0, dt, n_steps):
+    # A floating-point dt used to produce one timestep too many: the stop
+    # boundary tend + dt could round upward, and np.arange would emit a step
+    # past tend. See issue #583.
+    dmd = DMD(svd_rank=10)
+    dmd.fit(sample_data)
+
+    dmd.dmd_time["t0"] = t0
+    dmd.dmd_time["dt"] = dt
+    dmd.dmd_time["tend"] = t0 + n_steps * dt
+
+    timesteps = dmd.dmd_timesteps
+
+    assert len(timesteps) == n_steps + 1
+    np.testing.assert_allclose(timesteps[0], t0)
+    np.testing.assert_allclose(timesteps[-1], t0 + n_steps * dt)
+    np.testing.assert_allclose(np.diff(timesteps), dt)
+
+
+@pytest.mark.parametrize(
+    "t0, tend, dt, expected_last",
+    [
+        (0, 10, 3, 9),  # nearest grid point is below tend
+        (0.0, 0.28, 0.1, 0.3),  # nearest grid point is above tend
+        (0.0, 0.25, 0.1, 0.2),  # tend exactly between two grid points
+    ],
+)
+def test_dmd_timesteps_tend_off_grid(t0, tend, dt, expected_last):
+    # When tend is not a whole number of steps from t0 there is no exactly
+    # right answer. The last timestep is the grid point nearest tend, so the
+    # series never runs more than dt/2 past it.
+    dmd = DMD(svd_rank=10)
+    dmd.fit(sample_data)
+
+    dmd.dmd_time["t0"] = t0
+    dmd.dmd_time["dt"] = dt
+    dmd.dmd_time["tend"] = tend
+
+    timesteps = dmd.dmd_timesteps
+
+    np.testing.assert_allclose(timesteps[-1], expected_last)
+    assert abs(timesteps[-1] - tend) <= abs(dt) / 2
+
+
+def test_timesteps_empty_window():
+    # An empty window stays empty, which is what np.arange gave when the
+    # bounds were handed straight to it.
+    dmd = DMD(svd_rank=10)
+    dmd.fit(sample_data)
+
+    dmd.dmd_time["t0"] = 10
+    dmd.dmd_time["tend"] = 5
+    dmd.dmd_time["dt"] = 1
+
+    assert len(dmd.dmd_timesteps) == 0

@@ -11,6 +11,26 @@ from .dmdoperator import DMDOperator
 from .utils import compute_svd
 
 
+def _timesteps(time_dict):
+    """
+    Build the array of timesteps described by a time dictionary.
+
+    The number of steps is computed up front rather than letting
+    :func:`numpy.arange` derive it from the stop boundary. With a
+    floating-point `dt` the boundary `tend + dt` can round upward, in which
+    case `arange` emits a spurious extra step past `tend`. Multiplying `dt`
+    by an integer index also keeps integer time dictionaries integral, which
+    `arange` with a fractional stop would not.
+
+    :param dict time_dict: dictionary with keys `t0`, `tend` and `dt`.
+    :return: timesteps from `t0` to `tend` inclusive.
+    :rtype: numpy.ndarray
+    """
+    t0, tend, dt = time_dict["t0"], time_dict["tend"], time_dict["dt"]
+    n_steps = int(np.rint((tend - t0) / dt)) + 1
+    return t0 + dt * np.arange(n_steps)
+
+
 class ActivationBitmaskProxy:
     """
     A proxy which stands in the middle between a bitmask and an instance of
@@ -204,11 +224,7 @@ class DMDBase:
         :return: the time intervals of the original snapshots.
         :rtype: numpy.ndarray
         """
-        return np.arange(
-            self.dmd_time["t0"],
-            self.dmd_time["tend"] + self.dmd_time["dt"],
-            self.dmd_time["dt"],
-        )
+        return _timesteps(self.dmd_time)
 
     @property
     def original_timesteps(self):
@@ -218,11 +234,7 @@ class DMDBase:
         :return: the time intervals of the original snapshots.
         :rtype: numpy.ndarray
         """
-        return np.arange(
-            self.original_time["t0"],
-            self.original_time["tend"] + self.original_time["dt"],
-            self.original_time["dt"],
-        )
+        return _timesteps(self.original_time)
 
     @property
     def modes(self):
