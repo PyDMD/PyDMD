@@ -321,3 +321,20 @@ def test_correct_amplitudes():
     dmd = SpDMD(release_memory=True, svd_rank=-1)
     dmd.fit(X=data)
     np.testing.assert_array_almost_equal(dmd.amplitudes, dmd._b)
+
+
+def test_soft_thresholding_operator():
+    from pydmd.spdmd import soft_thresholding_operator
+
+    # Magnitudes above the threshold are shrunk by exactly k, smaller ones
+    # (including 0) are set to zero.
+    v = np.array([30.0, 5.0, 10.0, 0.0, -12.0])
+    np.testing.assert_allclose(
+        soft_thresholding_operator(v, 10), [20.0, 0.0, 0.0, 0.0, -2.0]
+    )
+
+    # For complex entries the phase is preserved and the magnitude shrunk.
+    v = np.array([3 + 4j, 6 - 8j, 1j])
+    np.testing.assert_allclose(
+        soft_thresholding_operator(v, 2), [1.8 + 2.4j, 4.8 - 6.4j, 0]
+    )
