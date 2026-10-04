@@ -228,7 +228,7 @@ class OptDMD(DMDBase):
 
         elif self.factorization == "evd":
             # --> Compute DMD eigenvalues and right/left eigenvectors
-            self._input_space = self.eigs
+            self._input_space = self.operator._eigenvectors
             self._output_space = self.operator.right_eigenvectors
 
         return self
@@ -249,7 +249,7 @@ class OptDMD(DMDBase):
             Y = np.linalg.multi_dot(
                 [
                     self._output_space,
-                    np.diag(self._eigs),
+                    np.diag(self.eigs),
                     self._input_space.T.conj(),
                     X,
                 ]
