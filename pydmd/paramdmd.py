@@ -108,8 +108,8 @@ class ParametricDMD:
         """
         An object used as a reference for several properties like
         :func:`dmd_time` and :func:`dmd_timesteps`. If this instance is
-        monolithic the returned value is `self._dmd`, otherwise it is the first
-        item of the list `self._dmd`.
+        monolithic the returned value is `self._wrapped_dmd`, otherwise it is the first
+        item of the list `self._wrapped_dmd`.
 
         :return: The object used as a reference.
         :rtype: pydmd.DMDBase
