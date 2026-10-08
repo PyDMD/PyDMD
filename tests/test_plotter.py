@@ -1,7 +1,9 @@
 import os
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 from pytest import raises
 
 from pydmd import DMD, DMDBase, MrDMD
@@ -297,6 +299,14 @@ def marker_snapshots():
     return [MARKER * (1.0 + 0.01 * k) for k in range(sample_data.shape[1])]
 
 
+# Before matplotlib 3.8, pcolor returned a PolyCollection with a flattened
+# array and no get_coordinates, so the drawn grid can't be inspected.
+requires_pcolor_quadmesh = pytest.mark.skipif(
+    tuple(int(v) for v in matplotlib.__version__.split(".")[:2]) < (3, 8),
+    reason="needs matplotlib >= 3.8, where pcolor returns a PolyQuadMesh",
+)
+
+
 def rendered_grids(axes):
     """
     The C array each axis handed to pcolor, in the shape it was drawn.
@@ -325,6 +335,7 @@ def axes_extents(axes):
     return extents
 
 
+@requires_pcolor_quadmesh
 def test_plot_modes_2D_default_grid():
     # Omitting x and y must be equivalent to passing the grid implied by the
     # snapshot shape: x spans the columns, y spans the rows. See issue #565.
@@ -349,6 +360,7 @@ def test_plot_modes_2D_default_grid():
     assert list(np.flatnonzero(hot.any(axis=0))) == [1, 2]
 
 
+@requires_pcolor_quadmesh
 def test_plot_snapshots_2D_default_grid():
     dmd = DMD(svd_rank=1)
     dmd.fit(X=marker_snapshots())
