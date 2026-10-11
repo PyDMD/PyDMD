@@ -1903,7 +1903,7 @@ class BOPDMD(DMDBase):
         :rtype: numpy.ndarray or numpy.ndarray, numpy.ndarray
         """
         # Process the input data and convert to numpy.ndarray.
-        t = np.array(t).squeeze()
+        t = np.atleast_1d(np.array(t).squeeze())
 
         # Reject the input time vector if it isn't one-dimensional.
         if t.ndim > 1:

@@ -1,7 +1,7 @@
 import dask
 import numpy as np
 import matplotlib.pyplot as plt
-from pytest import raises, warns
+from pytest import mark, raises, warns
 from scipy.integrate import solve_ivp
 
 from pydmd.bopdmd import BOPDMD
@@ -153,6 +153,21 @@ def test_reconstruction():
     bopdmd = BOPDMD(svd_rank=2, num_trials=10, trial_size=0.8)
     bopdmd.fit(Z, t)
     np.testing.assert_allclose(bopdmd.reconstructed_data, Z, rtol=1e-5)
+
+
+@mark.parametrize("num_trials", [0, 2])
+def test_forecast_single_time(num_trials):
+    """One forecast time retains its axis with and without bagging."""
+    bopdmd = BOPDMD(svd_rank=2, num_trials=num_trials, seed=42)
+    bopdmd.fit(Z[:, :100], t[:100])
+    future_times = np.array([1.0, 1.1])
+    multiple = bopdmd.forecast(future_times)
+    single = bopdmd.forecast(future_times[:1])
+    if num_trials == 0:
+        multiple, single = (multiple,), (single,)
+    for actual, expected in zip(single, multiple):
+        assert actual.shape == (2, 1)
+        np.testing.assert_allclose(actual, expected[:, :1])
 
 
 def test_forecast():
