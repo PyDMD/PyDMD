@@ -183,7 +183,8 @@ class DMDc(DMDBase):
     :param int tlsq_rank: rank truncation computing Total Least Square. Default
         is 0, that means no truncation.
     :param opt: argument to control the computation of DMD modes amplitudes.
-        See :class:`DMDBase`. Default is False.
+        See :class:`DMDBase`. Default is False. ``True`` is not supported
+        when separate snapshot pairs are supplied to :meth:`fit`.
     :type opt: bool or int
     :param svd_rank_omega: the rank for the truncation of the aumented matrix
         omega composed by the left snapshots matrix and the control. Used only
@@ -192,7 +193,8 @@ class DMDc(DMDBase):
         `svd_rank` parameter description above.
     :type svd_rank_omega: int or float
     :param lag: the time lag for the snapshots. Used in fit method to generate
-        X and Y.
+        X and Y. When Y is supplied explicitly, the pairs must already be
+        separated by this lag and are not sliced again.
     :type lag: int
     """
 
@@ -213,6 +215,7 @@ class DMDc(DMDBase):
 
         self._B = None
         self._snapshots_holder = None
+        self._snapshots_holder_y = None
         self._controlin = None
         self._basis = None
         self._lag = lag
@@ -244,6 +247,25 @@ class DMDc(DMDBase):
         """
         return self._basis
 
+    @property
+    def dynamics(self):
+        """
+        Get the temporal mode dynamics for a sequential snapshot fit.
+
+        Separate snapshot pairs do not define an ordered trajectory. Use
+        :meth:`predict` to evaluate the fitted map on those pairs instead.
+
+        :return: the matrix containing the time evolution of each mode.
+        :rtype: numpy.ndarray
+        :raises RuntimeError: if Y was supplied explicitly to :meth:`fit`.
+        """
+        if self._snapshots_holder_y is not None:
+            raise RuntimeError(
+                "Temporal dynamics are not defined for separate snapshot "
+                "pairs. Use predict(X, I) to evaluate the fitted model."
+            )
+        return super().dynamics
+
     def reconstructed_data(self, control_input=None):
         """
         Return the reconstructed data, computed using the `control_input`
@@ -254,7 +276,15 @@ class DMDc(DMDBase):
         :param numpy.ndarray control_input: the input control matrix.
         :return: the matrix that contains the reconstructed snapshots.
         :rtype: numpy.ndarray
+        :raises RuntimeError: if Y was supplied explicitly to :meth:`fit`.
+            Separate snapshot pairs do not define a trajectory; use
+            :meth:`predict` to evaluate their outputs.
         """
+        if self._snapshots_holder_y is not None:
+            raise RuntimeError(
+                "Trajectory reconstruction is not defined for separate "
+                "snapshot pairs. Use predict(X, I) to evaluate their outputs."
+            )
         controlin = (
             np.asarray(control_input)
             if control_input is not None
@@ -288,21 +318,108 @@ class DMDc(DMDBase):
         data = np.array(data).T
         return data
 
-    def fit(self, X, I, B=None):
+    def predict(self, X, control_input):
+        """
+        Predict the output of the fitted map for states and control inputs.
+
+        Each column is evaluated independently as ``A X + B I``. The map
+        advances by the lag used during fitting, without chaining columns
+        into a trajectory. The active DMD modes are used for the state
+        operator, and the fitted control operator B is unchanged.
+
+        :param X: a state vector of shape (n,) or state matrix of shape (n, m).
+        :type X: numpy.ndarray or array-like
+        :param control_input: control inputs of shape (l, m), where l is the
+            number of control channels. For a single channel, a vector of
+            length m is also accepted. For a single state, a vector of length
+            l is accepted. A scalar is accepted only for one state and one
+            control channel. Inputs are never broadcast across states.
+        :type control_input: numpy.ndarray or array-like
+        :return: the predicted state vector or matrix, with the same shape
+            as X. For a sequential fit, this predicts states after ``lag``
+            sampling steps.
+        :rtype: numpy.ndarray
+        :raises RuntimeError: if the model has not been fitted.
+        :raises ValueError: if the state or control shapes are incompatible
+            with the fitted model.
+        """
+        if not self.fitted:
+            raise RuntimeError("Call fit before calling predict(X, I).")
+
+        states = np.asarray(X)
+        if states.ndim not in (1, 2):
+            raise ValueError("X must be a state vector or a 2D state matrix.")
+        if states.shape[0] != self.snapshots.shape[0]:
+            raise ValueError(
+                f"X must have {self.snapshots.shape[0]} state coordinates, "
+                f"received {states.shape[0]}."
+            )
+        vector_input = states.ndim == 1
+        if vector_input:
+            states = states[:, None]
+
+        control = np.asarray(control_input)
+        expected_shape = (self._B.shape[1], states.shape[1])
+        if control.ndim == 0 and expected_shape == (1, 1):
+            control = control.reshape(1, 1)
+        elif control.ndim == 1:
+            if expected_shape[0] == 1:
+                control = control[None, :]
+            elif expected_shape[1] == 1:
+                control = control[:, None]
+        if control.shape != expected_shape:
+            raise ValueError(
+                f"Control input I must have shape {expected_shape}, "
+                f"received {control.shape}."
+            )
+
+        modal_states = np.linalg.pinv(self.modes).dot(states)
+        prediction = self.modes.dot(self.eigs[:, None] * modal_states)
+        prediction = prediction + self._B.dot(control)
+        return prediction[:, 0] if vector_input else prediction
+
+    # Keep the established I keyword for compatibility with existing callers.
+    def fit(self, X, I, B=None, *, Y=None):  # noqa: E741
         """
         Compute the Dynamic Modes Decomposition with control given the original
         snapshots and the control input data. The matrix `B` that controls how
         the control input influences the system evolution can be provided by
         the user; otherwise, it is computed by the algorithm.
 
-        :param X: the input snapshots.
+        If Y is provided, X, Y and I contain aligned snapshot pairs and
+        controls satisfying ``Y = A X + B I``. Their columns may be shuffled
+        or collected from independent trajectories. No time ordering is
+        inferred and no additional lag slicing is performed. Predictions
+        are available through :meth:`predict`; temporal dynamics and
+        trajectory reconstruction are not defined for this input format.
+
+        :param X: the input snapshots. When Y is omitted, these form a
+            sequential trajectory with the time axis in the last dimension.
         :type X: numpy.ndarray or iterable
-        :param I: the control input.
+        :param I: the control input. With separate snapshot pairs, this must
+            have one column per pair. A one-dimensional array represents
+            one control channel.
         :type I: numpy.ndarray or iterable
         :param numpy.ndarray B: matrix that controls the control input
             influences the system evolution.
         :type B: numpy.ndarray or iterable
+        :param Y: optional output snapshots, with the same shape as X after
+            spatial flattening. Each column is the target corresponding to
+            the same column of X and I, separated by the configured lag.
+        :type Y: numpy.ndarray or iterable
+        :raises ValueError: if separate snapshot or control shapes disagree,
+            B has an incompatible shape, or ``opt=True`` is requested with Y.
         """
+        if (
+            Y is not None
+            and isinstance(self._opt, (bool, np.bool_))
+            and self._opt
+        ):
+            raise ValueError(
+                "opt=True requires sequential snapshots and cannot be used "
+                "with separate snapshot pairs. Use opt=False or select an "
+                "input snapshot with an integer opt."
+            )
         self._reset()
         self._controlin = np.atleast_2d(np.asarray(I))
 
@@ -312,8 +429,30 @@ class DMDc(DMDBase):
         if self._lag < 1:
             raise ValueError("Time lag must be positive.")
 
-        X = self.snapshots[:, : -self._lag]
-        Y = self.snapshots[:, self._lag :]
+        if Y is None:
+            X = self.snapshots[:, : -self._lag]
+            Y = self.snapshots[:, self._lag :]
+        else:
+            self._snapshots_holder_y = Snapshots(Y)
+            self._compare_data_shapes(self.snapshots_y)
+            X = self.snapshots
+            Y = self.snapshots_y
+            if (
+                self._controlin.ndim != 2
+                or self._controlin.shape[1] != n_samples
+            ):
+                raise ValueError(
+                    "Control input I must be a 2D matrix with one column "
+                    f"per snapshot pair ({n_samples} columns)."
+                )
+            if B is not None:
+                B = np.asarray(B)
+                expected_shape = (X.shape[0], self._controlin.shape[0])
+                if B.shape != expected_shape:
+                    raise ValueError(
+                        f"B must have shape {expected_shape}, "
+                        f"received {B.shape}."
+                    )
 
         self._set_initial_time_dictionary(
             {"t0": 0, "tend": n_samples - 1, "dt": 1}
