@@ -318,7 +318,7 @@ class DMDc(DMDBase):
         data = np.array(data).T
         return data
 
-    def predict(self, X, I):
+    def predict(self, X, control_input):
         """
         Predict the output of the fitted map for states and control inputs.
 
@@ -329,12 +329,12 @@ class DMDc(DMDBase):
 
         :param X: a state vector of shape (n,) or state matrix of shape (n, m).
         :type X: numpy.ndarray or array-like
-        :param I: control inputs of shape (l, m), where l is the number of
-            control channels. For a single channel, a vector of length m is
-            also accepted. For a single state, a vector of length l is
-            accepted. A scalar is accepted only for one state and one
+        :param control_input: control inputs of shape (l, m), where l is the
+            number of control channels. For a single channel, a vector of
+            length m is also accepted. For a single state, a vector of length
+            l is accepted. A scalar is accepted only for one state and one
             control channel. Inputs are never broadcast across states.
-        :type I: numpy.ndarray or array-like
+        :type control_input: numpy.ndarray or array-like
         :return: the predicted state vector or matrix, with the same shape
             as X. For a sequential fit, this predicts states after ``lag``
             sampling steps.
@@ -358,7 +358,7 @@ class DMDc(DMDBase):
         if vector_input:
             states = states[:, None]
 
-        control = np.asarray(I)
+        control = np.asarray(control_input)
         expected_shape = (self._B.shape[1], states.shape[1])
         if control.ndim == 0 and expected_shape == (1, 1):
             control = control.reshape(1, 1)
@@ -378,7 +378,8 @@ class DMDc(DMDBase):
         prediction = prediction + self._B.dot(control)
         return prediction[:, 0] if vector_input else prediction
 
-    def fit(self, X, I, B=None, *, Y=None):
+    # Keep the established I keyword for compatibility with existing callers.
+    def fit(self, X, I, B=None, *, Y=None):  # noqa: E741
         """
         Compute the Dynamic Modes Decomposition with control given the original
         snapshots and the control input data. The matrix `B` that controls how
