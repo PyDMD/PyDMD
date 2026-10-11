@@ -102,9 +102,10 @@ def test_reconstruct_single_control(known_b, as_list):
     control = u.tolist() if as_list else u
     dmdc = DMDc(svd_rank=-1).fit(snapshots, control, B=B if known_b else None)
 
-    np.testing.assert_allclose(
-        dmdc.reconstructed_data(control), snapshots, atol=1e-12
-    )
+    # DMDc overrides the base class property with a method.
+    # pylint: disable=not-callable
+    reconstruction = dmdc.reconstructed_data(control)
+    np.testing.assert_allclose(reconstruction, snapshots, atol=1e-12)
 
 
 def test_B_b_known():
