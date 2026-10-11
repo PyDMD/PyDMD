@@ -256,7 +256,7 @@ class DMDc(DMDBase):
         :rtype: numpy.ndarray
         """
         controlin = (
-            np.asarray(control_input)
+            np.atleast_2d(np.asarray(control_input))
             if control_input is not None
             else self._controlin
         )
