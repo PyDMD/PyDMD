@@ -1,6 +1,6 @@
 import numpy as np
 import scipy
-from pytest import raises
+from pytest import mark, raises
 
 from pydmd import DMDc
 
@@ -85,6 +85,25 @@ def test_reconstruct_b_known():
     dmdc.fit(system["snapshots"], system["u"], system["B"])
     np.testing.assert_array_almost_equal(
         dmdc.reconstructed_data(), system["snapshots"]
+    )
+
+
+@mark.parametrize("known_b", [False, True])
+@mark.parametrize("as_list", [False, True])
+def test_reconstruct_single_control(known_b, as_list):
+    """A scalar-channel control series works in both fit and reconstruction."""
+    A = np.array([[0.7, 0.2], [-0.1, 0.8]])
+    B = np.array([[0.2], [0.5]])
+    u = np.random.default_rng(42).standard_normal(20)
+    snapshots = [np.array([-1.0, 1.0])]
+    for value in u:
+        snapshots.append(A @ snapshots[-1] + B[:, 0] * value)
+    snapshots = np.array(snapshots).T
+    control = u.tolist() if as_list else u
+    dmdc = DMDc(svd_rank=-1).fit(snapshots, control, B=B if known_b else None)
+
+    np.testing.assert_allclose(
+        dmdc.reconstructed_data(control), snapshots, atol=1e-12
     )
 
 
