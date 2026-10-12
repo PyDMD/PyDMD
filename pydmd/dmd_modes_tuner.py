@@ -69,7 +69,7 @@ def select_modes(
 
     if len(cut_indexes) > 0:
         tmp = np.array(dmd.modes_activation_bitmask)
-        tmp[cut_indexes] = False
+        tmp[np.flatnonzero(tmp)[cut_indexes]] = False
         dmd.modes_activation_bitmask = tmp
 
     if return_indexes:
