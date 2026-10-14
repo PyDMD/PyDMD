@@ -87,6 +87,9 @@ class CDMDOperator(DMDOperator):
             atilde_back = self._least_square_operator(bU, bs, bV, compressedX)
             atilde = sqrtm(atilde.dot(np.linalg.inv(atilde_back)))
 
+        if self._auto_rescale:
+            self._rescale_mode = s
+
         self._Atilde = atilde
         self._compute_eigenquantities()
         self._compute_modes(nonCompressedY, U, s, V)
