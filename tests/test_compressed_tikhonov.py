@@ -45,9 +45,8 @@ def test_compressed_tikhonov_norm(dtype, method, regularization, refit):
         model.fit(snapshots(dtype, scale=1.0))
     data = snapshots(dtype, scale=3.0)
     model.fit(data)
-    compression = model.compression_matrix
-    x = compression @ data[:, :-1]
-    y = compression @ data[:, 1:]
+    x = model.compression_matrix @ data[:, :-1]
+    y = model.compression_matrix @ data[:, 1:]
     u, singular_values, vh = np.linalg.svd(x, full_matrices=False)
     penalty = (
         0.0 if regularization is None else regularization * np.linalg.norm(x)
