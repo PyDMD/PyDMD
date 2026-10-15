@@ -382,8 +382,8 @@ def plot_modes_2D(
     # If domain dimensions have not been passed as argument,
     # use the snapshots dimensions
     if x is None and y is None:
-        x = np.arange(snapshots_shape[0])
-        y = np.arange(snapshots_shape[1])
+        y = np.arange(snapshots_shape[0])
+        x = np.arange(snapshots_shape[1])
 
     xgrid, ygrid = np.meshgrid(x, y)
 
@@ -497,8 +497,8 @@ def plot_snapshots_2D(
     # If domain dimensions have not been passed as argument,
     # use the snapshots dimensions
     if x is None and y is None:
-        x = np.arange(snapshots_shape[0])
-        y = np.arange(snapshots_shape[1])
+        y = np.arange(snapshots_shape[0])
+        x = np.arange(snapshots_shape[1])
 
     xgrid, ygrid = np.meshgrid(x, y)
 

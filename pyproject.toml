@@ -9,7 +9,7 @@ dependencies = [
     "matplotlib",
     "scikit-learn",
     "xarray",
-    "h5netcdf",
+    "h5netcdf[h5py]",
     "typing_extensions>=4.7.0;python_version<'3.12'",
     "dask[distributed, diagnostics]",
 ]
