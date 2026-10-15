@@ -3,6 +3,7 @@ import scipy.io
 from pytest import raises
 
 from pydmd import DMD, SpDMD
+from pydmd.spdmd import soft_thresholding_operator
 
 data = np.load("tests/test_datasets/heat_90.npy")
 gammas = [1.0e-1, 0.5, 2, 5, 10, 20, 40, 50, 100]
@@ -324,8 +325,6 @@ def test_correct_amplitudes():
 
 
 def test_soft_thresholding_operator():
-    from pydmd.spdmd import soft_thresholding_operator
-
     # Magnitudes above the threshold are shrunk by exactly k, smaller ones
     # (including 0) are set to zero.
     v = np.array([30.0, 5.0, 10.0, 0.0, -12.0])
