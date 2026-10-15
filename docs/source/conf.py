@@ -18,7 +18,6 @@ import datetime
 import shlex
 import sphinx
 from sphinx.errors import VersionRequirementError
-import sphinx_rtd_theme
 import importlib.metadata
 
 
@@ -46,21 +45,16 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.graphviz",
     "sphinx.ext.doctest",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
     "sphinx.ext.viewcode",
-    "sphinx.ext.imgmath",
     "sphinx.ext.ifconfig",
     "sphinx.ext.mathjax",
+    "nbsphinx",
+    "sphinx_design",
+    "sphinxcontrib.mermaid",
 ]
 
-intersphinx_mapping = {
-    "python": ("http://docs.python.org/2", None),
-    "numpy": ("http://docs.scipy.org/doc/numpy/", None),
-    "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
-    "matplotlib": ("http://matplotlib.sourceforge.net/", None),
-}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -99,7 +93,7 @@ release = version
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -153,15 +147,26 @@ viewcode_import = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 # html_theme = 'bizstyle'
-html_theme = "sphinx_rtd_theme"
+html_theme = "pydata_sphinx_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-# html_theme_options = {}
+html_theme_options = {
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/PyDMD/PyDMD",
+            "icon": "fab fa-github-square",
+            "type": "fontawesome",
+        },
+    ],
+    "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "footer_start": ["copyright"],
+    "footer_end": ["sphinx-version"],
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -172,7 +177,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-# html_logo = None
+html_logo = "_static/logo_PyDMD.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -331,3 +336,24 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 # texinfo_no_detailmenu = False
+
+# Remove left sidebar from all pages
+html_sidebars = {
+    "**": []
+}
+
+nbsphinx_execute = 'never'
+
+# Add Binder launch button to all notebooks
+nbsphinx_prolog = """
+.. raw:: html
+
+    <div style="margin-bottom: 20px;">
+        <a href="https://mybinder.org/v2/gh/PyDMD/PyDMD/master?filepath=tutorials/tutorial1/tutorial-1-dmd.ipynb" target="_blank">
+            <img src="https://mybinder.org/badge_logo.svg" alt="Launch Binder"/>
+        </a>
+        <span style="margin-left: 10px; font-size: 0.9em; color: gray;">
+            Launch this notebook in an interactive environment
+        </span>
+    </div>
+"""

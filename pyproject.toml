@@ -54,8 +54,11 @@ tutorial = [
     "ffmpeg-python",
 ]
 docs = [
-    "sphinx>=1.4",
-    "sphinx_rtd_theme"
+    "sphinx",
+    "pydata-sphinx-theme",
+    "nbsphinx",
+    "sphinx-design",
+    "sphinxcontrib-mermaid",
 ]
 
 [project.urls]
