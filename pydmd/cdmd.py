@@ -79,6 +79,8 @@ class CDMDOperator(DMDOperator):
 
         U, s, V = compute_svd(compressedX, svd_rank=self._svd_rank)
 
+        if self._tikhonov_regularization is not None:
+            self._norm_X = np.linalg.norm(compressedX)
         atilde = self._least_square_operator(U, s, V, compressedY)
 
         if self._forward_backward:

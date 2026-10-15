@@ -95,9 +95,8 @@ jobs:
         cache-dependency-path: pyproject.toml
     - name: Install Python dependencies
       run: |
-        pip install .[test]
-        # Force NumPy version
-        pip install numpy==${{ matrix.numpy-version }}
+        pip install ".[test]" "numpy==${{ matrix.numpy-version }}"
+        pip check
     - name: Test with pytest
       run: |
         pytest
