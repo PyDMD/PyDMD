@@ -54,6 +54,10 @@ class DMDOperator:
     ):
         self._exact = exact
         self._rescale_mode = rescale_mode
+        # The resolved scale array changes on every fit; keep the user's choice.
+        self._auto_rescale = (
+            isinstance(rescale_mode, str) and rescale_mode == "auto"
+        )
         self._svd_rank = svd_rank
         self._forward_backward = forward_backward
         self._sorted_eigs = sorted_eigs
@@ -90,7 +94,7 @@ class DMDOperator:
                 msg = "Casting atilde from np.complex256 to np.complex128"
                 logging.info(msg)
 
-        if isinstance(self._rescale_mode, str) and self._rescale_mode == "auto":
+        if self._auto_rescale:
             self._rescale_mode = s
 
         self._Atilde = atilde
