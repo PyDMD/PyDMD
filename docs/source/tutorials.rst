@@ -6,30 +6,30 @@ Tutorials
 .. toctree::
    :hidden:
 
-   tutorial-1-dmd
-   tutorial-2-adv-dmd
-   tutorial-3-mrdmd
-   tutorial-4-cdmd
-   tutorial-5-fbdmd
-   tutorial-6-hodmd
-   tutorial-7-dmdc
-   tutorial-8-comparisons
-   tutorial-9-spdmd
-   tutorial-10-paramdmd
-   tutorial-11-regularization
-   tutorial-12-cdmd
-   tutorial-13-subspacedmd
-   tutorial-14-bop-dmd
-   tutorial-15-pidmd
-   tutorial-16-rdmd
-   tutorial-17-edmd
-   tutorial-18-lando
-   tutorial-19-havok
-   costs-tutorial_toy-data
-   costs-tutorial_real-data
-   developers-help-1
-   user-manual-bopdmd
-   dmd-basic-tutorial
+   tutorials/tutorial1/tutorial-1-dmd
+   tutorials/tutorial2/tutorial-2-adv-dmd
+   tutorials/tutorial3/tutorial-3-mrdmd
+   tutorials/tutorial4/tutorial-4-cdmd
+   tutorials/tutorial5/tutorial-5-fbdmd
+   tutorials/tutorial6/tutorial-6-hodmd
+   tutorials/tutorial7/tutorial-7-dmdc
+   tutorials/tutorial8/tutorial-8-comparisons
+   tutorials/tutorial9/tutorial-9-spdmd
+   tutorials/tutorial10/tutorial-10-paramdmd
+   tutorials/tutorial11/tutorial-11-regularization
+   tutorials/tutorial12/tutorial-12-cdmd
+   tutorials/tutorial13/tutorial-13-subspacedmd
+   tutorials/tutorial14/tutorial-14-bop-dmd
+   tutorials/tutorial15/tutorial-15-pidmd
+   tutorials/tutorial16/tutorial-16-rdmd
+   tutorials/tutorial17/tutorial-17-edmd
+   tutorials/tutorial18/tutorial-18-lando
+   tutorials/tutorial19/tutorial-19-havok
+   tutorials/tutorial20/costs-tutorial_toy-data
+   tutorials/tutorial20/costs-tutorial_real-data
+   tutorials/developers-tutorial1/developers-help-1
+   tutorials/user-manual1/user-manual-bopdmd
+   tutorials/video-tutorial-code/dmd-basic-tutorial
 
 
 The following tutorials cover PyDMD's capabilities from basic to advanced usage.
