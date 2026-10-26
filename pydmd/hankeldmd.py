@@ -130,7 +130,7 @@ class HankelDMD(DMDBase):
         return max(
             0,
             (time - self.original_time["t0"]) // self.dmd_time["dt"]
-            - (self.original_time["t0"] + self._d - 1),
+            - (self._d - 1),
         )
 
     def _update_sub_dmd_time(self):

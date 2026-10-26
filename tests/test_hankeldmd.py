@@ -1,9 +1,9 @@
 from builtins import range
 
 import numpy as np
-from pytest import raises
+from pytest import mark, raises
 
-from pydmd import HankelDMD
+from pydmd import HODMD, HankelDMD
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -320,6 +320,30 @@ def test_first_occurences():
 
     assert (
         dmd._hankel_first_occurrence(dmd.dmd_time["t0"]) == x.shape[-1] // 2 - 2
+    )
+
+
+@mark.parametrize("model_class", [HankelDMD, HODMD])
+@mark.parametrize("origin", [0, 5, -3, 0.5])
+@mark.parametrize("window", [(0, 11), (4, 8), (10, 15)])
+@mark.parametrize("method", ["first", "mean", [1, 2, 3]])
+def test_reconstruction_time_origin(model_class, origin, window, method):
+    """Changing the time origin must preserve the requested snapshots."""
+    eigenvalues = np.array([0.9, 1.1])[:, None]
+    snapshots = eigenvalues ** np.arange(12)
+    kwargs = {"svd_rank_extra": 2} if model_class is HODMD else {}
+    dmd = model_class(svd_rank=2, d=3, reconstruction_method=method, **kwargs)
+    dmd.fit(snapshots)
+
+    dt = 0.5
+    dmd.original_time.update(t0=origin, tend=origin + 11 * dt, dt=dt)
+    start, end = window
+    dmd.dmd_time.update(t0=origin + start * dt, tend=origin + end * dt, dt=dt)
+
+    expected = eigenvalues ** np.arange(start, end + 1)
+    np.testing.assert_allclose(dmd.reconstructed_data, expected, atol=1e-12)
+    np.testing.assert_equal(
+        dmd.reconstructed_data.shape[1], len(dmd.dmd_timesteps)
     )
 
 
