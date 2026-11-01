@@ -22,17 +22,25 @@ def pinv_diag(x):
     """
     Utility function to compute the pseudo-inverse of a diagonal matrix.
 
+    Entries are inverted when their magnitude is above a tolerance and set to
+    zero otherwise, so that negative and complex entries (e.g. eigenvalues of
+    a non-symmetric operator) are inverted correctly.
+
     :param array_like x: diagonal of the matrix to be pseudo-inversed.
     :return: the computed pseudo-inverse
     :rtype: numpy.ndarray
     """
+    x = np.asarray(x)
+    if not np.issubdtype(x.dtype, np.inexact):
+        x = x.astype(float)
     t = x.dtype.char.lower()
     factor = {"f": 1e2, "d": 1e4}
-    rcond = factor[t] * np.finfo(t).eps
+    rcond = factor.get(t, 1e4) * np.finfo(x.real.dtype).eps
 
-    y = np.zeros(*x.shape)
+    y = np.zeros(x.shape, dtype=x.dtype)
 
-    y[x > rcond] = np.reciprocal(x[x > rcond])
+    mask = np.abs(x) > rcond
+    y[mask] = np.reciprocal(x[mask])
 
     return np.diag(y)
 
@@ -124,7 +132,7 @@ class DMDOptOperator(DMDOperator):
 
         # --> Rescale the left eigenvectors.
         m = np.diag(left_vecs.T.conj().dot(right_vecs))
-        left_vecs = left_vecs.dot(pinv_diag(m))
+        left_vecs = left_vecs.dot(pinv_diag(m.conj()))
 
         self._eigenvalues = vals
         self._eigenvectors = left_vecs

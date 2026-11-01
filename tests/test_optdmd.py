@@ -3,7 +3,7 @@ from builtins import range
 import numpy as np
 from pytest import raises
 
-from pydmd.optdmd import OptDMD
+from pydmd.optdmd import OptDMD, pinv_diag
 
 # 15 snapshot with 400 data. The matrix is 400x15 and it contains
 # the following data: f1 + f2 where
@@ -208,3 +208,37 @@ def test_getitem_not_implemented():
         optdmd = OptDMD(svd_rank=2)
         optdmd.fit(X=sample_data)
         optdmd[1:3]
+
+
+def test_pinv_diag_negative_and_complex():
+    x = np.array([2.0, -4.0, 1.0 + 1.0j, 0.0])
+    expected = np.array([0.5, -0.25, 0.5 - 0.5j, 0.0])
+    np.testing.assert_allclose(np.diag(pinv_diag(x)), expected)
+
+
+def test_pinv_diag_real_positive_unchanged():
+    x = np.array([3.0, 1e-20, 0.5])
+    y = pinv_diag(x)
+    assert y.dtype == x.dtype
+    np.testing.assert_allclose(np.diag(y), [1.0 / 3.0, 0.0, 2.0])
+
+
+def test_evd_eigenvectors_complex_and_negative_eigs():
+    # Rotation block (complex pair) plus a negative real eigenvalue.
+    th = 0.3
+    rot = 0.95 * np.array([[np.cos(th), -np.sin(th)], [np.sin(th), np.cos(th)]])
+    A = np.zeros((3, 3))
+    A[:2, :2] = rot
+    A[2, 2] = -0.5
+    X = np.random.default_rng(0).standard_normal((3, 20))
+    Y = A.dot(X)
+    dmd = OptDMD(svd_rank=-1, factorization="evd").fit(X, Y)
+    right = dmd.operator.right_eigenvectors
+    left = dmd.operator.eigenvectors
+    # no eigenvector may be zeroed out
+    assert np.all(np.linalg.norm(right, axis=0) > 1e-8)
+    np.testing.assert_allclose(
+        A.dot(right), right.dot(np.diag(dmd.eigs)), atol=1e-12
+    )
+    # left eigenvectors are rescaled to be bi-orthonormal to the right ones
+    np.testing.assert_allclose(left.T.conj().dot(right), np.eye(3), atol=1e-10)
