@@ -242,3 +242,23 @@ def test_evd_eigenvectors_complex_and_negative_eigs():
     )
     # left eigenvectors are rescaled to be bi-orthonormal to the right ones
     np.testing.assert_allclose(left.T.conj().dot(right), np.eye(3), atol=1e-10)
+
+
+def test_predict_evd_matches_operator():
+    # Rotation block (complex pair) plus a negative real eigenvalue.
+    th = 0.3
+    rot = 0.95 * np.array([[np.cos(th), -np.sin(th)], [np.sin(th), np.cos(th)]])
+    A = np.zeros((3, 3))
+    A[:2, :2] = rot
+    A[2, 2] = -0.5
+    X = np.random.default_rng(0).standard_normal((3, 20))
+    Y = A.dot(X)
+    for factorization in ("evd", "svd"):
+        dmd = OptDMD(svd_rank=-1, factorization=factorization).fit(X, Y)
+        np.testing.assert_allclose(dmd.predict(X), Y, atol=1e-12)
+
+
+def test_predict_evd_single_snapshot_shape():
+    dmd = OptDMD(svd_rank=2, factorization="evd").fit(sample_data)
+    x = sample_data[:, 0]
+    assert dmd.predict(x).shape == x.shape
