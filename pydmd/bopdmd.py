@@ -474,6 +474,17 @@ class BOPDMDOperator(DMDOperator):
         if "conjugate_pairs" in self._eig_constraints:
             eigenvalues = self._force_conj_pairs(eigenvalues)
 
+        if "imag_pairs" in self._eig_constraints:
+            if len(eigenvalues) % 2 == 1:
+                non_dc_modes_ind = np.abs(eigenvalues.imag) > 0
+                eigenvalues[non_dc_modes_ind] = (
+                    1j * eigenvalues[non_dc_modes_ind].imag
+                )
+            else:
+                raise ValueError(
+                    "imag_pairs can only be used when a DC mode is " "present."
+                )
+
         # Limits on the real components
         if "stable" in self._eig_constraints:
             right_half = eigenvalues.real > 0.0
@@ -772,6 +783,9 @@ class BOPDMDOperator(DMDOperator):
 
         # Initialize values.
         _lambda = init_lambda
+        if np.isnan(init_alpha).any():
+            # Convert NaNs to something less silly
+            init_alpha[np.isnan(init_alpha)] = 0 + 0j
         alpha = self._push_eigenvalues(init_alpha)
         B = compute_B(alpha, amp_lim=amp_limit)
         U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
@@ -1681,6 +1695,7 @@ class BOPDMD(DMDBase):
                 "imag",
                 "conjugate_pairs",
                 "nyquist",
+                "imag_pairs",
             }
             invalid_combos = [
                 {"stable", "imag"},
