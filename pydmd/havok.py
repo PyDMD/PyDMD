@@ -798,7 +798,8 @@ class HAVOK:
             X0=V0,
         )[1]
 
-        return embeddings
+        # lsim squeezes singleton dimensions; keep coordinates as columns.
+        return embeddings.reshape(-1, len(self.A))
 
     def _embeddings_to_original(self, V):
         """
