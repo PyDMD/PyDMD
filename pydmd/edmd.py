@@ -53,6 +53,16 @@ class EDMDOperator(DMDOperator):
         self._modes = None
         self._svd_vals = None
         self._eigenvectors = None
+        self._kernel_snapshots = None
+
+    @property
+    def kernel_snapshots(self):
+        """
+        :return: the input snapshots used to compute the kernel matrices,
+            after any TLSQ projection.
+        :rtype: numpy.ndarray
+        """
+        return self._kernel_snapshots
 
     @property
     def svd_vals(self):
@@ -122,6 +132,7 @@ class EDMDOperator(DMDOperator):
         # Store Sigma and V_hat for eigenfunction computations.
         self._svd_vals = np.diag(Sigma)
         self._eigenvectors = V_hat
+        self._kernel_snapshots = X
 
         return Q, Sigma, V_hat
 
@@ -261,7 +272,7 @@ class EDMD(DMD):
 
         K_xx = pairwise_kernels(
             x[None],
-            self.snapshots.T,
+            self.operator.kernel_snapshots.T,
             self._kernel_metric,
             **self._kernel_params,
         )

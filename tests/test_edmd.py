@@ -1,6 +1,6 @@
 import numpy as np
-from numpy.testing import assert_allclose
-from pytest import raises
+from numpy.testing import assert_allclose, assert_equal
+from pytest import mark, raises
 
 from pydmd.edmd import EDMD
 
@@ -180,3 +180,89 @@ def test_eigenfunction_error():
 
     with raises(ValueError):
         edmd.eigenfunctions(x_dummy[None])
+
+
+@mark.parametrize("kernel_metric", ["linear", "poly", "rbf"])
+def test_eigenfunctions_from_trajectory(kernel_metric):
+    """Trajectory and explicit-pair fits use the same kernel landmarks."""
+    snapshots = np.array([0.9 ** np.arange(12), 0.8 ** np.arange(12)])
+    trajectory = EDMD(svd_rank=2, kernel_metric=kernel_metric).fit(snapshots)
+    pairs = EDMD(svd_rank=2, kernel_metric=kernel_metric).fit(
+        snapshots[:, :-1], snapshots[:, 1:]
+    )
+
+    for point in [np.array([0.3, -0.2]), snapshots[:, 0]]:
+        actual = trajectory.eigenfunctions(point)
+        assert_equal(actual.shape, (1, 2))
+        assert_allclose(actual, pairs.eigenfunctions(point))
+
+
+def test_eigenfunctions_trajectory_koopman_identity():
+    """Linear-kernel eigenfunctions obey the known evolution of the data."""
+    snapshots = np.array([0.9 ** np.arange(12), 0.8 ** np.arange(12)])
+    edmd = EDMD(svd_rank=2).fit(snapshots)
+    point = np.array([0.3, -0.2])
+
+    assert_allclose(
+        edmd.eigenfunctions(np.array([0.9, 0.8]) * point),
+        edmd.eigs * edmd.eigenfunctions(point),
+        atol=1e-12,
+    )
+
+
+@mark.parametrize("kernel_metric", ["linear", "poly", "rbf"])
+@mark.parametrize("explicit_pairs", [False, True])
+def test_eigenfunctions_tlsq(kernel_metric, explicit_pairs):
+    """TLSQ eigenfunctions use the projected snapshots used by the fit."""
+    generator = np.random.default_rng(123)
+    snapshots = generator.standard_normal((2, 20))
+    if explicit_pairs:
+        inputs = snapshots
+        outputs = J @ inputs + 0.1 * generator.standard_normal(inputs.shape)
+        fit_args = (inputs, outputs)
+    else:
+        inputs, outputs = snapshots[:, :-1], snapshots[:, 1:]
+        fit_args = (snapshots,)
+
+    edmd = EDMD(svd_rank=2, tlsq_rank=2, kernel_metric=kernel_metric).fit(
+        *fit_args
+    )
+
+    # Independently project the stacked pairs onto the leading TLSQ subspace.
+    right_vectors = np.linalg.svd(
+        np.vstack([inputs, outputs]), full_matrices=False
+    )[2]
+    projection = right_vectors[:2].conj().T @ right_vectors[:2]
+    reference = EDMD(svd_rank=2, kernel_metric=kernel_metric).fit(
+        inputs @ projection, outputs @ projection
+    )
+
+    for point in [np.array([0.3, -0.2]), snapshots[:, 0]]:
+        assert_allclose(
+            edmd.eigenfunctions(point), reference.eigenfunctions(point)
+        )
+    assert_allclose(edmd.snapshots, snapshots)
+
+
+@mark.parametrize("kernel_metric", ["linear", "poly", "rbf"])
+@mark.parametrize("explicit_pairs", [False, True])
+@mark.parametrize("tlsq_rank", [0, 2])
+def test_eigenfunctions_refit(kernel_metric, explicit_pairs, tlsq_rank):
+    """Refitting replaces kernel landmarks, including when fit modes change."""
+    generator = np.random.default_rng(456)
+    first = generator.standard_normal((2, 8))
+    second = generator.standard_normal((2, 14))
+    edmd = EDMD(svd_rank=2, tlsq_rank=tlsq_rank, kernel_metric=kernel_metric)
+    if explicit_pairs:
+        edmd.fit(first)
+        fit_args = (second[:, :-1], second[:, 1:])
+    else:
+        edmd.fit(first[:, :-1], first[:, 1:])
+        fit_args = (second,)
+    edmd.fit(*fit_args)
+    reference = EDMD(
+        svd_rank=2, tlsq_rank=tlsq_rank, kernel_metric=kernel_metric
+    ).fit(*fit_args)
+
+    point = np.array([0.3, -0.2])
+    assert_allclose(edmd.eigenfunctions(point), reference.eigenfunctions(point))
