@@ -20,6 +20,7 @@ import numpy as np
 from numpy.linalg import LinAlgError
 from scipy.linalg import qr
 from scipy.sparse import csr_matrix
+from scipy.stats import mode
 import matplotlib.pyplot as plt
 
 from .dmdbase import DMDBase
@@ -65,14 +66,29 @@ class BOPDMDOperator(DMDOperator):
         variance.
     :type eig_sort: {"real", "imag", "abs", "auto"}
     :param eig_constraints: Set containing desired DMD operator eigenvalue
-        constraints. Currently available constraints are `"stable"`, which
-        constrains eigenvalues to the left half of the complex plane,
-        `"imag"`, which constrains eigenvalues to the imaginary axis, and
-        `"conjugate_pairs"`, which enforces that eigenvalues are always
-        present with their complex conjugate. Note that constraints may be
-        combined if valid. May alternatively be a custom eigenvalue constraint
-        function that will be applied to the computed eigenvalues at each step
-        of the variable projection routine.
+        constraints. Currently available constraints are:
+
+        - `"stable"`, constrains eigenvalues to the left half of the complex
+          plane
+        - `"imag"`, constrains eigenvalues to the imaginary axis
+        - `"conjugate_pairs"`, enforces that eigenvalues are always present
+          with their complex conjugate
+        - `"limited"`, constrains the real components to be less than a limit
+          provided in the `real_eig_limit` kwarg. Values >= 1 are interpreted
+          as a growth limit (e.g., a limit of 2 means less than doubling).
+          Values < 1 are absolute limits.
+        - `"imag_pairs"`, forces purely imaginary conjugate pairs with a purely
+          real odd-rank/DC mode (only applicable to odd-rank fits). Needs to be
+          used with `"conjugate_pairs"`.
+        - `"nyquist"`, constrains eigenvalue frequencies to be lower than the
+          Nyquist frequency (hard limit to catch aliasing at f < 1 / (2 dt))
+          and f > 1 / (4 T) where T is the length of the data window.
+          This regularization eliminates mode periods much longer than the
+          data window.
+
+        Note that constraints may be combined if valid. May alternatively be a
+        custom eigenvalue constraint function that will be applied to the
+        computed eigenvalues at each step of the variable projection routine.
     :type eig_constraints: set(str) or function
     :param mode_prox: Optional proximal operator function to apply to the DMD
         modes. If `use_proj` is False, this function is applied at every
@@ -152,7 +168,8 @@ class BOPDMDOperator(DMDOperator):
     :type verbose: bool
     :param real_eig_limit: Value limiting the real eigenvalues. Only used
     when the eigenvalue constraints include "limited" as an option otherwise
-    it has no effect.
+    it has no effect. Values >= 1 are interpreted as a growth limit (e.g.,
+    a limit of 2 means less than doubling). Values < 1 are absolute limits.
     :type real_eig_limit: float
     """
 
@@ -473,16 +490,59 @@ class BOPDMDOperator(DMDOperator):
         if "conjugate_pairs" in self._eig_constraints:
             eigenvalues = self._force_conj_pairs(eigenvalues)
 
+        if "imag_pairs" in self._eig_constraints:
+            if len(eigenvalues) % 2 == 1:
+                non_dc_modes_ind = np.abs(eigenvalues.imag) > 0
+                eigenvalues[non_dc_modes_ind] = (
+                    1j * eigenvalues[non_dc_modes_ind].imag
+                )
+            else:
+                raise ValueError(
+                    "imag_pairs can only be used when a DC mode is " "present."
+                )
+
+        # Limits on the real components
         if "stable" in self._eig_constraints:
             right_half = eigenvalues.real > 0.0
             eigenvalues[right_half] = 1j * eigenvalues[right_half].imag
         elif "imag" in self._eig_constraints:
             eigenvalues = 1j * eigenvalues.imag
         elif "limited" in self._eig_constraints:
-            # For eigenvalues with the real part over the limit, reset the real
-            # part to 0 to make the solver try again.
-            too_big = np.abs(eigenvalues.real) > self._real_eig_limit
-            eigenvalues[too_big] = 1j * eigenvalues[too_big].imag
+
+            # We were likely provided with a discrete eigenvalue limit
+            if self._real_eig_limit < 1:
+                # For eigenvalues with the real part over the limit, reset the
+                # real part to 0 to make the solver try again.
+                too_big = np.abs(eigenvalues.real) > self._real_eig_limit
+                eigenvalues[too_big] = 1j * eigenvalues[too_big].imag
+            # We were likely provided with a growth eigenvalue limit
+            if self._real_eig_limit >= 1:
+                # For eigenvalues with the real part over the limit, reset the
+                # real part to 0 to make the solver try again.
+                too_big = (
+                    eigenvalues.real > np.log(self._real_eig_limit) / self._tlen
+                )
+                eigenvalues[too_big] = 1j * eigenvalues[too_big].imag
+
+        # Limits on the imaginary component following the sampling criterion.
+        # Keeps the frequency from blowing up.
+        if "nyquist" in self._eig_constraints:
+            # Reset the imaginary frequencies when the typical sample alias
+            # bounds are exceeded.
+            too_high_freq = np.abs(eigenvalues.imag) / (2 * np.pi) > 1 / (
+                2 * self._dt
+            )
+            eigenvalues[too_high_freq] = (
+                eigenvalues[too_high_freq].real + 1j * 0
+            )
+
+            # Reset the imaginary frequencies when an oscillation with a period
+            # larger than the window is discovered. This a regularization rather
+            # than a hard physical limit like the aliasing effect above.
+            too_low_freq = np.abs(eigenvalues.imag) / (2 * np.pi) < 1 / (
+                4 * self._tlen
+            )
+            eigenvalues[too_low_freq] = eigenvalues[too_low_freq].real + 1j * 0
 
         return eigenvalues
 
@@ -739,6 +799,9 @@ class BOPDMDOperator(DMDOperator):
 
         # Initialize values.
         _lambda = init_lambda
+        if np.isnan(init_alpha).any():
+            # Convert NaNs to something less silly
+            init_alpha[np.isnan(init_alpha)] = 0 + 0j
         alpha = self._push_eigenvalues(init_alpha)
         B = compute_B(alpha, amp_lim=amp_limit)
         U, S, Vh = self._compute_irank_svd(Phi(alpha, t), tolrank)
@@ -982,6 +1045,8 @@ class BOPDMDOperator(DMDOperator):
         :return: The BOP-DMD amplitudes.
         :rtype: numpy.ndarray
         """
+        self._dt = mode(np.diff(t))[0]
+        self._tlen = t[-1] - t[0]
         # Perform an initial optimized dmd solve using init_alpha.
         initial_optdmd_results = self._single_trial_compute_operator(
             H, t, self._init_alpha
@@ -1253,14 +1318,29 @@ class BOPDMD(DMDBase):
         variance. Default is "auto".
     :type eig_sort: {"real", "imag", "abs", "auto"}
     :param eig_constraints: Set containing desired DMD operator eigenvalue
-        constraints. Currently available constraints are `"stable"`, which
-        constrains eigenvalues to the left half of the complex plane,
-        `"imag"`, which constrains eigenvalues to the imaginary axis, and
-        `"conjugate_pairs"`, which enforces that eigenvalues are always
-        present with their complex conjugate. Note that constraints may be
-        combined if valid. May alternatively be a custom eigenvalue constraint
-        function that will be applied to the computed eigenvalues at each step
-        of the variable projection routine.
+        constraints. Currently available constraints are:
+
+        - `"stable"`, constrains eigenvalues to the left half of the complex
+          plane
+        - `"imag"`, constrains eigenvalues to the imaginary axis
+        - `"conjugate_pairs"`, enforces that eigenvalues are always present
+          with their complex conjugate
+        - `"limited"`, constrains the real components to be less than a limit
+          provided in the `real_eig_limit` kwarg. Values >= 1 are interpreted
+          as a growth limit (e.g., a limit of 2 means less than doubling).
+          Values < 1 are absolute limits.
+        - `"imag_pairs"`, forces purely imaginary conjugate pairs with a purely
+          real odd-rank/DC mode (only applicable to odd-rank fits). Needs to be
+          used with `"conjugate_pairs"`.
+        - `"nyquist"`, constrains eigenvalue frequencies to be lower than the
+          Nyquist frequency (hard limit to catch aliasing at f < 1 / (2 dt))
+          and f > 1 / (4 T) where T is the length of the data window.
+          This regularization eliminates mode periods much longer than the
+          data window.
+
+        Note that constraints may be combined if valid. May alternatively be a
+        custom eigenvalue constraint function that will be applied to the
+        computed eigenvalues at each step of the variable projection routine.
     :type eig_constraints: set(str) or function
     :param mode_prox: Optional proximal operator function to apply to the DMD
         modes. If `use_proj` is False, this function is applied at every
@@ -1311,7 +1391,8 @@ class BOPDMD(DMDBase):
     :type varpro_opts_dict: dict
     :param real_eig_limit: Value limiting the real eigenvalues. Only used when
     the eigenvalue constraints include "limited" as an option otherwise it
-    has no effect.
+    has no effect. Values >= 1 are interpreted as a growth limit (e.g.,
+    a limit of 2 means less than doubling). Values < 1 are absolute limits.
     :type real_eig_limit: float
     :param varpro_flag: Indicates if the true variable projection or an
     approximation of exact DMD is used.
@@ -1645,6 +1726,8 @@ class BOPDMD(DMDBase):
                 "stable",
                 "imag",
                 "conjugate_pairs",
+                "nyquist",
+                "imag_pairs",
             }
             invalid_combos = [
                 {"stable", "imag"},

@@ -475,6 +475,243 @@ def test_eig_constraints_conjugate():
         )
 
 
+# Data for testing the "imag_pairs" constraint: the oscillatory system from
+# above plus a third, purely decaying (non-oscillatory) component, which
+# requires an odd svd rank of 3. True eigenvalues are -0.1, +1j, and -1j.
+dc_decay_rate = -0.1
+Z_dc = np.vstack(
+    [
+        Z + np.array([[0.5], [-0.3]]) * np.exp(dc_decay_rate * t),
+        np.exp(dc_decay_rate * t)[None],
+    ]
+)
+expected_eigs_dc = np.array((dc_decay_rate, -1j, 1j))
+
+
+def _assert_imag_pairs_and_real_mode(eigs):
+    """
+    Helper that asserts an odd number of eigenvalues consists of exactly one
+    purely real eigenvalue and n // 2 purely imaginary conjugate pairs.
+    """
+    assert len(eigs) % 2 == 1
+    real_mode = eigs.imag == 0.0
+    # Exactly one all real (DC) mode.
+    assert np.count_nonzero(real_mode) == 1
+    # All other eigenvalues are purely imaginary...
+    paired = eigs[~real_mode]
+    assert np.all(paired.real == 0.0)
+    # ...and come in conjugate pairs.
+    np.testing.assert_array_equal(np.sort(paired.imag), np.sort(-paired.imag))
+
+
+def test_eig_constraints_imag_pairs():
+    """
+    Tests that fitting an odd rank BOPDMD with the "imag_pairs" constraint
+    returns purely imaginary conjugate pairs and a single all real mode,
+    and that the real part of the real mode is not discarded.
+    """
+    bopdmd = BOPDMD(
+        svd_rank=3, eig_constraints={"conjugate_pairs", "imag_pairs"}
+    )
+    bopdmd.fit(Z_dc, t)
+    _assert_imag_pairs_and_real_mode(bopdmd.eigs)
+    np.testing.assert_allclose(
+        sort_imag(bopdmd.eigs), sort_imag(expected_eigs_dc), atol=1e-6
+    )
+
+    # Combine with a constraint on the real component.
+    bopdmd = BOPDMD(
+        svd_rank=3,
+        eig_constraints={"conjugate_pairs", "imag_pairs", "stable"},
+    )
+    bopdmd.fit(Z_dc, t)
+    _assert_imag_pairs_and_real_mode(bopdmd.eigs)
+    assert np.all(bopdmd.eigs.real <= 0.0)
+
+    # Without "conjugate_pairs" the oscillatory eigenvalues should still be
+    # purely imaginary, and the real mode should retain its real part.
+    bopdmd = BOPDMD(svd_rank=3, eig_constraints={"imag_pairs"})
+    bopdmd.fit(Z_dc, t)
+    oscillatory = np.abs(bopdmd.eigs.imag) > 0.5
+    assert np.count_nonzero(oscillatory) == 2
+    assert np.all(bopdmd.eigs[oscillatory].real == 0.0)
+    np.testing.assert_allclose(
+        bopdmd.eigs[~oscillatory].real, dc_decay_rate, rtol=1e-4
+    )
+
+
+def test_eig_constraints_imag_pairs_errors():
+    """
+    Tests that the "imag_pairs" constraint raises an error when fitting with
+    an even svd rank, as no DC mode can be present.
+    """
+    bopdmd = BOPDMD(svd_rank=2, eig_constraints={"imag_pairs"})
+    with raises(ValueError):
+        bopdmd.fit(Z, t)
+
+    bopdmd = BOPDMD(
+        svd_rank=2, eig_constraints={"conjugate_pairs", "imag_pairs"}
+    )
+    with raises(ValueError):
+        bopdmd.fit(Z, t)
+
+
+def test_eig_constraints_imag_pairs_push():
+    """
+    Tests the "imag_pairs" constraint directly on odd length eigenvalue
+    vectors that the solver may arrive at (e.g. the odd rank example from
+    test_eig_constraints_conjugate) and checks that the result consists of
+    purely imaginary conjugate pairs and a single all real mode.
+    """
+    eigs_1 = np.array(
+        [
+            7.17854760e-05 + 1.14433634j,
+            7.17854760e-05 - 1.14433634j,
+            3.46250187e-06 + 0.88297678j,
+            3.46250187e-06 - 0.88297678j,
+            -1.89823212e-06 + 0.64454973j,
+            -1.89823212e-06 - 0.64454973j,
+            -0.05 + 0j,
+            7.09378586e-08 + 0.20859477j,
+            7.09378586e-08 - 0.20859477j,
+            -3.40460840e-06 + 0.42177977j,
+            -3.40460840e-06 - 0.42177977j,
+        ]
+    )
+
+    # Not quite conjugate pairs and a real mode with a small imaginary part.
+    eigs_2 = np.array(
+        [
+            0.01060103 + 2.37774049j,
+            -0.00960103 - 2.37000049j,
+            -0.2533088 + 1e-4j,
+        ]
+    )
+
+    BDO = BOPDMDOperator(
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        {"conjugate_pairs", "imag_pairs"},
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+
+    for eigs in [eigs_1, eigs_2]:
+        new_eigs = BDO._push_eigenvalues(np.copy(eigs))
+        _assert_imag_pairs_and_real_mode(new_eigs)
+
+        # The real part of the real mode must be preserved.
+        dc_ind = np.argmin(np.abs(eigs.imag))
+        np.testing.assert_allclose(
+            new_eigs[dc_ind].real, eigs[dc_ind].real, rtol=1e-6
+        )
+
+
+def test_eig_constraints_nyquist():
+    """
+    Tests that the "nyquist" constraint zeroes the imaginary part of
+    eigenvalues above the sampling (aliasing) limit and of eigenvalues with
+    periods much longer than the time window, while keeping the real part.
+    """
+    eigs = np.array(
+        [
+            # Above the Nyquist frequency.
+            -0.1 + 40j,
+            -0.1 - 40j,
+            # Within both limits.
+            -0.2 + 1j,
+            -0.2 - 1j,
+            # Period longer than the time window.
+            -0.3 + 0.1j,
+            -0.3 - 0.1j,
+        ]
+    )
+    expected_eigs = np.array([-0.1, -0.1, -0.2 + 1j, -0.2 - 1j, -0.3, -0.3])
+
+    BDO = BOPDMDOperator(
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        {"nyquist"},
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+    # These are normally set in compute_operator. Upper limit is 5 Hz
+    # (|imag| ~ 31.4) and lower limit is 1/40 Hz (|imag| ~ 0.157).
+    BDO._dt = 0.1
+    BDO._tlen = 10.0
+
+    new_eigs = BDO._push_eigenvalues(np.copy(eigs))
+    np.testing.assert_array_equal(new_eigs, expected_eigs)
+
+
+def test_eig_constraints_limited_growth():
+    """
+    Tests that the "limited" constraint with a growth limit (real_eig_limit
+    >= 1) zeroes the real part of eigenvalues that grow by more than
+    real_eig_limit over the time window, while leaving decaying eigenvalues
+    alone. A limit of exactly 1 allows no growth.
+    """
+    eigs = np.array(
+        [
+            # Grows faster than the limit.
+            0.1 + 1j,
+            # Grows slower than the limit.
+            0.05 + 2j,
+            # Strongly decaying, which a growth limit does not restrict.
+            -0.5 + 3j,
+        ]
+    )
+
+    # (real_eig_limit, expected eigenvalues). With _tlen = 10, a limit of 2
+    # allows real parts up to ln(2) / 10 ~ 0.069 and a limit of 1 allows no
+    # growth at all.
+    cases = [
+        (2.0, np.array([1j, 0.05 + 2j, -0.5 + 3j])),
+        (1.0, np.array([1j, 2j, -0.5 + 3j])),
+    ]
+
+    for real_eig_limit, expected_eigs in cases:
+        BDO = BOPDMDOperator(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            {"limited"},
+            None,
+            None,
+            None,
+            None,
+            None,
+            real_eig_limit,
+        )
+        # Normally set in compute_operator.
+        BDO._tlen = 10.0
+
+        new_eigs = BDO._push_eigenvalues(np.copy(eigs))
+        np.testing.assert_array_equal(new_eigs, expected_eigs)
+
+
 def test_plot_mode_uq():
     """
     Test that a basic call to plot_mode_uq is successful.
