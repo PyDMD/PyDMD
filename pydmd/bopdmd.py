@@ -20,6 +20,7 @@ import numpy as np
 from numpy.linalg import LinAlgError
 from scipy.linalg import qr
 from scipy.sparse import csr_matrix
+from scipy.stats import mode
 import matplotlib.pyplot as plt
 
 from .dmdbase import DMDBase
@@ -473,16 +474,48 @@ class BOPDMDOperator(DMDOperator):
         if "conjugate_pairs" in self._eig_constraints:
             eigenvalues = self._force_conj_pairs(eigenvalues)
 
+        # Limits on the real components
         if "stable" in self._eig_constraints:
             right_half = eigenvalues.real > 0.0
             eigenvalues[right_half] = 1j * eigenvalues[right_half].imag
         elif "imag" in self._eig_constraints:
             eigenvalues = 1j * eigenvalues.imag
         elif "limited" in self._eig_constraints:
-            # For eigenvalues with the real part over the limit, reset the real
-            # part to 0 to make the solver try again.
-            too_big = np.abs(eigenvalues.real) > self._real_eig_limit
-            eigenvalues[too_big] = 1j * eigenvalues[too_big].imag
+
+            # We were likely provided with a discrete eigenvalue limit
+            if self._real_eig_limit < 1:
+                # For eigenvalues with the real part over the limit, reset the real
+                # part to 0 to make the solver try again.
+                too_big = np.abs(eigenvalues.real) > self._real_eig_limit
+                eigenvalues[too_big] = 1j * eigenvalues[too_big].imag
+            # We were likely provided with a growth eigenvalue limit
+            if self._real_eig_limit > 1:
+                # For eigenvalues with the real part over the limit, reset the real
+                # part to 0 to make the solver try again.
+                too_big = (
+                    eigenvalues.real > np.log(self._real_eig_limit) / self._tlen
+                )
+                eigenvalues[too_big] = 1j * eigenvalues[too_big].imag
+
+        # Limits on the imaginary component following the sampling criterion. Keeps
+        # the frequency from blowing up.
+        if "nyquist" in self._eig_constraints:
+            # Reset the imaginary frequencies when the typical sample alias bounds are
+            # exceeded.
+            too_high_freq = np.abs(eigenvalues.imag) / (2 * np.pi) > 1 / (
+                2 * self._dt
+            )
+            eigenvalues[too_high_freq] = (
+                eigenvalues[too_high_freq].real + 1j * 0
+            )
+
+            # Reset the imaginary frequencies when an oscillation with a period
+            # larger than the window is discovered. This a regularization rather than
+            # a hard physical limit like the aliasing effect above.
+            too_low_freq = np.abs(eigenvalues.imag) / (2 * np.pi) < 1 / (
+                4 * self._tlen
+            )
+            eigenvalues[too_low_freq] = eigenvalues[too_low_freq].real + 1j * 0
 
         return eigenvalues
 
@@ -982,6 +1015,8 @@ class BOPDMDOperator(DMDOperator):
         :return: The BOP-DMD amplitudes.
         :rtype: numpy.ndarray
         """
+        self._dt = mode(np.diff(t))[0]
+        self._tlen = t[-1] - t[0]
         # Perform an initial optimized dmd solve using init_alpha.
         initial_optdmd_results = self._single_trial_compute_operator(
             H, t, self._init_alpha
@@ -1645,6 +1680,7 @@ class BOPDMD(DMDBase):
                 "stable",
                 "imag",
                 "conjugate_pairs",
+                "nyquist",
             }
             invalid_combos = [
                 {"stable", "imag"},
