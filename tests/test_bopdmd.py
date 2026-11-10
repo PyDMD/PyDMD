@@ -616,6 +616,102 @@ def test_eig_constraints_imag_pairs_push():
         )
 
 
+def test_eig_constraints_nyquist():
+    """
+    Tests that the "nyquist" constraint zeroes the imaginary part of
+    eigenvalues above the sampling (aliasing) limit and of eigenvalues with
+    periods much longer than the time window, while keeping the real part.
+    """
+    eigs = np.array(
+        [
+            # Above the Nyquist frequency.
+            -0.1 + 40j,
+            -0.1 - 40j,
+            # Within both limits.
+            -0.2 + 1j,
+            -0.2 - 1j,
+            # Period longer than the time window.
+            -0.3 + 0.1j,
+            -0.3 - 0.1j,
+        ]
+    )
+    expected_eigs = np.array([-0.1, -0.1, -0.2 + 1j, -0.2 - 1j, -0.3, -0.3])
+
+    BDO = BOPDMDOperator(
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        {"nyquist"},
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+    # These are normally set in compute_operator. Upper limit is 5 Hz
+    # (|imag| ~ 31.4) and lower limit is 1/40 Hz (|imag| ~ 0.157).
+    BDO._dt = 0.1
+    BDO._tlen = 10.0
+
+    new_eigs = BDO._push_eigenvalues(np.copy(eigs))
+    np.testing.assert_array_equal(new_eigs, expected_eigs)
+
+
+def test_eig_constraints_limited_growth():
+    """
+    Tests that the "limited" constraint with a growth limit (real_eig_limit
+    >= 1) zeroes the real part of eigenvalues that grow by more than
+    real_eig_limit over the time window, while leaving decaying eigenvalues
+    alone. A limit of exactly 1 allows no growth.
+    """
+    eigs = np.array(
+        [
+            # Grows faster than the limit.
+            0.1 + 1j,
+            # Grows slower than the limit.
+            0.05 + 2j,
+            # Strongly decaying, which a growth limit does not restrict.
+            -0.5 + 3j,
+        ]
+    )
+
+    # (real_eig_limit, expected eigenvalues). With _tlen = 10, a limit of 2
+    # allows real parts up to ln(2) / 10 ~ 0.069 and a limit of 1 allows no
+    # growth at all.
+    cases = [
+        (2.0, np.array([1j, 0.05 + 2j, -0.5 + 3j])),
+        (1.0, np.array([1j, 2j, -0.5 + 3j])),
+    ]
+
+    for real_eig_limit, expected_eigs in cases:
+        BDO = BOPDMDOperator(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            {"limited"},
+            None,
+            None,
+            None,
+            None,
+            None,
+            real_eig_limit,
+        )
+        # Normally set in compute_operator.
+        BDO._tlen = 10.0
+
+        new_eigs = BDO._push_eigenvalues(np.copy(eigs))
+        np.testing.assert_array_equal(new_eigs, expected_eigs)
+
+
 def test_plot_mode_uq():
     """
     Test that a basic call to plot_mode_uq is successful.
